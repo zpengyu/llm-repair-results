@@ -1,0 +1,23 @@
+diff --git a/src/com/google/javascript/jscomp/PeepholeReplaceKnownMethods.java b/src/com/google/javascript/jscomp/PeepholeReplaceKnownMethods.java
+index c64b2ffd..277242a3 100644
+--- a/src/com/google/javascript/jscomp/PeepholeReplaceKnownMethods.java
++++ b/src/com/google/javascript/jscomp/PeepholeReplaceKnownMethods.java
+@@ -471,10 +463,16 @@ class PeepholeReplaceKnownMethods extends AbstractPeepholeOptimization{
+         reportCodeChange();
+         break;
+     }
+-
++    Node parent = n.getParent();
++    if (parent.getType() == Token.CALL) {
++      parent = parent.getParent();
++      if (parent != null && parent.getType() == Token.EXPR_RESULT) {
++        parent.detachFromParent();
++        reportCodeChange();
++      }
++    }
+     return n;
+   }
+-
+   /**
+    * Try to fold .substr() calls on strings
+    */

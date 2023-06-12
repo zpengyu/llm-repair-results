@@ -1,0 +1,31 @@
+diff --git a/src/java/org/apache/commons/lang/enums/ValuedEnum.java b/src/java/org/apache/commons/lang/enums/ValuedEnum.java
+index 0823e77d..1348233d 100644
+--- a/src/java/org/apache/commons/lang/enums/ValuedEnum.java
++++ b/src/java/org/apache/commons/lang/enums/ValuedEnum.java
+@@ -189,10 +182,22 @@ public abstract class ValuedEnum extends Enum {
+      * @param other  the object to determine the value for
+      * @return the value
+      */
+-            // ignore - should never happen
+-            // ignore - should never happen
+-            // ignore - should never happen
+-
++    private int getValue(Object other) {
++        // TODO: it would be nice to be able to cache this method or maybe a
++        // method handle or MethodHandle
++        // or the like.
++        try {
++            return getValueInOtherClassLoader(other);
++        } catch (Exception e) {
++            throw new IllegalStateException(
++                    "This should not happen - unable to get value due to " + e);
++        }
++    }
++    private int getValueInOtherClassLoader(Object other) throws Exception {
++        // TODO: this would be cleaner using a method handle
++        return ((Number) other.getClass().getMethod("getValue", null)
++                .invoke(other, null)).intValue();
++    }
+     /**
+      * <p>Human readable description of this <code>Enum</code> item.</p>
+      *

@@ -1,0 +1,25 @@
+    public int read(byte[] buf, int offset, int numToRead) throws IOException {
+    	int totalRead = 0;
+        
+        while (totalRead < numToRead) {
+            if (hasHitEOF || entryOffset >= entrySize) {
+                return totalRead;
+            }
+    
+            if (currEntry == null) {
+                throw new IllegalStateException("No current tar entry");
+            }
+    
+            int numRead = is.read(buf, offset+totalRead, numToRead-totalRead);
+            count(numRead);
+            
+            if (numRead == -1) {
+                hasHitEOF = true;
+            } else {
+                entryOffset += numRead;
+                totalRead += numRead;
+            }
+        }
+
+        return totalRead;
+    }

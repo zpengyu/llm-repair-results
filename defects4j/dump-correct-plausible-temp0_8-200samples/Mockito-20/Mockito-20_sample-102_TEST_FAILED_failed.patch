@@ -1,0 +1,31 @@
+diff --git a/src/org/mockito/internal/creation/bytebuddy/ByteBuddyMockMaker.java b/src/org/mockito/internal/creation/bytebuddy/ByteBuddyMockMaker.java
+index ddaada2f1..feafbf678 100644
+--- a/src/org/mockito/internal/creation/bytebuddy/ByteBuddyMockMaker.java
++++ b/src/org/mockito/internal/creation/bytebuddy/ByteBuddyMockMaker.java
+@@ -34,9 +34,10 @@ public class ByteBuddyMockMaker implements MockMaker {
+             mockInstance = classInstantiator.instantiate(mockedProxyType);
+             MockMethodInterceptor.MockAccess mockAccess = (MockMethodInterceptor.MockAccess) mockInstance;
+             mockAccess.setMockitoInterceptor(new MockMethodInterceptor(asInternalMockHandler(handler), settings));
+-
+             return ensureMockIsAssignableToMockedType(settings, mockInstance);
+-        } catch (ClassCastException cce) {
++        } catch (InstantiationError e) {
++            throw new MockitoException("Unable to create mock instance of type '" + mockedProxyType.getSuperclass().getSimpleName() + "'", e);
++        } catch (Exception e) {
+             throw new MockitoException(join(
+                     "ClassCastException occurred while creating the mockito mock :",
+                     "  class to mock : " + describeClass(mockedProxyType),
+@@ -46,12 +47,9 @@ public class ByteBuddyMockMaker implements MockMaker {
+                     "",
+                     "You might experience classloading issues, please ask the mockito mailing-list.",
+                     ""
+-            ),cce);
+-        } catch (org.mockito.internal.creation.instance.InstantiationException e) {
+-            throw new MockitoException("Unable to create mock instance of type '" + mockedProxyType.getSuperclass().getSimpleName() + "'", e);
++            ), e);
+         }
+     }
+-
+     private <T> T ensureMockIsAssignableToMockedType(MockCreationSettings<T> settings, T mock) {
+         // Force explicit cast to mocked type here, instead of
+         // relying on the JVM to implicitly cast on the client call site.

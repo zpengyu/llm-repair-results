@@ -1,0 +1,37 @@
+diff --git a/src/main/java/org/apache/commons/compress/archivers/zip/ZipFile.java b/src/main/java/org/apache/commons/compress/archivers/zip/ZipFile.java
+index fd5d1894..f7c6149a 100644
+--- a/src/main/java/org/apache/commons/compress/archivers/zip/ZipFile.java
++++ b/src/main/java/org/apache/commons/compress/archivers/zip/ZipFile.java
+@@ -805,15 +805,16 @@ public class ZipFile {
+         // the hashcode - see COMPRESS-164
+         // Map needs to be reconstructed in order to keep central
+         // directory order
++        final int lfhLen = LFH_OFFSET_FOR_FILENAME_LENGTH + SHORT + SHORT;
++        byte[] b = new byte[lfhLen];
+         for (ZipArchiveEntry ze : entries.keySet()) {
+             OffsetEntry offsetEntry = entries.get(ze);
+             long offset = offsetEntry.headerOffset;
+-            archive.seek(offset + LFH_OFFSET_FOR_FILENAME_LENGTH);
+-            byte[] b = new byte[SHORT];
++            archive.seek(offset);
+             archive.readFully(b);
+-            int fileNameLen = ZipShort.getValue(b);
+-            archive.readFully(b);
+-            int extraFieldLen = ZipShort.getValue(b);
++            int fileNameLen = ZipShort.getValue(b, LFH_OFFSET_FOR_FILENAME_LENGTH);
++            int extraFieldLen = ZipShort.getValue(b, LFH_OFFSET_FOR_FILENAME_LENGTH
++                                                  + SHORT);
+             int lenToSkip = fileNameLen;
+             while (lenToSkip > 0) {
+                 int skipped = archive.skipBytes(lenToSkip);
+@@ -826,9 +827,7 @@ public class ZipFile {
+             byte[] localExtraData = new byte[extraFieldLen];
+             archive.readFully(localExtraData);
+             ze.setExtra(localExtraData);
+-            offsetEntry.dataOffset = offset + LFH_OFFSET_FOR_FILENAME_LENGTH
+-                + SHORT + SHORT + fileNameLen + extraFieldLen;
+-
++            offsetEntry.dataOffset = offset + lfhLen + fileNameLen + extraFieldLen;
+             if (entriesWithoutUTF8Flag.containsKey(ze)) {
+                 String orig = ze.getName();
+                 NameAndComment nc = entriesWithoutUTF8Flag.get(ze);

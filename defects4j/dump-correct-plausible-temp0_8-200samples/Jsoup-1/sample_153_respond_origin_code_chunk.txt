@@ -1,0 +1,28 @@
+    private void normalise(Element element) {
+        List<Node> toMove = new ArrayList<Node>();
+        for (Node node: element.childNodes) {
+            if (node instanceof TextNode) {
+                TextNode tn = (TextNode) node;
+                if (!tn.isBlank())
+                    toMove.add(tn);
+            }
+        }
+
+        for (Node node: toMove) {
+            element.removeChild(node);
+            Element context = contextElement(element);
+            context.appendChild(new TextNode(" ", ""));
+            context.appendChild(node);
+        }
+    }
+
+    Element contextElement(Element el) {
+        Element context = body();
+        while (el != null) {
+            if (el.parent() instanceof Element)
+                context = (Element) el.parent();
+            el = el.parent();
+        }
+        return context;
+    }
+

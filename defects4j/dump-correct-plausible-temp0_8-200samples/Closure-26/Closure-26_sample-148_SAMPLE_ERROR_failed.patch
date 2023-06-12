@@ -1,0 +1,46 @@
+diff --git a/src/com/google/javascript/jscomp/ProcessCommonJSModules.java b/src/com/google/javascript/jscomp/ProcessCommonJSModules.java
+index f516e584..797586c5 100644
+--- a/src/com/google/javascript/jscomp/ProcessCommonJSModules.java
++++ b/src/com/google/javascript/jscomp/ProcessCommonJSModules.java
+@@ -239,7 +226,40 @@ public class ProcessCommonJSModules implements CompilerPass {
+       }
+     }
+   }
+-
++  /**
++   * Changes global variables and functions to include the module
++   * name to avoid polluting the global scope.
++   */
++  private static class SuffixVarsCallback extends
++      AbstractShallowStatementCallback {
++    private final String moduleName;
++    public SuffixVarsCallback(String moduleName) {
++      this.moduleName = moduleName;
++    }
++    @Override
++    public void visit(NodeTraversal t, Node n, Node parent) {
++      switch (n.getToken()) {
++        case FUNCTION:
++          Node name = n.getFirstChild();
++          if (name.isName()) {
++            name.setString(suffixName(name.getString()));
++          }
++          break;
++        case VAR:
++          // TODO(johnlenz): handle multiple VARs in a single statement.
++          visitVar(n);
++          break;
++      }
++    }
++    private void visitVar(Node var) {
++      Preconditions.checkArgument(var.isVar());
++      String name = var.getFirstChild().getString();
++      var.getFirstChild().setString(suffixName(name));
++    }
++    private String suffixName(String name) {
++      return name + "$" + moduleName;
++    }
++  }
+   /**
+    * Traverses a node tree and appends a suffix to all global variable names.
+    */

@@ -1,0 +1,29 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/jsontype/impl/ClassNameIdResolver.java b/src/main/java/com/fasterxml/jackson/databind/jsontype/impl/ClassNameIdResolver.java
+index 112c00b5c..302108a43 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/jsontype/impl/ClassNameIdResolver.java
++++ b/src/main/java/com/fasterxml/jackson/databind/jsontype/impl/ClassNameIdResolver.java
+@@ -44,10 +44,6 @@ public class ClassNameIdResolver
+ 
+     protected JavaType _typeFromId(String id, DatabindContext ctxt) throws IOException
+     {
+-        /* 30-Jan-2010, tatu: Most ids are basic class names; so let's first
+-         *    check if any generics info is added; and only then ask factory
+-         *    to do translation when necessary
+-         */
+         TypeFactory tf = ctxt.getTypeFactory();
+         if (id.indexOf('<') > 0) {
+             // note: may want to try combining with specialization (esp for EnumMap)?
+@@ -56,6 +52,13 @@ public class ClassNameIdResolver
+             //    security issues.
+             JavaType t = tf.constructFromCanonical(id);
+                 // Probably cleaner to have a method in `TypeFactory` but can't add in patch
++            JavaType superType = t.getSuperClass();
++            if (superType != null) {
++                Class<?> clz = superType.getRawClass();
++                if (clz.isAssignableFrom(t.getRawClass())) {
++                    t = superType;
++                }
++            }
+             return t;
+         }
+         Class<?> cls;

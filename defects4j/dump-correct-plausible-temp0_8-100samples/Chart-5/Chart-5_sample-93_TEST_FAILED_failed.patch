@@ -1,0 +1,22 @@
+diff --git a/source/org/jfree/data/xy/XYSeries.java b/source/org/jfree/data/xy/XYSeries.java
+index 0b37e6e..e03ab29 100644
+--- a/source/org/jfree/data/xy/XYSeries.java
++++ b/source/org/jfree/data/xy/XYSeries.java
+@@ -567,8 +566,16 @@ public class XYSeries extends Series implements Cloneable, Serializable {
+                 this.data.add(new XYDataItem(x, y));
+             }
+             // check if this addition will exceed the maximum item count...
+-            if (getItemCount() > this.maximumItemCount) {
++            int seriesCount = getItemCount();
++            if (seriesCount > this.maximumItemCount) {
+                 this.data.remove(0);
++                // if the series is sorted, we must remove the redundant entry
++                // as well to ensure the binary search works correctly...
++                if (this.autoSort) {
++                    index = indexOf(x);
++                    this.data.remove(index);
++                    seriesCount = getItemCount();
++                }
+             }
+         }
+         fireSeriesChanged();

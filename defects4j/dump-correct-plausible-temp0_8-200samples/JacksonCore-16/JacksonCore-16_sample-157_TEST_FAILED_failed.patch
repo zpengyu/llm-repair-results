@@ -1,0 +1,33 @@
+diff --git a/src/main/java/com/fasterxml/jackson/core/util/JsonParserSequence.java b/src/main/java/com/fasterxml/jackson/core/util/JsonParserSequence.java
+index bed27f2b..a10353b6 100644
+--- a/src/main/java/com/fasterxml/jackson/core/util/JsonParserSequence.java
++++ b/src/main/java/com/fasterxml/jackson/core/util/JsonParserSequence.java
+@@ -103,15 +94,21 @@ public class JsonParserSequence extends JsonParserDelegate
+     @Override
+     public JsonToken nextToken() throws IOException, JsonParseException
+     {
+-        JsonToken t = delegate.nextToken();
+-        if (t != null) return t;
+-        while (switchToNext()) {
+-            t = delegate.nextToken();
+-            if (t != null) return t;
++        // 09-Oct-2015, tatu: Related to [core#278], need to check if delegate parser
++        //   is already at EOF: if so, need to advance to next.
++        if (delegate.getCurrentToken() == null) {
++            JsonToken t = delegate.nextToken();
++            if (t == null) {
++                while (switchToNext()) {
++                    t = delegate.nextToken();
++                    if (t != null) return t;
++                }
++                return null;
++            }
+         }
+-        return null;
++        // already pointing to an event, can just return that
++        return delegate.getCurrentToken();
+     }
+-
+     /*
+     /*******************************************************
+     /* Additional extended API

@@ -1,0 +1,28 @@
+diff --git a/src/main/java/org/jsoup/helper/HttpConnection.java b/src/main/java/org/jsoup/helper/HttpConnection.java
+index 0b7fa7e..30dc884 100644
+--- a/src/main/java/org/jsoup/helper/HttpConnection.java
++++ b/src/main/java/org/jsoup/helper/HttpConnection.java
+@@ -769,9 +768,21 @@ public class HttpConnection implements Connection {
+                         if (cookieName.length() > 0)
+                             cookie(cookieName, cookieVal);
+                     }
++                } else if (name.equals("Location")) {
++                    header(name, values.get(0));
+                 } else { // combine same header names with comma: http://www.w3.org/Protocols/rfc2616/rfc2616-sec4.html#sec4.2
+-                    if (!values.isEmpty())
+-                        header(name, values.get(0));
++                    // only set the last of repeated headers
++                    // beware of multiple access to values
++                    Iterator<String> it = values.iterator();
++                    String value = null;
++                    if (it.hasNext()) {
++                        value = it.next();
++                    }
++                    while (it.hasNext()) {
++                        value = it.next();
++                    }
++                    if (value != null)
++                        header(name, value);
+                 }
+             }
+         }

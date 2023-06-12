@@ -1,0 +1,18 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/deser/std/CollectionDeserializer.java b/src/main/java/com/fasterxml/jackson/databind/deser/std/CollectionDeserializer.java
+index af4270610..11683fe79 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/deser/std/CollectionDeserializer.java
++++ b/src/main/java/com/fasterxml/jackson/databind/deser/std/CollectionDeserializer.java
+@@ -190,9 +190,12 @@ public class CollectionDeserializer
+                 JsonFormat.Feature.ACCEPT_SINGLE_VALUE_AS_ARRAY);
+         // also, often value deserializer is resolved here:
+         JsonDeserializer<?> valueDeser = _valueDeserializer;
+-        
+         // May have a content converter
+         valueDeser = findConvertingContentDeserializer(ctxt, property, valueDeser);
++        // 08-Feb-2017, tatu: As per [databind#1148], avoid bogus class cast problem
++        if (valueDeser != null && valueDeser instanceof ContextualDeserializer) {
++            valueDeser = ((ContextualDeserializer) valueDeser).createContextual(ctxt, property);
++        }
+         final JavaType vt = _collectionType.getContentType();
+         if (valueDeser == null) {
+             valueDeser = ctxt.findContextualValueDeserializer(vt, property);

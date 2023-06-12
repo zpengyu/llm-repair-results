@@ -1,0 +1,18 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/deser/impl/InnerClassProperty.java b/src/main/java/com/fasterxml/jackson/databind/deser/impl/InnerClassProperty.java
+index 128a8346f..0fde5107d 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/deser/impl/InnerClassProperty.java
++++ b/src/main/java/com/fasterxml/jackson/databind/deser/impl/InnerClassProperty.java
+@@ -118,7 +101,12 @@ public final class InnerClassProperty
+             value = _valueDeserializer.deserializeWithType(jp, ctxt, _valueTypeDeserializer);
+         } else  { // the usual case
+             try {
+-                value = _creator.newInstance(bean);
++                // Added a check that the parameter is instance of the bean
++                if (bean.getClass().isInstance(_creator.getDeclaringClass())) {
++                    value = _creator.newInstance(bean);
++                } else {
++                    value = _creator.newInstance();
++                }
+             } catch (Exception e) {
+                 ClassUtil.unwrapAndThrowAsIAE(e, "Failed to instantiate class "+_creator.getDeclaringClass().getName()+", problem: "+e.getMessage());
+                 value = null;

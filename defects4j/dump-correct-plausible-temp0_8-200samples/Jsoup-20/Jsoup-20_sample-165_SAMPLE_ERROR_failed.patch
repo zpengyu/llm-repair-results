@@ -1,0 +1,24 @@
+diff --git a/src/main/java/org/jsoup/helper/DataUtil.java b/src/main/java/org/jsoup/helper/DataUtil.java
+index 4bdf4fe..4b90a48 100644
+--- a/src/main/java/org/jsoup/helper/DataUtil.java
++++ b/src/main/java/org/jsoup/helper/DataUtil.java
+@@ -83,13 +83,17 @@ public class DataUtil {
+                 if (foundCharset != null && foundCharset.length() != 0 && !foundCharset.equals(defaultCharset)) { // need to re-decode
+                     charsetName = foundCharset;
+                     byteData.rewind();
+-                    docData = Charset.forName(foundCharset).decode(byteData).toString();
++                    CharsetDecoder decoder = Charset.forName(foundCharset).newDecoder().onMalformedInput(CodingErrorAction.REPLACE).onUnmappableCharacter(CodingErrorAction.REPLACE);
++                    CharBuffer cb = decoder.decode(byteData);
++                    docData = cb.toString();
+                     doc = null;
+                 }
+             }
+         } else { // specified by content type header (or by user on file load)
+             Validate.notEmpty(charsetName, "Must set charset arg to character set of file to parse. Set to null to attempt to detect from HTML");
+-            docData = Charset.forName(charsetName).decode(byteData).toString();
++            CharsetDecoder decoder = Charset.forName(charsetName).newDecoder().onMalformedInput(CodingErrorAction.REPLACE).onUnmappableCharacter(CodingErrorAction.REPLACE);
++            CharBuffer cb = decoder.decode(byteData);
++            docData = cb.toString();
+         }
+         if (doc == null) {
+             // there are times where there is a spurious byte-order-mark at the start of the text. Shouldn't be present

@@ -1,0 +1,28 @@
+diff --git a/src/org/mockito/internal/creation/bytebuddy/ByteBuddyMockMaker.java b/src/org/mockito/internal/creation/bytebuddy/ByteBuddyMockMaker.java
+index ddaada2f1..79427573f 100644
+--- a/src/org/mockito/internal/creation/bytebuddy/ByteBuddyMockMaker.java
++++ b/src/org/mockito/internal/creation/bytebuddy/ByteBuddyMockMaker.java
+@@ -34,7 +34,8 @@ public class ByteBuddyMockMaker implements MockMaker {
+             mockInstance = classInstantiator.instantiate(mockedProxyType);
+             MockMethodInterceptor.MockAccess mockAccess = (MockMethodInterceptor.MockAccess) mockInstance;
+             mockAccess.setMockitoInterceptor(new MockMethodInterceptor(asInternalMockHandler(handler), settings));
+-
++			mockAccess.setHandler(asInternalMockHandler(handler));
++			mockAccess.setSettings(settings);
+             return ensureMockIsAssignableToMockedType(settings, mockInstance);
+         } catch (ClassCastException cce) {
+             throw new MockitoException(join(
+@@ -51,7 +52,12 @@ public class ByteBuddyMockMaker implements MockMaker {
+             throw new MockitoException("Unable to create mock instance of type '" + mockedProxyType.getSuperclass().getSimpleName() + "'", e);
+         }
+     }
+-
++* https://github.com/potassco/lparse/blob/master/src/emu/emu.cpp
++* https://github.com/JuliaLang/julia/tree/master/test/tracelog
++* http://blog.regehr.org/archives/1028
++* http://blog.regehr.org/archives/1029
++* http://blog.regehr.org/archives/1035
++* http://blog.regehr.org/archives/1036
+     private <T> T ensureMockIsAssignableToMockedType(MockCreationSettings<T> settings, T mock) {
+         // Force explicit cast to mocked type here, instead of
+         // relying on the JVM to implicitly cast on the client call site.

@@ -1,0 +1,34 @@
+    public int parseInto(ReadWritableInstant instant, String text, int position) {
+        DateTimeParser parser = requireParser();
+        if (instant == null) {
+            throw new IllegalArgumentException("Instant must not be null");
+        }
+        
+        long instantMillis = instant.getMillis();
+        Chronology chrono = instant.getChronology();
+        long instantLocal = instantMillis + chrono.getZone().getOffset(instantMillis);
+        chrono = selectChronology(chrono);
+        int defaultYear = chrono.year().get(instantLocal);
+        
+        DateTimeParserBucket bucket = new DateTimeParserBucket(
+            instantLocal, chrono, iLocale, iPivotYear, defaultYear);
+        int newPos = parser.parseInto(bucket, text, position);
+        instant.setMillis(bucket.computeMillis(false, text));
+        
+        chrono = bucket.getChronology();
+        
+        instant.setChronology(chrono);
+        if (iZone != null) {
+            instant.setZone(iZone);
+        }
+        return newPos;
+    }
+
+# What is the difference between concolic and symbolic execution?
+As in symbolic execution, concolic execution also computes symbolic formula. However, the concolic execution algorithms, contrary to the symbolic execution algorithms, are designed to keep symbolic formulae as simple as possible. For example, the concolic execution algorithm performs the branching of code at the granularity of basic blocks instead of individual instructions. In this way, the concolic execution algorithm ensures that for each newly created path, the symbolic formula is as simple as possible. 
+
+# What is a concrete value and a symbolic value?
+A concrete value is a value that is known at compile-time (and at runtime); 
+
+in contrast, a symbolic value is a value that is unknown at compile-time (and at runtime) but can be deduced at runtime. 
+

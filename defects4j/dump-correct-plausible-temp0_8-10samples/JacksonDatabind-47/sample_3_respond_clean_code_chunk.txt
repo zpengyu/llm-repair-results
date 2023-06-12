@@ -1,0 +1,53 @@
+        // 10-Oct-2015, tatu: For 2.7, we'll need to delegate back to
+        //    now-deprecated secondary methods; this because while
+        //    direct sub-class not yet retrofitted may only override
+        //    those methods. With 2.8 or later we may consider removal
+        //    of these methods
+        // Ok: start by refining the main type itself; common to all types
+        Class<?> serClass = findSerializationType(a);
+        if (serClass != null) {
+            type = _updateType(type, serClass, tf, config);
+        }
+        // Then further processing for container types
+        // First, key type (for Maps, Map-like types):
+        if (type.isMapLikeType()) {
+            JavaType keyType = type.getKeyType();
+            Class<?> keyClass = findSerializationKeyType(a, keyType);
+            if (keyClass != null) {
+                keyType = _updateType(keyType, keyClass, tf, config);
+                type = ((MapLikeType) type).withKeyType(keyType);
+            }
+        }
+        // And then value types for all containers:
+        JavaType contentType = type.getContentType();
+        if (contentType != null) {
+            Class<?> contentClass = findSerializationContentType(a, contentType);
+            if (contentClass != null) {
+                contentType = _updateType(contentType, contentClass, tf, config);
+                type = type.withContentType(contentType);
+            }
+        }
+        return type;
+    }
+    private JavaType _updateType(JavaType type, Class<?> cls,
+            final TypeFactory tf, final MapperConfig<?> config)
+        throws JsonMappingException
+    {
+        if (type.hasRawClass(cls)) {
+            // 30-Nov-2015, tatu: As per [databind#1023], need to allow forcing of
+            //    static typing this way
+            type = type.withStaticTyping();
+        } else {
+            try {
+                // 11-Oct-2015, tatu: For deser, we call `TypeFactory.constructSpecializedType()`,
+                //   may be needed here too in future?
+                type = tf.constructGeneralizedType(type, cls);
+            } catch (IllegalArgumentException iae) {
+                throw new JsonMappingException(null,
+                        String.format("Failed to widen type %s with concrete-type annotation (value %s), from '%s': %s",
+                                type, cls.getName(), a.getName(), iae.getMessage()),
+                                iae);
+            }
+        }
+        return type;
+    }

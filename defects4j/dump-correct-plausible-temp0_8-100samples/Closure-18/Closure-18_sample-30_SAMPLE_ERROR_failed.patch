@@ -1,0 +1,18 @@
+diff --git a/src/com/google/javascript/jscomp/Compiler.java b/src/com/google/javascript/jscomp/Compiler.java
+index e0dc0d38..179a5ad6 100644
+--- a/src/com/google/javascript/jscomp/Compiler.java
++++ b/src/com/google/javascript/jscomp/Compiler.java
+@@ -1355,6 +1334,13 @@ public class Compiler extends AbstractCompiler {
+       if (hasErrors()) {
+         return null;
+       }
++      if (options.propertyRenaming == PropertyRenamingPolicy.AGGRESSIVE_REPLACE_GLOBALS
++          && options.getLanguageIn() == LanguageMode.ECMASCRIPT5) {
++        // In aggressive global rename mode, we need to rename properties on
++        // the global object, i.e. the properties on the window object in
++        // browsers.
++        new GlobalNamespace(this, externsRoot, jsRoot).addReferenceDecls();
++      }
+       return externAndJsRoot;
+     } finally {
+       stopTracer(tracer, "parseInputs");

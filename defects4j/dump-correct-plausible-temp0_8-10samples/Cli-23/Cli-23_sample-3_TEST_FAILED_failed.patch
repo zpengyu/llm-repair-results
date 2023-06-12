@@ -1,0 +1,44 @@
+diff --git a/src/java/org/apache/commons/cli/HelpFormatter.java b/src/java/org/apache/commons/cli/HelpFormatter.java
+index 7f61ceb..c3fd538 100644
+--- a/src/java/org/apache/commons/cli/HelpFormatter.java
++++ b/src/java/org/apache/commons/cli/HelpFormatter.java
+@@ -818,13 +815,24 @@ public class HelpFormatter
+         // all following lines must be padded with nextLineTabStop space 
+         // characters
+         final String padding = createPadding(nextLineTabStop);
+-
++        int lastPos = pos;
++        text = padding + text.substring(pos).trim();
++        pos = findWrapPos(text, width, 0);
++        if (pos == -1)
++        {
++            sb.append(text);
++            return sb;
++        } else
++        if (pos == lastPos)
++        {
++            throw new RuntimeException("Text too long for line - throwing exception to avoid infinite loop [CLI-162]: " + text);
++        }
+         while (true)
+         {
+-            int lastPos = pos;
++            sb.append(rtrim(text.substring(0, pos))).append(defaultNewLine);
++            lastPos = pos;
+             text = padding + text.substring(pos).trim();
+             pos = findWrapPos(text, width, 0);
+-
+             if (pos == -1)
+             {
+                 sb.append(text);
+@@ -835,11 +842,8 @@ public class HelpFormatter
+             {
+                 throw new RuntimeException("Text too long for line - throwing exception to avoid infinite loop [CLI-162]: " + text);
+             }
+-
+-            sb.append(rtrim(text.substring(0, pos))).append(defaultNewLine);
+         }
+     }
+-
+     /**
+      * Finds the next text wrap position after <code>startPos</code> for the
+      * text in <code>text</code> with the column width <code>width</code>.

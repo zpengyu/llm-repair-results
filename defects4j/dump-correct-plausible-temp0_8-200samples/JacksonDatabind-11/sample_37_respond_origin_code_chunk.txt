@@ -1,0 +1,23 @@
+    protected JavaType _fromVariable(TypeVariable<?> type, TypeBindings context)
+    {
+        final String name = type.getName();
+        // 19-Mar-2015: Without context, all we can check are bounds.
+        if (context == null) {
+            // And to prevent infinite loops, now need this:
+            return _unknownType();
+        } else {
+            // Ok: here's where context might come in handy!
+            JavaType actualType = context.findType(name);
+            if (actualType != null) {
+                return actualType;
+            }
+        }
+        // No contextual information? Need to parse the bounds then
+        // (which is the only information we have)
+        if (context.isEmpty()) {
+            context = TypeBindings.emptyBindings();
+        }
+        // And to prevent infinite loops, now need this:
+        return _resolveVariableViaBounds(type, context);
+    }
+

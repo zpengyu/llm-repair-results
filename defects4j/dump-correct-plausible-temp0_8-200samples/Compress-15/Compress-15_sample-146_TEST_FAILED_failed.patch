@@ -1,0 +1,76 @@
+diff --git a/src/main/java/org/apache/commons/compress/archivers/zip/ZipArchiveEntry.java b/src/main/java/org/apache/commons/compress/archivers/zip/ZipArchiveEntry.java
+index 6e20d4e4..1bfc4f17 100644
+--- a/src/main/java/org/apache/commons/compress/archivers/zip/ZipArchiveEntry.java
++++ b/src/main/java/org/apache/commons/compress/archivers/zip/ZipArchiveEntry.java
+@@ -654,36 +654,44 @@ public class ZipArchiveEntry extends java.util.zip.ZipEntry
+             return false;
+         }
+         ZipArchiveEntry other = (ZipArchiveEntry) obj;
+-        String myName = getName();
+-        String otherName = other.getName();
+-        if (myName == null) {
+-            if (otherName != null) {
+-                return false;
+-            }
+-        } else if (!myName.equals(otherName)) {
+-            return false;
+-        }
+-        String myComment = getComment();
+-        String otherComment = other.getComment();
+-        if (myComment == null) {
+-            if (otherComment != null) {
+-                return false;
+-            }
+-        } else if (!myComment.equals(otherComment)) {
+-            return false;
+-        }
+-        return getTime() == other.getTime()
++        if (getTime() == other.getTime()
+             && getInternalAttributes() == other.getInternalAttributes()
+             && getPlatform() == other.getPlatform()
+             && getExternalAttributes() == other.getExternalAttributes()
+             && getMethod() == other.getMethod()
+             && getSize() == other.getSize()
+             && getCrc() == other.getCrc()
+-            && getCompressedSize() == other.getCompressedSize()
+-            && Arrays.equals(getCentralDirectoryExtra(),
+-                             other.getCentralDirectoryExtra())
+-            && Arrays.equals(getLocalFileDataExtra(),
+-                             other.getLocalFileDataExtra())
+-            && gpb.equals(other.gpb);
+-    }
+-}
++            && getCompressedSize() == other.getCompressedSize()) {
++            String myName = getName();
++            String otherName = other.getName();
++            if (myName == null) {
++                if (otherName != null) {
++                    return false;
++                }
++            } else if (!myName.equals(otherName)) {
++                return false;
++            }
++            String myComment = getComment();
++            String otherComment = other.getComment();
++            if (myComment == null) {
++                if (otherComment != null) {
++                    return false;
++                }
++            } else if (!myComment.equals(otherComment)) {
++                return false;
++            }
++            if (!Arrays.equals(getCentralDirectoryExtra(),
++                               other.getCentralDirectoryExtra())) {
++                return false;
++            }
++            if (!Arrays.equals(getLocalFileDataExtra(),
++                               other.getLocalFileDataExtra())) {
++                return false;
++            }
++            if (!gpb.equals(other.gpb)) {
++                return false;
++            }
++            return true;
++        }
++        return false;
++    }}

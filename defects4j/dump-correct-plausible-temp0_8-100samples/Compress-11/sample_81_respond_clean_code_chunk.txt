@@ -1,0 +1,27 @@
+if (in == null) {
+            throw new IllegalArgumentException("Stream must not be null.");
+        }
+        if (!in.markSupported()) {
+            throw new IllegalArgumentException("Mark is not supported.");
+        }
+        final byte[] signature = new byte[12];
+        in.mark(signature.length);
+        try {
+            int signatureLength = in.read(signature);
+            in.reset();
+            if (ZipArchiveInputStream.matches(signature, signatureLength)) {
+                return new ZipArchiveInputStream(in);
+            } else if (JarArchiveInputStream.matches(signature, signatureLength)) {
+                return new JarArchiveInputStream(in);
+            } else if (ArArchiveInputStream.matches(signature, signatureLength)) {
+                return new ArArchiveInputStream(in);
+            } else if (CpioArchiveInputStream.matches(signature, signatureLength)) {
+                return new CpioArchiveInputStream(in);
+            }
+        } catch (IOException e) {
+            throw new ArchiveException("Could not use reset and mark operations.", e);
+        }
+        throw new ArchiveException("No Archiver found for the stream signature");
+    }
+```
+```

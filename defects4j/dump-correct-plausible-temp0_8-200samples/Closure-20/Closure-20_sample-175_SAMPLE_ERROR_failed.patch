@@ -1,0 +1,27 @@
+diff --git a/src/com/google/javascript/jscomp/PeepholeSubstituteAlternateSyntax.java b/src/com/google/javascript/jscomp/PeepholeSubstituteAlternateSyntax.java
+index dee765a1..095ec20c 100644
+--- a/src/com/google/javascript/jscomp/PeepholeSubstituteAlternateSyntax.java
++++ b/src/com/google/javascript/jscomp/PeepholeSubstituteAlternateSyntax.java
+@@ -225,6 +225,22 @@ class PeepholeSubstituteAlternateSyntax
+         reportCodeChange();
+         return addition;
+       }
++    } else if (callTarget != null && callTarget.isName() &&
++        callTarget.getString().equals("Number")) {
++      // Fold Number(a) to +(a) on immutable literals,
++      // which allows further optimizations
++      //
++      // We can't do this in the general case, because Number(a) has
++      // slightly different semantics than +(a). See
++      // http://code.google.com/p/closure-compiler/issues/detail?id=759
++      Node value = callTarget.getNext();
++      if (value != null) {
++        Node addition = IR.add(
++            IR.add(value.detachFromParent()));
++        n.getParent().replaceChild(n, addition);
++        reportCodeChange();
++        return addition;
++      }
+     }
+     return n;
+   }

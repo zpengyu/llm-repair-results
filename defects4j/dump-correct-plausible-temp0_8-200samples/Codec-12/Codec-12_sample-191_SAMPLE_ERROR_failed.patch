@@ -1,0 +1,55 @@
+diff --git a/src/main/java/org/apache/commons/codec/binary/BaseNCodecInputStream.java b/src/main/java/org/apache/commons/codec/binary/BaseNCodecInputStream.java
+index 78f4d67e..2c57a777 100644
+--- a/src/main/java/org/apache/commons/codec/binary/BaseNCodecInputStream.java
++++ b/src/main/java/org/apache/commons/codec/binary/BaseNCodecInputStream.java
+@@ -139,20 +131,40 @@ public class BaseNCodecInputStream extends FilterInputStream {
+      *
+      * @throws IllegalArgumentException if the provided skip length is negative
+      */
+-
+-        // skip in chunks of 512 bytes
+-
+-
++    @Override
++    public long skip(long n) throws IOException {
++        if (n < 0) {
++            throw new IllegalArgumentException();
++        }
++        final long toSkip = n;
++        long remaining = n;
++        while (remaining > 0) {
++            final byte[] buf = new byte[(int) Math.min(512, remaining)];
++            final long numBytes = in.read(buf);
++            if (numBytes == EOF) {
++                break;
++            }
++            if (doEncode) {
++                baseNCodec.encode(buf, 0, (int) numBytes);
++            } else {
++                baseNCodec.decode(buf, 0, (int) numBytes);
++            }
++            remaining -= numBytes;
++        }
++        return toSkip - remaining;
++    }
+     /**
+      * {@inheritDoc}
+      *
+      * @return <code>0</code> if the {@link InputStream} has reached <code>EOF</code>,
+      * <code>1</code> otherwise
+      */
+-        // Note: the logic is similar to the InflaterInputStream:
+-        //       as long as we have not reached EOF, indicate that there is more
+-        //       data available. As we do not know for sure how much data is left,
+-        //       just return 1 as a safe guess.
+-
++    @Override
++    public int available() throws IOException {
++        if (baseNCodec.hasData()) {
++            return 1;
++        }
+         // use the EOF flag of the underlying codec instance
++        return baseNCodec.isEof() ? 0 : 1;
++    }
+ }
+\ No newline at end of file

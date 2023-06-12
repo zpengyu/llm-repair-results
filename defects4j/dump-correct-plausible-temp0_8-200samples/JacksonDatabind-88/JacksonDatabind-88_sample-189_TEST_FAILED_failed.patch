@@ -1,0 +1,37 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/jsontype/impl/ClassNameIdResolver.java b/src/main/java/com/fasterxml/jackson/databind/jsontype/impl/ClassNameIdResolver.java
+index 112c00b5c..22c1ef1d2 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/jsontype/impl/ClassNameIdResolver.java
++++ b/src/main/java/com/fasterxml/jackson/databind/jsontype/impl/ClassNameIdResolver.java
+@@ -49,15 +49,6 @@ public class ClassNameIdResolver
+          *    to do translation when necessary
+          */
+         TypeFactory tf = ctxt.getTypeFactory();
+-        if (id.indexOf('<') > 0) {
+-            // note: may want to try combining with specialization (esp for EnumMap)?
+-            // 17-Aug-2017, tatu: As per [databind#1735] need to ensure assignment
+-            //    compatibility -- needed later anyway, and not doing so may open
+-            //    security issues.
+-            JavaType t = tf.constructFromCanonical(id);
+-                // Probably cleaner to have a method in `TypeFactory` but can't add in patch
+-            return t;
+-        }
+         Class<?> cls;
+         try {
+             cls =  tf.findClass(id);
+@@ -74,9 +65,14 @@ public class ClassNameIdResolver
+         } catch (Exception e) {
+             throw new IllegalArgumentException("Invalid type id '"+id+"' (for id type 'Id.class'): "+e.getMessage(), e);
+         }
+-        return tf.constructSpecializedType(_baseType, cls);
++        // note: may want to try combining with specialization (esp for EnumMap)?
++        // 17-Aug-2017, tatu: As per [databind#1735] need to ensure assignment
++        //    compatibility -- needed later anyway, and not doing so may open
++        //    security issues.
++        JavaType t = tf.constructFromCanonical(id);
++            // Probably cleaner to have a method in `TypeFactory` but can't add in patch
++        return t;
+     }    
+-    
+     /*
+     /**********************************************************
+     /* Internal methods

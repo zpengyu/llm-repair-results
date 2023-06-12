@@ -1,0 +1,26 @@
+diff --git a/src/com/google/javascript/jscomp/PeepholeSubstituteAlternateSyntax.java b/src/com/google/javascript/jscomp/PeepholeSubstituteAlternateSyntax.java
+index dee765a1..9b6e6ad6 100644
+--- a/src/com/google/javascript/jscomp/PeepholeSubstituteAlternateSyntax.java
++++ b/src/com/google/javascript/jscomp/PeepholeSubstituteAlternateSyntax.java
+@@ -218,12 +218,15 @@ class PeepholeSubstituteAlternateSyntax
+       // http://code.google.com/p/closure-compiler/issues/detail?id=759
+       Node value = callTarget.getNext();
+       if (value != null) {
+-        Node addition = IR.add(
+-            IR.string("").srcref(callTarget),
+-            value.detachFromParent());
+-        n.getParent().replaceChild(n, addition);
+-        reportCodeChange();
+-        return addition;
++        if (value.isString() || value.isNumber() || value.isBoolean() ||
++            value.isNull()) {
++          Node addition = IR.add(
++              IR.string("").srcref(callTarget),
++              value.detachFromParent());
++          n.getParent().replaceChild(n, addition);
++          reportCodeChange();
++          return addition;
++        }
+       }
+     }
+     return n;

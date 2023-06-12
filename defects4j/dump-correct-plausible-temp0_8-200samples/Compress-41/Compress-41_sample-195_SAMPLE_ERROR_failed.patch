@@ -1,0 +1,36 @@
+diff --git a/src/main/java/org/apache/commons/compress/archivers/zip/ZipArchiveInputStream.java b/src/main/java/org/apache/commons/compress/archivers/zip/ZipArchiveInputStream.java
+index 5d4c0a82..f908fc06 100644
+--- a/src/main/java/org/apache/commons/compress/archivers/zip/ZipArchiveInputStream.java
++++ b/src/main/java/org/apache/commons/compress/archivers/zip/ZipArchiveInputStream.java
+@@ -284,14 +273,10 @@ public ZipArchiveEntry getNextZipEntry() throws IOException {
+         } else {
+             off += 3 * WORD;
+         }
+-
+-        final int fileNameLen = ZipShort.getValue(LFH_BUF, off);
+-
++        int fileNameLen = ZipShort.getValue(LFH_BUF, off);
+         off += SHORT;
+-
+-        final int extraLen = ZipShort.getValue(LFH_BUF, off);
++        int extraLen = ZipShort.getValue(LFH_BUF, off);
+         off += SHORT;
+-
+         final byte[] fileName = new byte[fileNameLen];
+         readFully(fileName);
+         current.entry.setName(entryEncoding.decode(fileName), fileName);
+@@ -318,7 +299,13 @@ public ZipArchiveEntry getNextZipEntry() throws IOException {
+                 current.in = new BZip2CompressorInputStream(new BoundedInputStream(in, current.entry.getCompressedSize()));
+             }
+         }
+-        
++        if (current.entry.getMethod() != ZipMethod.STORED.getCode()) {
++            final Crc32VerifyingInputStream verifyingStream = new Crc32VerifyingInputStream(new BoundedInputStream(in, current.entry.getCompressedSize()));
++            current.in = new CountingInputStream(verifyingStream);
++            current.verifyingInputStream = verifyingStream;
++        } else {
++            current.in = new BoundedInputStream(in, current.entry.getCompressedSize());
++        }
+         entriesRead++;
+         return current.entry;
+     }

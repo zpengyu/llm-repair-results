@@ -1,0 +1,18 @@
+    static Document parseInputStream(InputStream input, String charsetName, String baseUri, Parser parser) throws IOException {
+        Validate.notNull(input, "Must provide an input stream");
+        // work around for bug in Eclipse console reader. System.in requires Ctrl-C to exit,
+        // which sends it a -1. To work around, we just wrap it to a PushbackInputStream, and
+        // push the read char (-1) back on
+        if (input.markSupported()) input.mark(1);
+        int firstChar = input.read();
+        if (firstChar == -1)
+            return new Document(baseUri);
+        if (input.markSupported()) input.reset();
+        else input = new PushbackInputStream(input, 1);
+        if (firstChar == '<') { // looks like HTML
+            return parseXmlInputStream(input, charsetName, baseUri, parser);
+        } else { // assume plain text
+            return parseTextInputStream(input, charsetName, baseUri, parser);
+        }
+    }
+

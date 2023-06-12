@@ -1,0 +1,26 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/deser/impl/ExternalTypeHandler.java b/src/main/java/com/fasterxml/jackson/databind/deser/impl/ExternalTypeHandler.java
+index b0797059f..0c340db10 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/deser/impl/ExternalTypeHandler.java
++++ b/src/main/java/com/fasterxml/jackson/databind/deser/impl/ExternalTypeHandler.java
+@@ -282,8 +282,19 @@ public class ExternalTypeHandler
+                         "Missing property '%s' for external type id '%s'",
+                         prop.getName(), _properties[i].getTypePropertyName());
+             }
+-            values[i] = _deserialize(p, ctxt, i, typeId);
+-
++            Object deser = _deserialize(p, ctxt, i, typeId);
++            // [databind#1328]: Don't care if problem, just want to get `null`
++            if (extProp.getTypePropertyName() != null) {
++                values[i] = deser;
++            } else {
++                SettableBeanProperty prop = extProp.getProperty();
++                // also: if it's creator prop, fill in
++                if (prop.getCreatorIndex() >= 0) {
++                    buffer.assignParameter(prop, deser);
++                } else {
++                    prop.set(bean, deser);
++                }
++            }
+             final SettableBeanProperty prop = extProp.getProperty();
+             // also: if it's creator prop, fill in
+             if (prop.getCreatorIndex() >= 0) {

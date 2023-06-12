@@ -1,0 +1,23 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/deser/BuilderBasedDeserializer.java b/src/main/java/com/fasterxml/jackson/databind/deser/BuilderBasedDeserializer.java
+index 316efa3a9..4e6eeca89 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/deser/BuilderBasedDeserializer.java
++++ b/src/main/java/com/fasterxml/jackson/databind/deser/BuilderBasedDeserializer.java
+@@ -587,8 +585,9 @@ public class BuilderBasedDeserializer
+                         bean = creator.build(ctxt, buffer);
+                     } catch (Exception e) {
+                         wrapAndThrow(e, _beanType.getRawClass(), propName, ctxt);
+-                        continue;
++                        continue; // never gets here
+                     }
++                    // if so, need to copy all remaining tokens into buffer
+                     while (t == JsonToken.FIELD_NAME) {
+                         p.nextToken();
+                         tokens.copyCurrentStructure(p);
+@@ -601,6 +600,7 @@ public class BuilderBasedDeserializer
+                     }
+                     return _unwrappedPropertyHandler.processUnwrapped(p, ctxt, bean, tokens);
+                 }
++                // if not, may still need to read the property value
+                 continue;
+             }
+             // Object Id property?

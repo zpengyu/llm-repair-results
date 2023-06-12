@@ -1,0 +1,40 @@
+diff --git a/src/main/java/org/apache/commons/compress/archivers/tar/TarArchiveInputStream.java b/src/main/java/org/apache/commons/compress/archivers/tar/TarArchiveInputStream.java
+index 0c76c60a..757625c7 100644
+--- a/src/main/java/org/apache/commons/compress/archivers/tar/TarArchiveInputStream.java
++++ b/src/main/java/org/apache/commons/compress/archivers/tar/TarArchiveInputStream.java
+@@ -567,8 +567,7 @@ public class TarArchiveInputStream extends ArchiveInputStream {
+      */
+     @Override
+     public int read(byte[] buf, int offset, int numToRead) throws IOException {
+-    	int totalRead = 0;
+-
++        int totalRead = 0;
+         if (hasHitEOF || entryOffset >= entrySize) {
+             return -1;
+         }
+@@ -576,21 +574,18 @@ public class TarArchiveInputStream extends ArchiveInputStream {
+         if (currEntry == null) {
+             throw new IllegalStateException("No current tar entry");
+         }
+-
+         numToRead = Math.min(numToRead, available());
+-
++        if (entryOffset != 0) {
++            is.skip(entryOffset);
++            entryOffset = 0;
++        }
+         totalRead = is.read(buf, offset, numToRead);
+         count(totalRead);
+-
+         if (totalRead == -1) {
+             hasHitEOF = true;
+-        } else {
+-            entryOffset += totalRead;
+         }
+-
+         return totalRead;
+     }
+-
+     /**
+      * Whether this class is able to read the given entry.
+      *

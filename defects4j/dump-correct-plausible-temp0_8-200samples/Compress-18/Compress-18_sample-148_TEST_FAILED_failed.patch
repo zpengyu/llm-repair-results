@@ -1,0 +1,21 @@
+diff --git a/src/main/java/org/apache/commons/compress/archivers/tar/TarArchiveOutputStream.java b/src/main/java/org/apache/commons/compress/archivers/tar/TarArchiveOutputStream.java
+index da6bbfde..b9add74c 100644
+--- a/src/main/java/org/apache/commons/compress/archivers/tar/TarArchiveOutputStream.java
++++ b/src/main/java/org/apache/commons/compress/archivers/tar/TarArchiveOutputStream.java
+@@ -488,8 +487,15 @@ public class TarArchiveOutputStream extends ArchiveOutputStream {
+         putArchiveEntry(pex);
+         write(data);
+         closeArchiveEntry();
++        name = "./PaxHeaders/" + stripTo7Bits(entryName);
++        if (name.length() >= TarConstants.NAMELEN) {
++            name = name.substring(0, TarConstants.NAMELEN - 1);
++        }
++        pex = new TarArchiveEntry(name);
++        pex.setSize(0);
++        putArchiveEntry(pex);
++        closeArchiveEntry();
+     }
+-
+     private String stripTo7Bits(String name) {
+         final int length = name.length();
+         StringBuffer result = new StringBuffer(length);

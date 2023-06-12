@@ -1,0 +1,48 @@
+diff --git a/src/com/google/javascript/jscomp/TypedScopeCreator.java b/src/com/google/javascript/jscomp/TypedScopeCreator.java
+index 5e7bfa3f..75d05c57 100644
+--- a/src/com/google/javascript/jscomp/TypedScopeCreator.java
++++ b/src/com/google/javascript/jscomp/TypedScopeCreator.java
+@@ -2017,8 +2014,23 @@ final class TypedScopeCreator implements ScopeCreator {
+           if (ownerScope.isLocal()) {
+             data.get(ownerScope.getRootNode()).recordAssignedName(name);
+           }
+-
+-          if (scope != ownerScope && ownerScope.isLocal()) {
++          if (scope != ownerScope && ownerScope.isLocal()
++              // In the following case, even though we have a nested scope,
++              // the JS compiler only gives us one scope:
++              //   try {
++              //     var x = 1;
++              //   } catch (e) {
++              //   }
++              //
++              // The names "x" and "e" both get put in the parent scope.
++              //
++              // There are other cases where this can happen,
++              // but this may be the only one we care about.
++              //
++              // TODO(nicksantos): If we cared more about this, we could
++              // examine the AST more closely to figure out when this
++              // occurs.
++              && !ownerScope.isCatch()) {
+             data.get(ownerScope.getRootNode()).recordEscapedVarName(name);
+           }
+         }
+@@ -2029,14 +2041,14 @@ final class TypedScopeCreator implements ScopeCreator {
+         Var var = scope.getVar(name);
+         if (var != null) {
+           Scope ownerScope = var.getScope();
+-          if (scope != ownerScope && ownerScope.isLocal()) {
++          if (scope != ownerScope && ownerScope.isLocal()
++              && !ownerScope.isCatch()) {
+             data.get(ownerScope.getRootNode())
+                 .recordEscapedQualifiedName(n.getQualifiedName());
+           }
+         }
+       }
+-    }
+-  }
++    }  }
+ 
+   private AstFunctionContents getFunctionAnalysisResults(@Nullable Node n) {
+     if (n == null) {

@@ -1,0 +1,74 @@
+diff --git a/src/main/java/org/apache/commons/math3/optimization/univariate/BrentOptimizer.java b/src/main/java/org/apache/commons/math3/optimization/univariate/BrentOptimizer.java
+index 6905f1ac9..72fc3ba5c 100644
+--- a/src/main/java/org/apache/commons/math3/optimization/univariate/BrentOptimizer.java
++++ b/src/main/java/org/apache/commons/math3/optimization/univariate/BrentOptimizer.java
+@@ -108,16 +108,18 @@ public class BrentOptimizer extends BaseAbstractUnivariateOptimizer {
+     @Override
+     protected UnivariatePointValuePair doOptimize() {
+         final boolean isMinim = getGoalType() == GoalType.MINIMIZE;
+-        final double lo = getMin();
+-        final double mid = getStartValue();
+-        final double hi = getMax();
+-
++        double lo = getMin();
++        double hi = getMax();
+         // Optional additional convergence criteria.
+         final ConvergenceChecker<UnivariatePointValuePair> checker
+             = getConvergenceChecker();
+-
+-        double a;
+-        double b;
++        if (isMinim) {
++            double tmp = lo;
++            lo = -hi;
++            hi = -tmp;
++        }
++        final double a;
++        final double b;
+         if (lo < hi) {
+             a = lo;
+             b = hi;
+@@ -125,23 +127,17 @@ public class BrentOptimizer extends BaseAbstractUnivariateOptimizer {
+             a = hi;
+             b = lo;
+         }
+-
+-        double x = mid;
+-        double v = x;
+-        double w = x;
++        // initialization
++        final double x = getStartValue();
++        final double v = getStartValue();
++        double w = v;
+         double d = 0;
+         double e = 0;
+-        double fx = computeObjectiveValue(x);
+-        if (!isMinim) {
+-            fx = -fx;
+-        }
++        double fx = isMinim ? computeObjectiveValue(x) : -computeObjectiveValue(x);
+         double fv = fx;
+         double fw = fx;
+-
+         UnivariatePointValuePair previous = null;
+-        UnivariatePointValuePair current
+-            = new UnivariatePointValuePair(x, isMinim ? fx : -fx);
+-
++        UnivariatePointValuePair current = new UnivariatePointValuePair(x, isMinim ? fx : -fx);
+         int iter = 0;
+         while (true) {
+             final double m = 0.5 * (a + b);
+@@ -215,12 +204,7 @@ public class BrentOptimizer extends BaseAbstractUnivariateOptimizer {
+                 } else {
+                     u = x + d;
+                 }
+-
+-                double fu = computeObjectiveValue(u);
+-                if (!isMinim) {
+-                    fu = -fu;
+-                }
+-
++                final double fu = isMinim ? computeObjectiveValue(u) : -computeObjectiveValue(u);
+                 // User-defined convergence checker.
+                 previous = current;
+                 current = new UnivariatePointValuePair(u, isMinim ? fu : -fu);

@@ -1,0 +1,68 @@
+    public void reparseCentralDirectoryData(boolean hasUncompressedSize,
+                                            boolean hasCompressedSize,
+                                            boolean hasRelativeHeaderOffset,
+                                            boolean hasDiskStart)
+        throws ZipException {
+        if (rawCentralDirectoryData != null) {
+            int expectedLength = (hasUncompressedSize ? DWORD : 0)
+                + (hasCompressedSize ? DWORD : 0)
+                + (hasRelativeHeaderOffset ? DWORD : 0)
+                + (hasDiskStart ? WORD : 0);
+            if (rawCentralDirectoryData.length != expectedLength) {
+                throw new ZipException("central directory zip64 extended"
+                                       + " information extra field's length"
+                                       + " doesn't match central directory"
+                                       + " data.  Expected length "
+                                       + expectedLength + " but is "
+                                       + rawCentralDirectoryData.length);
+            }
+            int offset = 0;
+            if (hasUncompressedSize) {
+                long originalUncompressedSize = size.getValue();
+                size = new ZipEightByteInteger(rawCentralDirectoryData, offset);
+                long newUncompressedSize = size.getValue();
+                if (newUncompressedSize > 0xFFFFFFFFL && originalUncompressedSize == 0xFFFFFFFFL) {
+                    // if the uncompressed size is less than 0xFFFFFFFF, we can't truncate
+                    // the size and get the real size later.
+                    throw new ZipException("central directory zip64 extended information"
+                                           + " extra field uncompressed size value is "
+                                           + newUncompressedSize
+                                           + " but would be truncated to "
+                                           + originalUncompressedSize);
+                }
+                offset += DWORD;
+            }
+            if (hasCompressedSize) {
+                long originalCompressedSize = compressedSize.getValue();
+                compressedSize = new ZipEightByteInteger(rawCentralDirectoryData,
+                                                         offset);
+                long newCompressedSize = compressedSize.getValue();
+                if (newCompressedSize > 0xFFFFFFFFL && originalCompressedSize == 0xFFFFFFFFL) {
+                    throw new ZipException("central directory zip64 extended information"
+                                           + " extra field compressed size value is "
+                                           + newCompressedSize
+                                           + " but would be truncated to "
+                                           + originalCompressedSize);
+                }
+                offset += DWORD;
+            }
+            if (hasRelativeHeaderOffset) {
+                long originalRelativeHeaderOffset = relativeHeaderOffset.getValue();
+                relativeHeaderOffset =
+                    new ZipEightByteInteger(rawCentralDirectoryData, offset);
+                long newRelativeHeaderOffset = relativeHeaderOffset.getValue();
+                if (newRelativeHeaderOffset > 0xFFFFFFFFL && originalRelativeHeaderOffset == 0xFFFFFFFFL) {
+                    throw new ZipException("central directory zip64 extended information"
+                                           + " extra field relative header offset value is "
+                                           + newRelativeHeaderOffset
+                                           + " but would be truncated to "
+                                           + originalRelativeHeaderOffset);
+                }
+                offset += DWORD;
+            }
+            if (hasDiskStart) {
+                diskStart = new ZipLong(rawCentralDirectoryData, offset);
+                offset += WORD;
+            }
+        }
+    }

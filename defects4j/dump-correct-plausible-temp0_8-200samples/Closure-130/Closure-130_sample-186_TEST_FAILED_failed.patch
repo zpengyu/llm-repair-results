@@ -1,0 +1,26 @@
+diff --git a/src/com/google/javascript/jscomp/CollapseProperties.java b/src/com/google/javascript/jscomp/CollapseProperties.java
+index c24c69b2..c4ac6316 100644
+--- a/src/com/google/javascript/jscomp/CollapseProperties.java
++++ b/src/com/google/javascript/jscomp/CollapseProperties.java
+@@ -158,19 +158,12 @@ class CollapseProperties implements CompilerPass {
+    *    inlineable.
+    * @see InlineVariables
+    */
+-  private void inlineAliases(GlobalNamespace namespace) {
++private void inlineAliases(GlobalNamespace namespace) {
+     // Invariant: All the names in the worklist meet condition (a).
+     Deque<Name> workList = new ArrayDeque<Name>(namespace.getNameForest());
+     while (!workList.isEmpty()) {
+       Name name = workList.pop();
+-
+-      // Don't attempt to inline a getter or setter property as a variable.
+-      if (name.type == Name.Type.GET || name.type == Name.Type.SET) {
+-        continue;
+-      }
+-
+-      if (name.globalSets == 1 && name.localSets == 0 &&
+-          name.aliasingGets > 0) {
++      if (name.globalSets == 1 && name.localSets == 0 && name.aliasingGets > 0) {
+         // {@code name} meets condition (b). Find all of its local aliases
+         // and try to inline them.
+         List<Ref> refs = Lists.newArrayList(name.getRefs());

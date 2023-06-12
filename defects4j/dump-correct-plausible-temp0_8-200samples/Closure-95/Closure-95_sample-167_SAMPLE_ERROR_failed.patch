@@ -1,0 +1,24 @@
+diff --git a/src/com/google/javascript/jscomp/TypedScopeCreator.java b/src/com/google/javascript/jscomp/TypedScopeCreator.java
+index a5b356fb..4defbfd0 100644
+--- a/src/com/google/javascript/jscomp/TypedScopeCreator.java
++++ b/src/com/google/javascript/jscomp/TypedScopeCreator.java
+@@ -910,8 +906,17 @@ final class TypedScopeCreator implements ScopeCreator {
+           setDeferredType(n, type);
+         }
+         CompilerInput input = compiler.getInput(sourceName);
+-        scopeToDeclareIn.declare(variableName, n, type, input, inferred);
+-
++        if (n.getType() == Token.GETPROP) {
++          // var type.a -> type can be null
++          if (type == null && parent.isExprResult()) {
++            type = typeRegistry.createNullableType(typeRegistry.getNativeType(
++                JSTypeNative.UNKNOWN_TYPE));
++          }
++          scopeToDeclareIn.declare(variableName, n, type, input,
++              inferred);
++        } else {
++          scopeToDeclareIn.declare(variableName, n, type, input, inferred);
++        }
+         if (shouldDeclareOnGlobalThis) {
+           ObjectType globalThis =
+               typeRegistry.getNativeObjectType(JSTypeNative.GLOBAL_THIS);

@@ -1,0 +1,35 @@
+diff --git a/src/org/mockito/internal/stubbing/answers/AnswersValidator.java b/src/org/mockito/internal/stubbing/answers/AnswersValidator.java
+index 5d8057846..1bb239d2c 100644
+--- a/src/org/mockito/internal/stubbing/answers/AnswersValidator.java
++++ b/src/org/mockito/internal/stubbing/answers/AnswersValidator.java
+@@ -24,11 +20,26 @@ public class AnswersValidator {
+         if (answer instanceof DoesNothing) {
+             validateDoNothing((DoesNothing) answer, invocation);
+         }
+-        
++        if (answer instanceof ReturnsArgumentAt) {
++            validateReturnsArgument((ReturnsArgumentAt) answer, invocation);
++        }
++        if (answer instanceof CallsRealMethods) {
++            validateCallsRealMethods((CallsRealMethods) answer, invocation);
++        }
+     }
+-
+-
+-    private void validateDoNothing(DoesNothing answer, Invocation invocation) {
++    private void validateCallsRealMethods(CallsRealMethods answer, Invocation invocation) {
++		if (invocation.isVoid()) {
++			reporter.cannotCallRealMethodOnVoidMethod();
++		}
++	}
++	private void validateReturnsArgument(ReturnsArgumentAt answer, Invocation invocation) {
++		int wantedArgument = answer.getWantedArgumentPosition();
++		Object[] arguments = invocation.getArguments();
++		if (arguments.length <= wantedArgument) {
++			reporter.wantedArgumentIsOutOfBounds(wantedArgument, arguments.length);
++		}
++	}
++	private void validateDoNothing(DoesNothing answer, Invocation invocation) {
+         if (!invocation.isVoid()) {
+             reporter.onlyVoidMethodsCanBeSetToDoNothing();
+         }

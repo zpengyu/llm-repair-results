@@ -1,0 +1,45 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/jsontype/impl/AsPropertyTypeDeserializer.java b/src/main/java/com/fasterxml/jackson/databind/jsontype/impl/AsPropertyTypeDeserializer.java
+index 8bad30e7c..2d3e7e703 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/jsontype/impl/AsPropertyTypeDeserializer.java
++++ b/src/main/java/com/fasterxml/jackson/databind/jsontype/impl/AsPropertyTypeDeserializer.java
+@@ -145,6 +145,10 @@ public class AsPropertyTypeDeserializer extends AsArrayTypeDeserializer
+             }
+             return deser.deserialize(p, ctxt);
+         }
++        if (ctxt.isEnabled(DeserializationFeature.FAIL_ON_INVALID_SUBTYPE)) {
++            ctxt.reportBadTypeDefinition(baseType,
++                    "No (native) type id found when one was expected for polymorphic type handling");
++        }
+         // or, perhaps we just bumped into a "natural" value (boolean/int/double/String)?
+         Object result = TypeDeserializer.deserializeIfNatural(p, ctxt, _baseType);
+         if (result != null) {
+@@ -154,11 +158,26 @@ public class AsPropertyTypeDeserializer extends AsArrayTypeDeserializer
+         if (p.getCurrentToken() == JsonToken.START_ARRAY) {
+             return super.deserializeTypedFromAny(p, ctxt);
+         }
+-        ctxt.reportWrongTokenException(p, JsonToken.FIELD_NAME,
+-                "missing property '"+_typePropertyName+"' that is to contain type id  (for class "+baseTypeName()+")");
++        if (ctxt.isEnabled(DeserializationFeature.FAIL_ON_INVALID_SUBTYPE)) {
++            ctxt.reportWrongTokenException(p, JsonToken.FIELD_NAME,
++                    "missing property '"+_typePropertyName+"' that is to contain type id  (for class "+baseTypeName()+")");
++        }
+         return null;
+     }
+-
++Here we will use the test dataset to see how the classifier performs on data it was not trained on.
++Apply the model (built in step 3) to the test set.
++The following are the steps to run the model on the test dataset.
++- Use the following function to load the test dataset
++- Apply the model to the test dataset.
++- Print the confusion matrix.
++- Print the classification report.
++- Print the AUC score.
++```python
++def load_dataset(filename):
++    df = pd.read_csv(filename)
++    X = df.drop(columns=['bug']).values
++    y = df.bug.values
++    return X, y
+     /* Also need to re-route "unknown" version. Need to think
+      * this through bit more in future, but for now this does address issue and has
+      * no negative side effects (at least within existing unit test suite).

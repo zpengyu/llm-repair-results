@@ -1,0 +1,17 @@
+    public PropertyName findNameForSerialization(Annotated a)
+    {
+        JsonGetter jg = _findAnnotation(a, JsonGetter.class);
+        if (jg != null) {
+            return PropertyName.construct(jg.value());
+        }
+        JsonProperty pann = _findAnnotation(a, JsonProperty.class);
+        if (pann != null) {
+            // [JACKSON-635]
+            return PropertyName.construct(pann.value());
+        }
+        // [JACKSON-212]: consider implicit name from @JsonSerialize
+        if (_hasAnnotation(a, JsonSerialize.class)) {
+            return PropertyName.USE_DEFAULT;
+        }
+        return null;
+    }

@@ -1,0 +1,24 @@
+    protected JavaType _fromVariable(TypeVariable<?> type, TypeBindings context)
+    {
+        final String name = type.getName();
+        if (context == null) {
+            return _unknownType();
+        }
+        JavaType actualType = context.findType(name);
+        if (actualType != null) {
+            return actualType;
+        }
+        Type[] bounds = type.getBounds();
+        if (bounds.length == 0) { // no bounds
+            if (_forClass != null && !_config.isEnabled(MapperFeature.ALLOW_FINAL_FIELDS_AS_MUTATORS)) {
+                Field field = _scanField(name);
+                if (field != null && Modifier.isFinal(field.getModifiers())) {
+                    return TypeFactory.unknownType();
+                }
+            }
+            context._addPlaceholder(name);
+            return _unknownType();
+        }
+        context._addPlaceholder(name);
+        return _constructType(bounds[0], context);
+    }

@@ -1,0 +1,22 @@
+    private boolean compute(Object left, Object right) {
+        Object leftType = getType(left);
+        Object rightType = getType(right);
+        if (leftType instanceof InitialContext) {
+            ((InitialContext) leftType).reset();
+        }
+        if (rightType instanceof InitialContext) {
+            ((InitialContext) rightType).reset();
+        }
+        if (leftType instanceof Iterator && rightType instanceof Iterator) {
+            return findMatch((Iterator) leftType, (Iterator) rightType);
+        }
+        if (leftType instanceof Iterator) {
+            return containsMatch((Iterator) leftType, rightType);
+        }
+        if (rightType instanceof Iterator) {
+            return containsMatch((Iterator) rightType, leftType);
+        }
+        double ld = InfoSetUtil.doubleValue(leftType);
+        double rd = InfoSetUtil.doubleValue(rightType);
+        return evaluateCompare(ld == rd ? 0 : ld < rd ? -1 : 1);
+    }

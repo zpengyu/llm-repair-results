@@ -1,0 +1,45 @@
+    public double evaluate(double x, double epsilon, int maxIterations) {
+        final double small = 1e-50;
+        double hPrev = getA(0, x);
+        // use the value of small as epsilon criteria for zero checks
+        if (Precision.equals(hPrev, 0.0, small)) {
+            hPrev = small;
+        }
+        int n = 1;
+        double dPrev = 0.0;
+        double cPrev = hPrev;
+        double hN = hPrev;
+        while (n < maxIterations) {
+            final double a = getA(n, x);
+            final double b = getB(n, x);
+            final double deltaN = a + b * dPrev;
+            if (Double.isInfinite(deltaN)) {
+                throw new ConvergenceException(LocalizedFormats.CONTINUED_FRACTION_INFINITY_DIVERGENCE,
+                                               x);
+            }
+            if (Double.isNaN(deltaN)) {
+                throw new ConvergenceException(LocalizedFormats.CONTINUED_FRACTION_NAN_DIVERGENCE,
+                                               x);
+            }
+            dPrev = 1.0 / deltaN;
+            hN = cPrev * dPrev;
+            if (Double.isInfinite(hN)) {
+                throw new ConvergenceException(LocalizedFormats.CONTINUED_FRACTION_INFINITY_DIVERGENCE,
+                                               x);
+            }
+            if (Double.isNaN(hN)) {
+                throw new ConvergenceException(LocalizedFormats.CONTINUED_FRACTION_NAN_DIVERGENCE,
+                                               x);
+            }
+            if (FastMath.abs(deltaN - 1.0) < epsilon) {
+                break;
+            }
+            cPrev = deltaN * cPrev;
+            n++;
+        }
+        if (n >= maxIterations) {
+            throw new MaxCountExceededException(LocalizedFormats.NON_CONVERGENT_CONTINUED_FRACTION,
+                                                maxIterations, x);
+        }
+        return hN;
+    }

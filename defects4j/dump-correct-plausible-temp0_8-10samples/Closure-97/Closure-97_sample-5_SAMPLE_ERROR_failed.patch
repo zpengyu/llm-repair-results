@@ -1,0 +1,30 @@
+diff --git a/src/com/google/javascript/jscomp/PeepholeFoldConstants.java b/src/com/google/javascript/jscomp/PeepholeFoldConstants.java
+index 0f2a6d44..71e0f08a 100644
+--- a/src/com/google/javascript/jscomp/PeepholeFoldConstants.java
++++ b/src/com/google/javascript/jscomp/PeepholeFoldConstants.java
+@@ -705,13 +698,22 @@ public class PeepholeFoldConstants extends AbstractPeepholeOptimization {
+       Node newNumber = Node.newNumber(result);
+       n.getParent().replaceChild(n, newNumber);
+       reportCodeChange();
+-
+       return newNumber;
+     }
+-
+     return n;
+   }
+-
++  private Node tryFoldShift(Node n, Node left, Node right) {
++    // only the lower 5 bits are used when shifting, so don't do anything
++    // if the shift amount is outside [0,32)
++    if (right.getType() == Token.NUMBER) {
++      double rval = right.getDouble();
++      if (!(rval >= 0 && rval < 32)) {
++        error(SHIFT_AMOUNT_OUT_OF_BOUNDS, right);
++        return n;
++      }
++    }
++    return n;
++  }
+   /**
+    * Try to fold comparison nodes, e.g ==
+    */

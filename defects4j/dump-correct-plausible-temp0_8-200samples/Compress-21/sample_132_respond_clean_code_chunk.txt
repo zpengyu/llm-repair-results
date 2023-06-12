@@ -1,0 +1,18 @@
+    private void writeBits(final DataOutput header, final BitSet bits, final int length) throws IOException {
+        int cache = 0;
+        int shift = 0;
+        int bitsLeft = length;
+        while (bitsLeft > 0) {
+            cache |= ((bits.get(length - bitsLeft) ? 1 : 0) << shift);
+            ++shift;
+            if (shift == 8) {
+                header.write(cache);
+                shift = 0;
+                cache = 0;
+            }
+            --bitsLeft;
+        }
+        if (shift > 0) {
+            header.write(cache);
+        }
+    }

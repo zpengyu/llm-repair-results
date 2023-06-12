@@ -1,0 +1,43 @@
+diff --git a/src/main/java/org/apache/commons/compress/archivers/zip/ZipArchiveInputStream.java b/src/main/java/org/apache/commons/compress/archivers/zip/ZipArchiveInputStream.java
+index 5d4c0a82..6513a873 100644
+--- a/src/main/java/org/apache/commons/compress/archivers/zip/ZipArchiveInputStream.java
++++ b/src/main/java/org/apache/commons/compress/archivers/zip/ZipArchiveInputStream.java
+@@ -284,22 +273,16 @@ public ZipArchiveEntry getNextZipEntry() throws IOException {
+         } else {
+             off += 3 * WORD;
+         }
+-
+-        final int fileNameLen = ZipShort.getValue(LFH_BUF, off);
+-
++        int fileNameLen = ZipShort.getValue(LFH_BUF, off);
+         off += SHORT;
+-
+-        final int extraLen = ZipShort.getValue(LFH_BUF, off);
++        int extraLen = ZipShort.getValue(LFH_BUF, off);
+         off += SHORT;
+-
+-        final byte[] fileName = new byte[fileNameLen];
++        byte[] fileName = new byte[fileNameLen];
+         readFully(fileName);
+         current.entry.setName(entryEncoding.decode(fileName), fileName);
+-
+-        final byte[] extraData = new byte[extraLen];
++        byte[] extraData = new byte[extraLen];
+         readFully(extraData);
+         current.entry.setExtra(extraData);
+-
+         if (!hasUTF8Flag && useUnicodeExtraFields) {
+             ZipUtil.setNameAndCommentFromExtraFields(current.entry, fileName, null);
+         }
+@@ -317,8 +298,10 @@ public ZipArchiveEntry getNextZipEntry() throws IOException {
+             } else if (current.entry.getMethod() == ZipMethod.BZIP2.getCode()) {
+                 current.in = new BZip2CompressorInputStream(new BoundedInputStream(in, current.entry.getCompressedSize()));
+             }
++            else if(current.entry.getMethod() == ZipMethod.STORED.getCode()) {
++                current.in = new BoundedInputStream(in, current.entry.getCompressedSize());
++            }
+         }
+-        
+         entriesRead++;
+         return current.entry;
+     }

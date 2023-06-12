@@ -1,0 +1,29 @@
+diff --git a/src/main/java/org/jsoup/nodes/FormElement.java b/src/main/java/org/jsoup/nodes/FormElement.java
+index baffcf1..d942473 100644
+--- a/src/main/java/org/jsoup/nodes/FormElement.java
++++ b/src/main/java/org/jsoup/nodes/FormElement.java
+@@ -105,4 +96,23 @@ public class FormElement extends Element {
+         }
+         return data;
+     }
++    /**
++     * Get the combined values of the selected options
++     * @return string concatenated selected option values
++     */
++    public String selectOptions() {
++        StringBuilder builder = new StringBuilder();
++        for (Element el: elements) {
++            if (!el.tag().isFormSubmittable()) continue; // contents are form listable, superset of submitable
++            if (el.hasAttr("disabled")) continue; // skip disabled form inputs
++            String type = el.attr("type");
++            if ("select".equals(el.tagName())) {
++                Elements options = el.select("option[selected]");
++                for (Element option : options) {
++                    builder.append(option.text());
++                }
++            }
++        }
++        return builder.toString();
++    }
+ }
+\ No newline at end of file

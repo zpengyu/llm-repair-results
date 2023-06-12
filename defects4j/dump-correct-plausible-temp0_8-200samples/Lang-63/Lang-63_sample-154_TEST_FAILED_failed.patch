@@ -1,0 +1,71 @@
+diff --git a/src/java/org/apache/commons/lang/time/DurationFormatUtils.java b/src/java/org/apache/commons/lang/time/DurationFormatUtils.java
+index 8ced282e..319a7bcb 100644
+--- a/src/java/org/apache/commons/lang/time/DurationFormatUtils.java
++++ b/src/java/org/apache/commons/lang/time/DurationFormatUtils.java
+@@ -261,7 +261,7 @@ public class DurationFormatUtils {
+      */
+     public static String formatPeriod(long startMillis, long endMillis, String format, boolean padWithZeros, 
+             TimeZone timezone) {
+-
++        // Finds difference between two times
+         long millis = endMillis - startMillis;
+         if (millis < 28 * DateUtils.MILLIS_PER_DAY) {
+             return formatDuration(millis, format, padWithZeros);
+@@ -275,8 +273,6 @@ public class DurationFormatUtils {
+         start.setTime(new Date(startMillis));
+         Calendar end = Calendar.getInstance(timezone);
+         end.setTime(new Date(endMillis));
+-
+-        // initial estimates
+         int milliseconds = end.get(Calendar.MILLISECOND) - start.get(Calendar.MILLISECOND);
+         int seconds = end.get(Calendar.SECOND) - start.get(Calendar.SECOND);
+         int minutes = end.get(Calendar.MINUTE) - start.get(Calendar.MINUTE);
+@@ -284,36 +280,35 @@ public class DurationFormatUtils {
+         int days = end.get(Calendar.DAY_OF_MONTH) - start.get(Calendar.DAY_OF_MONTH);
+         int months = end.get(Calendar.MONTH) - start.get(Calendar.MONTH);
+         int years = end.get(Calendar.YEAR) - start.get(Calendar.YEAR);
+-
+-        // each initial estimate is adjusted in case it is under 0
+         while (milliseconds < 0) {
+             milliseconds += 1000;
+-            seconds -= 1;
++            seconds--;
+         }
+         while (seconds < 0) {
+             seconds += 60;
+-            minutes -= 1;
++            minutes--;
+         }
+         while (minutes < 0) {
+             minutes += 60;
+-            hours -= 1;
++            hours--;
+         }
+         while (hours < 0) {
+             hours += 24;
+-            days -= 1;
++            days--;
++        }
++        if (!Token.containsTokenWithValue(tokens, d)) {
++            // Need to add days to months as well.
++            int daysInMonth = end.get(Calendar.DAY_OF_MONTH) - start.get(Calendar.DAY_OF_MONTH);
++            days += daysInMonth;
++            months -= daysInMonth * 3;
+         }
+         while (days < 0) {
+             days += 31;
+-//days += 31; // TODO: Need tests to show this is bad and the new code is good.
+-// HEN: It's a tricky subject. Jan 15th to March 10th. If I count days-first it is
+-// 1 month and 26 days, but if I count month-first then it is 1 month and 23 days.
+-// Also it's contextual - if asked for no M in the format then I should probably
+-// be doing no calculating here.
+-            months -= 1;
++            months--;
+         }
+         while (months < 0) {
+             months += 12;
+-            years -= 1;
++            years--;
+         }
+         milliseconds -= reduceAndCorrect(start, end, Calendar.MILLISECOND, milliseconds);
+         seconds -= reduceAndCorrect(start, end, Calendar.SECOND, seconds);

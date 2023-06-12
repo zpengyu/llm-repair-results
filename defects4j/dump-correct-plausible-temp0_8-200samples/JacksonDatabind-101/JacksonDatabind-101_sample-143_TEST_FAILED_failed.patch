@@ -1,0 +1,20 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/deser/BeanDeserializer.java b/src/main/java/com/fasterxml/jackson/databind/deser/BeanDeserializer.java
+index 3c89dc109..e6711f94b 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/deser/BeanDeserializer.java
++++ b/src/main/java/com/fasterxml/jackson/databind/deser/BeanDeserializer.java
+@@ -823,7 +820,14 @@ public class BeanDeserializer
+                 continue;
+             }
+         }
+-
++        // 23-Mar-2018, tatu: This is a little tricky, since we may have been called without
++        //    an active Builder (or, even with, in case of root value). In such case
++        //    we will have a single property that may or may not be CreatorProperty;
++        //    and if not, has to be handled by `any setter` (if any)
++        if (_anySetter != null) {
++            buffer.bufferAnyProperty(_anySetter, p.getCurrentName(),
++                    _anySetter.deserialize(p, ctxt));
++        }
+         // We hit END_OBJECT, so:
+         Object bean;
+         try {

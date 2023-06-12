@@ -1,0 +1,72 @@
+diff --git a/src/main/java/org/apache/commons/compress/archivers/ar/ArArchiveInputStream.java b/src/main/java/org/apache/commons/compress/archivers/ar/ArArchiveInputStream.java
+index 9112fa85..88598b87 100644
+--- a/src/main/java/org/apache/commons/compress/archivers/ar/ArArchiveInputStream.java
++++ b/src/main/java/org/apache/commons/compress/archivers/ar/ArArchiveInputStream.java
+@@ -63,7 +59,7 @@ public class ArArchiveInputStream extends ArchiveInputStream {
+         if (offset == 0) {
+             final byte[] expected = ArArchiveEntry.HEADER.getBytes();
+             final byte[] realized = new byte[expected.length]; 
+-            final int read = read(realized);
++            int read = read(realized);
+             if (read != expected.length) {
+                 throw new IOException("failed to read header");
+             }
+@@ -89,18 +82,34 @@ public class ArArchiveInputStream extends ArchiveInputStream {
+         final byte[] groupid = new byte[6];
+         final byte[] filemode = new byte[8];
+         final byte[] length = new byte[10];
+-
+-        read(name);
+-        read(lastmodified);
+-        read(userid);
+-        read(groupid);
+-        read(filemode);
+-        read(length);
+-
++        int read = read(name);
++        if (read != name.length) {
++            throw new IOException("failed to read entry name");
++        }
++        read = read(lastmodified);
++        if (read != lastmodified.length) {
++            throw new IOException("failed to read entry lastmod");
++        }
++        read = read(userid);
++        if (read != userid.length) {
++            throw new IOException("failed to read entry userid");
++        }
++        read = read(groupid);
++        if (read != groupid.length) {
++            throw new IOException("failed to read entry groupid");
++        }
++        read = read(filemode);
++        if (read != filemode.length) {
++            throw new IOException("failed to read entry filemode");
++        }
++        read = read(length);
++        if (read != length.length) {
++            throw new IOException("failed to read entry length");
++        }
+         {
+             final byte[] expected = ArArchiveEntry.TRAILER.getBytes();
+             final byte[] realized = new byte[expected.length]; 
+-            final int read = read(realized);
++            read = read(realized);
+             if (read != expected.length) {
+                 throw new IOException("failed to read entry header");
+             }
+@@ -110,13 +119,10 @@ public class ArArchiveInputStream extends ArchiveInputStream {
+                 }
+             }
+         }
+-
+         return new ArArchiveEntry(new String(name).trim(),
+-                                          Long.parseLong(new String(length)
++                 Long.parseLong(new String(length)
+                                                          .trim()));
+     }
+-
+-
+     public ArchiveEntry getNextEntry() throws IOException {
+         return getNextArEntry();
+     }

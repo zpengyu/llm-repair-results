@@ -1,0 +1,19 @@
+diff --git a/src/main/java/org/apache/commons/compress/archivers/zip/ZipArchiveInputStream.java b/src/main/java/org/apache/commons/compress/archivers/zip/ZipArchiveInputStream.java
+index fc7b80d5..5b6dc2b8 100644
+--- a/src/main/java/org/apache/commons/compress/archivers/zip/ZipArchiveInputStream.java
++++ b/src/main/java/org/apache/commons/compress/archivers/zip/ZipArchiveInputStream.java
+@@ -237,6 +236,14 @@ public class ZipArchiveInputStream extends ArchiveInputStream {
+                 throw new ZipException(e.getMessage());
+             }
+             if (read == 0 && inf.finished()) {
++                if (current.getMethod() == ZipArchiveOutputStream.DEFLATED) {
++                    if (inf.getTotalIn() != current.getCompressedSize()) {
++                        throw new ZipException("Bad compressed size for entry "
++                                + current.getName() + ": expected "
++                                + current.getCompressedSize() + " but got "
++                                + inf.getTotalIn());
++                    }
++                }
+                 return -1;
+             }
+             crc.update(buffer, start, read);

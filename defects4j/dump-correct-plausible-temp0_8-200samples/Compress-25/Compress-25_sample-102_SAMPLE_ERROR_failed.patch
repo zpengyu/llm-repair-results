@@ -1,0 +1,27 @@
+diff --git a/src/main/java/org/apache/commons/compress/archivers/zip/ZipArchiveInputStream.java b/src/main/java/org/apache/commons/compress/archivers/zip/ZipArchiveInputStream.java
+index 84eb7403..afc51866 100644
+--- a/src/main/java/org/apache/commons/compress/archivers/zip/ZipArchiveInputStream.java
++++ b/src/main/java/org/apache/commons/compress/archivers/zip/ZipArchiveInputStream.java
+@@ -174,15 +174,20 @@ public class ZipArchiveInputStream extends ArchiveInputStream {
+     public ZipArchiveInputStream(InputStream inputStream,
+                                  String encoding,
+                                  boolean useUnicodeExtraFields,
+-                                 boolean allowStoredEntriesWithDataDescriptor) {
++                                 boolean allowStoredEntriesWithDataDescriptor) throws IOException {
+         zipEncoding = ZipEncodingHelper.getZipEncoding(encoding);
+         this.useUnicodeExtraFields = useUnicodeExtraFields;
+         in = new PushbackInputStream(inputStream, buf.capacity());
+         this.allowStoredEntriesWithDataDescriptor =
+             allowStoredEntriesWithDataDescriptor;
++        readFully(buf, 0, 4);
++        final long sig = ZipLong.getValue(buf);
++        if (sig != ENTRY_HEADER) {
++            throw new IOException("Wrong Central Directory signature: "
++                    + sig);
++        }
+         // haven't read anything so far
+     }
+-
+     public ZipArchiveEntry getNextZipEntry() throws IOException {
+         boolean firstEntry = true;
+         if (closed || hitCentralDirectory) {

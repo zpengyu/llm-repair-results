@@ -1,0 +1,64 @@
+diff --git a/src/java/org/apache/commons/cli/CommandLine.java b/src/java/org/apache/commons/cli/CommandLine.java
+index de23601..a23f2ee 100644
+--- a/src/java/org/apache/commons/cli/CommandLine.java
++++ b/src/java/org/apache/commons/cli/CommandLine.java
+@@ -45,11 +43,9 @@ public class CommandLine {
+     /** the processed options */
+     private Map options = new HashMap();
+     private Map names = new HashMap();
+-
+     /** Map of unique options for ease to get complete list of options */
+-//    private Set allOptions = new HashSet();
++    private Set allOptions = new HashSet();
+     private Map hashcodeMap = new HashMap();
+-
+     /**
+      * Creates a command line.
+      */
+@@ -160,15 +142,34 @@ public class CommandLine {
+             return ((Option) options.get(key)).getValues();
+         }
+         return null;
+-        }
+-
++    }
+     /**
+      * <p>Retrieves the option object given the long or short option as a String</p>
+      * @param opt short or long name of the option
+      * @return Canonicalized option
+      */
+-
+-
++    public Option getOption(String opt)
++    {
++        opt = Util.stripLeadingHyphens(opt);
++        // if the option is a long option (--x), then remove '--'
++        if (opt.startsWith("--"))
++        {
++            opt = opt.substring(2);
++        }
++        // if the option is a short option (-x), then remove '-'
++        if (opt.startsWith("-"))
++        {
++            opt = opt.substring(1);
++        }
++        Option option = (Option) options.get(opt);
++        // try to handle the case when long and short options are both used for
++        // the same argument.  e.g. -f file.txt --file file.txt
++        if (option == null)
++        {
++            option = (Option) names.get(opt);
++        }
++        return option;
++    }
+     /** 
+      * Retrieves the array of values, if any, of an option.
+      *
+@@ -276,6 +264,7 @@ public class CommandLine {
+     void addOption(Option opt)
+     {
+         hashcodeMap.put(new Integer(opt.hashCode()), opt);
++        allOptions.add(opt);
+         String key = opt.getKey();
+         if (key == null)
+         {

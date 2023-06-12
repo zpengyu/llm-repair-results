@@ -1,0 +1,58 @@
+    public int getOffsetFromLocal(long instantLocal) {
+        // get the offset at instantLocal (first estimate)
+        final int offsetLocal = getOffset(instantLocal);
+        // adjust instantLocal using the estimate and recalc the offset
+        final long instantAdjusted = instantLocal - offsetLocal;
+        final int offsetAdjusted = getOffset(instantAdjusted);
+        // if the offsets differ, we must be near a DST boundary
+        if (offsetLocal != offsetAdjusted) {
+            // we need to ensure that time is always after the DST gap
+            // this happens naturally for positive offsets, but not for negative
+            if ((offsetLocal - offsetAdjusted) < 0) {
+                // if we just return offsetAdjusted then the time is pushed
+                // back before the transition, whereas it should be
+                // on or after the transition
+                long nextLocal = nextTransition(instantAdjusted);
+                long nextAdjusted = nextTransition(instantLocal - offsetAdjusted);
+                if (nextLocal != nextAdjusted) {
+                    return offsetLocal;
+                }
+                // else, if the gap is exactly one hour, we always choose the later
+                // instant to avoid accidental double counting of the hour.
+                if ((nextLocal - instantLocal) == (instantLocal - nextAdjusted)) {
+                    return offsetLocal;
+                }
+                // else, if the adjusted time falls into the standard offset, use that
+                int offsetStandard = getStandardOffset(instantAdjusted);
+                if (offsetAdjusted == offsetStandard) {
+                    return offsetAdjusted;
+                }
+                // else choose the offset which is closer to the actual one
+                long diff = Math.abs(offsetLocal - offsetAdjusted);
+                long diffStandard = Math.abs(offsetStandard - offsetAdjusted);
+                if (diff < diffStandard) {
+                    return offsetLocal;
+                } else if (diff > diffStandard) {
+                    return offsetStandard;
+                } else {
+                    // choose the one that is further in the future
+                    long nextStandard = nextTransition(instantAdjusted - offsetStandard);
+                    if (nextStandard == nextLocal) {
+                        return offsetLocal;
+                    } else {
+                        return offsetStandard;
+                    }
+                }
+            }
+        } else if (offsetLocal > 0) {
+            long prev = previousTransition(instantAdjusted);
+            if (prev < instantAdjusted) {
+                int offsetPrev = getOffset(prev);
+                int diff = offsetPrev - offsetLocal;
+                if (instantAdjusted - prev <= diff) {
+                    return offsetPrev;
+                }
+            }
+        }
+        return offsetAdjusted;
+    }

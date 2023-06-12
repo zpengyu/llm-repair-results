@@ -1,0 +1,43 @@
+private void process(Node externs, Node root) {
+  if (flags.jsOutputFile.isEmpty() || flags.jsOutputFile.equals("-")) {
+    jsOutputFile = System.out;
+  } else {
+    try {
+      jsOutputFile = new PrintStream(flags.jsOutputFile);
+    } catch (IOException e) {
+      throw new RuntimeException(e);
+    }
+  }
+  if (flags.createSourceMap && flags.sourceMapOutputPath.isEmpty()) {
+    flags.createSourceMap = false;
+  }
+  if (flags.createSourceMap) {
+    try {
+      sourceMapFile = new File(flags.sourceMapOutputPath);
+      sourceMapFile.createNewFile();
+      if (!sourceMapFile.isFile()) {
+        throw new IOException();
+      }
+      sourceMapOut = new PrintStream(sourceMapFile);
+    } catch (IOException e) {
+      throw new RuntimeException(e);
+    }
+  }
+  int numRepetitions = 1;
+  if (flags.chunkSize > 0) {
+    numRepetitions = flags.chunkSize;
+  }
+  for (int i = 0; i < numRepetitions; i++) {
+    if (flags.chunkSize > 0) {
+      processTree(externs, root, i + 1);
+    } else {
+      processTree(externs, root);
+    }
+  }
+  if (sourceMapOut != null) {
+    sourceMapOut.close();
+  }
+  if (jsOutputFile != null) {
+    jsOutputFile.close();
+  }
+}

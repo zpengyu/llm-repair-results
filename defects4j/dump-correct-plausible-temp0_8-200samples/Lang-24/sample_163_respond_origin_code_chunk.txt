@@ -1,0 +1,91 @@
+
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+public class Util {
+
+    public static final String DOUBLE_PATTERN = "[\\x00-\\x20]*[+-]?(NaN|Infinity|((((\\p{Digit}+)(\\.)?((\\p{Digit}+)?)([eE][+-]?(\\p{Digit}+))?)|(\\.((\\p{Digit}+))([eE][+-]?(\\p{Digit}+))?)|(((0[xX](\\p{XDigit}+)(\\.)?)|(0[xX](\\p{XDigit}+)?(\\.)(\\p{XDigit}+)))[pP][+-]?(\\p{Digit}+)))[fFdD]?))[\\x00-\\x20]*";
+    public static final Pattern DOUBLE_PATTERN_COMPILED = Pattern.compile(DOUBLE_PATTERN);
+
+    public static final String FLOAT_PATTERN = "[\\x00-\\x20]*[+-]?(NaN|Infinity|((((\\p{Digit}+)(\\.)?((\\p{Digit}+)?)([eE][+-]?(\\p{Digit}+))?)|(\\.((\\p{Digit}+))([eE][+-]?(\\p{Digit}+))?)|(((0[xX](\\p{XDigit}+)(\\.)?)|(0[xX](\\p{XDigit}+)?(\\.)(\\p{XDigit}+)))[pP][+-]?(\\p{Digit}+)))[fF]?))[\\x00-\\x20]*";
+    public static final Pattern FLOAT_PATTERN_COMPILED = Pattern.compile(FLOAT_PATTERN);
+
+    public static final String HEX_PATTERN = "0[xX][\\p{XDigit}]+";
+    public static final Pattern HEX_PATTERN_COMPILED = Pattern.compile(HEX_PATTERN);
+
+    public static final String CHARACTER_PATTERN = "'([^']|\\\\')'";
+    public static final Pattern CHARACTER_PATTERN_COMPILED = Pattern.compile(CHARACTER_PATTERN);
+
+    public static final String STRING_PATTERN = "\"([^\"]|\\\\\")*\"";
+    public static final Pattern STRING_PATTERN_COMPILED = Pattern.compile(STRING_PATTERN);
+
+    public static boolean isString(String str) {
+        return str != null && STRING_PATTERN_COMPILED.matcher(str).matches();
+    }
+
+    public static boolean isCharacter(String str) {
+        return str != null && CHARACTER_PATTERN_COMPILED.matcher(str).matches();
+    }
+
+    public static boolean isBoolean(String str) {
+        return str != null && ("true".equals(str) || "false".equals(str));
+    }
+
+    public static boolean isInteger(String str) {
+        try {
+            Integer.parseInt(str);
+            return true;
+        } catch (NumberFormatException e) {
+            return false;
+        }
+    }
+
+    public static boolean isHex(String str) {
+        return str != null && HEX_PATTERN_COMPILED.matcher(str).matches();
+    }
+
+    public static boolean isFloat(String str) {
+        try {
+            Float.parseFloat(str);
+            return true;
+        } catch (NumberFormatException e) {
+            return false;
+        }
+    }
+
+    public static boolean isDouble(String str) {
+        try {
+            Double.parseDouble(str);
+            return true;
+        } catch (NumberFormatException e) {
+            return false;
+        }
+    }
+
+    public static boolean isLong(String str) {
+        try {
+            Long.parseLong(str);
+            return true;
+        } catch (NumberFormatException e) {
+            return false;
+        }
+    }
+
+    public static boolean isNumber(String str) {
+        if (StringUtils.isEmpty(str)) {
+            return false;
+        }
+        Matcher matcher = DOUBLE_PATTERN_COMPILED.matcher(str);
+        if (matcher.matches()) {
+            return true;
+        }
+        matcher = FLOAT_PATTERN_COMPILED.matcher(str);
+        if (matcher.matches()) {
+            return true;
+        }
+        return isInteger(str);
+    }
+
+}
+ 
+

@@ -1,0 +1,38 @@
+    public static Locale toLocale(final String str) {
+        if (str == null) {
+            return null;
+        }
+        if (str.isEmpty()) {  // Since JDK 7.
+            throw new IllegalArgumentException("Invalid locale format: " + str);
+        }
+        if (str.startsWith("_")) {  // Special case for Parsing "C" locale.
+            if (str.length() < 2) {
+                throw new IllegalArgumentException("Invalid locale format: " + str);
+            }
+            if (!str.startsWith("_#")) {
+                throw new IllegalArgumentException("Invalid locale format: " + str);
+            }
+            final char lang = str.charAt(2);
+            if (str.length() == 3) {
+                return new Locale("", "", str.substring(3));
+            }
+            final char script = str.charAt(3);
+            if (str.length() == 4) {
+                return new Locale("", String.valueOf(lang) + script);
+            }
+            if (!str.startsWith("_#_")) {
+                throw new IllegalArgumentException("Invalid locale format: " + str);
+            }
+            return new Locale("", String.valueOf(lang) + script, str.substring(4));
+        }
+        final String[] segments = str.split("_", -1);
+        final int length = segments.length;
+        switch (length) {
+            case 1:
+                return new Locale(segments[0]);
+            case 2:
+                return new Locale(segments[0], segments[1]);
+            default:
+                return new Locale(segments[0], segments[1], segments[2]);
+        }
+    }

@@ -1,0 +1,36 @@
+diff --git a/src/main/java/org/joda/time/chrono/BasicMonthOfYearDateTimeField.java b/src/main/java/org/joda/time/chrono/BasicMonthOfYearDateTimeField.java
+index 98e6912c..d3a056ae 100644
+--- a/src/main/java/org/joda/time/chrono/BasicMonthOfYearDateTimeField.java
++++ b/src/main/java/org/joda/time/chrono/BasicMonthOfYearDateTimeField.java
+@@ -201,12 +201,11 @@ class BasicMonthOfYearDateTimeField extends ImpreciseDateTimeField {
+ 
+     //-----------------------------------------------------------------------
+     public int[] add(ReadablePartial partial, int fieldIndex, int[] values, int valueToAdd) {
+-        // overridden as superclass algorithm can't handle
+-        // 2004-02-29 + 48 months -> 2008-02-29 type dates
+         if (valueToAdd == 0) {
+             return values;
+         }
+-            // month is largest field and being added to, such as month-day
++        // overridden as superclass algorithm can't handle
++        // 2004-02-29 + 48 months -> 2008-02-29 type dates
+         if (DateTimeUtils.isContiguous(partial)) {
+             long instant = 0L;
+             for (int i = 0, isize = partial.size(); i < isize; i++) {
+@@ -214,6 +213,16 @@ class BasicMonthOfYearDateTimeField extends ImpreciseDateTimeField {
+             }
+             instant = add(instant, valueToAdd);
+             return iChronology.get(partial, instant);
++        } else if (fieldIndex < partial.size() && partial.getFieldType(fieldIndex).getField(iChronology) == this) {
++            // month is largest field and being added to, such as month-day
++            int target = values[fieldIndex];
++            int[] copy = new int[values.length];
++            System.arraycopy(values, 0, copy, 0, values.length);
++            for (int i = 0; i < valueToAdd; i++) {
++                target = getWrappedField(target).add(target, 1);
++            }
++            copy[fieldIndex] = target;
++            return set(partial, fieldIndex, values, target);
+         } else {
+             return super.add(partial, fieldIndex, values, valueToAdd);
+         }

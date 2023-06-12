@@ -1,0 +1,26 @@
+diff --git a/src/com/google/javascript/jscomp/ControlFlowAnalysis.java b/src/com/google/javascript/jscomp/ControlFlowAnalysis.java
+index 0f5c5421..575c11c0 100644
+--- a/src/com/google/javascript/jscomp/ControlFlowAnalysis.java
++++ b/src/com/google/javascript/jscomp/ControlFlowAnalysis.java
+@@ -768,9 +767,20 @@ final class ControlFlowAnalysis implements Callback, CompilerPass {
+             }
+           }
+           return computeFollowNode(fromNode, parent, cfa);
++        } else {
++          Node nextSibling = node.getNext();
++          // Skip function declarations because control doesn't get pass into it.
++          while (nextSibling != null && nextSibling.isFunction()) {
++            nextSibling = nextSibling.getNext();
++          }
++          if (nextSibling != null) {
++            return computeFallThrough(nextSibling);
++          } else {
++            // If there are no more siblings, control is transferred up the AST.
++            return computeFollowNode(fromNode, parent, cfa);
++          }
+         }
+     }
+-
+     // Now that we are done with the special cases follow should be its
+     // immediate sibling, unless its sibling is a function
+     Node nextSibling = node.getNext();

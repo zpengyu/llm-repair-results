@@ -1,0 +1,102 @@
+    public ArchiveInputStream createArchiveInputStream(final InputStream in)
+            throws ArchiveException {
+        if (in == null) {
+            throw new IllegalArgumentException("Stream must not be null.");
+        }
+
+        if (!in.markSupported()) {
+            throw new IllegalArgumentException("Mark is not supported.");
+        }
+
+        final byte[] signature = new byte[12];
+        in.mark(signature.length);
+        try {
+            int signatureLength = in.read(signature);
+            in.reset();
+            if (ZipArchiveInputStream.matches(signature, signatureLength)) {
+                return new ZipArchiveInputStream(in);
+            } else if (JarArchiveInputStream.matches(signature, signatureLength)) {
+                return new JarArchiveInputStream(in);
+            } else if (ArArchiveInputStream.matches(signature, signatureLength)) {
+                return new ArArchiveInputStream(in);
+            } else if (CpioArchiveInputStream.matches(signature, signatureLength)) {
+                return new CpioArchiveInputStream(in);
+            }
+
+            // Dump needs a bigger buffer to check the signature;
+            final byte[] dumpsig = new byte[32];
+            in.mark(dumpsig.length);
+            signatureLength = in.read(dumpsig);
+            in.reset();
+            if (DumpArchiveInputStream.matches(dumpsig, signatureLength)) {
+                return new DumpArchiveInputStream(in);
+            }
+
+            // Tar needs an even bigger buffer to check the signature; read the first block
+            final byte[] tarheader = new byte[512];
+            in.mark(tarheader.length);
+            signatureLength = in.read(tarheader);
+            in.reset();
+            if (TarArchiveInputStream.matches(tarheader, signatureLength)) {
+                return new TarArchiveInputStream(in);
+            }
+            // COMPRESS-117 - improve auto-recognition
+            try {
+                TarArchiveInputStream tais = new TarArchiveInputStream(new ByteArrayInputStream(tarheader));
+                tais.getNextEntry();
+                return new TarArchiveInputStream(in);
+            } catch (Exception e) { // NOPMD
+                // can generate IllegalArgumentException as well as IOException
+                // autodetection, simply not a TAR
+                // ignored
+            }
+
+            // COMPRESS-117 - improve auto-recognition
+            // check for BZip2
+            try {
+                in.mark(512);
+                final int firstByte = in.read();
+                if (firstByte == 'B') {
+                    return new BZip2CompressorInputStream(in);
+                }
+                in.reset();
+            } catch (IOException e) {
+                // ignored
+            }
+
+            // check for XZ
+            try {
+                final int firstByte = in.read();
+                if (firstByte == 0xFD) {
+                    final int secondByte = in.read();
+                    if (secondByte == '7'
+                            || secondByte == 'z') {
+                        return new XZCompressorInputStream(in);
+                    }
+                }
+                in.reset();
+            } catch (IOException e) {
+                // ignored
+            }
+
+            // check for GZIP
+            try {
+                in.mark(3);
+                final int firstByte = in.read();
+                if (firstByte == 31) {
+                    final int secondByte = in.read();
+                    if (secondByte == 139) {
+                        return new GzipCompressorInputStream(in);
+                    }
+                }
+                in.reset();
+            } catch (IOException e) {
+                // ignored
+            }
+        } catch (IOException e) {
+            throw new ArchiveException("Could not use reset and mark operations.", e);
+        }
+
+        throw new ArchiveException("No Archiver found for the stream signature");
+    }
+

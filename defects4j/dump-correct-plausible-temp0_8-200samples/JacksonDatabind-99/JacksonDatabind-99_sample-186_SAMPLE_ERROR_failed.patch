@@ -1,0 +1,21 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/type/ReferenceType.java b/src/main/java/com/fasterxml/jackson/databind/type/ReferenceType.java
+index 2281eaa41..3ad934ea4 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/type/ReferenceType.java
++++ b/src/main/java/com/fasterxml/jackson/databind/type/ReferenceType.java
+@@ -165,10 +165,14 @@ public class ReferenceType extends SimpleType
+         StringBuilder sb = new StringBuilder();
+         sb.append(_class.getName());
+         sb.append('<');
+-        sb.append(_referencedType.toCanonical());
++        JavaType enclosingType = _referencedType.getEnclosingType();
++        if (enclosingType != null) {
++            sb.append(enclosingType.toCanonical());
++            sb.append('.');
++        }
++        sb.append(_referencedType.getRawClass().getName());
+         return sb.toString();
+     }
+-
+     /*
+     /**********************************************************
+     /* Narrow/widen

@@ -1,0 +1,49 @@
+diff --git a/src/main/java/org/apache/commons/compress/archivers/tar/TarArchiveInputStream.java b/src/main/java/org/apache/commons/compress/archivers/tar/TarArchiveInputStream.java
+index 0c76c60a..6231af86 100644
+--- a/src/main/java/org/apache/commons/compress/archivers/tar/TarArchiveInputStream.java
++++ b/src/main/java/org/apache/commons/compress/archivers/tar/TarArchiveInputStream.java
+@@ -568,7 +568,7 @@ public class TarArchiveInputStream extends ArchiveInputStream {
+     @Override
+     public int read(byte[] buf, int offset, int numToRead) throws IOException {
+     	int totalRead = 0;
+-
++		int numToProcess = numToRead;
+         if (hasHitEOF || entryOffset >= entrySize) {
+             return -1;
+         }
+@@ -576,21 +575,22 @@ public class TarArchiveInputStream extends ArchiveInputStream {
+         if (currEntry == null) {
+             throw new IllegalStateException("No current tar entry");
+         }
+-
+-        numToRead = Math.min(numToRead, available());
+-
+-        totalRead = is.read(buf, offset, numToRead);
+-        count(totalRead);
+-
+-        if (totalRead == -1) {
+-            hasHitEOF = true;
+-        } else {
+-            entryOffset += totalRead;
++        numToProcess = Math.min(numToProcess, available());
++        int bytesProcessed = 0;
++        for (int toProcess = numToProcess; toProcess > 0;) {
++            totalRead = is.read(buf, offset, toProcess);
++            count(totalRead);
++            if (totalRead == -1) {
++                hasHitEOF = true;
++                return (bytesProcessed > 0) ? bytesProcessed : -1;
++            }
++            toProcess -= totalRead;
++            bytesProcessed += totalRead;
++            offset += totalRead;
+         }
+-
+-        return totalRead;
++        entryOffset += numToRead;
++        return bytesProcessed;
+     }
+-
+     /**
+      * Whether this class is able to read the given entry.
+      *

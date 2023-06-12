@@ -1,0 +1,21 @@
+    private void declareArguments(Node functionNode) {
+      Node astParameters = functionNode.getFirstChild().getNext();
+      Node body = astParameters.getNext();
+      FunctionType functionType = (FunctionType) functionNode.getJSType();
+      if (functionType != null) {
+        Node jsDocParameters = functionType.getParametersNode();
+        Node jsDocParameter = null;
+        if (jsDocParameters != null) {
+          jsDocParameter = jsDocParameters.getFirstChild();
+        }
+        for (Node astParameter : astParameters.children()) {
+          JSType parameterType = null;
+          if (jsDocParameter != null) {
+            parameterType = jsDocParameter.getJSType();
+            jsDocParameter = jsDocParameter.getNext();
+          }
+          defineSlot(astParameter, functionNode, parameterType, true);
+        }
+      }
+    } // end declareArguments
+

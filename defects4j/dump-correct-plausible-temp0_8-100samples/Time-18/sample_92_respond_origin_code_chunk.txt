@@ -1,0 +1,35 @@
+    public long getDateTimeMillis(int year, int monthOfYear, int dayOfMonth,
+                                  int hourOfDay, int minuteOfHour,
+                                  int secondOfMinute, int millisOfSecond)
+        throws IllegalArgumentException
+    {
+        Chronology base;
+        if ((base = getBase()) != null) {
+            return base.getDateTimeMillis
+                (year, monthOfYear, dayOfMonth,
+                 hourOfDay, minuteOfHour, secondOfMinute, millisOfSecond);
+        }
+
+        if (isAfterCutover(year, monthOfYear, dayOfMonth)) {
+            return iGregorianChronology.getDateTimeMillis
+                (year, monthOfYear, dayOfMonth,
+                 hourOfDay, minuteOfHour, secondOfMinute, millisOfSecond);
+        }
+        return iJulianChronology.getDateTimeMillis
+            (year, monthOfYear, dayOfMonth,
+             hourOfDay, minuteOfHour, secondOfMinute, millisOfSecond);
+    }
+
+    private boolean isAfterCutover(int year, int monthOfYear, int dayOfMonth) {
+        int gregorianMonth = iGregorianCutoverDate.getMonthOfYear();
+        int gregorianDom = iGregorianCutoverDate.getDayOfMonth();
+        if (year == iGregorianCutoverDate.getYear()) {
+            return monthOfYear > gregorianMonth ||
+                (monthOfYear == gregorianMonth && dayOfMonth >= gregorianDom);
+        } else if (year > iGregorianCutoverDate.getYear()) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+

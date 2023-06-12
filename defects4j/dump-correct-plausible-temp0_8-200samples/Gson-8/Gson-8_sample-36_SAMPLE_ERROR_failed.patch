@@ -1,0 +1,43 @@
+diff --git a/gson/src/main/java/com/google/gson/internal/UnsafeAllocator.java b/gson/src/main/java/com/google/gson/internal/UnsafeAllocator.java
+index a72d3d10..e3a7466e 100644
+--- a/gson/src/main/java/com/google/gson/internal/UnsafeAllocator.java
++++ b/gson/src/main/java/com/google/gson/internal/UnsafeAllocator.java
+@@ -45,7 +44,11 @@ public abstract class UnsafeAllocator {
+         @Override
+         @SuppressWarnings("unchecked")
+         public <T> T newInstance(Class<T> c) throws Exception {
+-          return (T) allocateInstance.invoke(unsafe, c);
++          if (!Modifier.isInterface(c.getModifiers()) && !Modifier.isAbstract(c.getModifiers())) {
++            return (T) allocateInstance.invoke(unsafe, c);
++          } else {
++            throw new UnsupportedOperationException("Cannot allocate " + c);
++          }
+         }
+       };
+     } catch (Exception ignored) {
+@@ -68,7 +70,11 @@ public abstract class UnsafeAllocator {
+         @Override
+         @SuppressWarnings("unchecked")
+         public <T> T newInstance(Class<T> c) throws Exception {
+-          return (T) newInstance.invoke(null, c, constructorId);
++          if (!Modifier.isInterface(c.getModifiers()) && !Modifier.isAbstract(c.getModifiers())) {
++            return (T) newInstance.invoke(null, c, constructorId);
++          } else {
++            throw new UnsupportedOperationException("Cannot allocate " + c);
++          }
+         }
+       };
+     } catch (Exception ignored) {
+@@ -87,7 +92,11 @@ public abstract class UnsafeAllocator {
+         @Override
+         @SuppressWarnings("unchecked")
+         public <T> T newInstance(Class<T> c) throws Exception {
+-          return (T) newInstance.invoke(null, c, Object.class);
++          if (!Modifier.isInterface(c.getModifiers()) && !Modifier.isAbstract(c.getModifiers())) {
++            return (T) newInstance.invoke(null, c, Object.class);
++          } else {
++            throw new UnsupportedOperationException("Cannot allocate " + c);
++          }
+         }
+       };
+     } catch (Exception ignored) {

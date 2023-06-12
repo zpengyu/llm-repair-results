@@ -1,0 +1,36 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/deser/BuilderBasedDeserializer.java b/src/main/java/com/fasterxml/jackson/databind/deser/BuilderBasedDeserializer.java
+index 316efa3a9..30f40998b 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/deser/BuilderBasedDeserializer.java
++++ b/src/main/java/com/fasterxml/jackson/databind/deser/BuilderBasedDeserializer.java
+@@ -580,7 +578,9 @@ public class BuilderBasedDeserializer
+             // creator property?
+             SettableBeanProperty creatorProp = creator.findCreatorProperty(propName);
+             if (creatorProp != null) {
+-                if (buffer.assignParameter(creatorProp, creatorProp.deserialize(p, ctxt))) {
++                // Last creator property to set?
++                Object creatorValue = creatorProp.deserialize(p, ctxt);
++                if (buffer.assignParameter(creatorProp.getCreatorIndex(), creatorValue)) {
+                     t = p.nextToken();
+                     Object bean;
+                     try {
+@@ -589,8 +589,9 @@ public class BuilderBasedDeserializer
+                         wrapAndThrow(e, _beanType.getRawClass(), propName, ctxt);
+                         continue;
+                     }
++                    // if so, need to copy all remaining tokens into buffer
+                     while (t == JsonToken.FIELD_NAME) {
+-                        p.nextToken();
++                        p.nextToken(); // to skip name
+                         tokens.copyCurrentStructure(p);
+                         t = p.nextToken();
+                     }
+@@ -601,6 +602,9 @@ public class BuilderBasedDeserializer
+                     }
+                     return _unwrappedPropertyHandler.processUnwrapped(p, ctxt, bean, tokens);
+                 }
++                // nope; just need to copy the value as is
++                tokens.writeFieldName(propName);
++                tokens.copyCurrentStructure(p);
+                 continue;
+             }
+             // Object Id property?

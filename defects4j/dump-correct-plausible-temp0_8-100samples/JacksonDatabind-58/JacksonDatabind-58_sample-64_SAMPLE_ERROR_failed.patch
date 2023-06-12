@@ -1,0 +1,51 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/deser/BeanDeserializerFactory.java b/src/main/java/com/fasterxml/jackson/databind/deser/BeanDeserializerFactory.java
+index bc8e6736f..dd05b1448 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/deser/BeanDeserializerFactory.java
++++ b/src/main/java/com/fasterxml/jackson/databind/deser/BeanDeserializerFactory.java
+@@ -707,12 +707,8 @@ public class BeanDeserializerFactory
+     {
+         // need to ensure method is callable (for non-public)
+         AnnotatedMember mutator = propDef.getNonConstructorMutator();
+-
+         if (ctxt.canOverrideAccessModifiers()) {
+-            // [databind#877]: explicitly prevent forced access to `cause` of `Throwable`;
+-            // never needed and attempts may cause problems on some platforms.
+-            // !!! NOTE: should be handled better for 2.8 and later
+-                mutator.fixAccess(ctxt.isEnabled(MapperFeature.OVERRIDE_PUBLIC_ACCESS_MODIFIERS));
++            mutator.fixAccess(ctxt.isEnabled(MapperFeature.OVERRIDE_PUBLIC_ACCESS_MODIFIERS));
+         }
+         // note: this works since we know there's exactly one argument for methods
+         BeanProperty.Std property = new BeanProperty.Std(propDef.getFullName(),
+@@ -748,9 +743,31 @@ public class BeanDeserializerFactory
+         if(objectIdInfo != null){
+             prop.setObjectIdInfo(objectIdInfo);
+         }
++        if (mutator.getDeclaringClass().isInterface()) {
++            return prop;
++        }
++        JsonSetter.Value setterConf = propDef.findSetterInfo();
++        JsonSetter setter = null;
++        if (setterConf != null) {
++            setter = setterConf.setter;
++        }
++        // should we force use of "any getter"?
++        if (setter == null && mutator instanceof AnnotatedMethod) {
++            setter = ctxt.getAnnotationIntrospector().findSetterInfo((AnnotatedMethod) mutator);
++        }
++        if (setter != null) {
++            if (setter.value().emptyAsNull()) {
++                prop = prop.withValueDeserializer(
++                        new NullsConstantDeserializer(prop.getValueDeserializer(), setter.nulls())
++                );
++            }
++        } else if (propDef.hasSetter()) { // 19-Apr-2018, tatu: Another "bug" for backwards compatibility -- if no @JsonSetter, must have null value handling
++            prop = prop.withValueDeserializer(
++                    new NullsAsEmptyDeserializer(prop.getValueDeserializer())
++            );
++        }
+         return prop;
+     }
+-
+     /**
+      * Method that will construct a regular bean property setter using
+      * the given setter method.

@@ -1,0 +1,24 @@
+diff --git a/src/com/google/javascript/jscomp/ReferenceCollectingCallback.java b/src/com/google/javascript/jscomp/ReferenceCollectingCallback.java
+index fefd3926..1fb07a08 100644
+--- a/src/com/google/javascript/jscomp/ReferenceCollectingCallback.java
++++ b/src/com/google/javascript/jscomp/ReferenceCollectingCallback.java
+@@ -433,10 +432,17 @@ class ReferenceCollectingCallback implements ScopedCallback,
+           return false;
+         }
+       }
+-
++      BasicBlock enclosingBlock = ref.getBasicBlock();
++      for (Reference ref2 : getReferences()) {
++        if (ref2 != ref) {
++          if (NodeUtil.isReferenceName(ref2.node) &&
++              ref2.getBasicBlock().isAncestorOf(enclosingBlock)) {
++            return false;
++          }
++        }
++      }
+       return true;
+     }
+-
+     /**
+      * @return The one and only assignment. Returns if there are 0 or 2+
+      *    assignments.

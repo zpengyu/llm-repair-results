@@ -1,0 +1,31 @@
+diff --git a/src/com/google/javascript/jscomp/InlineCostEstimator.java b/src/com/google/javascript/jscomp/InlineCostEstimator.java
+index 17dc677f..ec533b1b 100644
+--- a/src/com/google/javascript/jscomp/InlineCostEstimator.java
++++ b/src/com/google/javascript/jscomp/InlineCostEstimator.java
+@@ -99,5 +91,24 @@ class InlineCostEstimator {
+      * Constants (true, false, null) are considered basically free,
+      * because it's likely that they will get folded when we're done.
+      */
+-  }
+-}
++    @Override
++    void addConstant(String constant) {
++    }
++    @Override
++    void beginString(char quote) {
++      last = 'x';
++      cost += ESTIMATED_STRING_COST;
++    }
++    @Override
++    void endString(char quote) {
++      last = quote;
++      if (maxCost <= cost) {
++        continueProcessing = false;
++      }
++    }
++    @Override
++    void addRegexp(String regexp, String flags) {
++      last = '/';
++      cost += ESTIMATED_REGEXP_COST;
++    }
++  }}

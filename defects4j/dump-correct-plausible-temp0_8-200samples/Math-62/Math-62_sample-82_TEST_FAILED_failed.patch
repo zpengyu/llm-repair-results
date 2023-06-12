@@ -1,0 +1,39 @@
+diff --git a/src/main/java/org/apache/commons/math/optimization/univariate/MultiStartUnivariateRealOptimizer.java b/src/main/java/org/apache/commons/math/optimization/univariate/MultiStartUnivariateRealOptimizer.java
+index 506cc7845..3ea0c3c8c 100644
+--- a/src/main/java/org/apache/commons/math/optimization/univariate/MultiStartUnivariateRealOptimizer.java
++++ b/src/main/java/org/apache/commons/math/optimization/univariate/MultiStartUnivariateRealOptimizer.java
+@@ -157,22 +147,25 @@ public class MultiStartUnivariateRealOptimizer<FUNC extends UnivariateRealFuncti
+         // Multi-start loop.
+         for (int i = 0; i < starts; ++i) {
+             try {
+-                final double bound1 = (i == 0) ? min : min + generator.nextDouble() * (max - min);
+-                final double bound2 = (i == 0) ? max : min + generator.nextDouble() * (max - min);
+-                optima[i] = optimizer.optimize(f, goal, FastMath.min(bound1, bound2), FastMath.max(bound1, bound2));
++                // The first iteration will be done in the original interval,
++                // the others will be done with a random value.
++                if (i == 0) {
++                    optima[i] = optimizer.optimize(f, goal, min, max, startValue);
++                } else {
++                    final double bound1 = min + generator.nextDouble() * (max - min);
++                    final double bound2 = min + generator.nextDouble() * (max - min);
++                    optima[i] = optimizer.optimize(f, goal, FastMath.min(bound1, bound2), FastMath.max(bound1, bound2));
++                }
+             } catch (FunctionEvaluationException fee) {
+                 optima[i] = null;
+             } catch (ConvergenceException ce) {
+                 optima[i] = null;
+             }
+-
+-            final int usedEvaluations = optimizer.getEvaluations();
+-            optimizer.setMaxEvaluations(optimizer.getMaxEvaluations() - usedEvaluations);
+-            totalEvaluations += usedEvaluations;
++            // Use the total number of evaluations performed by the current
++            // optimizer to update the total.
++            totalEvaluations += optimizer.getEvaluations();
+         }
+-
+         sortPairs(goal);
+-
+         if (optima[0] == null) {
+             throw new ConvergenceException(LocalizedFormats.NO_CONVERGENCE_WITH_ANY_START_POINT,
+                                            starts);

@@ -1,0 +1,55 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/type/TypeFactory.java b/src/main/java/com/fasterxml/jackson/databind/type/TypeFactory.java
+index 87b165830..8776bd91a 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/type/TypeFactory.java
++++ b/src/main/java/com/fasterxml/jackson/databind/type/TypeFactory.java
+@@ -904,31 +904,26 @@ public final class TypeFactory
+                 return actualType;
+             }
+         }
+-
+-        /* 29-Jan-2010, tatu: We used to throw exception here, if type was
+-         *   bound: but the problem is that this can occur for generic "base"
+-         *   method, overridden by sub-class. If so, we will want to ignore
+-         *   current type (for method) since it will be masked.
+-         */
+-        Type[] bounds = type.getBounds();
+-
+-        // With type variables we must use bound information.
+-        // Theoretically this gets tricky, as there may be multiple
+-        // bounds ("... extends A & B"); and optimally we might
+-        // want to choose the best match. Also, bounds are optional;
+-        // but here we are lucky in that implicit "Object" is
+-        // added as bounds if so.
+-        // Either way let's just use the first bound, for now, and
+-        // worry about better match later on if there is need.
+-
+-        /* 29-Jan-2010, tatu: One more problem are recursive types
+-         *   (T extends Comparable<T>). Need to add "placeholder"
+-         *   for resolution to catch those.
+-         */
+-        context._addPlaceholder(name);
+-        return _constructType(bounds[0], context);
++        JavaType[] pt = _resolveVariableViaBounds(type, context);
++        if (pt == null) {
++            // Ok, unknown? Better add placeholders to try to resolve at end
++            context._addPlaceholder(name);
++            return _unknownType();
++        }
++        // There are two main cases for the variable itself:
++        // (a) it has just one bound; or
++        // (b) it has 2 or more bounds (in which case bounds must be interfaces)
++        if (pt.length == 1) {
++            return pt[0];
++        }
++        // 21-Dec-2013, tatu: Alas, due to limitations of type handling in
++        //   Java, we have to choose one of the bound types for the "unknown"
++        //   type. For example, for "T extends Enum<T> & MyInterface" we MUST
++        //   return type for either Enum OR MyInterface, not something generic.
++        //   And if nothing else, let's follow lead of JDK and use the first
++        //   bound in this case.
++        return pt[0];
+     }
+-
+     protected JavaType _fromWildcard(WildcardType type, TypeBindings context)
+     {
+         /* Similar to challenges with TypeVariable, we may have

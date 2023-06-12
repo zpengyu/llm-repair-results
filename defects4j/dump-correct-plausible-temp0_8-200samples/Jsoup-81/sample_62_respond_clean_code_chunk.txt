@@ -1,0 +1,41 @@
+    static Document parseInputStream(InputStream input, String charsetName, String baseUri, Parser parser) throws IOException {
+        Validate.notNull(input, "Must provide an input stream");
+        if (charsetName == null) { // determine from meta. safe first parse as UTF-8
+            InputStreamReader reader = new InputStreamReader(input, defaultCharset);
+            String docData = StringUtil.readAll(reader);
+            Document doc = parser.parseInput(docData, baseUri);
+            // look for <meta http-equiv="Content-Type" content="text/html;charset=gb2312"> or HTML5 <meta charset="gb2312">
+            Elements metaElements = doc.select("meta[http-equiv=content-type], meta[charset]");
+            String foundCharset = null; // if not found, will keep utf-8 as best attempt
+            for (Element meta : metaElements) {
+                if (meta.hasAttr("http-equiv"))
+                    foundCharset = getCharsetFromContentType(meta.attr("content"));
+                if (foundCharset == null && meta.hasAttr("charset"))
+                    foundCharset = meta.attr("charset");
+                if (foundCharset != null)
+                    break;
+            }
+            // look for <?xml encoding='ISO-8859-1'?>
+            if (foundCharset == null && doc.childNodeSize() > 0) {
+                Node first = doc.childNode(0);
+                XmlDeclaration decl = null;
+                if (first instanceof XmlDeclaration)
+                    decl = (XmlDeclaration) first;
+                if (decl != null) {
+                    if (decl.name().equalsIgnoreCase("xml"))
+                        foundCharset = decl.attr("encoding");
+                }
+            }
+            foundCharset = validateCharset(foundCharset);
+            if (foundCharset != null && !foundCharset.equalsIgnoreCase(defaultCharset)) // need to re-decode. (case insensitive check here to match how validate works)
+                charsetName = foundCharset.trim().replaceAll("[\"']", "");
+            else
+                charsetName = defaultCharset;
+        }
+        Validate.notEmpty(charsetName, "Must set charset arg to character set of file to parse. Set to null to attempt to detect from HTML");
+        BufferedReader reader = new BufferedReader(new InputStreamReader(input, charsetName), bufferSize);
+        Document doc = parser.parseInput(reader, baseUri);
+        doc.outputSettings().charset(charsetName);
+        reader.close();
+        return doc;
+    }

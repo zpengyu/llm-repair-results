@@ -1,0 +1,51 @@
+diff --git a/src/com/google/javascript/jscomp/UnreachableCodeElimination.java b/src/com/google/javascript/jscomp/UnreachableCodeElimination.java
+index 60bfd244..8951a85e 100644
+--- a/src/com/google/javascript/jscomp/UnreachableCodeElimination.java
++++ b/src/com/google/javascript/jscomp/UnreachableCodeElimination.java
+@@ -190,12 +171,43 @@ class UnreachableCodeElimination extends AbstractPostOrderCallback
+     }
+     return n;
+   }
+-
+   private Node computeFollowing(Node n) {
+     Node next = ControlFlowAnalysis.computeFollowNode(n);
+-    return next;
++    if (next == null) {
++      return null;
++    }
++    while (true) {
++      Node parent = next.getParent();
++      if (parent == null) {
++        return next;
++      }
++      switch (parent.getType()) {
++        case Token.IF:
++          Node cond = parent.getFirstChild();
++          if (!cond.isTrue()) {
++            next = parent;
++            continue;
++          }
++          break;
++        case Token.WHILE:
++        case Token.DO:
++          Node cond = parent.getFirstChild();
++          if (!cond.isTrue()) {
++            next = parent;
++            continue;
++          }
++          break;
++        case Token.FOR:
++          Node cond = parent.getFirstChild();
++          if (!cond.isTrue()) {
++            next = parent;
++            continue;
++          }
++          break;
++      }
++      return next;
++    }
+   }
+-
+   private void removeDeadExprStatementSafely(Node n) {
+     Node parent = n.getParent();
+     if (n.getType() == Token.EMPTY ||

@@ -1,0 +1,53 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/deser/impl/ExternalTypeHandler.java b/src/main/java/com/fasterxml/jackson/databind/deser/impl/ExternalTypeHandler.java
+index b0797059f..6c3e31c45 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/deser/impl/ExternalTypeHandler.java
++++ b/src/main/java/com/fasterxml/jackson/databind/deser/impl/ExternalTypeHandler.java
+@@ -252,7 +252,7 @@ public class ExternalTypeHandler
+      * Variant called when creation of the POJO involves buffering of creator properties
+      * as well as property-based creator.
+      */
+-    public Object complete(JsonParser p, DeserializationContext ctxt,
++public Object complete(JsonParser p, DeserializationContext ctxt,
+             PropertyValueBuffer buffer, PropertyBasedCreator creator)
+         throws IOException
+     {
+@@ -260,30 +260,24 @@ public class ExternalTypeHandler
+         final int len = _properties.length;
+         Object[] values = new Object[len];
+         for (int i = 0; i < len; ++i) {
+-            String typeId = _typeIds[i];
+             final ExtTypedProperty extProp = _properties[i];
++            // let's allow missing both type and property (may already have been set, too)
++            if (_tokens[i] == null) {
++                continue;
++            }
++            // 29-Jul-2019, tatu: Some changes to avoid `NullPointerException` reported as
++            //   [databind#2046] as well as some re-arrangement to match 1.x code.
++            String typeId = _typeIds[i];
++            // 26-Oct-2012, tatu: As per [databind#94], must allow use of 'defaultImpl'
+             if (typeId == null) {
+-                // let's allow missing both type and property (may already have been set, too)
+-                if (_tokens[i] == null) {
+-                    continue;
+-                }
+-                // but not just one
+-                // 26-Oct-2012, tatu: As per [databind#94], must allow use of 'defaultImpl'
+                 if (!extProp.hasDefaultType()) {
+                     ctxt.reportInputMismatch(_beanType,
+                             "Missing external type id property '%s'",
+                             extProp.getTypePropertyName());
+-                } else {
+-                    typeId = extProp.getDefaultTypeId();
+                 }
+-            } else if (_tokens[i] == null) {
+-                SettableBeanProperty prop = extProp.getProperty();
+-                ctxt.reportInputMismatch(_beanType,
+-                        "Missing property '%s' for external type id '%s'",
+-                        prop.getName(), _properties[i].getTypePropertyName());
++                typeId = extProp.getDefaultTypeId();
+             }
+             values[i] = _deserialize(p, ctxt, i, typeId);
+-
+             final SettableBeanProperty prop = extProp.getProperty();
+             // also: if it's creator prop, fill in
+             if (prop.getCreatorIndex() >= 0) {

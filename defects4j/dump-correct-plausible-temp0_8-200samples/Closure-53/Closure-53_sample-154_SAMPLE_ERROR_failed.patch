@@ -1,0 +1,32 @@
+diff --git a/src/com/google/javascript/jscomp/InlineObjectLiterals.java b/src/com/google/javascript/jscomp/InlineObjectLiterals.java
+index 5b8fedb1..af104779 100644
+--- a/src/com/google/javascript/jscomp/InlineObjectLiterals.java
++++ b/src/com/google/javascript/jscomp/InlineObjectLiterals.java
+@@ -326,8 +325,8 @@ class InlineObjectLiterals implements CompilerPass {
+                    Node.newString(Token.NAME, varmap.get(var)),
+                    NodeUtil.newUndefinedNode(null)));
+       }
+-
+       Node replacement;
++      if (ref.isLValue()) {
+         // All assignments evaluate to true, so make sure that the
+         // expr statement evaluates to true in case it matters.
+         nodes.add(new Node(Token.TRUE));
+@@ -347,10 +345,15 @@ class InlineObjectLiterals implements CompilerPass {
+         }
+         cur.addChildToFront(nodes.get(i));
+         cur.addChildToFront(nodes.get(i + 1));
+-
++      } else {
++        replacement = new Node(Token.BLOCK);
++        for (Node node : Lists.reverse(nodes)) {
++          replacement.addChildToFront(
++              new Node(Token.EXPR_RESULT, node));
++        }
++      }
+       Node replace = ref.getParent();
+       replacement.copyInformationFromForTree(replace);
+-
+       if (replace.getType() == Token.VAR) {
+         replace.getParent().replaceChild(
+             replace, NodeUtil.newExpr(replacement));

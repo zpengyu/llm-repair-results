@@ -1,0 +1,353 @@
+diff --git a/src/main/java/org/apache/commons/collections4/trie/AbstractPatriciaTrie.java b/src/main/java/org/apache/commons/collections4/trie/AbstractPatriciaTrie.java
+index 9eaf0837..aa1d6c5e 100644
+--- a/src/main/java/org/apache/commons/collections4/trie/AbstractPatriciaTrie.java
++++ b/src/main/java/org/apache/commons/collections4/trie/AbstractPatriciaTrie.java
+@@ -2089,178 +2089,192 @@ abstract class AbstractPatriciaTrie<K, V> extends AbstractBitwiseTrie<K, V> {
+     /**
+      * A submap used for prefix views over the {@link Trie}.
+      */
+-    private class PrefixRangeMap extends RangeMap {
+-
+-        private final K prefix;
+-
+-        private final int offsetInBits;
+-
+-        private final int lengthInBits;
+-
+-        private K fromKey = null;
+-
+-        private K toKey = null;
+-
+-        private transient int expectedModCount = 0;
+-
+-        private int size = -1;
+-
+-        /**
+-         * Creates a {@link PrefixRangeMap}.
+-         */
+-        private PrefixRangeMap(final K prefix, final int offsetInBits, final int lengthInBits) {
+-            this.prefix = prefix;
+-            this.offsetInBits = offsetInBits;
+-            this.lengthInBits = lengthInBits;
+-        }
+-
+-        /**
+-         * This method does two things. It determines the FROM
+-         * and TO range of the {@link PrefixRangeMap} and the number
+-         * of elements in the range. This method must be called every
+-         * time the {@link Trie} has changed.
+-         */
+-        private int fixup() {
+-            // The trie has changed since we last found our toKey / fromKey
+-            if (size == - 1 || AbstractPatriciaTrie.this.modCount != expectedModCount) {
+-                final Iterator<Map.Entry<K, V>> it = super.entrySet().iterator();
+-                size = 0;
+-
+-                Map.Entry<K, V> entry = null;
+-                if (it.hasNext()) {
+-                    entry = it.next();
+-                    size = 1;
+-                }
+-
+-                fromKey = entry == null ? null : entry.getKey();
+-                if (fromKey != null) {
+-                    final TrieEntry<K, V> prior = previousEntry((TrieEntry<K, V>)entry);
+-                    fromKey = prior == null ? null : prior.getKey();
+-                }
+-
+-                toKey = fromKey;
+-
+-                while (it.hasNext()) {
+-                    ++size;
+-                    entry = it.next();
+-                }
+-
+-                toKey = entry == null ? null : entry.getKey();
+-
+-                if (toKey != null) {
+-                    entry = nextEntry((TrieEntry<K, V>)entry);
+-                    toKey = entry == null ? null : entry.getKey();
+-                }
+-
+-                expectedModCount = AbstractPatriciaTrie.this.modCount;
+-            }
+-
+-            return size;
+-        }
+-
+-        @Override
+-        public K firstKey() {
+-            fixup();
+-
+-            Map.Entry<K,V> e = null;
+-            if (fromKey == null) {
+-                e = firstEntry();
++class TrieRangeMap implements SortedMap<K, V> {
++    private final K fromKey;
++    private final boolean fromInclusive;
++    private final K toKey;
++    private final boolean toInclusive;
++    private final TrieEntry<K, V> fromEntry;
++    private final TrieEntry<K, V> toEntry;
++    private final int size;
++    public TrieRangeMap(final K fromKey, final boolean fromInclusive,
++                        final K toKey, final boolean toInclusive) {
++        this.fromKey = fromKey;
++        this.fromInclusive = fromInclusive;
++        this.toKey = toKey;
++        this.toInclusive = toInclusive;
++        this.fromEntry = fromKey != null ? TrieRangeMap.this.trie.find(fromKey, fromInclusive) : TrieRangeMap.this.trie.firstEntry();
++        this.toEntry = toKey != null ? TrieRangeMap.this.trie.find(toKey, toInclusive) : null;
++        if (fromKey != null) {
++            if (toKey != null) {
++                this.size = TrieRangeMap.this.trie.getCount(fromEntry, toEntry, false);
+             } else {
+-                e = higherEntry(fromKey);
+-            }
+-
+-            final K first = e != null ? e.getKey() : null;
+-            if (e == null || !getKeyAnalyzer().isPrefix(prefix, offsetInBits, lengthInBits, first)) {
+-                throw new NoSuchElementException();
++                this.size = TrieRangeMap.this.trie.getCount(fromEntry);
+             }
+-
+-            return first;
++        } else if (toKey != null) {
++            this.size = TrieRangeMap.this.trie.getCount(toEntry);
++        } else {
++            this.size = TrieRangeMap.this.trie.getSize();
+         }
+-
+-        @Override
+-        public K lastKey() {
+-            fixup();
+-
+-            Map.Entry<K,V> e = null;
+-            if (toKey == null) {
+-                e = lastEntry();
+-            } else {
+-                e = lowerEntry(toKey);
+-            }
+-
+-            final K last = e != null ? e.getKey() : null;
+-            if (e == null || !getKeyAnalyzer().isPrefix(prefix, offsetInBits, lengthInBits, last)) {
+-                throw new NoSuchElementException();
++    }
++    @Override
++    public boolean isEmpty() {
++        return size == 0;
++    }
++    @Override
++    public int size() {
++        return size;
++    }
++    @Override
++    public boolean containsKey(final Object key) {
++        return inRange((K)key);
++    }
++    @Override
++    public boolean containsValue(final Object value) {
++        for (final Entry<K, V> entry : entrySet()) {
++            if (Util.<V>equals(entry.getValue(), value)) {
++                return true;
+             }
+-
+-            return last;
+         }
+-
+-        /**
+-         * Returns true if this {@link PrefixRangeMap}'s key is a prefix of the provided key.
+-         */
+-        @Override
+-        protected boolean inRange(final K key) {
+-            return getKeyAnalyzer().isPrefix(prefix, offsetInBits, lengthInBits, key);
++        return false;
++    }
++    @Override
++    public V get(final Object key) {
++        if (inRange((K)key)) {
++            return TrieRangeMap.this.trie.get(key);
+         }
+-
+-        /**
+-         * Same as {@link #inRange(Object)}.
+-         */
+-        @Override
+-        protected boolean inRange2(final K key) {
+-            return inRange(key);
++        return null;
++    }
++    @Override
++    public V put(final K key, final V value) {
++        if (inRange(key)) {
++            return TrieRangeMap.this.trie.put(key, value);
+         }
+-
+-        /**
+-         * Returns true if the provided Key is in the FROM range of the {@link PrefixRangeMap}.
+-         */
+-        @Override
+-        protected boolean inFromRange(final K key, final boolean forceInclusive) {
+-            return getKeyAnalyzer().isPrefix(prefix, offsetInBits, lengthInBits, key);
++        throw new IllegalArgumentException("Key is out of range!");
++    }
++    @Override
++    public V remove(final Object key) {
++        if (inRange((K)key)) {
++            return TrieRangeMap.this.trie.remove(key);
+         }
+-
+-        /**
+-         * Returns true if the provided Key is in the TO range of the {@link PrefixRangeMap}.
+-         */
+-        @Override
+-        protected boolean inToRange(final K key, final boolean forceInclusive) {
+-            return getKeyAnalyzer().isPrefix(prefix, offsetInBits, lengthInBits, key);
++        return null;
++    }
++    @Override
++    public void putAll(final Map<? extends K, ? extends V> map) {
++        for (final Entry<? extends K, ? extends V> entry : map.entrySet()) {
++            put(entry.getKey(), entry.getValue());
+         }
+-
+-        @Override
+-        protected Set<Map.Entry<K, V>> createEntrySet() {
+-            return new PrefixRangeEntrySet(this);
++    }
++    @Override
++    public void clear() {
++        final Iterator<Entry<K, V>> it = entrySet().iterator();
++        while (it.hasNext()) {
++            it.next();
++            it.remove();
+         }
+-
+-        @Override
+-        public K getFromKey() {
+-            return fromKey;
++    }
++    @Override
++    public Comparator<? super K> comparator() {
++        return TrieRangeMap.this.trie.comparator();
++    }
++    @Override
++    public SortedMap<K, V> subMap(final K fromKey, final K toKey) {
++        if (!inRange(fromKey)) {
++            throw new IllegalArgumentException("From key out of range!");
+         }
+-
+-        @Override
+-        public K getToKey() {
+-            return toKey;
++        if (!inRange(toKey)) {
++            throw new IllegalArgumentException("To key out of range!");
+         }
+-
+-        @Override
+-        public boolean isFromInclusive() {
+-            return false;
++        return new TrieRangeMap(fromKey, true, toKey, false);
++    }
++    @Override
++    public SortedMap<K, V> headMap(final K toKey) {
++        if (!inRange(toKey)) {
++            throw new IllegalArgumentException("To key out of range!");
+         }
+-
+-        @Override
+-        public boolean isToInclusive() {
+-            return false;
++        return new TrieRangeMap(fromKey, fromInclusive, toKey, false);
++    }
++    @Override
++    public SortedMap<K, V> tailMap(final K fromKey) {
++        if (!inRange(fromKey)) {
++            throw new IllegalArgumentException("From key out of range!");
+         }
+-
+-        @Override
+-        protected SortedMap<K, V> createRangeMap(final K fromKey, final boolean fromInclusive,
+-                                                 final K toKey, final boolean toInclusive) {
+-            return new RangeEntryMap(fromKey, fromInclusive, toKey, toInclusive);
++        return new TrieRangeMap(fromKey, true, toKey, toInclusive);
++    }
++    @Override
++    public K firstKey() {
++        final TrieEntry<K, V> e = fromEntry;
++        if (e != null) {
++            return e.getKey();
+         }
+-
++        throw new NoSuchElementException();
+     }
+-
++    @Override
++    public K lastKey() {
++        final TrieEntry<K, V> e = toEntry;
++        if (e != null) {
++            return e.getKey();
++        }
++        throw new NoSuchElementException();
++    }
++    @Override
++    public Set<K> keySet() {
++        return new AbstractSet<K>() {
++            @Override
++            public Iterator<K> iterator() {
++                return new TrieIterator<K, V>(TrieRangeMap.this.trie, TrieRangeMap.this.trie.size()) {
++                    @Override
++                    protected K get(final TrieEntry<K, V> entry) {
++                        return entry.getKey();
++                    }
++                };
++            }
++            @Override
++            public int size() {
++                return size;
++            }
++        };
++    }
++    @Override
++    public Collection<V> values() {
++        return new AbstractCollection<V>() {
++            @Override
++            public Iterator<V> iterator() {
++                return new TrieIterator<K, V>(TrieRangeMap.this.trie, TrieRangeMap.this.trie.size()) {
++                    @Override
++                    protected V get(final TrieEntry<K, V> entry) {
++                        return entry.getValue();
++                    }
++                };
++            }
++            @Override
++            public int size() {
++                return size;
++            }
++        };
++    }
++    @Override
++    public Set<Entry<K, V>> entrySet() {
++        return new AbstractSet<Entry<K, V>>() {
++            @Override
++            public Iterator<Entry<K, V>> iterator() {
++                return new TrieIterator<K, V>(TrieRangeMap.this.trie, TrieRangeMap.this.trie.size()) {
++                    @Override
++                    protected Entry<K, V> get(final TrieEntry<K, V> entry) {
++                        return entry;
++                    }
++                };
++            }
++            @Override
++            public int size() {
++                return size;
++            }
++        };
++    }
++    private boolean inRange(final K key) {
++        return TrieRangeMap.this.trie.inRange(key, fromKey, fromInclusive, toKey, toInclusive);
++    }
++}
+     /**
+      * A prefix {@link RangeEntrySet} view of the {@link Trie}.
+      */

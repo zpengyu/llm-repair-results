@@ -1,0 +1,25 @@
+diff --git a/gson/src/main/java/com/google/gson/internal/$Gson$Types.java b/gson/src/main/java/com/google/gson/internal/$Gson$Types.java
+index 173598a1..37461b35 100644
+--- a/gson/src/main/java/com/google/gson/internal/$Gson$Types.java
++++ b/gson/src/main/java/com/google/gson/internal/$Gson$Types.java
+@@ -340,11 +340,16 @@ public final class $Gson$Types {
+       if (toResolve instanceof TypeVariable) {
+         TypeVariable<?> typeVariable = (TypeVariable<?>) toResolve;
+           // cannot reduce due to infinite recursion
+-        toResolve = resolveTypeVariable(context, contextRawType, typeVariable);
+-        if (toResolve == typeVariable) {
+-          return toResolve;
++        if(!visitedTypeVariables.contains(typeVariable)) {
++          visitedTypeVariables.add(typeVariable);
++          toResolve = resolveTypeVariable(context, contextRawType, typeVariable);
++          if (toResolve == typeVariable) {
++            return toResolve;
++          }
++        }
++        else {
++          toResolve = typeVariable.getBounds()[0];
+         }
+-
+       } else if (toResolve instanceof Class && ((Class<?>) toResolve).isArray()) {
+         Class<?> original = (Class<?>) toResolve;
+         Type componentType = original.getComponentType();

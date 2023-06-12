@@ -1,0 +1,33 @@
+diff --git a/src/org/mockito/internal/creation/instance/ConstructorInstantiator.java b/src/org/mockito/internal/creation/instance/ConstructorInstantiator.java
+index 972e1a282..d2050b042 100644
+--- a/src/org/mockito/internal/creation/instance/ConstructorInstantiator.java
++++ b/src/org/mockito/internal/creation/instance/ConstructorInstantiator.java
+@@ -24,10 +20,26 @@ public class ConstructorInstantiator implements Instantiator {
+             Constructor<T> c = cls.getDeclaredConstructor(outerClassInstance.getClass());
+             return c.newInstance(outerClassInstance);
+         } catch (Exception e) {
+-            throw paramsException(cls, e);
++            if (e instanceof InvocationTargetException) {
++                return tryFromConstructors(outerClassInstance, cls);
++            } else {
++                throw paramsException(cls, e);
++            }
+         }
+     }
+-
++    private static <T> T tryFromConstructors(Object instance, Class<T> cls) {
++        for (Constructor constructor : cls.getDeclaredConstructors()) {
++            constructor.setAccessible(true);
++            if (constructor.getParameterTypes().length == 1) {
++                try {
++                    return (T) constructor.newInstance(instance);
++                } catch (Exception e1) {
++                    e1.printStackTrace();
++                }
++            }
++        }
++        throw paramsException(cls, new InvocationTargetException(new Exception("Constructor not found")));
++    }
+     private static <T> InstantationException paramsException(Class<T> cls, Exception e) {
+         return new InstantationException("Unable to create mock instance of '"
+                 + cls.getSimpleName() + "'.\nPlease ensure that the outer instance has correct type and that the target class has parameter-less constructor.", e);

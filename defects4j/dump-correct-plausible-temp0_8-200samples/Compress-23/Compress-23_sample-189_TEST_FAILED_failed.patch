@@ -1,0 +1,26 @@
+diff --git a/src/main/java/org/apache/commons/compress/archivers/sevenz/Coders.java b/src/main/java/org/apache/commons/compress/archivers/sevenz/Coders.java
+index cd396b04..a6ff6a84 100644
+--- a/src/main/java/org/apache/commons/compress/archivers/sevenz/Coders.java
++++ b/src/main/java/org/apache/commons/compress/archivers/sevenz/Coders.java
+@@ -107,7 +107,10 @@ class Coders {
+         InputStream decode(final InputStream in, final Coder coder,
+                 byte[] password) throws IOException {
+             byte propsByte = coder.properties[0];
+-            long dictSize = coder.properties[1];
++            long dictSize = 0xFFFFFFFF; //coder.properties[1];
++            if(dictSize == 0xFFFFFFFF) {
++                dictSize = 0xFFFFFFFF;
++            }
+             for (int i = 1; i < 4; i++) {
+                 dictSize |= (coder.properties[i + 1] << (8 * i));
+             }
+@@ -115,8 +118,7 @@ class Coders {
+                 throw new IOException("Dictionary larger than 4GiB maximum size");
+             }
+             return new LZMAInputStream(in, -1, propsByte, (int) dictSize);
+-        }
+-    }
++        }    }
+     
+     static class DeflateDecoder extends CoderBase {
+         @Override

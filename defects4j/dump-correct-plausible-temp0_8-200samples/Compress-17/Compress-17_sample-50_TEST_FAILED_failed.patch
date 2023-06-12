@@ -1,0 +1,35 @@
+diff --git a/src/main/java/org/apache/commons/compress/archivers/tar/TarUtils.java b/src/main/java/org/apache/commons/compress/archivers/tar/TarUtils.java
+index 34ecc5ac..57a2b4f2 100644
+--- a/src/main/java/org/apache/commons/compress/archivers/tar/TarUtils.java
++++ b/src/main/java/org/apache/commons/compress/archivers/tar/TarUtils.java
+@@ -128,7 +124,7 @@ public class TarUtils {
+             end--;
+         } else {
+             throw new IllegalArgumentException(
+-                    exceptionMessage(buffer, offset, length, end-1, trailer));
++                                               exceptionMessage(buffer, offset, length, end-1, trailer));
+         }
+         // May have additional NULs or spaces
+         trailer = buffer[end - 1];
+@@ -141,15 +136,17 @@ public class TarUtils {
+             // CheckStyle:MagicNumber OFF
+             if (currentByte < '0' || currentByte > '7'){
+                 throw new IllegalArgumentException(
+-                        exceptionMessage(buffer, offset, length, start, currentByte));
++                                                   exceptionMessage(buffer, offset, length, start, currentByte));
++            }
++            if(result > Long.MAX_VALUE/8){
++                throw new NumberFormatException("Value cannot be converted to long");
++            }else{
++                result = (result << 3) + (currentByte - '0'); // convert from ASCII
+             }
+-            result = (result << 3) + (currentByte - '0'); // convert from ASCII
+             // CheckStyle:MagicNumber ON
+         }
+-
+         return result;
+     }
+-
+     /** 
+      * Compute the value contained in a byte buffer.  If the most
+      * significant bit of the first byte in the buffer is set, this

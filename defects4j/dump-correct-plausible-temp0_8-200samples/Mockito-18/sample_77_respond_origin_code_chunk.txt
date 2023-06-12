@@ -1,0 +1,18 @@
+    Object returnValueFor(Class<?> type) {
+        if (Primitives.isPrimitiveOrWrapper(type)) {
+            return Primitives.defaultValueForPrimitiveOrWrapper(type);
+            //new instances are used instead of Collections.emptyList(), etc.
+            //to avoid UnsupportedOperationException if code under test modifies returned collection
+        } else if (type.isInterface()) {
+            return ObjectMethodsGuru.INSTANCE.isCollection(type) ?
+                new LinkedList<Object>() : ObjectMethodsGuru.INSTANCE.isMap(type) ?
+                new HashMap<Object, Object>() : null;
+        } else {
+            try {
+                return type.newInstance();
+            } catch (Exception e) {
+                return null;
+            }
+        }
+    }
+

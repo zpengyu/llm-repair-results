@@ -1,0 +1,73 @@
+diff --git a/src/main/java/org/jsoup/helper/DataUtil.java b/src/main/java/org/jsoup/helper/DataUtil.java
+index bbbd8fb..f20c200 100644
+--- a/src/main/java/org/jsoup/helper/DataUtil.java
++++ b/src/main/java/org/jsoup/helper/DataUtil.java
+@@ -90,31 +90,17 @@ public final class DataUtil {
+         }
+     }
+ 
+-    static Document parseInputStream(InputStream input, String charsetName, String baseUri, Parser parser) throws IOException  {
+-        if (input == null) // empty body
+-            return new Document(baseUri);
+-        input = ConstrainableInputStream.wrap(input, bufferSize, 0);
+-
+-        Document doc = null;
+-        boolean fullyRead = false;
+-
+-        // read the start of the stream and look for a BOM or meta charset
+-        input.mark(bufferSize);
+-        ByteBuffer firstBytes = readToByteBuffer(input, firstReadBufferSize - 1); // -1 because we read one more to see if completed. First read is < buffer size, so can't be invalid.
+-        fullyRead = input.read() == -1;
++    static Document parseInputStream(InputStream input, String charsetName, String baseUri, Parser parser) throws IOException {
++        Validate.notNull(input, "Must provide an input stream");
++        // empty body
++        if (input.read() == -1) return new Document(baseUri);
+         input.reset();
+-
+-        // look for BOM - overrides any other header or input
+-        BomCharset bomCharset = detectCharsetFromBom(firstBytes);
+-        if (bomCharset != null) {
+-            charsetName = bomCharset.charset;
+-            input.skip(bomCharset.offset);
+-        }
+-
++        Document doc = null;
+         if (charsetName == null) { // determine from meta. safe first parse as UTF-8
+-            String docData = Charset.forName(defaultCharset).decode(firstBytes).toString();
+-            doc = parser.parseInput(docData, baseUri);
+-
++            input.mark(bufferSize);
++            ByteBuffer firstBytes = readToByteBuffer(input, firstReadBufferSize - 1); // -1 because we read one more to see if completed. First read is < buffer size, so can't be invalid.
++            input.reset();
++            doc = parser.parseInput(Charset.forName(defaultCharset).decode(firstBytes).toString(), baseUri);
+             // look for <meta http-equiv="Content-Type" content="text/html;charset=gb2312"> or HTML5 <meta charset="gb2312">
+             Elements metaElements = doc.select("meta[http-equiv=content-type], meta[charset]");
+             String foundCharset = null; // if not found, will keep utf-8 as best attempt
+@@ -138,18 +123,23 @@ public final class DataUtil {
+                 foundCharset = foundCharset.trim().replaceAll("[\"']", "");
+                 charsetName = foundCharset;
+                 doc = null;
+-            } else if (!fullyRead) {
+-                doc = null;
+             }
+         } else { // specified by content type header (or by user on file load)
+             Validate.notEmpty(charsetName, "Must set charset arg to character set of file to parse. Set to null to attempt to detect from HTML");
+         }
+         if (doc == null) {
++            // look for BOM - overrides any other header or input
++            input.mark(bufferSize);
++            BomCharset bomCharset = detectCharsetFromBom(readToByteBuffer(input, firstReadBufferSize));
++            if (bomCharset != null) {
++                charsetName = bomCharset.charset;
++                input.reset();
++                input.skip(bomCharset.offset);
++            }
+             if (charsetName == null)
+                 charsetName = defaultCharset;
+             BufferedReader reader = new BufferedReader(new InputStreamReader(input, charsetName), bufferSize);
+-                doc = parser.parseInput(reader, baseUri);
+-                // io exception when parsing (not seen before because reading the stream as we go)
++            doc = parser.parseInput(reader, baseUri);
+             doc.outputSettings().charset(charsetName);
+         }
+         input.close();

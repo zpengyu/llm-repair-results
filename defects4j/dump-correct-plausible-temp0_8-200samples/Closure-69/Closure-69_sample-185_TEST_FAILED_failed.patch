@@ -1,0 +1,31 @@
+diff --git a/src/com/google/javascript/jscomp/TypeCheck.java b/src/com/google/javascript/jscomp/TypeCheck.java
+index 6030d48d..3123d7c4 100644
+--- a/src/com/google/javascript/jscomp/TypeCheck.java
++++ b/src/com/google/javascript/jscomp/TypeCheck.java
+@@ -1544,13 +1544,6 @@ public class TypeCheck implements NodeTraversal.Callback, CompilerPass {
+   private void visitCall(NodeTraversal t, Node n) {
+     Node child = n.getFirstChild();
+     JSType childType = getJSType(child).restrictByNotNullOrUndefined();
+-
+-    if (!childType.canBeCalled()) {
+-      report(t, n, NOT_CALLABLE, childType.toString());
+-      ensureTyped(t, n);
+-      return;
+-    }
+-
+     // A couple of types can be called as if they were functions.
+     // If it is a function type, then validate parameters.
+     if (childType instanceof FunctionType) {
+@@ -1581,9 +1570,11 @@ public class TypeCheck implements NodeTraversal.Callback, CompilerPass {
+       visitParameterList(t, n, functionType);
+       ensureTyped(t, n, functionType.getReturnType());
+     } else {
++      if (!childType.canBeCalled()) {
++        report(t, n, NOT_CALLABLE, childType.toString());
++      }
+       ensureTyped(t, n);
+     }
+-
+     // TODO: Add something to check for calls of RegExp objects, which is not
+     // supported by IE.  Either say something about the return type or warn
+     // about the non-portability of the call or both.

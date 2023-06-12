@@ -1,0 +1,33 @@
+diff --git a/src/com/google/javascript/jscomp/TypeInference.java b/src/com/google/javascript/jscomp/TypeInference.java
+index 53e8cb48..85bb94e1 100644
+--- a/src/com/google/javascript/jscomp/TypeInference.java
++++ b/src/com/google/javascript/jscomp/TypeInference.java
+@@ -544,10 +543,14 @@ class TypeInference
+         // is as narrow as it can possibly be, but we need to make
+         // sure we back-infer the <string> element constraint on
+         // the left hand side, so we use the left hand side.
+-
+-        boolean isVarTypeBetter = !isVarDeclaration || var == null || var.isTypeInferred();
+-            // Makes it easier to check for NPEs.
+-
++        //
++        // However, if the var's type is already undefined, we want to
++        // keep it undefined. We don't want to set the type based on the
++        // initialization. This allows us to catch more type errors based on
++        // the initialization, but only if we're not already expecting
++        // undefined.
++        boolean isVarTypeBetter = !isVarDeclaration || var == null ||
++            (var.getType() != null && var.getType().isUnknownType());
+         // TODO(nicksantos): This might be a better check once we have
+         // back-inference of object/array constraints.  It will probably
+         // introduce more type warnings.  It uses the result type iff it's
+@@ -563,8 +564,7 @@ class TypeInference
+         }
+         left.setJSType(isVarDeclaration || leftType == null ?
+             resultType : null);
+-
+-        if (var != null && var.isTypeInferred()) {
++        if (var != null && var.getType() != null) {
+           JSType oldType = var.getType();
+           var.setType(oldType == null ?
+               resultType : oldType.getLeastSupertype(resultType));

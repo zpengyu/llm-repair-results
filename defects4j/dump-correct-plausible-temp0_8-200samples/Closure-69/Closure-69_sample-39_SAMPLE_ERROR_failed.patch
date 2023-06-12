@@ -1,0 +1,26 @@
+diff --git a/src/com/google/javascript/jscomp/TypeCheck.java b/src/com/google/javascript/jscomp/TypeCheck.java
+index 6030d48d..f9e32388 100644
+--- a/src/com/google/javascript/jscomp/TypeCheck.java
++++ b/src/com/google/javascript/jscomp/TypeCheck.java
+@@ -1574,10 +1570,19 @@ public class TypeCheck implements NodeTraversal.Callback, CompilerPass {
+            !isExtern)) {
+         report(t, n, CONSTRUCTOR_NOT_CALLABLE, childType.toString());
+       }
+-
+       // Functions with explcit 'this' types must be called in a GETPROP
+       // or GETELEM.
+-
++      // TODO(nicksantos): If a function is used as a call AND a
++      // get, then this check will fire twice.
++      if (functionType.isConstructor() &&
++          n.getType() == Token.CALL &&
++          !n.getParent().isGetProp() &&
++          !n.getParent().isGetElem()) {
++        String msg = String.format(
++            "Constructor %s used in non-member access.",
++            getReadableJSTypeName(functionType));
++        report(t, n, CONSTRUCTOR_USED_AS_FUNCTION, msg);
++      }
+       visitParameterList(t, n, functionType);
+       ensureTyped(t, n, functionType.getReturnType());
+     } else {

@@ -1,0 +1,41 @@
+diff --git a/src/main/java/org/apache/commons/math3/optimization/linear/SimplexTableau.java b/src/main/java/org/apache/commons/math3/optimization/linear/SimplexTableau.java
+index 5287bdf95..b7a7b7a33 100644
+--- a/src/main/java/org/apache/commons/math3/optimization/linear/SimplexTableau.java
++++ b/src/main/java/org/apache/commons/math3/optimization/linear/SimplexTableau.java
+@@ -361,11 +356,34 @@ class SimplexTableau implements Serializable {
+         for (int i = columnsToDrop.size() - 1; i >= 0; i--) {
+           columnLabels.remove((int) columnsToDrop.get(i));
+         }
+-
+         this.tableau = new Array2DRowRealMatrix(matrix);
+         this.numArtificialVariables = 0;
++        dropUnusedArtificialVariables();
++    }
++    private void dropUnusedArtificialVariables() {
++        int droppedVar = 0;
++        for (int i = 0; i < getNumArtificialVariables(); i++) {
++            if (nonRestrictedVariables[i]) {
++                droppedVar = i + getArtificialVariableOffset();
++                break;
++            }
++        }
++        if (droppedVar != 0) {
++            List<Integer> columnsToDrop = new ArrayList<Integer>();
++            columnsToDrop.add(droppedVar);
++            double[][] matrix = new double[getHeight()][getWidth() - 1];
++            int col = 0;
++            for (int j = 0; j < getWidth(); j++) {
++                if (!columnsToDrop.contains(j)) {
++                    for (int i = 0; i < getHeight(); i++) {
++                        matrix[i][col] = tableau.getEntry(i, j);
++                    }
++                    col++;
++                }
++            }
++            this.tableau = new Array2DRowRealMatrix(matrix);
++        }
+     }
+-
+     /**
+      * @param src the source array
+      * @param dest the destination array

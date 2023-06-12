@@ -1,0 +1,69 @@
+diff --git a/src/java/org/apache/commons/jxpath/ri/axes/AttributeContext.java b/src/java/org/apache/commons/jxpath/ri/axes/AttributeContext.java
+index 25d0931..abe4f54 100644
+--- a/src/java/org/apache/commons/jxpath/ri/axes/AttributeContext.java
++++ b/src/java/org/apache/commons/jxpath/ri/axes/AttributeContext.java
+@@ -30,12 +30,9 @@ import org.apache.commons.jxpath.ri.model.NodePointer;
+  * @version $Revision$ $Date$
+  */
+ public class AttributeContext extends EvalContext {
+-
+     private NodeTest nodeTest;
+-    private boolean setStarted = false;
+     private NodeIterator iterator;
+     private NodePointer currentNodePointer;
+-
+     /**
+      * @param parentContext represents the previous step on the path
+      * @param nodeTest is the name of the attribute we are looking for
+@@ -43,18 +40,20 @@ public class AttributeContext extends EvalContext {
+     public AttributeContext(EvalContext parentContext, NodeTest nodeTest) {
+         super(parentContext);
+         this.nodeTest = nodeTest;
++        reset();
+     }
+-
+     public NodePointer getCurrentNodePointer() {
+         return currentNodePointer;
+     }
+-
+     public void reset() {
+-        setStarted = false;
+-        iterator = null;
+-        super.reset();
++        if (!(nodeTest instanceof NodeNameTest)) {
++            return;
++        }
++        QName name = ((NodeNameTest) nodeTest).getNodeName();
++        iterator = parentContext.getCurrentNodePointer().attributeIterator(name);
++        setCurrentPosition(0);
++        nextNode();
+     }
+-
+     public boolean setPosition(int position) {
+         if (position < getCurrentPosition()) {
+             reset();
+@@ -67,22 +65,12 @@ public class AttributeContext extends EvalContext {
+         }
+         return true;
+     }
+-
+     public boolean nextNode() {
+-        super.setPosition(getCurrentPosition() + 1);
+-        if (!setStarted) {
+-            setStarted = true;
+-            if (!(nodeTest instanceof NodeNameTest)) {
+-                return false;
+-            }
+-            QName name = ((NodeNameTest) nodeTest).getNodeName();
+-            iterator =
+-                parentContext.getCurrentNodePointer().attributeIterator(name);
+-        }
++        setCurrentPosition(getCurrentPosition() + 1);
+         if (iterator == null) {
+             return false;
+         }
+-        if (!iterator.setPosition(iterator.getPosition() + 1)) {
++        if (!iterator.setPosition(getCurrentPosition())) {
+             return false;
+         }
+         currentNodePointer = iterator.getNodePointer();

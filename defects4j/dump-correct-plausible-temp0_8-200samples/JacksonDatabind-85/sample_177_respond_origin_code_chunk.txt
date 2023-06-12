@@ -1,0 +1,57 @@
+    public JsonSerializer<?> createContextual(SerializerProvider serializers,
+            BeanProperty property) throws JsonMappingException
+    {
+        if (property == null) {
+            return this;
+        }
+        JsonFormat.Value format = findFormatOverrides(serializers, property, handledType());
+        if (format == null) {
+            return this;
+        }
+        // Simple case first: serialize as numeric timestamp?
+        JsonFormat.Shape shape = format.getShape();
+        if (shape.isNumeric()) {
+            return withFormat(Boolean.TRUE, null);
+        }
+        final TimeZone tz = format.getTimeZone();
+        final Locale loc = format.getLocale();
+        if (loc == null) {
+            serializers.reportBadDefinition(handledType(),
+                String.format("Locale can not be null"));
+        }
+        // 08-Jun-2017, tatu: With [databind#1648], this gets bit tricky..
+        // First: custom pattern will override things
+        if (format.hasPattern()) {
+            SimpleDateFormat df = new SimpleDateFormat(format.getPattern(), loc);
+            if (tz == null) {
+                tz = serializers.getTimeZone();
+            }
+            df.setTimeZone(tz);
+            return withFormat(Boolean.FALSE, df);
+        }
+        String pattern = null;
+        switch (shape) {
+        case STRING:
+            break;
+        case NUMBER:
+            pattern = StdDateFormat.DATE_FORMAT_STR_NUM_INPUT;
+            break;
+        case ARRAY:
+            pattern = StdDateFormat.DATE_FORMAT_STR_ARRAY_INPUT;
+            break;
+        case OBJECT:
+            pattern = StdDateFormat.DATE_FORMAT_STR_OBJECT_INPUT;
+            break;
+        default:
+            serializers.reportBadDefinition(handledType(),
+                String.format("Unexpected shape (%s) for DateFormat", shape));
+            break;
+        }
+        // Finally: need a new instance
+        SimpleDateFormat df = new SimpleDateFormat(pattern, loc);
+        if (tz == null) {
+            tz = serializers.getTimeZone();
+        }
+        df.setTimeZone(tz);
+        return withFormat(Boolean.FALSE, df);
+    }

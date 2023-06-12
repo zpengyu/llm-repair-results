@@ -1,0 +1,27 @@
+diff --git a/src/main/java/org/jsoup/safety/Cleaner.java b/src/main/java/org/jsoup/safety/Cleaner.java
+index c6879b1..d6a89f1 100644
+--- a/src/main/java/org/jsoup/safety/Cleaner.java
++++ b/src/main/java/org/jsoup/safety/Cleaner.java
+@@ -112,10 +98,20 @@ public class Cleaner {
+         }
+         Attributes enforcedAttrs = whitelist.getEnforcedAttributes(sourceTag);
+         destAttrs.addAll(enforcedAttrs);
+-
++        String destTag = dest.tagName();
++        if (destTag.equalsIgnoreCase("a")) {
++            String url = destAttrs.getIgnoreCase("href");
++            if (StringUtil.isBlank(url)) {
++                destAttrs.put(new Attribute("href", "javascript:void(0)"));
++            }
++        } else if (destTag.equalsIgnoreCase("img")) {
++            String url = destAttrs.getIgnoreCase("src");
++            if (StringUtil.isBlank(url)) {
++                destAttrs.put(new Attribute("src", "/images/common/no_img.gif"));
++            }
++        }
+         return new ElementMeta(dest, numDiscarded);
+     }
+-
+     private static class ElementMeta {
+         Element el;
+         int numAttribsDiscarded;

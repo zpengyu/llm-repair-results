@@ -1,0 +1,30 @@
+diff --git a/src/org/mockito/internal/invocation/InvocationMatcher.java b/src/org/mockito/internal/invocation/InvocationMatcher.java
+index 7b877b1e2..c94c14d87 100644
+--- a/src/org/mockito/internal/invocation/InvocationMatcher.java
++++ b/src/org/mockito/internal/invocation/InvocationMatcher.java
+@@ -120,17 +120,16 @@ public class InvocationMatcher implements DescribedInvocation, CapturesArgumensF
+     public void captureArgumentsFrom(Invocation invocation) {
+         if (invocation.getMethod().isVarArgs()) {
+             int indexOfVararg = invocation.getRawArguments().length - 1;
+-            throw new UnsupportedOperationException();
+-
+-        } else {
+-            for (int position = 0; position < matchers.size(); position++) {
+-                Matcher m = matchers.get(position);
+-                if (m instanceof CapturesArguments) {
+-                    ((CapturesArguments) m).captureFrom(invocation.getArgumentAt(position, Object.class));
+-                }
++            if(!isVarargMatcher(matchers.get(indexOfVararg))){
++                throw new IllegalStateException("You cannot use a non vararg matcher to capture vararg arguments! Have you considered annotating your vararg parameter as @Capturing?");
+             }
++            Object array = invocation.getRawArguments()[indexOfVararg];
++            for (int i = 0; i < Array.getLength(array); i++) {
++                ((CapturesArguments) matchers.get(indexOfVararg)).captureFrom(Array.get(array, i));
++            }
++            //since we've captured all varargs already, it does not make sense to process other matchers.
++            return;
+         }
+-
+ //        for (int position = 0; position < matchers.size(); position++) {
+ //            Matcher m = matchers.get(position);
+ //            if (m instanceof CapturesArguments && invocation.getRawArguments().length > position) {

@@ -1,0 +1,61 @@
+diff --git a/src/java/org/apache/commons/jxpath/ri/compiler/CoreOperationCompare.java b/src/java/org/apache/commons/jxpath/ri/compiler/CoreOperationCompare.java
+index cc45a8f..6c66f97 100644
+--- a/src/java/org/apache/commons/jxpath/ri/compiler/CoreOperationCompare.java
++++ b/src/java/org/apache/commons/jxpath/ri/compiler/CoreOperationCompare.java
+@@ -49,11 +49,8 @@ public abstract class CoreOperationCompare extends CoreOperation {
+     {
+         Object l = left.compute(context);
+         Object r = right.compute(context);
+-
+-//        System.err.println("COMPARING: " +
+-//            (l == null ? "null" : l.getClass().getName()) + " " +
+-//            (r == null ? "null" : r.getClass().getName()));
+-
++        Object lm = null;
++        Object rm = null;
+         if (l instanceof InitialContext || l instanceof SelfContext) {
+             l = ((EvalContext) l).getSingleNodePointer();
+         }
+@@ -69,19 +63,37 @@ public abstract class CoreOperationCompare extends CoreOperation {
+         if (r instanceof Collection) {
+             r = ((Collection) r).iterator();
+         }
+-
+-        if ((l instanceof Iterator) && !(r instanceof Iterator)) {
++        if (l instanceof Iterator && !(r instanceof Iterator)) {
+             return contains((Iterator) l, r);
+         }
+-        if (!(l instanceof Iterator) && (r instanceof Iterator)) {
++        if (!(l instanceof Iterator) && r instanceof Iterator) {
+             return contains((Iterator) r, l);
+         }
+         if (l instanceof Iterator && r instanceof Iterator) {
+             return findMatch((Iterator) l, (Iterator) r);
+         }
+-        return equal(l, r);
++        lm = l;
++        rm = r;
++        if (lm != null && lm instanceof Number) {
++            rm = ValueUtils.convertNumber(r, Number.class);
++            if (rm == null) {
++                return false;
++            }
++        } else if (rm != null && rm instanceof Number) {
++            lm = ValueUtils.convertNumber(l, Number.class);
++            if (lm == null) {
++                return false;
++            }
++        } else if (lm != null && rm != null) {
++            if ((lm instanceof String && rm instanceof String)
++                || (lm instanceof Number && rm instanceof Number)) 
++            {
++                lm = ValueUtils.getStringValue(l);
++                rm = ValueUtils.getStringValue(r);
++            }
++        }
++        return ValueUtils.equal(lm, rm);
+     }
+-
+     protected boolean contains(Iterator it, Object value) {
+         while (it.hasNext()) {
+             Object element = it.next();

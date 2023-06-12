@@ -1,0 +1,22 @@
+diff --git a/src/com/google/javascript/jscomp/TypeCheck.java b/src/com/google/javascript/jscomp/TypeCheck.java
+index 75a54ad5..35853da7 100644
+--- a/src/com/google/javascript/jscomp/TypeCheck.java
++++ b/src/com/google/javascript/jscomp/TypeCheck.java
+@@ -1665,11 +1665,14 @@ public class TypeCheck implements NodeTraversal.Callback, CompilerPass {
+         ensureTyped(t, n);
+       }
+     } else {
+-      report(t, n, NOT_A_CONSTRUCTOR);
+-      ensureTyped(t, n);
++      if(type.isNominalConstructor()){
++        report(t, n, NOT_A_CONSTRUCTOR);
++        ensureTyped(t, n);
++      } else {
++        ensureTyped(t, n, type.dereference());
++      }
+     }
+   }
+-
+   /**
+    * Check whether there's any property conflict for for a particular super
+    * interface

@@ -1,0 +1,34 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/introspect/JacksonAnnotationIntrospector.java b/src/main/java/com/fasterxml/jackson/databind/introspect/JacksonAnnotationIntrospector.java
+index f66075ef7..d4aee6e62 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/introspect/JacksonAnnotationIntrospector.java
++++ b/src/main/java/com/fasterxml/jackson/databind/introspect/JacksonAnnotationIntrospector.java
+@@ -743,12 +742,24 @@ public class JacksonAnnotationIntrospector
+                  *   it's actually bit tricky to do it more efficiently (meta-annotations
+                  *   add more lookups; AnnotationMap costs etc)
+                  */
+-            } else if (_hasAnnotation(a, JsonSerialize.class)
+-                    || _hasAnnotation(a, JsonView.class)
+-                    || _hasAnnotation(a, JsonRawValue.class)) {
+-                name = "";
+             } else {
+-                return null;
++                JsonSerialize ann = _findAnnotation(a, JsonSerialize.class);
++                if (ann != null) {
++                    // Empty String is ok here, meaning "default"; but not for others
++                    name = ann.as();
++                } else {
++                    JsonView annView = _findAnnotation(a, JsonView.class);
++                    if (annView != null) {
++                        name = "";
++                    } else {
++                        JsonRawValue annRaw = _findAnnotation(a, JsonRawValue.class);
++                        if (annRaw != null) {
++                            name = "";
++                        } else {
++                            return null;
++                        }
++                    }
++                }
+             }
+         }
+         return PropertyName.construct(name);

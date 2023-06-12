@@ -1,0 +1,23 @@
+diff --git a/src/com/google/javascript/jscomp/CheckGlobalThis.java b/src/com/google/javascript/jscomp/CheckGlobalThis.java
+index 961b964c..14cb6f9b 100644
+--- a/src/com/google/javascript/jscomp/CheckGlobalThis.java
++++ b/src/com/google/javascript/jscomp/CheckGlobalThis.java
+@@ -131,10 +127,16 @@ final class CheckGlobalThis implements Callback {
+           }
+       }
+     }
+-
++    else {
++		if (n.getType() == Token.GETPROP && n.getLastChild().getString().equals("prototype")) {
++			return false;
++		}
++		if (n.getQualifiedName() != null && n.getQualifiedName().contains(".prototype.")) {
++			return false;
++		}
++	}
+     return true;
+   }
+-
+   public void visit(NodeTraversal t, Node n, Node parent) {
+     if (n.getType() == Token.THIS && shouldReportThis(n, parent)) {
+       compiler.report(t.makeError(n, level, GLOBAL_THIS));

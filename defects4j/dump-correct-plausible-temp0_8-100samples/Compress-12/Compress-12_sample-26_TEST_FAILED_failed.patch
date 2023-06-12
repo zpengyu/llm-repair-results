@@ -1,0 +1,62 @@
+diff --git a/src/main/java/org/apache/commons/compress/archivers/tar/TarArchiveInputStream.java b/src/main/java/org/apache/commons/compress/archivers/tar/TarArchiveInputStream.java
+index 52bb7455..2cc7dfa8 100644
+--- a/src/main/java/org/apache/commons/compress/archivers/tar/TarArchiveInputStream.java
++++ b/src/main/java/org/apache/commons/compress/archivers/tar/TarArchiveInputStream.java
+@@ -173,23 +173,18 @@ public class TarArchiveInputStream extends ArchiveInputStream {
+         if (hasHitEOF) {
+             return null;
+         }
+-
+         if (currEntry != null) {
+             long numToSkip = entrySize - entryOffset;
+-
+-            while (numToSkip > 0) {
++            if (numToSkip > 0) {
+                 long skipped = skip(numToSkip);
+-                if (skipped <= 0) {
+-                    throw new RuntimeException("failed to skip current tar entry");
++                if (skipped != numToSkip) {
++                    throw new RuntimeException(
++                        "failed to skip current tar entry");
+                 }
+-                numToSkip -= skipped;
+             }
+-
+             readBuf = null;
+         }
+-
+         byte[] headerBuf = getRecord();
+-
+         if (hasHitEOF) {
+             currEntry = null;
+             return null;
+@@ -198,29 +192,6 @@ public class TarArchiveInputStream extends ArchiveInputStream {
+         currEntry = new TarArchiveEntry(headerBuf);
+         entryOffset = 0;
+         entrySize = currEntry.getSize();
+-
+-        if (currEntry.isGNULongNameEntry()) {
+-            // read in the name
+-            StringBuffer longName = new StringBuffer();
+-            byte[] buf = new byte[SMALL_BUFFER_SIZE];
+-            int length = 0;
+-            while ((length = read(buf)) >= 0) {
+-                longName.append(new String(buf, 0, length));
+-            }
+-            getNextEntry();
+-            if (currEntry == null) {
+-                // Bugzilla: 40334
+-                // Malformed tar file - long entry name not followed by entry
+-                return null;
+-            }
+-            // remove trailing null terminator
+-            if (longName.length() > 0
+-                && longName.charAt(longName.length() - 1) == 0) {
+-                longName.deleteCharAt(longName.length() - 1);
+-            }
+-            currEntry.setName(longName.toString());
+-        }
+-
+         if (currEntry.isPaxHeader()){ // Process Pax headers
+             paxHeaders();
+         }

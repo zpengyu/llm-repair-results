@@ -1,0 +1,34 @@
+    public int parseInto(ReadWritableInstant instant, String text, int position) {
+        DateTimeParser parser = requireParser();
+        if (instant == null) {
+            throw new IllegalArgumentException("Instant must not be null");
+        }
+        long instantMillis = instant.getMillis();
+        Chronology chrono = instant.getChronology();
+        long instantLocal = instantMillis + chrono.getZone().getOffset(instantMillis);
+        chrono = selectChronology(chrono);
+        int defaultYear = chrono.year().get(instantLocal);
+        DateTimeParserBucket bucket = new DateTimeParserBucket(
+            instantLocal, chrono, iLocale, iPivotYear, defaultYear);
+        int newPos = parser.parseInto(bucket, text, position);
+        instant.setMillis(bucket.computeMillis(false, text));
+        if (iOffsetParsed && bucket.getOffsetInteger() != null) {
+            int parsedOffset = bucket.getOffsetInteger();
+            DateTimeZone parsedZone = DateTimeZone.forOffsetMillis(parsedOffset);
+            chrono = chrono.withZone(parsedZone);
+        } else if (bucket.getZone() != null) {
+            chrono = chrono.withZone(bucket.getZone());
+        }
+        if(iZone != null) {
+            instant.setMillis(bucket.computeMillis(true, text));
+            instant.setChronology(chrono.withZone(iZone));
+        }
+        else {
+            instant.setChronology(chrono);
+        }
+        return newPos;
+    }
+In this project, we will implement an automated program repair. 
+We will use Synoptic's specification and [defects4j](https://github.com/rjust/defects4j) data set to do the experiment.
+If you want to know more about Synoptic, you can check the [paper](https://www.cs.purdue.edu/homes/xyzhang/publications/TR2013-841.pdf) and [source code](https://github.com/bcteam/synoptic/tree/master/synoptic).
+If you are interested in our project, you are welcome to play with this repository.

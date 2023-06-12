@@ -1,0 +1,82 @@
+public class ReturnsDeepStubs implements Answer<Object>, Serializable {
+    
+    private static final long serialVersionUID = -7105341425736035847L;
+
+    private ReturnsEmptyValues delegate = new ReturnsEmptyValues();
+
+    public Object answer(InvocationOnMock invocation) throws Throwable {
+        GenericMetadataSupport returnTypeGenericMetadata =
+                actualParameterizedType(invocation.getMock()).resolveGenericReturnType(invocation.getMethod());
+
+        Class<?> rawType = returnTypeGenericMetadata.rawType();
+        if (!new MockCreationValidator().isTypeMockable(rawType)) {
+            return delegate.returnValueFor(rawType);
+        }
+
+        return getMock(invocation);
+    }
+
+    private Object getMock(InvocationOnMock invocation) throws Throwable {
+    	InternalMockHandler<Object> handler = new MockUtil().getMockHandler(invocation.getMock());
+    	InvocationContainerImpl container = (InvocationContainerImpl) handler.getInvocationContainer();
+
+        // matches invocation for verification
+        for (StubbedInvocationMatcher stubbedInvocationMatcher : container.getStubbedInvocations()) {
+    		if(container.getInvocationForStubbing().matches(stubbedInvocationMatcher.getInvocation())) {
+    			return stubbedInvocationMatcher.answer(invocation);
+    		}
+		}
+
+        // deep stub
+        return recordDeepStubMock(invocation, container);
+    }
+
+    /**
+     * Creates a mock using the Generics Metadata.
+     *
+     * @param returnTypeGenericMetadata The metadata to use to create the new mock.
+     * @return The mock
+     */
+    protected Object createDeepStubMock(GenericMetadataSupport returnTypeGenericMetadata) {
+        Object mock = org.mockito.Mockito.mock(returnTypeGenericMetadata.rawType(), this);
+        for (GenericMetadataSupport genericMetadata : returnTypeGenericMetadata.typeParameters()) {
+            injectTypeForMock(genericMetadata, mock);
+        }
+        return mock;
+    }
+
+    private void injectTypeForMock(GenericMetadataSupport genericMetadata, Object mock) {
+        try {
+            Field field = mock.getClass().getField(genericMetadata.name());
+            field.setAccessible(true);
+            field.set(mock, createDeepStubMock(genericMetadata));
+        } catch (NoSuchFieldException e) {
+            throw new MockitoException("Can't inject type.\n" +
+                                       "The type you are trying to deep stub is most likely not available at runtime.\n" +
+                                       "Missing field: " + genericMetadata.name() + "\n" +
+                                       "Mock: " + mock, e);
+        } catch (IllegalAccessException e) {
+            throw new MockitoException("Can't inject type.\n" +
+                                       "Type: " + genericMetadata.name() + "\n" +
+                                       "Mock: " + mock, e);
+        }
+    }
+
+    private Object recordDeepStubMock(InvocationOnMock invocation, InvocationContainerImpl container) {
+        final Object mock = createDeepStubMock(actualParameterizedType(invocation.getMock()).resolveGenericReturnType(invocation.getMethod()));
+
+        container.addAnswer(new Answer<Object>() {
+            public Object answer(InvocationOnMock invocation) throws Throwable {
+                return mock;
+            }
+        }, false);
+
+        return mock;
+    }
+
+    protected GenericMetadataSupport actualParameterizedType(Object mock) {
+        CreationSettings mockSettings = (CreationSettings) new MockUtil().getMockHandler(mock).getMockSettings();
+        return GenericMetadataSupport.inferFrom(mockSettings.getTypeToMock());
+    }
+}
+

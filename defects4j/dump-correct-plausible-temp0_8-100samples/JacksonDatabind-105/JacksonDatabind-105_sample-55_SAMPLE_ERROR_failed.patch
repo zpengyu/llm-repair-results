@@ -1,0 +1,33 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/deser/std/JdkDeserializers.java b/src/main/java/com/fasterxml/jackson/databind/deser/std/JdkDeserializers.java
+index 2b7efe9c9..a9bcf64c3 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/deser/std/JdkDeserializers.java
++++ b/src/main/java/com/fasterxml/jackson/databind/deser/std/JdkDeserializers.java
+@@ -46,6 +45,27 @@ public class JdkDeserializers
+                 return new ByteBufferDeserializer();
+             }
+         }
++        if (rawType == OptionalDouble.class) {
++            return new Jdk8OptionalDeserializer.Double(_valueClass(rawType));
++        }
++        if (rawType == OptionalInt.class) {
++            return new Jdk8OptionalDeserializer.Int(_valueClass(rawType));
++        }
++        if (rawType == OptionalLong.class) {
++            return new Jdk8OptionalDeserializer.Long(_valueClass(rawType));
++        }
+         return null;
+     }
++    public static Class<Number> _valueClass(Class<?> optionalType) {
++        if (optionalType == OptionalDouble.class) {
++            return Number.class;
++        }
++        if (optionalType == OptionalInt.class) {
++            return Integer.class;
++        }
++        if (optionalType == OptionalLong.class) {
++            return Long.class;
++        }
++        throw new IllegalArgumentException("Unrecognized optional type: "+optionalType.getName());
++    }
+ }
+\ No newline at end of file

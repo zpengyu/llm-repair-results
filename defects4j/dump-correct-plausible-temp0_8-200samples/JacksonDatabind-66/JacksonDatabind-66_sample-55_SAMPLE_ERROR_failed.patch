@@ -1,0 +1,20 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/deser/std/StdKeyDeserializer.java b/src/main/java/com/fasterxml/jackson/databind/deser/std/StdKeyDeserializer.java
+index d4417f6ad..62616e0a3 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/deser/std/StdKeyDeserializer.java
++++ b/src/main/java/com/fasterxml/jackson/databind/deser/std/StdKeyDeserializer.java
+@@ -311,9 +311,14 @@ public class StdKeyDeserializer extends KeyDeserializer
+             if (key == null) { // is this even legal call?
+                 return null;
+             }
++            if (_keyDeserializer == null) {
++                // 13-Aug-2014, tatu: We are getting plain key, but caller will expect Map instance;
++                //   meaning we must deserialize it too
++                return ctxt.findKeyDeserializer(_keyType, _property).deserializeKey(key, ctxt);
++            }
+             try {
+                 // Ugh... should not have to give parser which may or may not be correct one...
+-                Object result = _delegate.deserialize(ctxt.getParser(), ctxt);
++                Object result = _keyDeserializer.deserializeKey(key, ctxt);
+                 if (result != null) {
+                     return result;
+                 }

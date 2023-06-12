@@ -1,0 +1,19 @@
+diff --git a/src/com/google/javascript/jscomp/parsing/IRFactory.java b/src/com/google/javascript/jscomp/parsing/IRFactory.java
+index 32a15610..af404959 100644
+--- a/src/com/google/javascript/jscomp/parsing/IRFactory.java
++++ b/src/com/google/javascript/jscomp/parsing/IRFactory.java
+@@ -554,9 +552,13 @@ public class IRFactory {
+         lp.addChildToBack(transform(param));
+       }
+       node.addChildToBack(lp);
+-
+       Node bodyNode = transform(functionNode.getBody());
+       parseDirectives(bodyNode);
++      // Now that the body's been parsed, wrap it in the appropriate block,
++      // if it's not a block already.
++      if (bodyNode.getType() != Token.BLOCK) {
++        bodyNode = newNode(Token.BLOCK, bodyNode);
++      }
+       node.addChildToBack(bodyNode);
+      return node;
+     }

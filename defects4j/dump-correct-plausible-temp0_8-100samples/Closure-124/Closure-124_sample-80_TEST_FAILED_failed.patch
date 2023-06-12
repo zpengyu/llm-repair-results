@@ -1,0 +1,31 @@
+diff --git a/src/com/google/javascript/jscomp/ExploitAssigns.java b/src/com/google/javascript/jscomp/ExploitAssigns.java
+index 196b710d..87957aec 100644
+--- a/src/com/google/javascript/jscomp/ExploitAssigns.java
++++ b/src/com/google/javascript/jscomp/ExploitAssigns.java
+@@ -209,16 +209,21 @@ class ExploitAssigns extends AbstractPeepholeOptimization {
+       return true;
+     }
+     Preconditions.checkArgument(node.isGetProp());
+-
+-      node = node.getFirstChild();
++    node = node.getFirstChild();
+     if (node.isName()
+         && isNameAssignedTo(node.getString(), replacement)) {
+       return false;
+     }
+-
+-    return true;
++    // Replacements that have the form
++    //   <name>.<member>
++    //   <name>.<member> = <expr>
++    //   <expr>.<member>
++    // are safe.
++    if (node.isGetProp()) {
++      return true;
++    }
++    return false;
+   }
+-
+   /**
+    * @return Whether name is assigned in the expression rooted at node.
+    */

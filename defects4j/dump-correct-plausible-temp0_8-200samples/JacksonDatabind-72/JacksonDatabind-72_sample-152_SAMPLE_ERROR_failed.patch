@@ -1,0 +1,135 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/deser/impl/InnerClassProperty.java b/src/main/java/com/fasterxml/jackson/databind/deser/impl/InnerClassProperty.java
+index 128a8346f..70b485bad 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/deser/impl/InnerClassProperty.java
++++ b/src/main/java/com/fasterxml/jackson/databind/deser/impl/InnerClassProperty.java
+@@ -16,64 +16,35 @@ import com.fasterxml.jackson.databind.util.ClassUtil;
+  * alternative for default constructor; but otherwise can delegate
+  * to regular implementation.
+  */
+-public final class InnerClassProperty
+-    extends SettableBeanProperty
++public final class InnerClassProperty extends SettableBeanProperty
+ {
+     private static final long serialVersionUID = 1L;
+-
+     /**
+      * Actual property that we use after value construction.
+      */
+     protected final SettableBeanProperty _delegate;
+-
+-    /**
+-     * Constructor used when deserializing this property.
+-     * Transient since there is no need to persist; only needed during
+-     * construction of objects.
+-     */
+-    final protected transient Constructor<?> _creator;
+-    
+     /**
+      * Serializable version of single-arg constructor we use for value instantiation.
+      */
+-    protected AnnotatedConstructor _annotated;
+-
++    protected final AnnotatedConstructor _annotated;
+     public InnerClassProperty(SettableBeanProperty delegate,
+-            Constructor<?> ctor)
++            AnnotatedConstructor ctor)
+     {
+         super(delegate);
+         _delegate = delegate;
+-        _creator = ctor;
+-    }
+-
+-    /**
+-     * Constructor used with JDK Serialization; needed to handle transient
+-     * Constructor, wrap/unwrap in/out-of Annotated variant.
+-     */
+-    protected InnerClassProperty(InnerClassProperty src, AnnotatedConstructor ann)
+-    {
+-        super(src);
+-        _delegate = src._delegate;
+-        _annotated = ann;
+-        _creator = (_annotated == null) ? null : _annotated.getAnnotated();
+-        if (_creator == null) {
+-            throw new IllegalArgumentException("Missing constructor (broken JDK (de)serialization?)");
+-        }
++        _annotated = ctor;
+     }
+-    
+-    protected InnerClassProperty(InnerClassProperty src, JsonDeserializer<?> deser)
++    public InnerClassProperty(InnerClassProperty src, JsonDeserializer<?> deser)
+     {
+         super(src, deser);
+         _delegate = src._delegate.withValueDeserializer(deser);
+-        _creator = src._creator;
++        _annotated = src._annotated;
+     }
+-
+-    protected InnerClassProperty(InnerClassProperty src, PropertyName newName) {
++    public InnerClassProperty(InnerClassProperty src, PropertyName newName) {
+         super(src, newName);
+         _delegate = src._delegate.withName(newName);
+-        _creator = src._creator;
++        _annotated = src._annotated;
+     }
+-
+     @Override
+     public InnerClassProperty withName(PropertyName newName) {
+         return new InnerClassProperty(this, newName);
+@@ -97,9 +62,8 @@ public final class InnerClassProperty
+     public <A extends Annotation> A getAnnotation(Class<A> acls) {
+         return _delegate.getAnnotation(acls);
+     }
+-
+-    @Override public AnnotatedMember getMember() {  return _delegate.getMember(); }
+-
++    @Override
++    public AnnotatedMember getMember() {  return _delegate.getMember(); }
+     /*
+     /**********************************************************
+     /* Deserialization methods
+@@ -110,17 +73,17 @@ public final class InnerClassProperty
+     public void deserializeAndSet(JsonParser jp, DeserializationContext ctxt, Object bean)
+         throws IOException
+     {
+-        JsonToken t = jp.getCurrentToken();
+         Object value;
++        JsonToken t = jp.getCurrentToken();
+         if (t == JsonToken.VALUE_NULL) {
+             value = _valueDeserializer.getNullValue(ctxt);
+         } else if (_valueTypeDeserializer != null) {
+             value = _valueDeserializer.deserializeWithType(jp, ctxt, _valueTypeDeserializer);
+         } else  { // the usual case
+             try {
+-                value = _creator.newInstance(bean);
++                value = _annotated.call1(bean);
+             } catch (Exception e) {
+-                ClassUtil.unwrapAndThrowAsIAE(e, "Failed to instantiate class "+_creator.getDeclaringClass().getName()+", problem: "+e.getMessage());
++                ClassUtil.unwrapAndThrowAsIAE(e, "Failed to instantiate class "+_annotated.getDeclaringClass().getName()+", problem: "+e.getMessage());
+                 value = null;
+             }
+             _valueDeserializer.deserialize(jp, ctxt, value);
+@@ -145,23 +105,4 @@ public final class InnerClassProperty
+     public Object setAndReturn(Object instance, Object value) throws IOException {
+         return _delegate.setAndReturn(instance, value);
+     }
+-
+-    /*
+-    /**********************************************************
+-    /* JDK serialization handling
+-    /**********************************************************
+-     */
+-
+-    // When reading things back, 
+-    Object readResolve() {
+-        return new InnerClassProperty(this, _annotated);
+-    }
+-
+-    Object writeReplace() {
+-        // need to construct a fake instance to support serialization
+-        if (_annotated != null) {
+-            return this;
+-        }
+-        return new InnerClassProperty(this, new AnnotatedConstructor(null, _creator, null, null));
+-    }
+ }
+\ No newline at end of file

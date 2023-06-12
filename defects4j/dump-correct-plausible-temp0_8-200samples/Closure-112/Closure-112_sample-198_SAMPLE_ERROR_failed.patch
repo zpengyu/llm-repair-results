@@ -1,0 +1,43 @@
+diff --git a/src/com/google/javascript/jscomp/TypeInference.java b/src/com/google/javascript/jscomp/TypeInference.java
+index 6c9c7846..a7d17476 100644
+--- a/src/com/google/javascript/jscomp/TypeInference.java
++++ b/src/com/google/javascript/jscomp/TypeInference.java
+@@ -1191,24 +1190,25 @@ class TypeInference
+     // Try to infer the template types
+     Map<TemplateType, JSType> inferred =
+         inferTemplateTypesFromParameters(fnType, n);
+-
+-
+-    // Replace all template types. If we couldn't find a replacement, we
+-    // replace it with UNKNOWN.
+-    TemplateTypeReplacer replacer = new TemplateTypeReplacer(
+-        registry, inferred);
++    FunctionType replacementFnType = null;
++    // If we have a replacement, create a new function type with the
++    // replacement.
++    if (!inferred.isEmpty()) {
++      // Replace all template types. If we couldn't find a replacement, we
++      // replace it with UNKNOWN.
++      TemplateTypeReplacer replacer = new TemplateTypeReplacer(
++          registry, inferred);
++      replacementFnType = fnType.visit(replacer)
++          .toMaybeFunctionType();
++    }
++    if (replacementFnType == null) {
++      replacementFnType = fnType;
++    }
+     Node callTarget = n.getFirstChild();
+-
+-    FunctionType replacementFnType = fnType.visit(replacer)
+-        .toMaybeFunctionType();
+-    Preconditions.checkNotNull(replacementFnType);
+-
+     callTarget.setJSType(replacementFnType);
+     n.setJSType(replacementFnType.getReturnType());
+-
+     return replacer.madeChanges;
+   }
+-
+   private FlowScope traverseNew(Node n, FlowScope scope) {
+     scope = traverseChildren(n, scope);
+ 

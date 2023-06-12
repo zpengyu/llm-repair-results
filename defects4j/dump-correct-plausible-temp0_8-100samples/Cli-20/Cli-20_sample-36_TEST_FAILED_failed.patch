@@ -1,0 +1,36 @@
+diff --git a/src/java/org/apache/commons/cli/PosixParser.java b/src/java/org/apache/commons/cli/PosixParser.java
+index 2b1bbb1..d849048 100644
+--- a/src/java/org/apache/commons/cli/PosixParser.java
++++ b/src/java/org/apache/commons/cli/PosixParser.java
+@@ -111,17 +108,30 @@ public class PosixParser extends Parser {
+             // handle long option --foo or --foo=bar
+             if (token.startsWith("--"))
+             {
++                // check if this is a clustered long option, e.g. --foo=bar
+                 if (token.indexOf('=') != -1)
+                 {
+                     tokens.add(token.substring(0, token.indexOf('=')));
+                     tokens.add(token.substring(token.indexOf('=') + 1, token.length()));
+                 }
++                // long option but not clustered, e.g. --foo bar
+                 else
+                 {
+                     tokens.add(token);
++                    if (iter.hasNext())
++                    {
++                        String next = (String) iter.next();
++                        if (next.startsWith("-"))
++                        {
++                            tokens.add(next);
++                        }
++                        else
++                        {
++                            tokens.add(next);
++                        }
++                    }
+                 }
+             }
+-
+             // single hyphen
+             else if ("-".equals(token))
+             {

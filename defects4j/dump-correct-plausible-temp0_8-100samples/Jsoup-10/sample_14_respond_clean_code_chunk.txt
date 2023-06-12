@@ -1,0 +1,17 @@
+    public String absUrl(String attributeKey) {
+        Validate.notEmpty(attributeKey);
+        if (!hasAttr(attributeKey)) {
+            return ""; // nothing to make absolute with
+        } else {
+            boolean isAbs = (attributeKey.length() >= 4 && attributeKey.substring(0,4).equalsIgnoreCase("http"));
+            if (isAbs)
+                return attributeKey; // escape early to prevent java resolving '//path/file + ?foo' to '//path/?foo'
+            try {
+                URL base = new URL(baseUri);
+                URL abs = new URL(base, attributeKey);
+                return abs.toExternalForm();
+            } catch (MalformedURLException e) {
+                return "";
+            }
+        }
+    }

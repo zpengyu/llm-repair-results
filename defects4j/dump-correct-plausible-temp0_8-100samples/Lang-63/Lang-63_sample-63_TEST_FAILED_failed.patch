@@ -1,0 +1,57 @@
+diff --git a/src/java/org/apache/commons/lang/time/DurationFormatUtils.java b/src/java/org/apache/commons/lang/time/DurationFormatUtils.java
+index 8ced282e..243efd11 100644
+--- a/src/java/org/apache/commons/lang/time/DurationFormatUtils.java
++++ b/src/java/org/apache/commons/lang/time/DurationFormatUtils.java
+@@ -302,13 +297,9 @@ public class DurationFormatUtils {
+             hours += 24;
+             days -= 1;
+         }
++//      
+         while (days < 0) {
+-            days += 31;
+-//days += 31; // TODO: Need tests to show this is bad and the new code is good.
+-// HEN: It's a tricky subject. Jan 15th to March 10th. If I count days-first it is
+-// 1 month and 26 days, but if I count month-first then it is 1 month and 23 days.
+-// Also it's contextual - if asked for no M in the format then I should probably
+-// be doing no calculating here.
++            days += getDaysInMonth(start.get(Calendar.MONTH), start.get(Calendar.YEAR));
+             months -= 1;
+         }
+         while (months < 0) {
+@@ -356,10 +346,34 @@ public class DurationFormatUtils {
+             milliseconds += 1000 * seconds;
+             seconds = 0;
+         }
+-
+         return format(tokens, years, months, days, hours, minutes, seconds, milliseconds, padWithZeros);
+     }
+-
++    private static int getDaysInMonth(int month, int year) {
++        // TODO: this is a bit weak, needs work to know about leap years
++        if (month == 2) {
++            if ((year % 4) == 0) {
++                return 29;
++            }
++            return 28;
++        }
++        switch (month) {
++            case 1:
++            case 3:
++            case 5:
++            case 7:
++            case 8:
++            case 10:
++            case 12:
++                return 31;
++            case 4:
++            case 6:
++            case 9:
++            case 11:
++                return 30;
++            default:
++                throw new IllegalArgumentException("Illegal month: " + month);
++        }
++    }
+     //-----------------------------------------------------------------------
+     /**
+      * <p>The internal method to do the formatting.</p>

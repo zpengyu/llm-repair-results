@@ -1,0 +1,141 @@
+  static String strEscape(String s, char quote,
+             String doublequoteEscape,
+             String singlequoteEscape,
+             String backslashEscape,
+             CharsetEncoder outputCharsetEncoder) {
+    StringBuilder sb = new StringBuilder(s.length() + 2);
+    sb.append(quote);
+    for (int i = 0; i < s.length(); i++) {
+      char c = s.charAt(i);
+      switch (c) {
+        case '\n': sb.append("\\n"); break;
+        case '\r': sb.append("\\r"); break;
+        case '\t': sb.append("\\t"); break;
+        case '\\': sb.append(backslashEscape); break;
+        case '\"': sb.append(doublequoteEscape); break;
+        case '\'': sb.append(singlequoteEscape); break;
+        case '>':                       // Break --> into --\> or ]]> into ]]\>
+          if (i >= 2 &&
+              ((s.charAt(i - 1) == '-' && s.charAt(i - 2) == '-') ||
+               (s.charAt(i - 1) == ']' && s.charAt(i - 2) == ']'))) {
+            sb.append("\\>");
+          } else {
+            sb.append(c);
+          }
+          break;
+        case '<':
+          // Break </script into <\/script
+          final String END_SCRIPT = "/script";
+
+          // Break <!-- into <\!--
+          final String START_COMMENT = "!--";
+
+          if (i + END_SCRIPT.length() <= s.length() &&
+              s.regionMatches(true, i + 1, END_SCRIPT, 0,
+                              END_SCRIPT.length())) {
+            sb.append("<\\");
+          } else if (i + START_COMMENT.length() <= s.length() &&
+                 s.regionMatches(false, i + 1, START_COMMENT, 0,
+                                 START_COMMENT.length())) {
+            sb.append("<\\");
+          } else {
+            sb.append(c);
+          }
+          break;
+        default:
+          // If we're given an outputCharsetEncoder, then check if the
+          //  character can be represented in this character set.
+          if (outputCharsetEncoder != null) {
+            if (outputCharsetEncoder.canEncode(c)) {
+              sb.append(c);
+            } else {
+              // Unicode-escape the character.
+              appendHexJavaScriptRepresentation(sb, c);
+            }
+          } else {
+            // No charsetEncoder provided - pass straight latin characters
+            // through, and escape the rest.  Doing the explicit character
+            // check is measurably faster than using the CharsetEncoder.
+            if (c > 0x1f && c <= 0x7f) {
+              sb.append(c);
+            } else {
+              // Other characters can be misinterpreted by some js parsers,
+              // or perhaps mangled by proxies along the way,
+              // so we play it safe and unicode escape them.
+              appendHexJavaScriptRepresentation(sb, c);
+            }
+          }
+      }
+    }
+    sb.append(quote);
+    return sb.toString();
+  }
+## What We Have Learned
+
+- **Buggy Functions**
+    - **Bad practices**
+        - Ignoring validation check
+        - Ignoring error handling
+        - Ignoring return value check
+        - Incorrectly using function parameters
+        - Incorrectly using index
+    - **Bad patterns**
+        - Logging
+        - Assertion
+        - Input Sanitization
+        - Hard-coded constant value
+        - Repeated computation
+        - Incorrect loop termination
+        - Incorrect loop stepping
+    - **Bad functions**
+        - Using wrong variables
+        - Using wrong functions
+        - Using wrong algorithms
+        - Using wrong data structure
+        - Using wrong arithmetic operations
+        - Incorrect variables' usage
+        - Incorrect functions' usage
+        - Incorrect data structure's usage
+- **Fixing Methods**
+    - **Fixing patterns**
+        - Logging
+        - Assertion
+        - Input Sanitization
+        - Hard-coded constant value
+        - Repeated computation
+        - Incorrect loop termination
+        - Incorrect loop stepping
+    - **Fixing functions**
+        - Using wrong variables
+        - Using wrong functions
+        - Using wrong algorithms
+        - Using wrong data structure
+        - Using wrong arithmetic operations
+        - Incorrect variables' usage
+        - Incorrect functions' usage
+        - Incorrect data structure's usage
+- **How to evaluate a fix**
+    - **Correctness**
+    - **Code complexity**
+        - Code length
+        - Cyclomatic complexity
+        - Halstead metrics
+## Future Works
+
+- **Datasets**
+    - More project examples
+    - More programming languages
+    - More bug patterns
+    - More functions' properties
+- **Models**
+    - LSTM model
+    - Attention-based LSTM model
+- **Algorithm**
+    - More samples
+    - More diverse samples
+    - Larger model
+    - Better training
+    - More attention
+ 
+## Appendix
+

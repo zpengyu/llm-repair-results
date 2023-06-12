@@ -1,0 +1,82 @@
+###Provide a fix for the buggy function
+###Buggy Function
+class FibonacciExample {
+    public static void main(String args[]) {
+        int n1 = 0, n2 = 1, n3, i, count = 10;
+
+        System.out.print(n1 + " " + n2);
+
+        for (i = 2; i < count; ++i) {
+            n3 = n1 - n2;
+            System.out.print(" " + n3);
+            n1 = n2;
+            n2 = n3;
+        }
+    }
+}
+
+###Fixed Function
+class FibonacciExample {
+    public static void main(String args[]) {
+        int n1 = 0, n2 = 1, n3, i, count = 10;
+
+        System.out.print(n1 + " " + n2);
+
+        for (i = 2; i < count; ++i) {
+            n3 = n1 + n2;
+            System.out.print(" " + n3);
+            n1 = n2;
+            n2 = n3;
+        }
+    }
+}
+
+###Provide a fix for the buggy function
+###Buggy Function
+protected BasePeriod(long duration) {
+    this(duration, null, null);
+    // bug [3264409]
+}
+###Fixed Function
+protected BasePeriod(long duration) {
+    super();
+    // bug [3264409]
+    iType = PeriodType.time();
+    int[] values = ISOChronology.getInstanceUTC().get(this, duration);
+    iType = PeriodType.standard();
+    iValues = new int[8];
+    System.arraycopy(values, 0, iValues, 4, 4);
+}
+###Provide a fix for the buggy function
+###Buggy Function
+    public long getDateTimeMillis(int year, int monthOfYear, int dayOfMonth,
+                                  int hourOfDay, int minuteOfHour,
+                                  int secondOfMinute, int millisOfSecond)
+        throws IllegalArgumentException
+    {
+        Chronology base;
+        if ((base = getBase()) != null) {
+            return base.getDateTimeMillis
+                (year, monthOfYear, dayOfMonth,
+                 hourOfDay, minuteOfHour, secondOfMinute, millisOfSecond);
+        }
+
+        // Assume date is Gregorian.
+        long instant;
+            instant = iGregorianChronology.getDateTimeMillis
+                (year, monthOfYear, dayOfMonth,
+                 hourOfDay, minuteOfHour, secondOfMinute, millisOfSecond);
+        if (instant < iCutoverMillis) {
+            // Maybe it's Julian.
+            instant = iJulianChronology.getDateTimeMillis
+                (year, monthOfYear, dayOfMonth,
+                 hourOfDay, minuteOfHour, secondOfMinute, millisOfSecond);
+            if (instant >= iCutoverMillis) {
+                // Okay, it's in the illegal cutover gap.
+                throw new IllegalArgumentException("Specified date does not exist");
+            }
+        }
+        return instant;
+    }
+
+###Fixed Function

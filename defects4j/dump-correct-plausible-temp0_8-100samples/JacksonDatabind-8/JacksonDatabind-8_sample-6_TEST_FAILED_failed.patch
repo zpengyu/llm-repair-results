@@ -1,0 +1,19 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/deser/impl/CreatorCollector.java b/src/main/java/com/fasterxml/jackson/databind/deser/impl/CreatorCollector.java
+index fd590d628..cb4c7cbf9 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/deser/impl/CreatorCollector.java
++++ b/src/main/java/com/fasterxml/jackson/databind/deser/impl/CreatorCollector.java
+@@ -288,8 +287,13 @@ public class CreatorCollector
+                 }
+                 // both explicit: verify
+                 // otherwise only verify if neither explicitly annotated.
++            } else if (explicit) {
++                // 11-Nov-2015, tatu: One thing to note is that if new creator is explicit,
++                //     but old one is not, we can't really know if we should override or not.
++                //     For this case, let's err on the side of data-binding, i.e. prefer explicit.
++                // !!! TODO: verify if we can make this even stricter, i.e. "explicit wins"
++                //    no matter what.
+             }
+-
+             // one more thing: ok to override in sub-class
+             if (oldOne.getClass() == newOne.getClass()) {
+                 // [databind#667]: avoid one particular class of bogus problems

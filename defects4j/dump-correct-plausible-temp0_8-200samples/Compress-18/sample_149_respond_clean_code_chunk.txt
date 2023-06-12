@@ -1,0 +1,22 @@
+public void writePaxHeaders(String entryName, Map<String, String> headers) throws IOException {
+    TarArchiveEntry pex = new TarArchiveEntry("./PaxHeaders.X/" + stripTo7Bits(entryName));
+    pex.setTypeFlag(TarConstants.LF_PAX_EXTENDED_HEADER_LC);
+    // create writer, ensuring we always close it
+    ByteArrayOutputStream bout = new ByteArrayOutputStream();
+    Writer out = new OutputStreamWriter(bout, CharsetNames.UTF_8);
+    try {
+        for (Map.Entry<String, String> h : headers.entrySet()) {
+            out.write(h.getKey());
+            out.write('=');
+            out.write(h.getValue());
+            out.write('\n');
+        }
+        out.flush();
+        pex.setSize(bout.size());
+        putArchiveEntry(pex);
+        write(bout.toByteArray());
+        closeArchiveEntry();
+    } finally {
+        IOUtils.closeQuietly(out);
+    }
+}

@@ -1,0 +1,67 @@
+diff --git a/src/com/google/javascript/jscomp/CollapseVariableDeclarations.java b/src/com/google/javascript/jscomp/CollapseVariableDeclarations.java
+index 26ca29ca..bbbcdc0b 100644
+--- a/src/com/google/javascript/jscomp/CollapseVariableDeclarations.java
++++ b/src/com/google/javascript/jscomp/CollapseVariableDeclarations.java
+@@ -204,11 +175,59 @@ class CollapseVariableDeclarations implements CompilerPass {
+           && !blacklistedVars.contains(var);
+     }
+   }
+-
+-
++  /**
++   * Collapses all variable declarations which are adjacent, as well as
++   * declarations that are preceded by an assignment to the same variable.
++   *
++   * For example, the following code:
++   *
++   * var x;
++   * var y;
++   * var z;
++   * x = 0;
++   * y = 0;
++   *
++   * Should be collapsed into
++   *
++   * var x, y, z;
++   * x = 0;
++   * y = 0;
++   *
++   * Also, any number of assignments to the same variable in a row should be
++   * collapsed into a single assignment.
++   *
++   * For example, the following code:
++   *
++   * y = 0;
++   * y = 1;
++   * y = 2;
++   *
++   * Should be collapsed into:
++   *
++   * y = 2;
++   *
++   *
++   * TODO(nicksantos): This pass needs to be run before CollapseVariableDeclarations.
++   * This can't be done until we fix the minor bug where this pass is
++   * incorrectly collapsing:
++   *
++   * var x = 0;
++   * var y = 0;
++   *
++   * into
++   *
++   * var x = 0, y = 0;
++   *
++   * There are two reasons why this is a minor bug:
++   * 1) It works in current browsers, as long as there's not a semicolon
++   *    between x and y.
++   * 2) It's a safe change, and it makes the code minify better.
++   *
++   * TODO(nicksantos): All of these passes have to be re-run when
++   * code is split for run-time lazy loading.
++   */
+   private void applyCollapses() {
+     for (Collapse collapse : collapses) {
+-
+       Node var = new Node(Token.VAR);
+       var.copyInformationFrom(collapse.startNode);
+       collapse.parent.addChildBefore(var, collapse.startNode);

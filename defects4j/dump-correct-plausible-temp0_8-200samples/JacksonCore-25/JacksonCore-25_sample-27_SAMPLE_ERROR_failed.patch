@@ -1,0 +1,23 @@
+diff --git a/src/main/java/com/fasterxml/jackson/core/json/ReaderBasedJsonParser.java b/src/main/java/com/fasterxml/jackson/core/json/ReaderBasedJsonParser.java
+index 1cfcfa1b..c73c9a68 100644
+--- a/src/main/java/com/fasterxml/jackson/core/json/ReaderBasedJsonParser.java
++++ b/src/main/java/com/fasterxml/jackson/core/json/ReaderBasedJsonParser.java
+@@ -1984,11 +1982,15 @@ public class ReaderBasedJsonParser // final in 2.3, earlier
+             char[] buf = tb.getTextBuffer();
+             int start = tb.getTextOffset();
+             int len = tb.size();
+-
+-            return _symbols.findSymbol(buf, start, len, hash);
++            String result = _symbols.findSymbol(buf, start, len, hash);
++            if (result == null) {
++                //_textBuffer.releaseBuffers();
++                //_textBuffer.resetWithShared(_inputBuffer, startPtr, (_inputPtr - startPtr));
++                result = _addName(startPtr, hash);
++            }
++            return result;
+         }
+     }
+-
+     @Override
+     protected final void _finishString() throws IOException
+     {

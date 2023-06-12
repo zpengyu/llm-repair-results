@@ -1,0 +1,70 @@
+diff --git a/src/org/mockito/internal/stubbing/defaultanswers/ReturnsDeepStubs.java b/src/org/mockito/internal/stubbing/defaultanswers/ReturnsDeepStubs.java
+index c4384f7fc..d13c463d7 100644
+--- a/src/org/mockito/internal/stubbing/defaultanswers/ReturnsDeepStubs.java
++++ b/src/org/mockito/internal/stubbing/defaultanswers/ReturnsDeepStubs.java
+@@ -68,11 +59,9 @@ public class ReturnsDeepStubs implements Answer<Object>, Serializable {
+     			return stubbedInvocationMatcher.answer(invocation);
+     		}
+ 		}
+-
+         // deep stub
+-        return recordDeepStubMock(createNewDeepStubMock(returnTypeGenericMetadata), container);
++        return recordDeepStubMock(createNewDeepStubMock(invocation, returnTypeGenericMetadata), container);
+     }
+-
+     /**
+      * Creates a mock using the Generics Metadata.
+      *
+@@ -83,34 +72,33 @@ public class ReturnsDeepStubs implements Answer<Object>, Serializable {
+      * @param returnTypeGenericMetadata The metadata to use to create the new mock.
+      * @return The mock
+      */
+-    private Object createNewDeepStubMock(GenericMetadataSupport returnTypeGenericMetadata) {
++    private Object createNewDeepStubMock(InvocationOnMock invocation, GenericMetadataSupport returnTypeGenericMetadata) {
+         return mockitoCore.mock(
+                 returnTypeGenericMetadata.rawType(),
+-                withSettingsUsing(returnTypeGenericMetadata)
++                withSettingsUsing(invocation, returnTypeGenericMetadata)
+         );
+     }
+-
+-    private MockSettings withSettingsUsing(GenericMetadataSupport returnTypeGenericMetadata) {
++    private MockSettings withSettingsUsing(InvocationOnMock invocation, GenericMetadataSupport returnTypeGenericMetadata) {
+         MockSettings mockSettings =
+                 returnTypeGenericMetadata.rawExtraInterfaces().length > 0 ?
+                 withSettings().extraInterfaces(returnTypeGenericMetadata.rawExtraInterfaces())
+                 : withSettings();
+-
+         return mockSettings
+-                .defaultAnswer(returnsDeepStubsAnswerUsing(returnTypeGenericMetadata));
++                .defaultAnswer(returnsDeepStubsAnswerUsing(invocation, returnTypeGenericMetadata));
+     }
+-
+-    private ReturnsDeepStubs returnsDeepStubsAnswerUsing(final GenericMetadataSupport returnTypeGenericMetadata) {
++    private ReturnsDeepStubs returnsDeepStubsAnswerUsing(final InvocationOnMock invocation, final GenericMetadataSupport returnTypeGenericMetadata) {
+         return new ReturnsDeepStubs() {
+             @Override
+             protected GenericMetadataSupport actualParameterizedType(Object mock) {
+                 return returnTypeGenericMetadata;
+             }
++            @Override
++            protected InvocationOnMock actualInvocation(InvocationOnMock invocation) {
++            	return invocation;
++            }
+         };
+     }
+-
+     private Object recordDeepStubMock(final Object mock, InvocationContainerImpl container) throws Throwable {
+-
+         container.addAnswer(new Answer<Object>() {
+             public Object answer(InvocationOnMock invocation) throws Throwable {
+                 return mock;
+@@ -127,4 +110,7 @@ public class ReturnsDeepStubs implements Answer<Object>, Serializable {
+         CreationSettings mockSettings = (CreationSettings) new MockUtil().getMockHandler(mock).getMockSettings();
+         return GenericMetadataSupport.inferFrom(mockSettings.getTypeToMock());
+     }
++    protected InvocationOnMock actualInvocation(InvocationOnMock invocation) {
++    	return invocation;
++    }
+ }
+\ No newline at end of file

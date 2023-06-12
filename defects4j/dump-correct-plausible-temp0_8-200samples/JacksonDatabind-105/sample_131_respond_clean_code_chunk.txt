@@ -1,0 +1,45 @@
+public class JdkDeserializers
+{
+    private final static HashSet<String> _classNames = new HashSet<String>();
+    static {
+        // note: can skip primitive types; other ways to check them:
+        Class<?>[] types = new Class<?>[] {
+            UUID.class,
+            AtomicBoolean.class,
+            StackTraceElement.class,
+            ByteBuffer.class
+        };
+        for (Class<?> cls : types) { _classNames.add(cls.getName()); }
+        // Not clear at this point which of these we want to support any more...
+        for (Class<?> cls : FromStringDeserializer.types()) { _classNames.add(cls.getName()); }
+    }
+    public static JsonDeserializer<?> find(JavaType type, DeserializationConfig config,
+            BeanDescription beanDesc)
+    {
+        Class<?> rawType = type.getRawClass();
+        String clsName = rawType.getName();
+        if (_classNames.contains(clsName)) {
+            if (rawType == UUID.class) {
+                return new UUIDDeserializer();
+            }
+            if (rawType == StackTraceElement.class) {
+                return new StackTraceElementDeserializer();
+            }
+            if (rawType == AtomicBoolean.class) {
+                // (note: AtomicInteger/Long work due to single-arg constructor. For now?
+                return new AtomicBooleanDeserializer();
+            }
+            if (rawType == ByteBuffer.class) {
+                return new ByteBufferDeserializer();
+            }
+        }
+        // 14-Oct-2014, tatu: For now this is mostly used to support JDK enum types
+        //   (as they are bit special); but one day will also use this
+        JsonDeserializer<?> deser = findDeserializerFromAnnotation(config, beanDesc);
+        if (deser != null) {
+            return deser;
+        }
+        // 14-Oct-2014, tatu: Also, possibly support "from-String" deserializers for values
+        return FromStringDeserializer.findDeserializer(type);
+    }
+}

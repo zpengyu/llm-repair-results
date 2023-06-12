@@ -1,0 +1,30 @@
+private final Object _deserialize(JsonParser p, DeserializationContext ctxt) throws IOException
+{
+    if (p.canReadTypeId()) {
+        Object typeId = p.getTypeId();
+        if (typeId != null) {
+            return _deserializeWithNativeTypeId(p, ctxt, typeId);
+        }
+    }
+    // first, sanity checks
+    final JsonToken t = p.getCurrentToken();
+    if (t == JsonToken.START_ARRAY) {
+        return _deserializeFromArray(p, ctxt);
+    }
+    if (t != JsonToken.START_OBJECT) {
+        return ctxt.handleUnexpectedToken(baseType(), p);
+    }
+    String typeId = _locateTypeId(p, ctxt);
+    JsonDeserializer<Object> deser = _findDeserializer(ctxt, typeId);
+    if (_typeIdVisible) { // need to skip past id
+        typeId = _extractAndRemoveTypeId(p, ctxt);
+    }
+    if (p.getCurrentToken() == JsonToken.START_OBJECT) {
+        p.nextToken();
+    }
+    Object value = deser.deserialize(p, ctxt);
+    if (_typeIdVisible) { // need to skip past id
+        _verifyAndDeserializeTypeId(p, ctxt, typeId);
+    }
+    return value;
+}

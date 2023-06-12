@@ -1,0 +1,33 @@
+diff --git a/src/com/google/javascript/jscomp/parsing/IRFactory.java b/src/com/google/javascript/jscomp/parsing/IRFactory.java
+index 32a15610..da5bf639 100644
+--- a/src/com/google/javascript/jscomp/parsing/IRFactory.java
++++ b/src/com/google/javascript/jscomp/parsing/IRFactory.java
+@@ -558,9 +555,26 @@ public class IRFactory {
+       Node bodyNode = transform(functionNode.getBody());
+       parseDirectives(bodyNode);
+       node.addChildToBack(bodyNode);
+-     return node;
++      if (functionNode.getEnclosingSource() != null) {
++        // If there's an enclosing source, then we've got a normal source
++        // file, and can add the source to the parse tree.
++        String source = functionNode.getEnclosingSource().toSource();
++        source = source.substring(
++            functionNode.getAbsolutePosition(),
++            functionNode.getAbsolutePosition() + functionNode.getLength());
++        node.putProp(Node.SOURCENAME_PROP, functionNode.getSourceName());
++        node.putProp(Node.SOURCEFILE_PROP, functionNode.getSourceFileName());
++        node.putProp(Node.SLASH_STAR_COMMENTS_PROP,
++            functionNode.getEnclosingSource().getComments());
++        node.setInputId(functionNode.getInputId());
++        node.setEncodedSourceBounds(
++            new int[] {
++              functionNode.getAbsolutePosition(),
++              functionNode.getLength()});
++        node.putProp(Node.RAW_SOURCE_PROP, source);
++      }
++      return node;
+     }
+-
+     @Override
+     Node processIfStatement(IfStatement statementNode) {
+       Node node = newNode(Token.IF);

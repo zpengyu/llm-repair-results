@@ -1,0 +1,22 @@
+diff --git a/gson/src/main/java/com/google/gson/DefaultDateTypeAdapter.java b/gson/src/main/java/com/google/gson/DefaultDateTypeAdapter.java
+index 70c30e14..798ab78e 100644
+--- a/gson/src/main/java/com/google/gson/DefaultDateTypeAdapter.java
++++ b/gson/src/main/java/com/google/gson/DefaultDateTypeAdapter.java
+@@ -107,11 +107,14 @@ final class DefaultDateTypeAdapter extends TypeAdapter<Date> {
+     } else if (dateType == java.sql.Date.class) {
+       return new java.sql.Date(date.getTime());
+     } else {
+-      // This must never happen: dateType is guarded in the primary constructor
+-      throw new AssertionError();
++      try {
++        return (Date) dateType.getConstructor(long.class).newInstance(date.getTime());
++      } catch (Exception e) {
++        // This must never happen: dateType is guarded in the primary constructor
++        throw new AssertionError(e);
++      }
+     }
+   }
+-
+   private Date deserializeToDate(String s) {
+     synchronized (localFormat) {
+       try {

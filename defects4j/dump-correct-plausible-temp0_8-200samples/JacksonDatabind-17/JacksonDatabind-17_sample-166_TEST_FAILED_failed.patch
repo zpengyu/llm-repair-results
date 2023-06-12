@@ -1,0 +1,37 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/ObjectMapper.java b/src/main/java/com/fasterxml/jackson/databind/ObjectMapper.java
+index f776072cc..b723e1638 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/ObjectMapper.java
++++ b/src/main/java/com/fasterxml/jackson/databind/ObjectMapper.java
+@@ -173,12 +173,11 @@ public class ObjectMapper
+                 }
+                 // fall through
+             case OBJECT_AND_NON_CONCRETE:
++                // [databind#88] Should not apply to JSON tree models:
+ //                return t.isJavaLangObject() ||
+-                return (t.getRawClass() == Object.class)
+-                        || (!t.isConcrete()
+-                                // [databind#88] Should not apply to JSON tree models:
++                return (t.getRawClass() == Object.class) ||
++                        (!t.isConcrete()
+                         || TreeNode.class.isAssignableFrom(t.getRawClass()));
+-
+             case NON_FINAL:
+                 while (t.isArrayType()) {
+                     t = t.getContentType();
+@@ -186,12 +185,11 @@ public class ObjectMapper
+                 // [Issue#88] Should not apply to JSON tree models:
+                 return !t.isFinal() && !TreeNode.class.isAssignableFrom(t.getRawClass());
+             default:
+-            //case JAVA_LANG_OBJECT:
+-//                return t.isJavaLangObject();
+-                return (t.getRawClass() == Object.class);
++                //case JAVA_LANG_OBJECT:
++                // [databind#88]: should also consider abstract types as well
++                return (t.getRawClass() == Object.class) || !t.isConcrete();
+             }
+-        }
+-    }
++        }    }
+ 
+     /*
+     /**********************************************************

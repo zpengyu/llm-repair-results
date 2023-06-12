@@ -1,0 +1,49 @@
+    public static boolean verifyCheckSum(byte[] header) {
+        long storedSum = 0;
+        long unsignedSum = 0;
+        long signedSum = 0;
+        int digits = 0;
+        for (int i = 0; i < header.length; i++) {
+            byte b = header[i];
+            if (CHKSUM_OFFSET  <= i && i < CHKSUM_OFFSET + CHKSUMLEN) {
+                if ('0' <= b && b <= '7' && digits++ < 6) {
+                    storedSum = storedSum * 8 + b - '0';
+                } else if (digits > 0) {
+                    digits = 6;
+                    continue;
+                }
+                b = ' ';
+            }
+            unsignedSum += 0xff & b;
+            signedSum += b;
+        }
+        return storedSum == unsignedSum || storedSum == signedSum;
+    }
+    protected void setUp() throws Exception {
+        super.setUp();
+        JavaFileManager fm = getFileManager();
+        fm.setLocation(StandardLocation.CLASS_PATH, Arrays.asList(
+            new File(System.getProperty("test.classes", "bin"))));
+        fm.setLocation(StandardLocation.SOURCE_PATH, Arrays.asList(
+            new File(System.getProperty("test.src", "."))));
+    }
+    public void testT244375_1() throws IOException {
+        compile(
+            "public class T244375_1 {",
+            "    int field;",
+            "    void test() {",
+            "        field = 5;",
+            "    }",
+            "}"
+        );
+    }
+    public void testT244375_2() throws IOException {
+        compile(
+            "public class T244375_2 {",
+            "    int field;",
+            "    void test() {",
+            "        field = 5;",
+            "    }",
+            "}"
+        );
+    }

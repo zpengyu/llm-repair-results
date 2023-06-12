@@ -1,0 +1,38 @@
+diff --git a/src/com/google/javascript/jscomp/UnreachableCodeElimination.java b/src/com/google/javascript/jscomp/UnreachableCodeElimination.java
+index 60bfd244..927170de 100644
+--- a/src/com/google/javascript/jscomp/UnreachableCodeElimination.java
++++ b/src/com/google/javascript/jscomp/UnreachableCodeElimination.java
+@@ -149,13 +133,6 @@ class UnreachableCodeElimination extends AbstractPostOrderCallback
+     if (gNode == null) {
+       return n;
+     }
+-
+-    if (n.getParent() == null) {
+-      List<DiGraphEdge<Node,Branch>> outEdges = gNode.getOutEdges();
+-      if (outEdges.size() == 1) {
+-        return tryRemoveUnconditionalBranching(outEdges.get(0).getDestination().getValue());
+-      }
+-    }
+     switch (n.getType()) {
+       case Token.BLOCK:
+         if (n.hasChildren()) {
+@@ -190,12 +165,17 @@ class UnreachableCodeElimination extends AbstractPostOrderCallback
+     }
+     return n;
+   }
+-
+   private Node computeFollowing(Node n) {
+     Node next = ControlFlowAnalysis.computeFollowNode(n);
++    if (next.getType() == Token.BLOCK) {
++      if (next.hasChildren()) {
++        return next.getFirstChild();
++      } else {
++        return next;
++      }
++    }
+     return next;
+   }
+-
+   private void removeDeadExprStatementSafely(Node n) {
+     Node parent = n.getParent();
+     if (n.getType() == Token.EMPTY ||

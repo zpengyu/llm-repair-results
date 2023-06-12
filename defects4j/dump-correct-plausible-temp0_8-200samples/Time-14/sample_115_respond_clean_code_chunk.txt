@@ -1,0 +1,23 @@
+    public int[] add(ReadablePartial partial, int fieldIndex, int[] values, int valueToAdd) {
+        if (valueToAdd == 0) {
+            return values;
+        }
+        // month is largest field and being added to, such as month-day
+        if (DateTimeUtils.isContiguous(partial)) {
+            long instant = 0L;
+            for (int i = 0, isize = partial.size(); i < isize; i++) {
+                instant = partial.getFieldType(i).getField(iChronology).set(instant, values[i]);
+            }
+            instant = add(instant, valueToAdd);
+            return iChronology.get(partial, instant);
+        }
+        long instant = 0L;
+        for (int i = 0, isize = partial.size(); i < isize; i++) {
+            if (partial.getFieldType(i) == this) {
+                instant = set(instant, values[i] + valueToAdd);
+            } else {
+                instant = partial.getFieldType(i).getField(iChronology).set(instant, values[i]);
+            }
+        }
+        return iChronology.get(partial, instant);
+    }

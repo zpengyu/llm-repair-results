@@ -1,0 +1,24 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/cfg/BaseSettings.java b/src/main/java/com/fasterxml/jackson/databind/cfg/BaseSettings.java
+index 789f0cf1d..a13f61a4d 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/cfg/BaseSettings.java
++++ b/src/main/java/com/fasterxml/jackson/databind/cfg/BaseSettings.java
+@@ -231,7 +231,18 @@ public final class BaseSettings
+         if (_dateFormat == df) {
+             return this;
+         }
+-        TimeZone tz = (df == null) ? _timeZone : df.getTimeZone();
++        TimeZone tz;
++        if (df == null) {
++            tz = _timeZone;
++        } else {
++            tz = df.getTimeZone();
++            if (tz == null) {
++                tz = _timeZone;
++                if (tz == null) {
++                    tz = TimeZone.getTimeZone("UTC");
++                }
++            }
++        }
+         return new BaseSettings(_classIntrospector, _annotationIntrospector, _visibilityChecker, _propertyNamingStrategy, _typeFactory,
+                 _typeResolverBuilder, df, _handlerInstantiator, _locale,
+                 tz, _defaultBase64);

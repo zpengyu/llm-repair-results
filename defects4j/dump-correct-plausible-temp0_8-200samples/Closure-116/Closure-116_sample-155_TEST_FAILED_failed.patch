@@ -1,0 +1,38 @@
+diff --git a/src/com/google/javascript/jscomp/FunctionInjector.java b/src/com/google/javascript/jscomp/FunctionInjector.java
+index c17b3cb3..12c0d6e2 100644
+--- a/src/com/google/javascript/jscomp/FunctionInjector.java
++++ b/src/com/google/javascript/jscomp/FunctionInjector.java
+@@ -686,7 +686,7 @@ class FunctionInjector {
+    *     x = foo(i++);
+    * </pre>
+    */
+-  private CanInlineResult canInlineReferenceDirectly(
++ private CanInlineResult canInlineReferenceDirectly(
+       Node callNode, Node fnNode) {
+     if (!isDirectCallNodeReplacementPossible(fnNode)) {
+       return CanInlineResult.NO;
+@@ -701,19 +697,13 @@ class FunctionInjector {
+     // Functions called via 'call' and 'apply' have a this-object as
+     // the first parameter, but this is not part of the called function's
+     // parameter list.
+-    if (!callNode.getFirstChild().isName()) {
+-      if (NodeUtil.isFunctionObjectCall(callNode)) {
+-        // TODO(johnlenz): Support replace this with a value.
+-        if (cArg == null || !cArg.isThis()) {
+-          return CanInlineResult.NO;
+-        }
+-        cArg = cArg.getNext();
+-      } else {
+-        // ".apply" call should be filtered before this.
+-        Preconditions.checkState(!NodeUtil.isFunctionObjectApply(callNode));
++    if (NodeUtil.isFunctionObjectCall(callNode)) {
++      // TODO(johnlenz): Support replace this with a value.
++      if (cArg == null || !cArg.isThis()) {
++        return CanInlineResult.NO;
+       }
++      cArg = cArg.getNext();
+     }
+-
+     // FUNCTION NODE -> LP NODE: [ ARG1, ARG2, ... ]
+     Node fnParam = NodeUtil.getFunctionParameters(fnNode).getFirstChild();
+     while (cArg != null || fnParam != null) {

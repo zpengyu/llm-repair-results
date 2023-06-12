@@ -1,0 +1,21 @@
+diff --git a/src/com/google/javascript/jscomp/ProcessClosurePrimitives.java b/src/com/google/javascript/jscomp/ProcessClosurePrimitives.java
+index 385e8b07..86094b36 100644
+--- a/src/com/google/javascript/jscomp/ProcessClosurePrimitives.java
++++ b/src/com/google/javascript/jscomp/ProcessClosurePrimitives.java
+@@ -301,12 +301,14 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback
+       if (provided == null || !provided.isExplicitlyProvided()) {
+         unrecognizedRequires.add(
+             new UnrecognizedRequire(n, ns, t.getSourceName()));
++        maybeAddToSymbolTable(left);
++        maybeAddStringNodeToSymbolTable(arg);
++        parent.detachFromParent();
++        compiler.reportCodeChange();
+       } else {
+         JSModule providedModule = provided.explicitModule;
+-
+         // This must be non-null, because there was an explicit provide.
+         Preconditions.checkNotNull(providedModule);
+-
+         JSModule module = t.getModule();
+         if (moduleGraph != null &&
+             module != providedModule &&

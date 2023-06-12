@@ -1,0 +1,35 @@
+diff --git a/src/com/google/javascript/jscomp/InlineObjectLiterals.java b/src/com/google/javascript/jscomp/InlineObjectLiterals.java
+index 5b8fedb1..6903da43 100644
+--- a/src/com/google/javascript/jscomp/InlineObjectLiterals.java
++++ b/src/com/google/javascript/jscomp/InlineObjectLiterals.java
+@@ -326,8 +325,17 @@ class InlineObjectLiterals implements CompilerPass {
+                    Node.newString(Token.NAME, varmap.get(var)),
+                    NodeUtil.newUndefinedNode(null)));
+       }
+-
+       Node replacement;
++      // If we do not know the type of the expression, we need to emit all
++      // assignments as expression statements.
++      if (ref.isAssignedToName()) {
++        replacement = nodes.get(nodes.size() - 1);
++        for (int i = nodes.size() - 2; i >= 0; i--) {
++          Node expr = new Node(Token.EXPR_RESULT);
++          expr.addChildToBack(nodes.get(i));
++          replacement.addChildToFront(expr);
++        }
++      } else {
+         // All assignments evaluate to true, so make sure that the
+         // expr statement evaluates to true in case it matters.
+         nodes.add(new Node(Token.TRUE));
+@@ -347,10 +354,9 @@ class InlineObjectLiterals implements CompilerPass {
+         }
+         cur.addChildToFront(nodes.get(i));
+         cur.addChildToFront(nodes.get(i + 1));
+-
++      }
+       Node replace = ref.getParent();
+       replacement.copyInformationFromForTree(replace);
+-
+       if (replace.getType() == Token.VAR) {
+         replace.getParent().replaceChild(
+             replace, NodeUtil.newExpr(replacement));

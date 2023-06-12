@@ -1,0 +1,83 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/jsontype/impl/SubTypeValidator.java b/src/main/java/com/fasterxml/jackson/databind/jsontype/impl/SubTypeValidator.java
+index 9fe2d40b0..5f6fca874 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/jsontype/impl/SubTypeValidator.java
++++ b/src/main/java/com/fasterxml/jackson/databind/jsontype/impl/SubTypeValidator.java
+@@ -19,8 +19,7 @@ import com.fasterxml.jackson.databind.JsonMappingException;
+ public class SubTypeValidator
+ {
+     protected final static String PREFIX_SPRING = "org.springframework.";
+-
+-
++    protected final static String CACHE_KEY_PREFIX = "`";
+     /**
+      * Set of well-known "nasty classes", deserialization of which is considered dangerous
+      * and should (and is) prevented by default.
+@@ -53,28 +51,45 @@ public class SubTypeValidator
+         // [databind#1855]: more 3rd party
+         s.add("org.apache.tomcat.dbcp.dbcp2.BasicDataSource");
+         s.add("com.sun.org.apache.bcel.internal.util.ClassLoader");
+-
+         DEFAULT_NO_DESER_CLASS_NAMES = Collections.unmodifiableSet(s);
+     }
+-
++    protected final ConcurrentHashMap<String, Boolean> _cache
++            = new ConcurrentHashMap<String, Boolean>(64, 0.75f, 2);
+     /**
+      * Set of class names of types that are never to be deserialized.
+      */
+     protected Set<String> _cfgIllegalClassNames = DEFAULT_NO_DESER_CLASS_NAMES;
+-
+     private final static SubTypeValidator instance = new SubTypeValidator();
+-
+     protected SubTypeValidator() { }
+-
+     public static SubTypeValidator instance() { return instance; }
+-
+     public void validateSubType(DeserializationContext ctxt, JavaType type) throws JsonMappingException
+     {
+-        // There are certain nasty classes that could cause problems, mostly
+-        // via default typing -- catch them here.
+         final Class<?> raw = type.getRawClass();
+         String full = raw.getName();
+-
++        // 06-Jan-2017, tatu: Do we need to use fully qualified name here? Depends on what
++        //   this method is used for, but probably not.
++        String prefix = (raw.isInterface() || Modifier.isAbstract(raw.getModifiers())) ?
++                "`" : "";
++        Boolean b = _cache.get(prefix+full);
++        if (b != null) {
++            if (!b.booleanValue()) {
++                throw JsonMappingException.from(ctxt,
++                        String.format("Illegal type (%s) to deserialize: prevented for security reasons", full));
++            }
++            return;
++        }
++        // not in cache; resolve
++        b = _resolve(ctxt, type);
++        _cache.put(prefix+full, b);
++        if (!b.booleanValue()) {
++            throw JsonMappingException.from(ctxt,
++                    String.format("Illegal type (%s) to deserialize: prevented for security reasons", full));
++        }
++    }
++    protected Boolean _resolve(DeserializationContext ctxt, JavaType type) throws JsonMappingException
++    {
++        final Class<?> raw = type.getRawClass();
++        String full = raw.getName();
+         main_check:
+         do {
+             if (_cfgIllegalClassNames.contains(full)) {
+@@ -103,10 +117,8 @@ public class SubTypeValidator
+                 // com.mchange.v2.c3p0.debug.AfterCloseLoggingComboPooledDataSource 
+                 }
+             }
+-            return;
++            return Boolean.TRUE;
+         } while (false);
+-
+-        throw JsonMappingException.from(ctxt,
+-                String.format("Illegal type (%s) to deserialize: prevented for security reasons", full));
++        return Boolean.FALSE;
+     }
+ }
+\ No newline at end of file

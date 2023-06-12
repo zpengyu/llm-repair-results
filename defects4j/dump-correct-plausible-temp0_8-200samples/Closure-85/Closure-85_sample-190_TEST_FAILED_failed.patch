@@ -1,0 +1,45 @@
+diff --git a/src/com/google/javascript/jscomp/UnreachableCodeElimination.java b/src/com/google/javascript/jscomp/UnreachableCodeElimination.java
+index 60bfd244..dba73c62 100644
+--- a/src/com/google/javascript/jscomp/UnreachableCodeElimination.java
++++ b/src/com/google/javascript/jscomp/UnreachableCodeElimination.java
+@@ -44,19 +44,35 @@ import java.util.logging.Logger;
+  *    being initialized.
+  *
+  */
++/**
++ * Eliminates dead code by removing all unreachable code.
++ *
++ * Dead code typically arise from conditional branching where one of the branch
++ * cannot be reached. Consider the following code:
++ *
++ * <pre>
++ * if (x) {
++ *   return 1;
++ * } else {
++ *   return 2;
++ * }
++ * </pre>
++ *
++ * If x is always true, the 2nd return will never be reached. It is dead code.
++ *
++ * Traverses the AST to identify unreachable code and removes it. Currently it
++ * understands conditional branching and looping structures.
++ *
++ */
+ class UnreachableCodeElimination extends AbstractPostOrderCallback
+-    implements CompilerPass, ScopedCallback  {
++    implements CompilerPass, ScopedCallback {
+   private static final Logger logger =
+     Logger.getLogger(UnreachableCodeElimination.class.getName());
+-
+   private final AbstractCompiler compiler;
+   private final boolean removeNoOpStatements;
+-
+   Deque<ControlFlowGraph<Node>> cfgStack =
+       new LinkedList<ControlFlowGraph<Node>>();
+-
+   ControlFlowGraph<Node> curCfg = null;
+-
+   UnreachableCodeElimination(AbstractCompiler compiler,
+       boolean removeNoOpStatements) {
+     this.compiler = compiler;

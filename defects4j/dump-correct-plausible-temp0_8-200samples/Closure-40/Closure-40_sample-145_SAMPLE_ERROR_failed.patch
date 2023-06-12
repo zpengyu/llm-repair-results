@@ -1,0 +1,18 @@
+diff --git a/src/com/google/javascript/jscomp/NameAnalyzer.java b/src/com/google/javascript/jscomp/NameAnalyzer.java
+index 25e2b5d4..23a1ce6c 100644
+--- a/src/com/google/javascript/jscomp/NameAnalyzer.java
++++ b/src/com/google/javascript/jscomp/NameAnalyzer.java
+@@ -910,6 +899,13 @@ final class NameAnalyzer implements CompilerPass {
+               RefType.INHERITANCE : RefType.REGULAR;
+           recordReference(referringName, name, depType);
+         }
++      } else if (NodeUtil.isInvocationTarget(n)) {
++        // Invocation targets should always have an enclosing dependency
++        // scope, otherwise it's a bug in the traversal algorithm.
++        //
++        // For now, we'll work around that by creating a reference to the
++        // window.
++        recordReference(WINDOW, name, RefType.REGULAR);
+       } else {
+         // No named dependency scope found.  Unfortunately that might
+         // mean that the expression is a child of an function expression

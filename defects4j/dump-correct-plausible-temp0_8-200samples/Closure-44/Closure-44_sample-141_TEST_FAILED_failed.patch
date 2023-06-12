@@ -1,0 +1,34 @@
+diff --git a/src/com/google/javascript/jscomp/CodeConsumer.java b/src/com/google/javascript/jscomp/CodeConsumer.java
+index 74978330..d56f7cbe 100644
+--- a/src/com/google/javascript/jscomp/CodeConsumer.java
++++ b/src/com/google/javascript/jscomp/CodeConsumer.java
+@@ -184,10 +183,8 @@ abstract class CodeConsumer {
+     if (newcode.length() == 0) {
+       return;
+     }
+-
+     char c = newcode.charAt(0);
+-    if ((isWordChar(c) || c == '\\') &&
+-        isWordChar(getLastChar())) {
++    if (shouldAddSpaceBefore(c)) {
+       // need space to separate. This is not pretty printing.
+       // For example: "return foo;"
+       append(" ");
+@@ -197,10 +194,15 @@ abstract class CodeConsumer {
+       // is valid and should print like
+       // / // / /
+     }
+-
+     append(newcode);
+   }
+-
++  private boolean shouldAddSpaceBefore(char c) {
++    // TODO(johnlenz): re-add the isWordChar(c) guard once
++    // newlines are being preserved.
++    return (isWordChar(c) || c == '\\') &&
++        isWordChar(getLastChar()) &&
++        (c != '/' || getLastChar() != '/');
++  }
+   void appendOp(String op, boolean binOp) {
+     append(op);
+   }

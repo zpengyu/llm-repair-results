@@ -1,0 +1,42 @@
+diff --git a/src/com/google/javascript/jscomp/CodeConsumer.java b/src/com/google/javascript/jscomp/CodeConsumer.java
+index dbdb0a9b..2d61a2f2 100644
+--- a/src/com/google/javascript/jscomp/CodeConsumer.java
++++ b/src/com/google/javascript/jscomp/CodeConsumer.java
+@@ -80,23 +72,31 @@ abstract class CodeConsumer {
+   void appendBlockEnd() {
+     append("}");
+   }
+-
+   void startNewLine() {
++    startNewLine(false);
++  }
++  void startNewLine(boolean ignoreBreak) {
++    if (!ignoreBreak && breakScheduled) {
++      append(LINE_SEPARATOR);
++      lineLength = 0;
++      breakScheduled = false;
++    }
+   }
+-
+   void maybeLineBreak() {
+     maybeCutLine();
++    breakScheduled = true;
+   }
+-
+   void maybeCutLine() {
++    if (lineLength > 100) {
++      startNewLine();
++    }
+   }
+-
+   void endLine() {
++    startNewLine();
+   }
+-
+   void notePreferredLineBreak() {
++    maybeLineBreak();
+   }
+-
+   void beginBlock() {
+     if (statementNeedsEnded) {
+       append(";");

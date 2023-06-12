@@ -1,0 +1,21 @@
+diff --git a/src/org/mockito/internal/creation/instance/ConstructorInstantiator.java b/src/org/mockito/internal/creation/instance/ConstructorInstantiator.java
+index 972e1a282..15dfa8114 100644
+--- a/src/org/mockito/internal/creation/instance/ConstructorInstantiator.java
++++ b/src/org/mockito/internal/creation/instance/ConstructorInstantiator.java
+@@ -22,7 +18,15 @@ public class ConstructorInstantiator implements Instantiator {
+             //this is kind of overengineered because we don't need to support more params
+             //however, I know we will be needing it :)
+             Constructor<T> c = cls.getDeclaredConstructor(outerClassInstance.getClass());
+-            return c.newInstance(outerClassInstance);
++            if(c.isAccessible()) {
++            	return c.newInstance(outerClassInstance);
++            }
++            else {
++            	c.setAccessible(true);
++            	T t = c.newInstance(outerClassInstance);
++            	c.setAccessible(false);
++            	return t;
++            }
+         } catch (Exception e) {
+             throw paramsException(cls, e);
+         }

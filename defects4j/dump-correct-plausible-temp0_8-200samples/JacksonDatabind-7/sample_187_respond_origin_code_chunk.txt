@@ -1,0 +1,22 @@
+    public TokenBuffer deserialize(JsonParser jp, DeserializationContext ctxt) throws IOException
+    {
+        if (jp.getCurrentToken() == JsonToken.FIELD_NAME) {
+            return handleMissingStartObject(jp, ctxt);
+        }
+        return copyCurrentStructure(jp);
+    }
+    
+    private final TokenBuffer handleMissingStartObject(JsonParser jp, DeserializationContext ctxt)
+            throws IOException
+    {
+        JsonToken t = jp.nextToken();
+        if (t == JsonToken.END_OBJECT) {
+            return this;
+        }
+        if (t != JsonToken.FIELD_NAME) {
+            return (TokenBuffer) ctxt.handleUnexpectedToken(handledType(), jp);
+        }
+        writeStartObject();
+        return deserialize(jp, ctxt);
+    }
+

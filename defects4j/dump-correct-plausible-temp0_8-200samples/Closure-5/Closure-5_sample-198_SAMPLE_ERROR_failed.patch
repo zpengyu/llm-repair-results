@@ -1,0 +1,90 @@
+diff --git a/src/com/google/javascript/jscomp/InlineObjectLiterals.java b/src/com/google/javascript/jscomp/InlineObjectLiterals.java
+index 2f5a8e10..be25ff70 100644
+--- a/src/com/google/javascript/jscomp/InlineObjectLiterals.java
++++ b/src/com/google/javascript/jscomp/InlineObjectLiterals.java
+@@ -152,47 +152,6 @@ class InlineObjectLiterals implements CompilerPass {
+      *   x.fn();
+      * </pre>
+      */
+-    private boolean isInlinableObject(List<Reference> refs) {
+-      boolean ret = false;
+-      Set<String> validProperties = Sets.newHashSet();
+-      for (Reference ref : refs) {
+-        Node name = ref.getNode();
+-        Node parent = ref.getParent();
+-        Node gramps = ref.getGrandparent();
+-
+-        // Ignore most indirect references, like x.y (but not x.y(),
+-        // since the function referenced by y might reference 'this').
+-        //
+-        if (parent.isGetProp()) {
+-          Preconditions.checkState(parent.getFirstChild() == name);
+-          // A call target may be using the object as a 'this' value.
+-          if (gramps.isCall()
+-              && gramps.getFirstChild() == parent) {
+-            return false;
+-          }
+-
+-          // Deleting a property has different semantics from deleting
+-          // a variable, so deleted properties should not be inlined.
+-
+-          // NOTE(nicksantos): This pass's object-splitting algorithm has
+-          // a blind spot. It assumes that if a property isn't defined on an
+-          // object, then the value is undefined. This is not true, because
+-          // Object.prototype can have arbitrary properties on it.
+-          //
+-          // We short-circuit this problem by bailing out if we see a reference
+-          // to a property that isn't defined on the object literal. This
+-          // isn't a perfect algorithm, but it should catch most cases.
+-          String propName = parent.getLastChild().getString();
+-          if (!validProperties.contains(propName)) {
+-            if (NodeUtil.isVarOrSimpleAssignLhs(parent, gramps)) {
+-              validProperties.add(propName);
+-            } else {
+-              return false;
+-            }
+-          }
+-          continue;
+-        }
+-
+         // Only rewrite VAR declarations or simple assignment statements
+         if (!isVarOrAssignExprLhs(name)) {
+            return false;
+@@ -224,9 +180,6 @@ class InlineObjectLiterals implements CompilerPass {
+             // ES5 get/set not supported.
+             return false;
+           }
+-
+-          validProperties.add(child.getString());
+-
+           Node childVal = child.getFirstChild();
+           // Check if childVal is the parent of any of the passed in
+           // references, as that is how self-referential assignments
+@@ -242,8 +195,25 @@ class InlineObjectLiterals implements CompilerPass {
+             }
+           }
+         }
+-
+-
++        // NOTE(nicksantos): This pass's object-splitting algorithm has
++        // a blind spot. It assumes that if a property isn't defined on an
++        // object, then the value is undefined. This is not true, because
++        // Object.prototype can have arbitrary properties on it.
++        //
++        // We short-circuit this problem by bailing out if we see a reference
++        // to a property that isn't defined on the object literal. This
++        // isn't a perfect algorithm, but it should catch most cases.
++        for (Node child = val.getFirstChild(); child != null;
++             child = child.getNext()) {
++          String propName = child.getString();
++          if (!validProperties.contains(propName)) {
++            if (NodeUtil.isVarOrSimpleAssignLhs(child, child.getParent())) {
++              validProperties.add(propName);
++            } else {
++              return false;
++            }
++          }
++        }
+         // We have found an acceptable object literal assignment. As
+         // long as there are no other assignments that mess things up,
+         // we can inline.

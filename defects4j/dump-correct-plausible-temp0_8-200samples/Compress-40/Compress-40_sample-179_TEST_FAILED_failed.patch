@@ -1,0 +1,60 @@
+diff --git a/src/main/java/org/apache/commons/compress/utils/BitInputStream.java b/src/main/java/org/apache/commons/compress/utils/BitInputStream.java
+index 4086c8b5..7382f6bc 100644
+--- a/src/main/java/org/apache/commons/compress/utils/BitInputStream.java
++++ b/src/main/java/org/apache/commons/compress/utils/BitInputStream.java
+@@ -82,29 +82,38 @@ public class BitInputStream implements Closeable {
+         if (count < 0 || count > MAXIMUM_CACHE_SIZE) {
+             throw new IllegalArgumentException("count must not be negative or greater than " + MAXIMUM_CACHE_SIZE);
+         }
+-        while (bitsCachedSize < count) {
+-            final long nextByte = in.read();
+-            if (nextByte < 0) {
+-                return nextByte;
++        if (count > bitsCachedSize) {
++            long bits = bitsCached;
++            bitsCached = 0;
++            bitsCachedSize = 0;
++            while (bitsCachedSize < count) {
++                final long nextByte = in.read();
++                if (nextByte < 0) {
++                    return nextByte;
++                }
++                if (byteOrder == ByteOrder.LITTLE_ENDIAN) {
++                    bitsCached |= (nextByte << bitsCachedSize);
++                } else {
++                    bitsCached <<= 8;
++                    bitsCached |= nextByte;
++                }
++                bitsCachedSize += 8;
+             }
+-            if (byteOrder == ByteOrder.LITTLE_ENDIAN) {
+-                bitsCached |= (nextByte << bitsCachedSize);
+-            } else {
+-                bitsCached <<= 8;
+-                bitsCached |= nextByte;
+-            }
+-            bitsCachedSize += 8;
++            bits |= (bitsCached >>> bitsCachedSize) & MASKS[count - bitsCachedSize];
++            bitsCachedSize -= count;
++            return bits;
+         }
+-            // bitsCachedSize >= 57 and left-shifting it 8 bits would cause an overflow
+-
+-        final long bitsOut;
++        return readBitsFast(count);
++    }
++    private long readBitsFast(final int count) throws IOException {
++            final long bitsOut;
+             if (byteOrder == ByteOrder.LITTLE_ENDIAN) {
+                 bitsOut = (bitsCached & MASKS[count]);
+                 bitsCached >>>= count;
+             } else {
+                 bitsOut = (bitsCached >> (bitsCachedSize - count)) & MASKS[count];
++                bitsCached <<= count;
+             }
+             bitsCachedSize -= count;
+-        return bitsOut;
+-    }
+-}
++            return bitsOut;
++    }}

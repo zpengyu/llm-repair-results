@@ -1,0 +1,32 @@
+diff --git a/src/main/java/com/fasterxml/jackson/core/json/JsonGeneratorImpl.java b/src/main/java/com/fasterxml/jackson/core/json/JsonGeneratorImpl.java
+index 81b90fed..2a9565cc 100644
+--- a/src/main/java/com/fasterxml/jackson/core/json/JsonGeneratorImpl.java
++++ b/src/main/java/com/fasterxml/jackson/core/json/JsonGeneratorImpl.java
+@@ -106,9 +94,7 @@ public abstract class JsonGeneratorImpl extends GeneratorBase
+             // inlined `setHighestNonEscapedChar()`
+             _maximumNonEscapedChar = 127;
+         }
+-        _cfgUnqNames = !Feature.QUOTE_FIELD_NAMES.enabledIn(features);
+     }
+-
+     /*
+     /**********************************************************
+     /* Overridden configuration methods
+@@ -191,7 +164,15 @@ public abstract class JsonGeneratorImpl extends GeneratorBase
+     @Override
+     public final void writeStringField(String fieldName, String value) throws IOException
+     {
+-        writeFieldName(fieldName);
++        if (isEnabled(Feature.QUOTE_FIELD_NAMES)) {
++            if (_cfgUnqNames) {
++                _writeStringFieldName(fieldName);
++            } else {
++                writeFieldName(fieldName);
++            }
++        } else {
++            _writeStringFieldNameUnq(fieldName);
++        }
+         writeString(value);
+     }
+ }
+\ No newline at end of file

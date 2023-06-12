@@ -1,0 +1,74 @@
+diff --git a/gson/src/main/java/com/google/gson/internal/ConstructorConstructor.java b/gson/src/main/java/com/google/gson/internal/ConstructorConstructor.java
+index cd5c2f6c..b4e58414 100644
+--- a/gson/src/main/java/com/google/gson/internal/ConstructorConstructor.java
++++ b/gson/src/main/java/com/google/gson/internal/ConstructorConstructor.java
+@@ -193,10 +192,67 @@ public final class ConstructorConstructor {
+         };
+       }
+     }
+-
++    if (Date.class.isAssignableFrom(rawType)) {
++      return new ObjectConstructor<T>() {
++        @Override public T construct() {
++          return (T) new Date();
++        }
++      };
++    }
++    if (Calendar.class.isAssignableFrom(rawType)) {
++      return new ObjectConstructor<T>() {
++        @Override public T construct() {
++          Calendar calendar = Calendar.getInstance();
++          // TODO(joel): configure timezone.
++          return (T) calendar;
++        }
++      };
++    }
++    if (JSONObject.class.isAssignableFrom(rawType)) {
++      return new ObjectConstructor<T>() {
++        @Override public T construct() {
++          return (T) new JSONObject();
++        }
++      };
++    }
++    if (JSONArray.class.isAssignableFrom(rawType)) {
++      return new ObjectConstructor<T>() {
++        @Override public T construct() {
++          return (T) new JSONArray();
++        }
++      };
++    }
++    if (atomicLongClass != null && atomicLongClass.isAssignableFrom(rawType)) {
++      return new ObjectConstructor<T>() {
++        @Override public T construct() {
++          return (T) new AtomicLong();
++        }
++      };
++    }
++    if (atomicIntegerClass != null && atomicIntegerClass.isAssignableFrom(rawType)) {
++      return new ObjectConstructor<T>() {
++        @Override public T construct() {
++          return (T) new AtomicInteger();
++        }
++      };
++    }
++    if (atomicBooleanClass != null && atomicBooleanClass.isAssignableFrom(rawType)) {
++      return new ObjectConstructor<T>() {
++        @Override public T construct() {
++          return (T) new AtomicBoolean();
++        }
++      };
++    }
++    // This is the same check as in DefaultTypeAdapters
++    if (Number.class.isAssignableFrom(rawType)) {
++      return new ObjectConstructor<T>() {
++        @Override public T construct() {
++          return (T) new BigDecimal("0");
++        }
++      };
++    }
+     return null;
+   }
+-
+   private <T> ObjectConstructor<T> newUnsafeAllocator(
+       final Type type, final Class<? super T> rawType) {
+     return new ObjectConstructor<T>() {

@@ -1,0 +1,63 @@
+diff --git a/src/java/org/apache/commons/jxpath/ri/compiler/CoreOperationCompare.java b/src/java/org/apache/commons/jxpath/ri/compiler/CoreOperationCompare.java
+index cc45a8f..a0bdfc5 100644
+--- a/src/java/org/apache/commons/jxpath/ri/compiler/CoreOperationCompare.java
++++ b/src/java/org/apache/commons/jxpath/ri/compiler/CoreOperationCompare.java
+@@ -42,6 +42,7 @@ public abstract class CoreOperationCompare extends CoreOperation {
+     /**
+      * Compares two values
+      */
++public class EqualPredicate extends Predicate {
+     protected boolean equal(
+         EvalContext context,
+         Expression left,
+@@ -49,11 +50,6 @@ public abstract class CoreOperationCompare extends CoreOperation {
+     {
+         Object l = left.compute(context);
+         Object r = right.compute(context);
+-
+-//        System.err.println("COMPARING: " +
+-//            (l == null ? "null" : l.getClass().getName()) + " " +
+-//            (r == null ? "null" : r.getClass().getName()));
+-
+         if (l instanceof InitialContext || l instanceof SelfContext) {
+             l = ((EvalContext) l).getSingleNodePointer();
+         }
+@@ -81,7 +73,37 @@ public abstract class CoreOperationCompare extends CoreOperation {
+         }
+         return equal(l, r);
+     }
+-
++    private boolean equal(Object l, Object r) {
++        if (l == r) {
++            return true;
++        }
++        if ((l == null) || (r == null)) {
++            return false;
++        }
++        return l.equals(r);
++    }
++    private boolean contains(Iterator it, Object o) {
++        while (it.hasNext()) {
++            if (equal(it.next(), o)) {
++                return true;
++            }
++        }
++        return false;
++    }
++    private boolean findMatch(Iterator left, Iterator right) {
++        while (left.hasNext()) {
++            Object lo = left.next();
++            while (right.hasNext()) {
++                Object ro = right.next();
++                if (equal(lo, ro)) {
++                    return true;
++                }
++            }
++            right = ((Collection) right).iterator();
++        }
++        return false;
++    }
++}
+     protected boolean contains(Iterator it, Object value) {
+         while (it.hasNext()) {
+             Object element = it.next();

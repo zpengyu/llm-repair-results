@@ -1,0 +1,28 @@
+    protected JavaType _narrow(Class<?> subclass)
+    {
+        // 15-Jan-2016, tatu: ... but there are few special cases to consider.
+        // One is that if we have type handler that is not compatible, we
+        // must apply it first
+        Object h = _valueHandler;
+        // 15-Jan-2016, tatu: [databind#1290] And another is that if we have a
+        //   concrete class, we should NOT replace it with a more specific
+        //   subtype; but we should merge new information into existing type.
+        if (subclass == _class) {
+            return this;
+        }
+        if (!_class.isAssignableFrom(subclass)) {
+            throw new IllegalArgumentException("Class "+subclass.getName()+" not sub-type of "
+                    +_class.getName());
+        }
+        // or, if the handler is not compatible, apply it first:
+        if (h == null) {
+            h = _findRemappedTypeHandler(subclass);
+        } else if (!_class.isAssignableFrom(h.getClass())) {
+            // 23-Oct-2015, tatu: But NOT if type handler is a "passthrough" for target type
+            if (!_class.equals(TypeFactory.rawClass(h.getClass()))) {
+                h = _findRemappedTypeHandler(subclass);
+            }
+        }
+        return new SimpleType(subclass, _bindings, _superClass, _superInterfaces,
+                h, _typeHandler, _asStatic);
+    }

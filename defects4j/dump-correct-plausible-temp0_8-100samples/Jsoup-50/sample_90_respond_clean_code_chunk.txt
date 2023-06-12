@@ -1,0 +1,91 @@
+    static Document parseByteData(ByteBuffer byteData, String charsetName, String baseUri, Parser parser) {
+        String docData;
+        Document doc = null;
+        // look for BOM - overrides any other header or input
+        byte[] bom = getCharsetBom(byteData.array());
+        byteData.rewind();
+        if (bom != null) {
+            // BOM found - use decoder with BOM
+            charsetName = getDecoderCharset(bom);
+            docData = Charset.forName(charsetName).decode(byteData).toString();
+            doc = parser.parseInput(docData, baseUri);
+            doc.outputSettings().charset(charsetName);
+        } else {
+            // look for <meta http-equiv="Content-Type" content="text/html;charset=gb2312"> or HTML5 <meta charset="gb2312">
+            docData = Charset.forName(defaultCharset).decode(byteData).toString();
+            doc = parser.parseInput(docData, baseUri);
+            Element meta = doc.select("meta[http-equiv=content-type], meta[charset]").first();
+            if (meta != null) { // if not found, will keep utf-8 as best attempt
+                String foundCharset = null;
+                if (meta.hasAttr("http-equiv")) {
+                    foundCharset = getCharsetFromContentType(meta.attr("content"));
+                }
+                if (foundCharset == null && meta.hasAttr("charset")) {
+                    try {
+                        if (Charset.isSupported(meta.attr("charset"))) {
+                            foundCharset = meta.attr("charset");
+                        }
+                    } catch (IllegalCharsetNameException e) {
+                        foundCharset = null;
+                    }
+                }
+                if (foundCharset != null && foundCharset.length() != 0 && !foundCharset.equals(defaultCharset)) { // need to re-decode
+                    foundCharset = foundCharset.trim().replaceAll("[\"']", "");
+                    charsetName = foundCharset;
+                    byteData.rewind();
+                    docData = Charset.forName(foundCharset).decode(byteData).toString();
+                    doc = null;
+                }
+            }
+            if (doc == null) {
+                doc = parser.parseInput(docData, baseUri);
+                doc.outputSettings().charset(charsetName);
+            }
+        }
+        return doc;
+    }
+    static byte[] getCharsetBom(byte[] content) {
+        if (content.length >= 3 && content[0] == (byte) 0xEF && content[1] == (byte) 0xBB && content[2] == (byte) 0xBF) {
+            return new byte[] {(byte) 0xEF, (byte) 0xBB, (byte) 0xBF};
+        }
+        if (content.length >= 4 && content[0] == (byte) 0x00 && content[1] == (byte) 0x00
+            && content[2] == (byte) 0xFE && content[3] == (byte) 0xFF) {
+            return new byte[] {(byte) 0x00, (byte) 0x00, (byte) 0xFE, (byte) 0xFF};
+        }
+        if (content.length >= 4 && content[0] == (byte) 0xFF && content[1] == (byte) 0xFE
+            && content[2] == (byte) 0x00 && content[3] == (byte) 0x00) {
+            return new byte[] {(byte) 0xFF, (byte) 0xFE, (byte) 0x00, (byte) 0x00};
+        }
+        if (content.length >= 2 && content[0] == (byte) 0xFF && content[1] == (byte) 0xFE) {
+            return new byte[] {(byte) 0xFF, (byte) 0xFE};
+        }
+        if (content.length >= 2 && content[0] == (byte) 0xFE && content[1] == (byte) 0xFF) {
+            return new byte[] {(byte) 0xFE, (byte) 0xFF};
+        }
+        if (content.length >= 4 && content[0] == (byte) 0x00 && content[1] == (byte) 0x00
+            && content[2] == (byte) 0xFF && content[3] == (byte) 0xFE) {
+            return new byte[] {(byte) 0x00, (byte) 0x00, (byte) 0xFF, (byte) 0xFE};
+        }
+        return null;
+    }
+    static String getDecoderCharset(byte[] bom) {
+        if (bom.length == 4 && bom[0] == (byte) 0x00 && bom[1] == (byte) 0x00 && bom[2] == (byte) 0xFE && bom[3] == (byte) 0xFF) {
+            return "UTF-32BE";
+        }
+        if (bom.length == 4 && bom[0] == (byte) 0xFF && bom[1] == (byte) 0xFE && bom[2] == (byte) 0x00 && bom[3] == (byte) 0x00) {
+            return "UTF-32LE";
+        }
+        if (bom.length == 2 && bom[0] == (byte) 0xFE && bom[1] == (byte) 0xFF) {
+            return "UTF-16BE";
+        }
+        if (bom.length == 2 && bom[0] == (byte) 0xFF && bom[1] == (byte) 0xFE) {
+            return "UTF-16LE";
+        }
+        if (bom.length == 3 && bom[0] == (byte) 0xEF && bom[1] == (byte) 0xBB && bom[2] == (byte) 0xBF) {
+            return "UTF-8";
+        }
+        if (bom.length == 4 && bom[0] == (byte) 0x00 && bom[1] == (byte) 0x00 && bom[2] == (byte) 0xFF && bom[3] == (byte) 0xFE) {
+            return "UTF-32LE";
+        }
+        return null;
+    }

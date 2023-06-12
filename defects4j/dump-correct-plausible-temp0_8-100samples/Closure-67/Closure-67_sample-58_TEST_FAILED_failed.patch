@@ -1,0 +1,41 @@
+diff --git a/src/com/google/javascript/jscomp/AnalyzePrototypeProperties.java b/src/com/google/javascript/jscomp/AnalyzePrototypeProperties.java
+index 17ab404c..add4f385 100644
+--- a/src/com/google/javascript/jscomp/AnalyzePrototypeProperties.java
++++ b/src/com/google/javascript/jscomp/AnalyzePrototypeProperties.java
+@@ -311,28 +311,22 @@ class AnalyzePrototypeProperties implements CompilerPass {
+            n.getParent().getType() == Token.NAME);
+     }
+ 
+-    private boolean isPrototypePropertyAssign(Node assign) {
+-      Node n = assign.getFirstChild();
+-      if (n != null && NodeUtil.isVarOrSimpleAssignLhs(n, assign)
+-          && n.getType() == Token.GETPROP
+-          ) {
++  private boolean isPrototypePropertyAssign(Node assign) {
++    Node n = assign.getFirstChild();
++    if (n != null && NodeUtil.isVarOrSimpleAssignLhs(n, assign)) {
++      if (n.getType() == Token.GETPROP) {
+         // We want to exclude the assignment itself from the usage list
+-        boolean isChainedProperty =
+-            n.getFirstChild().getType() == Token.GETPROP;
+-
++        boolean isChainedProperty = n.getFirstChild().getType() == Token.GETPROP;
+         if (isChainedProperty) {
+           Node child = n.getFirstChild().getFirstChild().getNext();
+-
+-          if (child.getType() == Token.STRING &&
+-              child.getString().equals("prototype")) {
++          if (child.getType() == Token.STRING && child.getString().equals("prototype")) {
+             return true;
+           }
+         }
+       }
+-
+-      return false;
+     }
+-
++    return false;
++  }
+     /**
+      * Processes a NAME node to see if it's a global function declaration.
+      * If it is, record it and return true. Otherwise, return false.

@@ -1,0 +1,16 @@
+    protected JavaType _narrow(Class<?> subclass)
+    {
+        if (_class == subclass) {
+            return this;
+        }
+        if (!_class.isAssignableFrom(subclass)) { // Issue#690
+            throw new IllegalArgumentException("Class "+subclass.getName()+" not sub-type of "+_class.getName());
+        }
+        JavaType supertype = _superClass;
+        // First: if superclass is itself parameterized, may need to re-narrow it too
+        if (supertype != null && supertype.getClass() == SimpleType.class) {
+            supertype = supertype.narrowBy(subclass);
+        }
+        return new SimpleType(subclass, _bindings, supertype, _superInterfaces,
+                _valueHandler, _typeHandler, _asStatic);
+    }

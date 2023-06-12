@@ -1,0 +1,27 @@
+diff --git a/src/main/java/org/apache/commons/lang3/time/FastDatePrinter.java b/src/main/java/org/apache/commons/lang3/time/FastDatePrinter.java
+index d9001ae9..778f0771 100644
+--- a/src/main/java/org/apache/commons/lang3/time/FastDatePrinter.java
++++ b/src/main/java/org/apache/commons/lang3/time/FastDatePrinter.java
+@@ -1172,8 +1172,10 @@ public class FastDatePrinter implements DatePrinter, Serializable {
+          */
+         @Override
+         public void appendTo(StringBuffer buffer, Calendar calendar) {
+-            int offset = calendar.get(Calendar.ZONE_OFFSET) + calendar.get(Calendar.DST_OFFSET);
+-
++            int offset = calendar.get(Calendar.ZONE_OFFSET);
++            if (calendar.get(Calendar.ERA) == GregorianCalendar.AD) {
++                offset += calendar.get(Calendar.DST_OFFSET);
++            }
+             if (offset < 0) {
+                 buffer.append('-');
+                 offset = -offset;
+@@ -1192,8 +1191,7 @@ public class FastDatePrinter implements DatePrinter, Serializable {
+             int minutes = offset / (60 * 1000) - 60 * hours;
+             buffer.append((char)(minutes / 10 + '0'));
+             buffer.append((char)(minutes % 10 + '0'));
+-        }
+-    }
++        }    }
+ 
+     // ----------------------------------------------------------------------
+     /**

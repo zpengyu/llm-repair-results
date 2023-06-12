@@ -1,0 +1,30 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/ser/std/NumberSerializer.java b/src/main/java/com/fasterxml/jackson/databind/ser/std/NumberSerializer.java
+index 958795bce..ad544b529 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/ser/std/NumberSerializer.java
++++ b/src/main/java/com/fasterxml/jackson/databind/ser/std/NumberSerializer.java
+@@ -76,13 +76,15 @@ public class NumberSerializer
+         if (_isInt) {
+             visitIntFormat(visitor, typeHint, JsonParser.NumberType.BIG_INTEGER);
+         } else {
+-            Class<?> h = handledType();
+-            if (h == BigDecimal.class) {
+-                visitFloatFormat(visitor, typeHint, JsonParser.NumberType.BIG_INTEGER);
+-            } else {
+-                // otherwise bit unclear what to call... but let's try:
+-                /*JsonNumberFormatVisitor v2 =*/ visitor.expectNumberFormat(typeHint);
++            JsonNumberFormatVisitor v2 = visitor.expectNumberFormat(typeHint);
++            if (v2 != null) {
++                Class<?> h = handledType();
++                if (h == BigDecimal.class) {
++                    v2.numberType(JsonParser.NumberType.BIG_DECIMAL);
++                } else {
++                    v2.numberType(JsonParser.NumberType.BIG_INTEGER);
++                }
++                v2.format(JsonValueFormat.NUMBER);
+             }
+         }
+-    }
+-}
+\ No newline at end of file
++    }}
+\ No newline at end of file

@@ -1,0 +1,22 @@
+diff --git a/src/main/java/org/apache/commons/compress/archivers/zip/ZipArchiveInputStream.java b/src/main/java/org/apache/commons/compress/archivers/zip/ZipArchiveInputStream.java
+index fc7b80d5..619db983 100644
+--- a/src/main/java/org/apache/commons/compress/archivers/zip/ZipArchiveInputStream.java
++++ b/src/main/java/org/apache/commons/compress/archivers/zip/ZipArchiveInputStream.java
+@@ -237,7 +236,16 @@ public class ZipArchiveInputStream extends ArchiveInputStream {
+                 throw new ZipException(e.getMessage());
+             }
+             if (read == 0 && inf.finished()) {
+-                return -1;
++                if (inf.getRemaining() > 0) {
++                    System.arraycopy(buf, buf.length - inf.getRemaining(),
++                        buf, 0, inf.getRemaining());
++                }
++                lengthOfLastRead = inf.getRemaining();
++                offsetInBuffer = 0;
++                inf.reset();
++                inf.setInput(buf, 0, lengthOfLastRead);
++                fill();
++                read = inf.inflate(buffer, start, length);
+             }
+             crc.update(buffer, start, read);
+             return read;

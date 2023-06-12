@@ -1,0 +1,110 @@
+    private static void modify(Calendar val, int field, boolean round) {
+        if (val.get(Calendar.YEAR) > 280000000) {
+            throw new ArithmeticException("Calendar value too large for accurate calculations");
+        }
+
+        Date date = val.getTime();
+        long time = date.getTime();
+        boolean done = false;
+
+        // ----------------- Fix for LANG-440 ---------------------- START ---------------
+        // see https://issues.apache.org/jira/browse/LANG-440
+        //
+        // Fragile code (even <clinit> is called by multiple threads concurrently) and
+        // time zone offset calculation depends on default <code>TimeZone</code>
+        // We use a copy of the original <code>TimeZone</code> saved on the first execution
+        time += val.get(Calendar.ZONE_OFFSET) + val.get(Calendar.DST_OFFSET);
+        // ----------------- Fix for LANG-440 ----------------------- END ----------------
+
+        while (!done) {
+            done = true;
+            switch (field) {
+                case Calendar.MILLISECOND:
+                    // --------------- Fix for LANG-59 ---------------------- START ---------------
+                    // truncate milliseconds
+                    time = time - time % 1000;
+                    done = false;
+                    break;
+                    // --------------- Fix for LANG-59 ---------------------- END ---------------
+
+                case Calendar.SECOND:
+                    time = time - time % DateUtils.MILLIS_PER_SECOND;
+                    done = false;
+                    break;
+                case Calendar.MINUTE:
+                    time = time - time % DateUtils.MILLIS_PER_MINUTE;
+                    done = false;
+                    break;
+                case DateUtils.SEMI_MONTH: {
+                    //This is a special case that's hard to generalize
+                    //If the date is 1, we round up to 16, otherwise
+                    //  we subtract 15 days and add 1 month
+                    if (val.get(Calendar.DATE) == 1) {
+                        val.add(Calendar.DATE, 15);
+                    } else {
+                        val.add(Calendar.DATE, -15);
+                        val.add(Calendar.MONTH, 1);
+                    }
+                    // ----------------- Fix for LANG-440 ---------------------- START ---------------
+                    // We need a day number correction in a non-default time zone
+                    time += val.get(Calendar.ZONE_OFFSET) + val.get(Calendar.DST_OFFSET);
+                    // ----------------- Fix for LANG-440 ----------------------- END ----------------
+                    break;
+                }
+                case Calendar.MONTH:
+                    if (val.get(Calendar.MONTH) == Calendar.FEBRUARY) {
+                        //This is a special case that's hard to generalize
+                        //If the day is 29, we round up to 30, otherwise
+                        //  we subtract 1 month
+                        if (val.get(Calendar.DATE) == 29) {
+                            val.add(Calendar.DATE, 1);
+                        } else {
+                            val.add(Calendar.MONTH, -1);
+                        }
+                        // ----------------- Fix for LANG-440 ---------------------- START ---------------
+                        // We need a day number correction in a non-default time zone
+                        time += val.get(Calendar.ZONE_OFFSET) + val.get(Calendar.DST_OFFSET);
+                        // ----------------- Fix for LANG-440 ----------------------- END ----------------
+                    } else {
+                        val.add(Calendar.MONTH, 1);
+                        val.set(Calendar.DATE, 1);
+                        val.add(Calendar.DATE, -1);
+                        // ----------------- Fix for LANG-440 ---------------------- START ---------------
+                        // We need a day number correction in a non-default time zone
+                        time += val.get(Calendar.ZONE_OFFSET) + val.get(Calendar.DST_OFFSET);
+                        // ----------------- Fix for LANG-440 ----------------------- END ----------------
+                    }
+                    break;
+                case Calendar.YEAR:
+                    val.set(Calendar.MONTH, Calendar.JANUARY);
+                    val.set(Calendar.DATE, 1);
+                    val.add(Calendar.DATE, -1);
+                    // ----------------- Fix for LANG-440 ---------------------- START ---------------
+                    // We need a day number correction in a non-default time zone
+                    time += val.get(Calendar.ZONE_OFFSET) + val.get(Calendar.DST_OFFSET);
+                    // ----------------- Fix for LANG-440 ----------------------- END ----------------
+                    break;
+                case Calendar.HOUR:
+                    time = time - time % DateUtils.MILLIS_PER_HOUR;
+                    done = false;
+                    break;
+                case Calendar.HOUR_OF_DAY:
+                    time = time - time % DateUtils.MILLIS_PER_HOUR;
+                    done = false;
+                    break;
+                case Calendar.MINUTE:
+                    time = time - time % DateUtils.MILLIS_PER_MINUTE;
+                    done = false;
+                    break;
+                case Calendar.SECOND:
+                    time = time - time % DateUtils.MILLIS_PER_SECOND;
+                    done = false;
+                    break;
+                case Calendar.MILLISECOND:
+                    done = false;
+                    break;
+            }
+        }
+        val.setTime(new Date(time));
+    }
+

@@ -1,0 +1,185 @@
+    public void visit(NodeTraversal t, Node n, Node parent) {
+      if (!(n.isName() ||
+            NodeUtil.isGet(n) && !parent.isGetProp())) {
+        // This is not a simple or qualified name.
+        return;
+      }
+      NameInformation nameInfo = createNameInformation(t, n, parent);
+      if (nameInfo == null) {
+        // The name is not a global name
+        return;
+      }
+      if (nameInfo.onlyAffectsClassDef) {
+        if (nameInfo.superclass != null) {
+          recordReference(
+              nameInfo.name, nameInfo.superclass, RefType.INHERITANCE);
+        }
+        // Make sure that we record a reference to the function that does
+        // the inheritance, so that the inherits() function itself does
+        // not get stripped.
+        String nodeName = n.getQualifiedName();
+        if (nodeName != null) {
+          recordReference(
+              nameInfo.name, nodeName, RefType.REGULAR);
+        }
+        return;
+      }
+      if (parent.isInstanceOf() &&
+          parent.getLastChild() == n &&
+          // Don't cover GETELEMs with a global root node.
+          n.isQualifiedName()) {
+        JsName checkedClass = getName(nameInfo.name, true);
+        refNodes.add(
+            new InstanceOfCheckNode(
+                checkedClass, n, parent, parent.getParent()));
+        checkedClass.hasInstanceOfReference = true;
+        return;
+      }
+      // Determine which name might be potentially referring to this one by
+      // looking up the nearest enclosing dependency scope. It's unnecessary to
+      // determine all enclosing dependency scopes because this callback should
+      // create a chain of references between them.
+      NameInformation referring = getDependencyScope(n);
+      String referringName = "";
+      if (referring != null) {
+        referringName = referring.isPrototype
+                      ? referring.prototypeClass
+                      : referring.name;
+      }
+      String name = nameInfo.name;
+      // A value whose result is the return value of a function call
+      // can be an alias to global object.
+      // Here we add a alias to the general "global" object
+      // to act as a placeholder for the actual (unnamed) value.
+      if (maybeHiddenAlias(name, n)) {
+        recordAlias(name, WINDOW);
+      }
+      // An externally referenceable name must always be defined, so we add a
+      // reference to it from the global scope (a.k.a. window).
+      if (nameInfo.isExternallyReferenceable) {
+        recordReference(WINDOW, name, RefType.REGULAR);
+        maybeRecordAlias(name, parent, referring, referringName);
+        return;
+      }
+      // An assignment implies a reference from the enclosing dependency scope.
+      // For example, foo references bar in: function foo() {bar=5}.
+      if (NodeUtil.isVarOrSimpleAssignLhs(n, parent)) {
+        if (referring != null) {
+          recordReference(referringName, name, RefType.REGULAR);
+        }
+        return;
+      }
+      if (nodesToKeep.contains(n)) {
+        NameInformation functionScope = getEnclosingFunctionDependencyScope(t);
+        if (functionScope != null) {
+          recordReference(functionScope.name, name, RefType.REGULAR);
+        } else {
+          recordReference(WINDOW, name, RefType.REGULAR);
+        }
+      } else if (referring != null) {
+        if (!maybeRecordAlias(name, parent, referring, referringName)) {
+          RefType depType = referring.onlyAffectsClassDef ?
+              RefType.INHERITANCE : RefType.REGULAR;
+          recordReference(referringName, name, depType);
+        }
+      } else {
+        // No named dependency scope found.  Unfortunately that might
+        // mean that the expression is a child of an function expression
+        // or assignment with a complex lhs.  In those cases,
+        // protect this node by creating a reference to WINDOW.
+        for (Node ancestor : n.getAncestors()) {
+          if (NodeUtil.isAssignmentOp(ancestor) ||
+              ancestor.isFunction()) {
+            recordReference(WINDOW, name, RefType.REGULAR);
+            break;
+          }
+        }
+      }
+    }
+  /**
+   * Determine if a reference to this name might be an alias to the global
+   * object.
+   *
+   * <p>This happens when the reference is to the result of a function call:
+   * <pre>
+   * var alias = foo();
+   * alert(alias.bar);
+   * </pre>
+   * This could be an alias to the global object.
+   *
+   * <p>This also happens when the reference is to the result of an
+   * indirect eval call:
+   * <pre>
+   * var alias = (0, eval)('this');
+   * alert(alias.bar);
+   * </pre>
+   *
+   * <p>This method does not update the reference graph.  It only determines
+   * if we should expect such a reference to occur.
+   *
+   * @param name The referenced name.
+   * @param n The node that is the root of a reference.
+   * @return Whether the reference might be an alias to the global object.
+   */
+  private boolean maybeHiddenAlias(String name, Node n) {
+    if (indirectEvalAliasesGlobalThis) {
+      if (isIndirectEval(n)) {
+        return true;
+      }
+    }
+    if (functionCallAliasesGlobalThis) {
+      // A function call may be an alias of the global object.
+      Node parent = n.getParent();
+      if (parent != null &&
+          !parent.isGetProp() &&
+          NodeUtil.isGet(parent.getParent())) {
+        Node grandparent = parent.getParent();
+        if (grandparent.getLastChild() == parent) {
+          if (isFunctionCall(parent.getFirstChild())) {
+            // There is a reference to a function call.
+            // This might be an alias.
+            return true;
+          }
+        }
+      }
+    }
+    return false;
+  }
+  /**
+   * Determine if a node represents a function call.
+   * @param n A node.
+   * @return Whether the node represents a function call.
+   */
+  private boolean isFunctionCall(Node n) {
+    if (n == null) {
+      return false;
+    }
+    if (n.isCall()) {
+      return true;
+    }
+    if (n.isNew()) {
+      return true;
+    }
+    if (n.isName() &&
+        indirectEvalAliasesGlobalThis &&
+        isIndirectEval(n)) {
+      return true;
+    }
+    return false;
+  }
+  /**
+   * Determine if a node represents an indirect call to eval().
+   * @param n A node.
+   * @return Whether the node represents an indirect call to eval().
+   */
+  private boolean isIndirectEval(Node n) {
+    if (!n.isName() ||
+        !NodeUtil.getRootOfQualifiedName(n).getString().equals("eval")) {
+      return false;
+    }
+    Node firstAncestor = n.getFirstAncestor(Token.CALL);
+    if (firstAncestor == null) {
+      return false;
+    }
+    return firstAncestor.getFirstChild() != n;
+  }

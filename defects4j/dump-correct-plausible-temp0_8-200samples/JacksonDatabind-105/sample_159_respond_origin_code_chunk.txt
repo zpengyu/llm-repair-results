@@ -1,0 +1,39 @@
+public class JdkDeserializers
+{
+    private final static HashSet<String> _classNames = new HashSet<String>();
+    static {
+        // note: can skip primitive types; other ways to check them:
+        Class<?>[] types = new Class<?>[] {
+                UUID.class,
+                AtomicBoolean.class,
+                StackTraceElement.class,
+                ByteBuffer.class
+        };
+        for (Class<?> cls : types) { _classNames.add(cls.getName()); }
+        for (Class<?> cls : FromStringDeserializer.types()) { _classNames.add(cls.getName()); }
+    }
+
+    public static JsonDeserializer<?> find(JavaType type, String clsName)
+    {
+        if (_classNames.contains(clsName)) {
+            JsonDeserializer<?> d = FromStringDeserializer.findDeserializer(type);
+            if (d != null) {
+                return d;
+            }
+            if (type.hasRawClass(UUID.class)) {
+                return new UUIDDeserializer();
+            }
+            if (type.hasRawClass(StackTraceElement.class)) {
+                return new StackTraceElementDeserializer();
+            }
+            if (type.hasRawClass(AtomicBoolean.class)) {
+                // (note: AtomicInteger/Long work due to single-arg constructor. For now?
+                return new AtomicBooleanDeserializer();
+            }
+            if (type.hasRawClass(ByteBuffer.class)) {
+                return new ByteBufferDeserializer();
+            }
+        }
+        return null;
+    }
+}

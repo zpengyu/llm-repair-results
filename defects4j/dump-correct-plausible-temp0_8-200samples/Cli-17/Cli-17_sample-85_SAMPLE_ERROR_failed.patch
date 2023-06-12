@@ -1,0 +1,80 @@
+diff --git a/src/java/org/apache/commons/cli/PosixParser.java b/src/java/org/apache/commons/cli/PosixParser.java
+index 8c84520..b36e909 100644
+--- a/src/java/org/apache/commons/cli/PosixParser.java
++++ b/src/java/org/apache/commons/cli/PosixParser.java
+@@ -281,31 +281,58 @@ public class PosixParser extends Parser {
+      */
+     protected void burstToken(String token, boolean stopAtNonOption)
+     {
+-        for (int i = 1; i < token.length(); i++)
++        if (stopAtNonOption)
+         {
+-            String ch = String.valueOf(token.charAt(i));
+-
+-            if (options.hasOption(ch))
++            process(token.substring(1));
++        }
++        else
++        {
++            tokens.add(token);
++        }
++    }
++    public void parse(String[] arguments) throws ParseException
++    {
++        boolean eatTheRest = false;
++        for (currentIndex = 0; currentIndex < arguments.length; currentIndex++)
++        {
++            String arg = arguments[currentIndex];
++            if ("--".equals(arg))
+             {
+-                tokens.add("-" + ch);
+-                currentOption = options.getOption(ch);
+-
+-                if (currentOption.hasArg() && (token.length() != (i + 1)))
++                eatTheRest = true;
++            }
++            else if ("-".equals(arg))
++            {
++                if (stopAtNonOption)
+                 {
+-                    tokens.add(token.substring(i + 1));
+-
+-                    break;
++                    eatTheRest = true;
++                }
++                else
++                {
++                    tokens.add(arg);
+                 }
+             }
+-            else if (stopAtNonOption)
++            else if (arg.startsWith("-"))
+             {
+-                process(token.substring(i));
++                if (stopAtNonOption && !options.hasOption(arg))
++                {
++                    eatTheRest = true;
++                    tokens.add(arg);
++                }
++                else
++                {
++                    burstToken(arg, stopAtNonOption);
++                }
+             }
+             else
+             {
+-                tokens.add(token);
+-                break;
++                tokens.add(arg);
++            }
++            if (eatTheRest)
++            {
++                for (currentIndex = currentIndex + 1; currentIndex < arguments.length; currentIndex++)
++                {
++                    tokens.add(arguments[currentIndex]);
++                }
+             }
+         }
+-    }
+-}
++    }}

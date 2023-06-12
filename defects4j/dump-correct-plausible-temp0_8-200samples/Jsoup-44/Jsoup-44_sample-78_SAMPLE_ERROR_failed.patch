@@ -1,0 +1,25 @@
+diff --git a/src/main/java/org/jsoup/parser/TreeBuilder.java b/src/main/java/org/jsoup/parser/TreeBuilder.java
+index f4faad4..4ee5562 100644
+--- a/src/main/java/org/jsoup/parser/TreeBuilder.java
++++ b/src/main/java/org/jsoup/parser/TreeBuilder.java
+@@ -76,4 +63,19 @@ abstract class TreeBuilder {
+         int size = stack.size();
+         return size > 0 ? stack.get(size-1) : null;
+     }
++    protected void process(Token token, Element el) {
++        if (token.type == Token.TokenType.StartTag) {
++            Element node = new Element(token.asStartTag().name, baseUri, token.asStartTag().attributes);
++            el.appendChild(node);
++        }
++    }
++    protected void process(Token token, Document doc) {
++        process(token, (Element) doc);
++    }
++    protected void addLeafNode(Element el) {
++        if (!stack.isEmpty()) {
++            Element parent = stack.get(stack.size() - 1);
++            parent.appendChild(el);
++        }
++    }
+ }
+\ No newline at end of file

@@ -1,0 +1,101 @@
+    static void escape(StringBuilder accum, String string, Document.OutputSettings out,
+                       boolean inAttribute, boolean normaliseWhite, boolean stripLeadingWhite) {
+        // from HTML 4.01 spec:
+        // ! --   $lt;   less than
+        // " --   $quot;   double quote (does not need to be escaped - seen as " in browser, not as entity)
+        // & --   $amp;   ampersand
+        // ' --   $apos;   single quote (does not need to be escaped - seen as ' in browser, not as entity)
+        // ( --   $lpar;   left parenthesis
+        // ) --   $rpar;   right parenthesis
+        // * --   $ast;   asterisk
+        // + --   $plus;   plus
+        // , --   $comma;   comma
+        // - --   $dash;   dash
+        // . --   $period;   period
+        // / --   $sol;   solidus
+        // : --   $colon;   colon
+        // ; --   $semi;   semicolon
+        // < --   $lt;   less than
+        // = --   $equals;   equals
+        // > --   $gt;   greater than
+        // ? --   $quest;   question mark
+        // @ --   $commat;   commercial at
+        // [ --   $lsqb;   left square bracket
+        // \ --   $bsol;   backslash
+        // ] --   $rsqb;   right square bracket
+        // ^ --   $hat;   circumflex accent
+        // { --   $lcub;   left curly brace
+        // | --   $verbar;   vertical bar
+        // } --   $rcub;   right curly brace
+        // ~ --   $tilde;   tilde
+        // whitespace is normalized during parsing to a space, and not unescaped, so this routine does not need to worry about them.
+        // It is possible to escape them, but not necessary as they cannot be expressed directly in HTML.
+        //
+        // If you want to escape them as entities (e.g. for XML/XHTML), use the escapeXml routine for a slightly different set of entities.
+        final EscapeMode escapeMode = out.escapeMode();
+        final CharsetEncoder encoder = out.encoder();
+        final CoreCharset coreCharset = CoreCharset.byName(encoder.charset().name());
+        final Map<Character, String> map = escapeMode.getMap();
+        final int length = string.length();
+        int codePoint;
+        for (int offset = 0; offset < length; offset += Character.charCount(codePoint)) {
+            codePoint = string.codePointAt(offset);
+            if (normaliseWhite && StringUtil.isWhitespace(codePoint)) {
+                if (stripLeadingWhite && offset == 0) {
+                    continue;
+                }
+                accum.append(' ');
+                continue;
+            }
+            // surrogate pairs, split implementation for efficiency on single char common case (saves creating strings, char[]):
+            if (codePoint < Character.MIN_SUPPLEMENTARY_CODE_POINT) {
+                final char c = (char) codePoint;
+                // html specific and required escapes:
+                if (escapeMode == EscapeMode.xhtml) {
+                    switch (c) {
+                        case '&':
+                            accum.append("&amp;");
+                            break;
+                        case '<':
+                            if (!inAttribute)
+                                accum.append("&lt;");
+                            else
+                                accum.append(c);
+                            break;
+                        case '>':
+                            if (!inAttribute)
+                                accum.append("&gt;");
+                            else
+                                accum.append(c);
+                            break;
+                        case '"':
+                            if (inAttribute)
+                                accum.append("&quot;");
+                            else
+                                accum.append(c);
+                            break;
+                        default:
+                            if (canEncode(coreCharset, c, encoder))
+                                accum.append(c);
+                            else if (map.containsKey(c))
+                                accum.append('&').append(map.get(c)).append(';');
+                            else
+                                accum.append("&#x").append(Integer.toHexString(codePoint)).append(';');
+                    }
+                } else {
+                    if (map.containsKey(c))
+                        accum.append('&').append(map.get(c)).append(';');
+                    else if (canEncode(coreCharset, c, encoder))
+                        accum.append(c);
+                    else
+                        accum.append("&#x").append(Integer.toHexString(codePoint)).append(';');
+                }
+            } else {
+                final String c = new String(Character.toChars(codePoint));
+                if (encoder.canEncode(c)) // uses fallback encoder for simplicity
+                    accum.append(c);
+                else
+                    accum.append("&#x").append(Integer.toHexString(codePoint)).append(';');
+            }
+        }
+    }

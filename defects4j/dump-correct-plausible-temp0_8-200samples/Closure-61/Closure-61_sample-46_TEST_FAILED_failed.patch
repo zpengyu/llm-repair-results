@@ -1,0 +1,48 @@
+diff --git a/src/com/google/javascript/jscomp/NodeUtil.java b/src/com/google/javascript/jscomp/NodeUtil.java
+index 53389622..68f254a0 100644
+--- a/src/com/google/javascript/jscomp/NodeUtil.java
++++ b/src/com/google/javascript/jscomp/NodeUtil.java
+@@ -948,33 +945,22 @@ public final class NodeUtil {
+                 nameNode.getLastChild().getString())) {
+         return false;
+       }
+-
+-      if (callNode.isOnlyModifiesThisCall()
+-          && evaluatesToLocalValue(nameNode.getFirstChild())) {
+-        return false;
+-      }
+-
+       // Functions in the "Math" namespace have no side effects.
+-
+-      if (compiler != null && !compiler.hasRegExpGlobalReferences()) {
+-        if (nameNode.getFirstChild().getType() == Token.REGEXP
+-            && REGEXP_METHODS.contains(nameNode.getLastChild().getString())) {
+-          return false;
+-        } else if (nameNode.getFirstChild().getType() == Token.STRING
+-            && STRING_REGEXP_METHODS.contains(
++      if (nameNode.getFirstChild().getType() == Token.REGEXP
++          && REGEXP_METHODS.contains(nameNode.getLastChild().getString())) {
++        return false;
++      } else if (nameNode.getFirstChild().getType() == Token.STRING
++          && STRING_REGEXP_METHODS.contains(
+                 nameNode.getLastChild().getString())) {
+-          Node param = nameNode.getNext();
+-          if (param != null &&
+-              (param.getType() == Token.STRING
+-                  || param.getType() == Token.REGEXP))
+-          return false;
+-        }
++        Node param = nameNode.getNext();
++        if (param != null &&
++            (param.getType() == Token.STRING
++                || param.getType() == Token.REGEXP))
++        return false;
+       }
+     }
+-
+     return true;
+   }
+-
+   /**
+    * @return Whether the call has a local result.
+    */

@@ -1,0 +1,17 @@
+    public final void serialize(JsonGenerator gen, SerializerProvider ctxt) throws IOException
+    {
+        Object value = _value;
+        if (value == null) {
+            ctxt.defaultSerializeNull(gen);
+            return;
+        }
+        if (value instanceof JsonSerializable) {
+            ((JsonSerializable) value).serialize(gen, ctxt);
+            return;
+        }
+        if (_valueTypeSerializer != null) {
+            _valueSerializer.serializeWithType(value, gen, ctxt, _valueTypeSerializer);
+            return;
+        }
+        _valueSerializer.serialize(value, gen, ctxt);
+    }

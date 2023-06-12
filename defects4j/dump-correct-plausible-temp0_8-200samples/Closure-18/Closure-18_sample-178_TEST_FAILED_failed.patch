@@ -1,0 +1,71 @@
+diff --git a/src/com/google/javascript/jscomp/Compiler.java b/src/com/google/javascript/jscomp/Compiler.java
+index e0dc0d38..24d9e3db 100644
+--- a/src/com/google/javascript/jscomp/Compiler.java
++++ b/src/com/google/javascript/jscomp/Compiler.java
+@@ -1275,7 +1268,29 @@ public class Compiler extends AbstractCompiler {
+         }
+         externsRoot.addChildToBack(n);
+       }
+-
++      // Parse all non-extern JS.
++      for (CompilerInput input : inputs) {
++        Node n = input.getAstRoot(this);
++        if (n == null) {
++          continue;
++        }
++        if (devMode) {
++          runSanityCheck();
++          if (hasErrors()) {
++            return null;
++          }
++        }
++        if (options.sourceMapOutputPath != null ||
++            options.nameReferenceReportPath != null) {
++          // Annotate the nodes in the tree with information from the
++          // input file. This information is used to construct the SourceMap.
++          SourceInformationAnnotator sia =
++              new SourceInformationAnnotator(
++                  input.getName(), options.devMode != DevMode.OFF);
++          NodeTraversal.traverse(this, n, sia);
++        }
++        jsRoot.addChildToBack(n);
++      }
+       // Modules inferred in ProcessCommonJS pass.
+       if (options.transformAMDToCJSModules || options.processCommonJSModules) {
+         processAMDAndCommonJSModules();
+@@ -1323,35 +1331,6 @@ public class Compiler extends AbstractCompiler {
+       if (staleInputs) {
+         repartitionInputs();
+       }
+-
+-      // Build the AST.
+-      for (CompilerInput input : inputs) {
+-        Node n = input.getAstRoot(this);
+-        if (n == null) {
+-          continue;
+-        }
+-
+-        if (devMode) {
+-          runSanityCheck();
+-          if (hasErrors()) {
+-            return null;
+-          }
+-        }
+-
+-        if (options.sourceMapOutputPath != null ||
+-            options.nameReferenceReportPath != null) {
+-
+-          // Annotate the nodes in the tree with information from the
+-          // input file. This information is used to construct the SourceMap.
+-          SourceInformationAnnotator sia =
+-              new SourceInformationAnnotator(
+-                  input.getName(), options.devMode != DevMode.OFF);
+-          NodeTraversal.traverse(this, n, sia);
+-        }
+-
+-        jsRoot.addChildToBack(n);
+-      }
+-
+       if (hasErrors()) {
+         return null;
+       }

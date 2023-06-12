@@ -1,0 +1,24 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/jsontype/impl/ClassNameIdResolver.java b/src/main/java/com/fasterxml/jackson/databind/jsontype/impl/ClassNameIdResolver.java
+index 112c00b5c..59a51da69 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/jsontype/impl/ClassNameIdResolver.java
++++ b/src/main/java/com/fasterxml/jackson/databind/jsontype/impl/ClassNameIdResolver.java
+@@ -42,7 +42,7 @@ public class ClassNameIdResolver
+         return _typeFromId(id, context);
+     }
+ 
+-    protected JavaType _typeFromId(String id, DatabindContext ctxt) throws IOException
++ protected JavaType _typeFromId(String id, DatabindContext ctxt) throws IOException
+     {
+         /* 30-Jan-2010, tatu: Most ids are basic class names; so let's first
+          *    check if any generics info is added; and only then ask factory
+@@ -55,7 +55,9 @@ public class ClassNameIdResolver
+             //    compatibility -- needed later anyway, and not doing so may open
+             //    security issues.
+             JavaType t = tf.constructFromCanonical(id);
+-                // Probably cleaner to have a method in `TypeFactory` but can't add in patch
++            if (!_baseType.isAssignableFrom(t)) {
++                throw InvalidTypeIdException.from(_baseType, id, "class "+t.getRawClass().getName()+" not subtype of "+_baseType);
++            }
+             return t;
+         }
+         Class<?> cls;

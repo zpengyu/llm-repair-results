@@ -1,0 +1,48 @@
+diff --git a/src/java/org/apache/commons/cli/GnuParser.java b/src/java/org/apache/commons/cli/GnuParser.java
+index 14a9cc0..e8ce486 100644
+--- a/src/java/org/apache/commons/cli/GnuParser.java
++++ b/src/java/org/apache/commons/cli/GnuParser.java
+@@ -76,20 +72,22 @@ public class GnuParser extends Parser {
+                 {
+                     tokens.add(arg);
+                 }
++                else if (opt.indexOf('=') != -1 && options.hasOption(opt.substring(0, opt.indexOf('='))))
++                {
++                    // the format is --foo=value or -foo=value
++                    tokens.add(arg.substring(0, arg.indexOf('='))); // --foo
++                    tokens.add(arg.substring(arg.indexOf('=') + 1)); // value
++                }
++                else if (arg.length() > 2 && options.hasOption(arg.substring(0, 2)))
++                {
++                    // the format is a special properties option (-Dproperty=value)
++                    tokens.add(arg.substring(0, 2)); // -D
++                    tokens.add(arg.substring(2)); // property=value
++                }
+                 else
+                 {
+-                    if (options.hasOption(arg.substring(0, 2)))
+-                    {
+-                        // the format is --foo=value or -foo=value
+-                        // the format is a special properties option (-Dproperty=value)
+-                        tokens.add(arg.substring(0, 2)); // -D
+-                        tokens.add(arg.substring(2)); // property=value
+-                    }
+-                    else
+-                    {
+-                        eatTheRest = stopAtNonOption;
+-                        tokens.add(arg);
+-                    }
++                    eatTheRest = stopAtNonOption;
++                    tokens.add(arg);
+                 }
+             }
+             else
+@@ -105,7 +102,5 @@ public class GnuParser extends Parser {
+                 }
+             }
+         }
+-
+         return (String[]) tokens.toArray(new String[tokens.size()]);
+-    }
+-}
++    }}

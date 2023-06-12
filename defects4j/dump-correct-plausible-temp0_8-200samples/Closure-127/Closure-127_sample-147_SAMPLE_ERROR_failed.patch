@@ -1,0 +1,26 @@
+diff --git a/src/com/google/javascript/jscomp/UnreachableCodeElimination.java b/src/com/google/javascript/jscomp/UnreachableCodeElimination.java
+index 3b323395..8ddcc6e3 100644
+--- a/src/com/google/javascript/jscomp/UnreachableCodeElimination.java
++++ b/src/com/google/javascript/jscomp/UnreachableCodeElimination.java
+@@ -205,8 +193,12 @@ class UnreachableCodeElimination implements CompilerPass {
+         // to execute one iteration. If the DO's body has breaks in the middle,
+         // it can get even more tricky and code size might actually increase.
+         case Token.DO:
+-          return;
+-
++          if (n.hasChildren()) {
++            n = n.getFirstChild();
++          } else {
++            return;
++          }
++          break;
+         case Token.BLOCK:
+           // BLOCKs are used in several ways including wrapping CATCH
+           // blocks in TRYs
+@@ -246,5 +234,4 @@ class UnreachableCodeElimination implements CompilerPass {
+       }
+       NodeUtil.removeChild(n.getParent(), n);
+     }
+-  }
+-}
++  }}

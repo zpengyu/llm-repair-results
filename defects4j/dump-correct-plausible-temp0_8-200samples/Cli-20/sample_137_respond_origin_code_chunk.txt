@@ -1,0 +1,81 @@
+
+    protected String[] flatten(Options options, String[] arguments, boolean stopAtNonOption)
+    {
+        init();
+        this.options = options;
+
+        // an iterator for the command line tokens
+        List tokensList = Arrays.asList(arguments);
+
+        int position = 0;
+
+        // process each command line token
+        while (position < tokensList.size())
+        {
+            // get the next command line token
+            String token = (String) tokensList.get(position);
+
+            // handle long option --foo or --foo=bar
+            if (token.startsWith("--"))
+            {
+                if (token.indexOf('=') != -1)
+                {
+                    tokens.add(token.substring(0, token.indexOf('=')));
+                    tokens.add(token.substring(token.indexOf('=') + 1, token.length()));
+                }
+                else
+                {
+                    tokens.add(token);
+                }
+            }
+
+            // single hyphen
+            else if ("-".equals(token))
+            {
+                tokens.add(token);
+            }
+            else if (token.startsWith("-"))
+            {
+                if (token.length() == 2)
+                {
+                    processOptionToken(token, stopAtNonOption);
+                }
+                else if (options.hasOption(token))
+                {
+                    tokens.add(token);
+                }
+                // requires bursting
+                else
+                {
+                    burstToken(token, stopAtNonOption);
+                }
+            }
+            else if (stopAtNonOption)
+            {
+                process(token);
+            }
+            else
+            {
+                tokens.add(token);
+            }
+
+            position = gobble(tokensList, position);
+        }
+
+        return (String[]) tokens.toArray(new String[tokens.size()]);
+    }
+
+
+    private int gobble(List tokens, int position)
+    {
+        if (position + 1 < tokens.size())
+        {
+            String next = (String) tokens.get(position + 1);
+            if (options.hasOption(token) && !next.startsWith("-"))
+            {
+                tokens.add(position + 1, token);
+                position++;
+            }
+        }
+        return position;
+    }

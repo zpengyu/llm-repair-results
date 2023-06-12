@@ -1,0 +1,20 @@
+diff --git a/src/java/org/apache/commons/jxpath/ri/model/dom/DOMNodePointer.java b/src/java/org/apache/commons/jxpath/ri/model/dom/DOMNodePointer.java
+index 9524259..72f7b12 100644
+--- a/src/java/org/apache/commons/jxpath/ri/model/dom/DOMNodePointer.java
++++ b/src/java/org/apache/commons/jxpath/ri/model/dom/DOMNodePointer.java
+@@ -689,7 +686,14 @@ public class DOMNodePointer extends NodePointer {
+                         return attr.getValue();
+                     }
+                 }
+-                aNode = aNode.getParentNode();
++                if (aNode.getNodeType() == Node.ATTRIBUTE_NODE) {
++                    // This fixes the case where namespace is defined on 
++                    // an attribute
++                    aNode = ((Attr)aNode).getOwnerElement();
++                }
++                else {
++                    aNode = aNode.getParentNode();
++                }
+             }
+             return null;
+         }

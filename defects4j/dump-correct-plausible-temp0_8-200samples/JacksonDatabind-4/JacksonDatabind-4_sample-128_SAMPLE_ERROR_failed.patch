@@ -1,0 +1,63 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/deser/std/StringArrayDeserializer.java b/src/main/java/com/fasterxml/jackson/databind/deser/std/StringArrayDeserializer.java
+index 773d1fbd8..3f082b8bd 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/deser/std/StringArrayDeserializer.java
++++ b/src/main/java/com/fasterxml/jackson/databind/deser/std/StringArrayDeserializer.java
+@@ -49,19 +44,16 @@ public final class StringArrayDeserializer
+         if (_elementDeserializer != null) {
+             return _deserializeCustom(jp, ctxt);
+         }
+-
+         final ObjectBuffer buffer = ctxt.leaseObjectBuffer();
+         Object[] chunk = buffer.resetAndStart();
+-
+         int ix = 0;
+         JsonToken t;
+-
++        boolean empty = true;
+             while ((t = jp.nextToken()) != JsonToken.END_ARRAY) {
++                empty = false;
+                 // Ok: no need to convert Strings, but must recognize nulls
+                 String value;
+-                if (t == JsonToken.VALUE_STRING) {
+-                    value = jp.getText();
+-                } else if (t == JsonToken.VALUE_NULL) {
++                if (t == JsonToken.VALUE_NULL) {
+                     value = null; // since we have established that '_elementDeserializer == null' earlier
+                 } else {
+                     value = _parseString(jp, ctxt);
+@@ -72,6 +64,10 @@ public final class StringArrayDeserializer
+                 }
+                 chunk[ix++] = value;
+             }
++            if (empty && (ctxt.getDeserializationFeatures() & DeserializationFeature.ACCEPT_EMPTY_ARRAY_AS_NULL_OBJECT.getMask()) != 0) {
++                ctxt.returnObjectBuffer(buffer);
++                return null;
++            }
+             // note: pass String.class, not String[].class, as we need element type for error info
+         String[] result = buffer.completeAndClearBuffer(chunk, ix, String.class);
+         ctxt.returnObjectBuffer(buffer);
+@@ -86,11 +81,11 @@ public final class StringArrayDeserializer
+         final ObjectBuffer buffer = ctxt.leaseObjectBuffer();
+         Object[] chunk = buffer.resetAndStart();
+         final JsonDeserializer<String> deser = _elementDeserializer;
+-        
++        boolean empty = true;
+         int ix = 0;
+         JsonToken t;
+-
+             while ((t = jp.nextToken()) != JsonToken.END_ARRAY) {
++                empty = false;
+                 // Ok: no need to convert Strings, but must recognize nulls
+                 String value = (t == JsonToken.VALUE_NULL) ? deser.getNullValue() : deser.deserialize(jp, ctxt);
+                 if (ix >= chunk.length) {
+@@ -99,6 +94,10 @@ public final class StringArrayDeserializer
+                 }
+                 chunk[ix++] = value;
+             }
++            if (empty && (ctxt.getDeserializationFeatures() & DeserializationFeature.ACCEPT_EMPTY_ARRAY_AS_NULL_OBJECT.getMask()) != 0) {
++                ctxt.returnObjectBuffer(buffer);
++                return null;
++            }
+             // note: pass String.class, not String[].class, as we need element type for error info
+         String[] result = buffer.completeAndClearBuffer(chunk, ix, String.class);
+         ctxt.returnObjectBuffer(buffer);

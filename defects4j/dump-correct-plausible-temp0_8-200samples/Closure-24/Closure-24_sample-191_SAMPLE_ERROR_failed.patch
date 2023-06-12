@@ -1,0 +1,23 @@
+diff --git a/src/com/google/javascript/jscomp/ScopedAliases.java b/src/com/google/javascript/jscomp/ScopedAliases.java
+index 0470cda2..ff21d67a 100644
+--- a/src/com/google/javascript/jscomp/ScopedAliases.java
++++ b/src/com/google/javascript/jscomp/ScopedAliases.java
+@@ -284,13 +283,13 @@ class ScopedAliases implements HotSwapCompilerPass {
+           String qualifiedName =
+               aliasVar.getInitialValue().getQualifiedName();
+           transformation.addAlias(name, qualifiedName);
+-          // Bleeding functions already get a BAD_PARAMETERS error, so just
+-          // do nothing.
+-          // Parameters of the scope function also get a BAD_PARAMETERS
+-          // error.
+         } else {
++          // If a local is bleeding, it should be OK, since it will be re-declared
++          // in the scope function.
+           // TODO(robbyw): Support using locals for private variables.
+-          report(t, n, GOOG_SCOPE_NON_ALIAS_LOCAL, n.getString());
++          if (!isBleedingFunction(n)) {
++            report(t, n, GOOG_SCOPE_NON_ALIAS_LOCAL, n.getString());
++          }
+         }
+         }
+       }

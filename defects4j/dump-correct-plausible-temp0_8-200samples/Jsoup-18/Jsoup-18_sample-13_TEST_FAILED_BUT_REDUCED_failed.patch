@@ -1,0 +1,103 @@
+diff --git a/src/main/java/org/jsoup/parser/CharacterReader.java b/src/main/java/org/jsoup/parser/CharacterReader.java
+index 7f39fc5..9aa2add 100644
+--- a/src/main/java/org/jsoup/parser/CharacterReader.java
++++ b/src/main/java/org/jsoup/parser/CharacterReader.java
+@@ -7,19 +7,20 @@ import org.jsoup.helper.Validate;
+  */
+ class CharacterReader {
+     static final char EOF = (char) -1;
+-
++    static final int maxCacheLen = 12; // will not cache strings longer than this
+     private final String input;
+     private final int length;
+     private int pos = 0;
+     private int mark = 0;
+-
++    private boolean useStringCache = true; // only cache strings if length less than max len
++    private boolean isStringCacheValid = false;
++    private String[] stringCache;
+     CharacterReader(String input) {
+         Validate.notNull(input);
+-
+         this.input = input;
+         this.length = input.length();
++        stringCache = new String[maxCacheLen];
+     }
+-
+     int pos() {
+         return pos;
+     }
+@@ -53,17 +47,26 @@ class CharacterReader {
+     void rewindToMark() {
+         pos = mark;
+     }
+-
+     String consumeAsString() {
+-        return input.substring(pos, pos++);
++        return new String(Character.toChars(consume()));
+     }
+-
+     String consumeTo(char c) {
+         int offset = input.indexOf(c, pos);
+         if (offset != -1) {
+-            String consumed = input.substring(pos, offset);
+-            pos += consumed.length();
+-            return consumed;
++            if (offset > pos && useStringCache && offset - pos < maxCacheLen) {
++                int cacheIdx = offset - pos;
++                if (!isStringCacheValid)
++                    populateStringCache();
++                if (stringCache[cacheIdx] == null)
++                    stringCache[cacheIdx] = input.substring(pos, offset);
++                String consumed = stringCache[cacheIdx];
++                pos += consumed.length();
++                return consumed;
++            } else {
++                String consumed = input.substring(pos, offset);
++                pos += consumed.length();
++                return consumed;
++            }
+         } else {
+             return consumeToEnd();
+         }
+@@ -91,12 +91,18 @@ class CharacterReader {
+             }
+             pos++;
+         }
+-
++        if (isStringCacheValid) {
++            int cacheIdx = pos - start;
++            if (cacheIdx < maxCacheLen && cacheIdx > 0) {
++                if (stringCache[cacheIdx] == null)
++                    stringCache[cacheIdx] = input.substring(start, pos);
++                return stringCache[cacheIdx];
++            }
++        }
+         return pos > start ? input.substring(start, pos) : "";
+     }
+-
+     String consumeToEnd() {
+-        String data = input.substring(pos, input.length() - 1);
++        String data = input.substring(pos, input.length());
+         pos = input.length();
+         return data;
+     }
+@@ -201,7 +192,17 @@ class CharacterReader {
+         String hiScan = seq.toUpperCase();
+         return (input.indexOf(loScan, pos) > -1) || (input.indexOf(hiScan, pos) > -1);
+     }
+-
++    // this is crap, and a hack, but the alternative is string creation at each consume
++    private void populateStringCache() {
++        for (int i = 0; i < maxCacheLen; i++) {
++            int pos = this.pos + i;
++            if (pos >= length)
++                break;
++            // populate string cache with strings 1 char longer. so when consuming, max string copy is 1
++            stringCache[i] = input.substring(pos - i, pos + 1);
++        }
++        isStringCacheValid = true;
++    }
+     @Override
+     public String toString() {
+         return input.substring(pos);

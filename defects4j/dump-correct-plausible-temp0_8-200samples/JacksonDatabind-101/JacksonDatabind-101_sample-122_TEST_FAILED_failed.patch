@@ -1,0 +1,60 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/deser/BeanDeserializer.java b/src/main/java/com/fasterxml/jackson/databind/deser/BeanDeserializer.java
+index 3c89dc109..cc08ace84 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/deser/BeanDeserializer.java
++++ b/src/main/java/com/fasterxml/jackson/databind/deser/BeanDeserializer.java
+@@ -756,8 +753,8 @@ public class BeanDeserializer
+                 // Last creator property to set?
+                 if (buffer.assignParameter(creatorProp,
+                         _deserializeWithErrorWrapping(p, ctxt, creatorProp))) {
+-                    t = p.nextToken(); // to move to following FIELD_NAME/END_OBJECT
+                     Object bean;
++                    t = p.nextToken(); // to move to following FIELD_NAME/END_OBJECT
+                     try {
+                         bean = creator.build(ctxt, buffer);
+                     } catch (Exception e) {
+@@ -767,7 +764,6 @@ public class BeanDeserializer
+                     p.setCurrentValue(bean);
+                     // if so, need to copy all remaining tokens into buffer
+                     while (t == JsonToken.FIELD_NAME) {
+-                        // NOTE: do NOT skip name as it needs to be copied; `copyCurrentStructure` does that
+                         p.nextToken();
+                         tokens.copyCurrentStructure(p);
+                         t = p.nextToken();
+@@ -805,25 +801,21 @@ public class BeanDeserializer
+             //    both to any setter AND buffer... but, for now, the only thing
+             //    we can do.
+             // how about any setter? We'll get copies but...
+-            if (_anySetter == null) {
+-                // but... others should be passed to unwrapped property deserializers
+-                tokens.writeFieldName(propName);
+-                tokens.copyCurrentStructure(p);
+-            } else {
+-                // Need to copy to a separate buffer first
+-                TokenBuffer b2 = TokenBuffer.asCopyOfValue(p);
+-                tokens.writeFieldName(propName);
+-                tokens.append(b2);
+-                try {
+-                    buffer.bufferAnyProperty(_anySetter, propName,
+-                            _anySetter.deserialize(b2.asParserOnFirstToken(), ctxt));
+-                } catch (Exception e) {
+-                    wrapAndThrow(e, _beanType.getRawClass(), propName, ctxt);
+-                }
++            if (_anySetter != null) {
++                buffer.bufferAnyProperty(_anySetter, propName, _anySetter.deserialize(p, ctxt));
+                 continue;
+             }
++            // 27-Sep-2016, tatu: But let's NOT attempt to pass it to unwrapped property
++            //   handler, since we have no unwrapped value support at all.
++            if (_needViewProcesing) {
++                Class<?> view = ctxt.getActiveView();
++                if (view != null) {
++                    continue;
++                }
++            }
++            tokens.writeFieldName(propName);
++            tokens.copyCurrentStructure(p);
+         }
+-
+         // We hit END_OBJECT, so:
+         Object bean;
+         try {

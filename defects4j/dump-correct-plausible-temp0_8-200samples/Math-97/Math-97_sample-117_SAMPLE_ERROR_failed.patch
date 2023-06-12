@@ -1,0 +1,49 @@
+diff --git a/src/java/org/apache/commons/math/analysis/BrentSolver.java b/src/java/org/apache/commons/math/analysis/BrentSolver.java
+index 8dab47503..467ae270b 100644
+--- a/src/java/org/apache/commons/math/analysis/BrentSolver.java
++++ b/src/java/org/apache/commons/math/analysis/BrentSolver.java
+@@ -124,33 +124,30 @@ public class BrentSolver extends UnivariateRealSolverImpl {
+      */
+     public double solve(double min, double max) throws MaxIterationsExceededException, 
+         FunctionEvaluationException {
+-        
+         clearResult();
+         verifyInterval(min, max);
+-        
+         double ret = Double.NaN;
+-        
+         double yMin = f.value(min);
+         double yMax = f.value(max);
+-
+         // Verify bracketing
+         double sign = yMin * yMax;
+-        if (sign >= 0) {
+-            // check if either value is close to a zero
+-                // neither value is close to zero and min and max do not bracket root.
+-                throw new IllegalArgumentException
+-                ("Function values at endpoints do not have different signs." +
+-                        "  Endpoints: [" + min + "," + max + "]" +
+-                        "  Values: [" + yMin + "," + yMax + "]");
+-        } else {
++        if (sign <= 0) {
+             // solve using only the first endpoint as initial guess
+             ret = solve(min, yMin, max, yMax, min, yMin);
+             // either min or max is a root
++        } else if (Math.abs(yMin) < Math.abs(yMax)) {
++            ret = solve(min, yMin, max, yMax, min, yMin);
++        } else {
++            ret = solve(min, yMin, max, yMax, max, yMax);
+         }
+-
+         return ret;
+     }
+-        
++The py.test library is an alternative to Python's standard unittest library. 
++* Do not require you to use a class-based approach
++* It encourages you to use function-based approach
++In py.test, each test is implemented as a function instead of a class or method.
++This can be beneficial to developers who are new to Python or to testing, because the py.test style may feel more familiar to people who have used the xUnit testing frameworks in other programming languages.
++* Note: py.test is not part of the Python standard library and must be installed separately        
+     /**
+      * Find a zero starting search according to the three provided points.
+      * @param x0 old approximation for the root

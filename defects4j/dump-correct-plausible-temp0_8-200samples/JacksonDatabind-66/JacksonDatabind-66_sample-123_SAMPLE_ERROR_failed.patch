@@ -1,0 +1,18 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/deser/std/StdKeyDeserializer.java b/src/main/java/com/fasterxml/jackson/databind/deser/std/StdKeyDeserializer.java
+index d4417f6ad..805fefb27 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/deser/std/StdKeyDeserializer.java
++++ b/src/main/java/com/fasterxml/jackson/databind/deser/std/StdKeyDeserializer.java
+@@ -317,6 +317,13 @@ public class StdKeyDeserializer extends KeyDeserializer
+                 if (result != null) {
+                     return result;
+                 }
++                if (_keyDeserializer == null) {
++                    ctxt.reportInputMismatch(BaseNodeKeyDeserializers.class,
++                            "Cannot deserialize Object from String \"%s\": no single-String deserializer",
++                            key);
++                    // can not throw, so return a bogus value
++                    return new Object();
++                }
+                 return ctxt.handleWeirdKey(_keyClass, key, "not a valid representation");
+             } catch (Exception re) {
+                 return ctxt.handleWeirdKey(_keyClass, key, "not a valid representation: %s", re.getMessage());

@@ -1,0 +1,27 @@
+diff --git a/src/main/java/org/apache/commons/lang3/time/FastDateFormat.java b/src/main/java/org/apache/commons/lang3/time/FastDateFormat.java
+index 0c2e4a7b..fe53ca27 100644
+--- a/src/main/java/org/apache/commons/lang3/time/FastDateFormat.java
++++ b/src/main/java/org/apache/commons/lang3/time/FastDateFormat.java
+@@ -495,7 +489,21 @@ public class FastDateFormat extends Format {
+                 if (tokenLen >= 4) {
+                     rule = selectNumberRule(Calendar.YEAR, tokenLen);
+                 } else {
+-                    rule = TwoDigitYearField.INSTANCE;
++                    if(i+1<length){
++                        char nextchar = mPattern.charAt(i+1);
++                        switch(nextchar){
++                            case 'y':
++                                rule = new TwoDigitYearField();
++                                break;
++                            case 'M':
++                                rule = new LastTwoDigitsOfYearField();
++                                break;
++                            default:
++                                rule = new TwoDigitYearField();
++                        }
++                    }else{
++                        rule = new TwoDigitYearField();
++                    }
+                 }
+                 break;
+             case 'M': // month in year (text and number)

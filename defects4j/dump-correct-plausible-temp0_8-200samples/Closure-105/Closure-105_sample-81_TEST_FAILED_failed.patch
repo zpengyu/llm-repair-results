@@ -1,0 +1,29 @@
+diff --git a/src/com/google/javascript/jscomp/FoldConstants.java b/src/com/google/javascript/jscomp/FoldConstants.java
+index 003743b3..e97e9aa2 100644
+--- a/src/com/google/javascript/jscomp/FoldConstants.java
++++ b/src/com/google/javascript/jscomp/FoldConstants.java
+@@ -1476,10 +1473,12 @@ class FoldConstants extends AbstractPostOrderCallback
+     List<Node> arrayFoldedChildren = Lists.newLinkedList();
+     StringBuilder sb = new StringBuilder();
+     int foldedSize = 0;
++    boolean hasStringChildren = false;
+     Node elem = arrayNode.getFirstChild();
+     // Merges adjacent String nodes.
+     while (elem != null) {
+       if (NodeUtil.isImmutableValue(elem)) {
++        hasStringChildren = true;
+         if (sb.length() > 0) {
+           sb.append(joinString);
+         }
+@@ -1511,8 +1508,10 @@ class FoldConstants extends AbstractPostOrderCallback
+         Node emptyStringNode = Node.newString("");
+         parent.replaceChild(n, emptyStringNode);
+         break;
+-
+       case 1:
++        if (!hasStringChildren) {
++          return;
++        }
+         Node foldedStringNode = arrayFoldedChildren.remove(0);
+         if (foldedSize > originalSize) {
+           return;

@@ -1,0 +1,43 @@
+diff --git a/gson/src/main/java/com/google/gson/TypeInfoFactory.java b/gson/src/main/java/com/google/gson/TypeInfoFactory.java
+index 0aa1455a..45417225 100644
+--- a/gson/src/main/java/com/google/gson/TypeInfoFactory.java
++++ b/gson/src/main/java/com/google/gson/TypeInfoFactory.java
+@@ -90,10 +86,35 @@ final class TypeInfoFactory {
+         int indexOfActualTypeArgument = getIndex(classTypeVariables, fieldTypeVariable);
+         Type[] actualTypeArguments = objParameterizedType.getActualTypeArguments();
+         return actualTypeArguments[indexOfActualTypeArgument];
+-
+-
++      } else if (parentType instanceof GenericArrayType) {
++        // The class definition has the actual types used for the type variables.
++        // Find the matching actual type for the Type Variable used for the field.
++        // For example, class Foo<A> { A[] a; }
++        // new Foo<Integer>(); defines the actual type of A to be Integer.
++        // So, to find the type of the field a, we will have to look at the class'
++        // actual type arguments.
++        TypeVariable<?> fieldTypeVariable = (TypeVariable<?>) typeToEvaluate;
++        TypeVariable<?>[] classTypeVariables = rawParentClass.getTypeParameters();
++        GenericArrayType objParameterizedType = (GenericArrayType) parentType;
++        Type componentType = objParameterizedType.getGenericComponentType();
++        if (componentType instanceof ParameterizedType) {
++          ParameterizedType parameterizedComponentType = (ParameterizedType)componentType;
++          Type actualComponentType = getActualType(parameterizedComponentType, parentType, rawParentClass);
++          return actualComponentType;
++        }
++      } else if (parentType instanceof WildcardType) {
++        // The class definition has the actual types used for the type variables.
++        // Find the matching actual type for the Type Variable used for the field.
++        // For example, class Foo<A> { A[] a; }
++        // new Foo<Integer>(); defines the actual type of A to be Integer.
++        // So, to find the type of the field a, we will have to look at the class'
++        // actual type arguments.
++        TypeVariable<?> fieldTypeVariable = (TypeVariable<?>) typeToEvaluate;
++        TypeVariable<?>[] classTypeVariables = rawParentClass.getTypeParameters();
++        WildcardType objParameterizedType = (WildcardType) parentType;
++        Type[] actualTypeArguments = objParameterizedType.getUpperBounds();
++        return actualTypeArguments[0];
+       }
+-
+       throw new UnsupportedOperationException("Expecting parameterized type, got " + parentType
+           + ".\n Are you missing the use of TypeToken idiom?\n See "
+           + "http://sites.google.com/site/gson/gson-user-guide#TOC-Serializing-and-Deserializing-Gener");

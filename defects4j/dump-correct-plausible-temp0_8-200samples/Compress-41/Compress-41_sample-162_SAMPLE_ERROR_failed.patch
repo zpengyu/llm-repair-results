@@ -1,0 +1,24 @@
+diff --git a/src/main/java/org/apache/commons/compress/archivers/zip/ZipArchiveInputStream.java b/src/main/java/org/apache/commons/compress/archivers/zip/ZipArchiveInputStream.java
+index 5d4c0a82..66573c9d 100644
+--- a/src/main/java/org/apache/commons/compress/archivers/zip/ZipArchiveInputStream.java
++++ b/src/main/java/org/apache/commons/compress/archivers/zip/ZipArchiveInputStream.java
+@@ -316,9 +297,18 @@ public ZipArchiveEntry getNextZipEntry() throws IOException {
+                         new BoundedInputStream(in, current.entry.getCompressedSize()));
+             } else if (current.entry.getMethod() == ZipMethod.BZIP2.getCode()) {
+                 current.in = new BZip2CompressorInputStream(new BoundedInputStream(in, current.entry.getCompressedSize()));
++            }else if (current.entry.getMethod() == ZipMethod.LZMA.getCode()) {
++                    current.in = new LZMACompressorInputStream(new BoundedInputStream(in, current.entry.getCompressedSize()));
++            } else {
++                current.in = new BoundedInputStream(in, current.entry.getCompressedSize());
+             }
++        } else {
++            current.in = new BoundedInputStream(in, in.available());
++        }
++        if (!current.hasDataDescriptor) {
++            current.crc = new CRC32();
++            current.count = 0;
+         }
+-        
+         entriesRead++;
+         return current.entry;
+     }

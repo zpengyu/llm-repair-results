@@ -1,0 +1,40 @@
+diff --git a/src/main/java/com/fasterxml/jackson/core/json/JsonGeneratorImpl.java b/src/main/java/com/fasterxml/jackson/core/json/JsonGeneratorImpl.java
+index 81b90fed..68a6df67 100644
+--- a/src/main/java/com/fasterxml/jackson/core/json/JsonGeneratorImpl.java
++++ b/src/main/java/com/fasterxml/jackson/core/json/JsonGeneratorImpl.java
+@@ -194,4 +168,34 @@ public abstract class JsonGeneratorImpl extends GeneratorBase
+         writeFieldName(fieldName);
+         writeString(value);
+     }
++    // // Internal methods:
++    protected void _verifyPrettyValueWrite(String typeMsg, int status) throws IOException
++    {
++        if (status == JsonWriteContext.STATUS_EXPECT_NAME) { // array
++            _reportError("Can not "+typeMsg+", expecting field name");
++        }
++        switch (_writeContext.writeValue()) {
++        case JsonWriteContext.STATUS_OK_AFTER_COMMA:
++            _cfgPrettyPrinter.writeArrayValueSeparator(this);
++            break;
++        case JsonWriteContext.STATUS_OK_AFTER_COLON:
++            _cfgPrettyPrinter.writeObjectFieldValueSeparator(this);
++            break;
++        case JsonWriteContext.STATUS_OK_AFTER_SPACE:
++            _cfgPrettyPrinter.writeRootValueSeparator(this);
++            break;
++        // should never occur but:
++        case JsonWriteContext.STATUS_OK_AS_IS:
++            break;
++        case JsonWriteContext.STATUS_EXPECT_VALUE:
++            _reportCantWriteValueExpectName(typeMsg);
++            break;
++        case JsonWriteContext.STATUS_EXPECT_NAME: // shouldn't get this
++        default:
++            _throwInternal();
++        }
++    }
++    protected void _reportCantWriteValueExpectName(String typeMsg) throws IOException {
++        _reportError("Can not "+typeMsg+", expecting field name");
++    }
+ }
+\ No newline at end of file

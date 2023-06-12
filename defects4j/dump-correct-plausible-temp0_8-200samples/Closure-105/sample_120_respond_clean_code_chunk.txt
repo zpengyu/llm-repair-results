@@ -1,0 +1,46 @@
+  /**
+   * @return A string that is the result of all the strings in the given array
+   *     node joined by the given join string.
+   */
+  private static String foldToString(
+      AbstractCompiler compiler, Node arrayNode, String joinString) {
+    Preconditions.checkArgument(arrayNode.isArrayLit());
+    Preconditions.checkArgument(NodeUtil.isImmutableValue(arrayNode));
+    StringBuilder sb = new StringBuilder();
+    for (Node child : arrayNode.children()) {
+      if (!NodeUtil.isImmutableValue(child)) {
+        return null;
+      }
+      if (sb.length() > 0) {
+        sb.append(joinString);
+      }
+      sb.append(NodeUtil.getStringValue(child));
+    }
+    return sb.toString();
+  }
+  /**
+   * Try to fold a call to String.prototype.join().
+   */
+  void tryFoldStringJoin(NodeTraversal t, Node n, Node left, Node right,
+      Node parent) {
+    if (!NodeUtil.isGetProp(left) || !NodeUtil.isImmutableValue(right)) {
+      return;
+    }
+    Node arrayNode = left.getFirstChild();
+    Node functionName = arrayNode.getNext();
+    if ((arrayNode.getType() != Token.ARRAYLIT) ||
+        !functionName.getString().equals("join")) {
+      return;
+    }
+    String joinString = NodeUtil.getStringValue(right);
+    if (joinString == null) {
+      return;
+    }
+    String folded = foldToString(t.getCompiler(), arrayNode, joinString);
+    if (folded == null) {
+      return;
+    }
+    Node foldedStringNode = Node.newString(folded);
+    parent.replaceChild(n, foldedStringNode);
+    t.getCompiler().reportCodeChange();
+  }

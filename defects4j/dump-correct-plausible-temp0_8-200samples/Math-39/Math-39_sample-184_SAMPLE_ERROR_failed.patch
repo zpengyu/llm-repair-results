@@ -1,0 +1,28 @@
+diff --git a/src/main/java/org/apache/commons/math/ode/nonstiff/EmbeddedRungeKuttaIntegrator.java b/src/main/java/org/apache/commons/math/ode/nonstiff/EmbeddedRungeKuttaIntegrator.java
+index 9a6ac9b16..3df989b2c 100644
+--- a/src/main/java/org/apache/commons/math/ode/nonstiff/EmbeddedRungeKuttaIntegrator.java
++++ b/src/main/java/org/apache/commons/math/ode/nonstiff/EmbeddedRungeKuttaIntegrator.java
+@@ -304,21 +282,13 @@ public abstract class EmbeddedRungeKuttaIntegrator
+           // stepsize control for next step
+           final double factor =
+               FastMath.min(maxGrowth, FastMath.max(minReduction, safety * FastMath.pow(error, exp)));
+-          final double  scaledH    = stepSize * factor;
+-          final double  nextT      = stepStart + scaledH;
++          final double  nextT      = stepStart + stepSize;
+           final boolean nextIsLast = forward ? (nextT >= t) : (nextT <= t);
+-          hNew = filterStep(scaledH, forward, nextIsLast);
+-
+           final double  filteredNextT      = stepStart + hNew;
+           final boolean filteredNextIsLast = forward ? (filteredNextT >= t) : (filteredNextT <= t);
+-          if (filteredNextIsLast) {
+-              hNew = t - stepStart;
+-          }
+-
++          hNew = filterStep(stepSize * factor, forward, nextIsLast && filteredNextIsLast);
+       }
+-
+     } while (!isLastStep);
+-
+     // dispatch results
+     equations.setTime(stepStart);
+     equations.setCompleteState(y);

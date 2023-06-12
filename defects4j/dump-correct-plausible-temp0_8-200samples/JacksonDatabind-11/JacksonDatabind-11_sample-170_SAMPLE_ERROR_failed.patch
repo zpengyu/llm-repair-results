@@ -1,0 +1,35 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/type/TypeFactory.java b/src/main/java/com/fasterxml/jackson/databind/type/TypeFactory.java
+index 87b165830..724e40db6 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/type/TypeFactory.java
++++ b/src/main/java/com/fasterxml/jackson/databind/type/TypeFactory.java
+@@ -911,7 +910,7 @@ public final class TypeFactory
+          *   current type (for method) since it will be masked.
+          */
+         Type[] bounds = type.getBounds();
+-
++        int len = bounds.length;
+         // With type variables we must use bound information.
+         // Theoretically this gets tricky, as there may be multiple
+         // bounds ("... extends A & B"); and optimally we might
+@@ -925,10 +923,19 @@ public final class TypeFactory
+          *   (T extends Comparable<T>). Need to add "placeholder"
+          *   for resolution to catch those.
+          */
++        if (len == 0) { // could this ever occur?
++            return _unknownType();
++        }
+         context._addPlaceholder(name);
+-        return _constructType(bounds[0], context);
++        // First: any real bounds?
++        TypeBindings b = TypeBindings.emptyBindings();
++        for (int i = 0; i < len; ++i) {
++            JavaType t = _constructType(bounds[i], context);
++            // do we care about bounds beyond first one?
++            b = b.withType(t.getRawClass().getName(), t);
++        }
++        return new SimpleType(type.getRawClass(), b);
+     }
+-
+     protected JavaType _fromWildcard(WildcardType type, TypeBindings context)
+     {
+         /* Similar to challenges with TypeVariable, we may have

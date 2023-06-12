@@ -1,0 +1,28 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/jsontype/impl/TypeDeserializerBase.java b/src/main/java/com/fasterxml/jackson/databind/jsontype/impl/TypeDeserializerBase.java
+index e8942ba4b..047e75ca2 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/jsontype/impl/TypeDeserializerBase.java
++++ b/src/main/java/com/fasterxml/jackson/databind/jsontype/impl/TypeDeserializerBase.java
+@@ -162,7 +162,7 @@ public abstract class TypeDeserializerBase
+                     JavaType actual = _handleUnknownTypeId(ctxt, typeId);
+                     if (actual == null) { // what should this be taken to mean?
+                         // 17-Jan-2019, tatu: As per [databind#2221], better NOT return `null` but...
+-                        return null;
++                        return _handleNoTypeInfo(ctxt, typeId);
+                     }
+                     // ... would this actually work?
+                     deser = ctxt.findContextualValueDeserializer(actual, _property);
+@@ -197,7 +197,13 @@ public abstract class TypeDeserializerBase
+         }
+         return deser;
+     }
+-
++    protected JsonDeserializer<Object> _handleNoTypeInfo(DeserializationContext ctxt, String typeId) throws IOException {
++        // 17-Jan-2019, tatu: As per [databind#2221], should NOT return null but...
++        //  Can consider either returning `null` or non-null (default) deserializer, but
++        //  should pick one.
++        //  For now, let's do similar to what was done, to minimize impact.
++        return null;
++    }
+     protected final JsonDeserializer<Object> _findDefaultImplDeserializer(DeserializationContext ctxt) throws IOException
+     {
+         /* 06-Feb-2013, tatu: As per [databind#148], consider default implementation value of

@@ -1,0 +1,30 @@
+diff --git a/src/com/google/javascript/jscomp/CodeConsumer.java b/src/com/google/javascript/jscomp/CodeConsumer.java
+index dbdb0a9b..8e4f243e 100644
+--- a/src/com/google/javascript/jscomp/CodeConsumer.java
++++ b/src/com/google/javascript/jscomp/CodeConsumer.java
+@@ -281,9 +240,22 @@ abstract class CodeConsumer {
+    * @return Whether the a line break can be added after the specified BLOCK.
+    */
+   boolean breakAfterBlockFor(Node n, boolean statementContext) {
+-    return statementContext;
++    // Do not line break after the last statement in a block.
++    // If the block is the last child of a parent block, the parent
++    // will decide when to line break after it.
++    // Otherwise it is ok to line break after the block.
++    return !isLastChildOfBlock(n);
++  }
++  /**
++   * Returns true if node is the last child of a block.
++   * This is used to avoid redundant line breaks.
++   */
++  private boolean isLastChildOfBlock(Node n) {
++    Node parent = n.getParent();
++    return parent != null &&
++        parent.isBlock() &&
++        parent.getLastChild() == n;
+   }
+-
+   /** Called when we're at the end of a file. */
+   void endFile() {}
+ }
+\ No newline at end of file

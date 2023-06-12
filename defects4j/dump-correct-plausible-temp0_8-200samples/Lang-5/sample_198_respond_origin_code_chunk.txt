@@ -1,0 +1,85 @@
+    public static Locale toLocale(final String str) {
+        if (str == null) {
+            return null;
+        }
+        if (str.isEmpty()) {
+            throw new IllegalArgumentException("Invalid locale format: " + str);
+        }
+        if (str.startsWith("_")) {
+            throw new IllegalArgumentException("Invalid locale format: " + str);
+        }
+
+        final int len = str.length();
+        char ch0 = '\u0000';
+        char ch1 = '\u0000';
+        char ch2 = '\u0000';
+        char ch3 = '\u0000';
+        char ch4 = '\u0000';
+        int phase = 0;
+        boolean isSpecial = false;
+        StringBuilder lang = new StringBuilder();
+        StringBuilder script = new StringBuilder();
+        StringBuilder country = new StringBuilder();
+        StringBuilder variant = new StringBuilder();
+
+        int i = 0;
+        while (i < len) {
+            ch0 = str.charAt(i);
+            if (ch0 == '_') {
+                if (phase == 0) {
+                    phase = 1;
+                } else if (phase == 2) {
+                    phase = 3;
+                } else if (phase == 4) {
+                    phase = 5;
+                } else {
+                    throw new IllegalArgumentException("Invalid locale format: " + str);
+                }
+            } else if (ch0 == '-') {
+                if (phase == 1) {
+                    phase = 2;
+                } else if (phase == 2) {
+                    phase = 4;
+                } else {
+                    throw new IllegalArgumentException("Invalid locale format: " + str);
+                }
+            } else {
+                if (!Character.isLetterOrDigit(ch0)) {
+                    throw new IllegalArgumentException("Invalid locale format: " + str);
+                }
+
+                if (phase == 0) {
+                    lang.append(ch0);
+                    if (lang.length() == 3) {
+                        phase = 1;
+                    }
+                } else if (phase == 1 || phase == 2) {
+                    script.append(ch0);
+                    if (script.length() == 4) {
+                        phase = 2;
+                    }
+                } else if (phase == 3 || phase == 4 || phase == 5) {
+                    country.append(ch0);
+                    if (country.length() == 2) {
+                        phase = 4;
+                    }
+                } else if (phase == 6) {
+                    variant.append(ch0);
+                }
+            }
+            i++;
+        }
+
+        String language = lang.toString();
+        String scriptcode = script.toString();
+        String countrycode = country.toString();
+        String variantcode = variant.toString();
+
+        if (variantcode.isEmpty() && countrycode.endsWith("#")) {
+            variantcode = countrycode.substring(3);
+            countrycode = countrycode.substring(0, 3);
+        }
+
+        return new Locale(language, countrycode, variantcode);
+    }
+

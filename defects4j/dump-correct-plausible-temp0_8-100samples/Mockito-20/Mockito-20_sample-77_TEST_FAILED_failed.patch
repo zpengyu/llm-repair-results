@@ -1,0 +1,35 @@
+diff --git a/src/org/mockito/internal/creation/bytebuddy/ByteBuddyMockMaker.java b/src/org/mockito/internal/creation/bytebuddy/ByteBuddyMockMaker.java
+index ddaada2f1..f1ff3d297 100644
+--- a/src/org/mockito/internal/creation/bytebuddy/ByteBuddyMockMaker.java
++++ b/src/org/mockito/internal/creation/bytebuddy/ByteBuddyMockMaker.java
+@@ -22,9 +22,6 @@ public class ByteBuddyMockMaker implements MockMaker {
+     }
+ 
+     public <T> T createMock(MockCreationSettings<T> settings, MockHandler handler) {
+-        if (settings.getSerializableMode() == SerializableMode.ACROSS_CLASSLOADERS) {
+-            throw new MockitoException("Serialization across classloaders not yet supported with ByteBuddyMockMaker");
+-        }
+         Class<? extends T> mockedProxyType = cachingMockBytecodeGenerator.get(
+                 settings.getTypeToMock(),
+                 settings.getExtraInterfaces()
+@@ -49,9 +45,19 @@ public class ByteBuddyMockMaker implements MockMaker {
+             ),cce);
+         } catch (org.mockito.internal.creation.instance.InstantiationException e) {
+             throw new MockitoException("Unable to create mock instance of type '" + mockedProxyType.getSuperclass().getSimpleName() + "'", e);
++        } catch (MockitoException e) {
++            throw e;
++        } catch (Exception e) {
++            throw new MockitoException(join(
++                    "Unable to mock type :",
++                    "  type to mock : " + describeClass(settings.getTypeToMock()),
++                    "  created class : " + describeClass(mockedProxyType),
++                    "",
++                    "You might experience classloading issues, please ask the mockito mailing-list.",
++                    ""
++            ),e);
+         }
+     }
+-
+     private <T> T ensureMockIsAssignableToMockedType(MockCreationSettings<T> settings, T mock) {
+         // Force explicit cast to mocked type here, instead of
+         // relying on the JVM to implicitly cast on the client call site.

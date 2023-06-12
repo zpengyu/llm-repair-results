@@ -1,0 +1,42 @@
+diff --git a/src/main/java/org/jsoup/helper/DataUtil.java b/src/main/java/org/jsoup/helper/DataUtil.java
+index 6de0c40..81d3337 100644
+--- a/src/main/java/org/jsoup/helper/DataUtil.java
++++ b/src/main/java/org/jsoup/helper/DataUtil.java
+@@ -88,9 +88,11 @@ public final class DataUtil {
+     static Document parseByteData(ByteBuffer byteData, String charsetName, String baseUri, Parser parser) {
+         String docData;
+         Document doc = null;
+-
+         // look for BOM - overrides any other header or input
+-
++        ByteOrderMark bom = getBom(byteData);
++        if (bom != null) {
++            charsetName = bom.getCharsetName();
++        }
+         if (charsetName == null) { // determine from meta. safe parse as UTF-8
+             // look for <meta http-equiv="Content-Type" content="text/html;charset=gb2312"> or HTML5 <meta charset="gb2312">
+             docData = Charset.forName(defaultCharset).decode(byteData).toString();
+@@ -123,20 +124,15 @@ public final class DataUtil {
+             Validate.notEmpty(charsetName, "Must set charset arg to character set of file to parse. Set to null to attempt to detect from HTML");
+             docData = Charset.forName(charsetName).decode(byteData).toString();
+         }
+-        if (docData.length() > 0 && docData.charAt(0) == UNICODE_BOM) {
+-            byteData.rewind();
+-            docData = Charset.forName(defaultCharset).decode(byteData).toString();
+-            docData = docData.substring(1);
+-            charsetName = defaultCharset;
+-            doc = null;
+-        }
+         if (doc == null) {
+             doc = parser.parseInput(docData, baseUri);
+             doc.outputSettings().charset(charsetName);
+         }
+         return doc;
+     }
+-
++    private static ByteOrderMark getBom(ByteBuffer byteData) {
++        return ByteOrderMark.read(byteData);
++    }
+     /**
+      * Read the input stream into a byte buffer.
+      * @param inStream the input stream to read from

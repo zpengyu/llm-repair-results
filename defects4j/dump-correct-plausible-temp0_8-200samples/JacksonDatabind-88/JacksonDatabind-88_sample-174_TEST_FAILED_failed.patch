@@ -1,0 +1,30 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/jsontype/impl/ClassNameIdResolver.java b/src/main/java/com/fasterxml/jackson/databind/jsontype/impl/ClassNameIdResolver.java
+index 112c00b5c..a120d3d8c 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/jsontype/impl/ClassNameIdResolver.java
++++ b/src/main/java/com/fasterxml/jackson/databind/jsontype/impl/ClassNameIdResolver.java
+@@ -56,7 +56,10 @@ public class ClassNameIdResolver
+             //    security issues.
+             JavaType t = tf.constructFromCanonical(id);
+                 // Probably cleaner to have a method in `TypeFactory` but can't add in patch
+-            return t;
++            if (t.isTypeOrSubTypeOf(_baseType.getRawClass())) {
++                return t;
++            }
++            return null;
+         }
+         Class<?> cls;
+         try {
+@@ -74,9 +77,11 @@ public class ClassNameIdResolver
+         } catch (Exception e) {
+             throw new IllegalArgumentException("Invalid type id '"+id+"' (for id type 'Id.class'): "+e.getMessage(), e);
+         }
+-        return tf.constructSpecializedType(_baseType, cls);
++        if (tf.constructSpecializedType(_baseType, cls).isTypeOrSubTypeOf(_baseType.getRawClass())) {
++            return tf.constructSpecializedType(_baseType, cls);
++        }
++        return null;
+     }    
+-    
+     /*
+     /**********************************************************
+     /* Internal methods

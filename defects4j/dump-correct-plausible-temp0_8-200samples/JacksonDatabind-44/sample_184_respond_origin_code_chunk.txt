@@ -1,0 +1,45 @@
+    protected JavaType _narrow(Class<?> subclass)
+    {
+        if (_class == subclass) {
+            return this;
+        }
+        // Should we check that there is a sub-class relationship?
+        // 15-Jan-2016, tatu: Almost yes, but there are some complications with
+        //    placeholder values (`Void`, `NoClass`), so can not quite do yet.
+        // TODO: fix in 2.8
+        /*
+        if (!_class.isAssignableFrom(subclass)) {
+            throw new IllegalArgumentException("Class "+subclass.getName()+" not sub-type of "
+                    +_class.getName());
+        }
+        */
+        JavaType[] newInterfaces = _superInterfaces;
+        if (newInterfaces == null) {
+            newInterfaces = NO_TYPES;
+        }
+        JavaType st = null;
+        if (_superClass != null) {
+            Class<?> superCls = _superClass.getRawClass();
+            // need to check sub-type relationship
+            if (superCls.isAssignableFrom(subclass)) {
+                st = _superClass.narrowBy(subclass);
+            }
+        }
+        if (st == null) {
+            int len = newInterfaces.length;
+            for (int i = 0; i < len; ++i) {
+                JavaType intCls = newInterfaces[i];
+                Class<?> raw = intCls.getRawClass();
+                if (raw.isAssignableFrom(subclass)) {
+                    st = intCls.narrowBy(subclass);
+                    break;
+                }
+            }
+        }
+        if (st == null) {
+            // should not get here but...
+            return new SimpleType(subclass, _bindings, this, _superInterfaces,
+                    _valueHandler, _typeHandler, _asStatic);
+        }
+        return st.forcedNarrowBy(subclass);
+    }

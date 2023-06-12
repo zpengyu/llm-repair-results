@@ -1,0 +1,21 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/deser/BeanDeserializer.java b/src/main/java/com/fasterxml/jackson/databind/deser/BeanDeserializer.java
+index 3c89dc109..c65b7b3f3 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/deser/BeanDeserializer.java
++++ b/src/main/java/com/fasterxml/jackson/databind/deser/BeanDeserializer.java
+@@ -832,9 +828,15 @@ public class BeanDeserializer
+             wrapInstantiationProblem(e, ctxt);
+             return null; // never gets here
+         }
++        if (t == JsonToken.END_OBJECT) {
++            return _unwrappedPropertyHandler.processUnwrapped(p, ctxt, bean, tokens);
++        }
++        tokens.writeEndObject();
++        // 31-May-2018, tatu: [databind#1798] Per spec, need to skip any wrapping
++        //    values after END_OBJECT (or missing END_OBJECT), so:
++        while (p.nextToken() != JsonToken.END_OBJECT) { }
+         return _unwrappedPropertyHandler.processUnwrapped(p, ctxt, bean, tokens);
+     }
+-
+     /*
+     /**********************************************************
+     /* Handling for cases where we have property/-ies with

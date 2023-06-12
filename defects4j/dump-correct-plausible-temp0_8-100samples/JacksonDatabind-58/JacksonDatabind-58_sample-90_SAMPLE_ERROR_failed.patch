@@ -1,0 +1,21 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/deser/BeanDeserializerFactory.java b/src/main/java/com/fasterxml/jackson/databind/deser/BeanDeserializerFactory.java
+index bc8e6736f..0e307a81d 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/deser/BeanDeserializerFactory.java
++++ b/src/main/java/com/fasterxml/jackson/databind/deser/BeanDeserializerFactory.java
+@@ -748,9 +746,15 @@ public class BeanDeserializerFactory
+         if(objectIdInfo != null){
+             prop.setObjectIdInfo(objectIdInfo);
+         }
++        // [databind#128]: allow object identity handling
++        if (mutator != null) {
++            ObjectIdInfo objectIdInfo = ctxt.getAnnotationIntrospector().findObjectIdInfo(mutator);
++            if (objectIdInfo != null) {
++                prop.setObjectIdInfo(objectIdInfo);
++            }
++        }
+         return prop;
+     }
+-
+     /**
+      * Method that will construct a regular bean property setter using
+      * the given setter method.

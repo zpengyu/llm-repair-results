@@ -1,0 +1,29 @@
+diff --git a/src/main/java/org/apache/commons/compress/archivers/zip/ZipArchiveInputStream.java b/src/main/java/org/apache/commons/compress/archivers/zip/ZipArchiveInputStream.java
+index 5d4c0a82..9adced38 100644
+--- a/src/main/java/org/apache/commons/compress/archivers/zip/ZipArchiveInputStream.java
++++ b/src/main/java/org/apache/commons/compress/archivers/zip/ZipArchiveInputStream.java
+@@ -303,22 +286,10 @@ public ZipArchiveEntry getNextZipEntry() throws IOException {
+         if (!hasUTF8Flag && useUnicodeExtraFields) {
+             ZipUtil.setNameAndCommentFromExtraFields(current.entry, fileName, null);
+         }
+-
+         processZip64Extra(size, cSize);
+-
+-        if (current.entry.getCompressedSize() != ArchiveEntry.SIZE_UNKNOWN) {
+-            if (current.entry.getMethod() == ZipMethod.UNSHRINKING.getCode()) {
+-                current.in = new UnshrinkingInputStream(new BoundedInputStream(in, current.entry.getCompressedSize()));
+-            } else if (current.entry.getMethod() == ZipMethod.IMPLODING.getCode()) {
+-                current.in = new ExplodingInputStream(
+-                        current.entry.getGeneralPurposeBit().getSlidingDictionarySize(),
+-                        current.entry.getGeneralPurposeBit().getNumberOfShannonFanoTrees(),
+-                        new BoundedInputStream(in, current.entry.getCompressedSize()));
+-            } else if (current.entry.getMethod() == ZipMethod.BZIP2.getCode()) {
+-                current.in = new BZip2CompressorInputStream(new BoundedInputStream(in, current.entry.getCompressedSize()));
+-            }
++        if (current.entry.getCompressedSize() != ArchiveEntry.SIZE_UNKNOWN && current.entry.getMethod() == ZipMethod.DEFLATED.getCode()) {
++            current.in = new Deflate64CompressorInputStream(in, current.entry.getCompressedSize(), current.entry.getSize());
+         }
+-        
+         entriesRead++;
+         return current.entry;
+     }

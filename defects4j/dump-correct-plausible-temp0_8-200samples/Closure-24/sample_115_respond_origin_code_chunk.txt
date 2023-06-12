@@ -1,0 +1,18 @@
+    private void findAliases(NodeTraversal t) {
+      Scope scope = t.getScope();
+      for (Var v : scope.getVarIterable()) {
+        Node n = v.getNode();
+        int type = n.getType();
+        Node parent = n.getParent();
+        if (parent.isVar()) {
+          if (n.hasChildren() && n.getFirstChild().isQualifiedName()) {
+            String name = n.getString();
+            Var aliasVar = scope.getVar(name);
+            if (aliases.put(name, aliasVar) != null) {
+              report(t, n, DUPLICATE_ALIAS, name);
+            }
+          }
+        }
+      }
+    }
+

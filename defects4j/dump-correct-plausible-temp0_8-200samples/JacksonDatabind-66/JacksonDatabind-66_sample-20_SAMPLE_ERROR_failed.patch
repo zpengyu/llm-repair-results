@@ -1,0 +1,22 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/deser/std/StdKeyDeserializer.java b/src/main/java/com/fasterxml/jackson/databind/deser/std/StdKeyDeserializer.java
+index d4417f6ad..456799809 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/deser/std/StdKeyDeserializer.java
++++ b/src/main/java/com/fasterxml/jackson/databind/deser/std/StdKeyDeserializer.java
+@@ -311,13 +311,12 @@ public class StdKeyDeserializer extends KeyDeserializer
+             if (key == null) { // is this even legal call?
+                 return null;
+             }
++            // Ugh... should not have to give parser which may or may not be correct one...
+             try {
+-                // Ugh... should not have to give parser which may or may not be correct one...
+-                Object result = _delegate.deserialize(ctxt.getParser(), ctxt);
+-                if (result != null) {
+-                    return result;
++                if (_factory != null) {
++                    return _factory.createKey(key, ctxt);
+                 }
+-                return ctxt.handleWeirdKey(_keyClass, key, "not a valid representation");
++                return _keyDeserializer.deserializeKey(key, ctxt);
+             } catch (Exception re) {
+                 return ctxt.handleWeirdKey(_keyClass, key, "not a valid representation: %s", re.getMessage());
+             }

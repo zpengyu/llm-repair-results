@@ -1,0 +1,30 @@
+diff --git a/src/com/google/javascript/jscomp/DeadAssignmentsElimination.java b/src/com/google/javascript/jscomp/DeadAssignmentsElimination.java
+index 19b8b6bd..b5878dc3 100644
+--- a/src/com/google/javascript/jscomp/DeadAssignmentsElimination.java
++++ b/src/com/google/javascript/jscomp/DeadAssignmentsElimination.java
+@@ -320,6 +320,18 @@ class DeadAssignmentsElimination extends AbstractPostOrderCallback implements
+    * reference of that variable is a read. It returns KILL, if the first
+    * reference of that variable is an assignment. It returns MAY_LIVE otherwise.
+    */
++private enum VariableLiveness {
++    MAYBE_LIVE,
++    READ,
++    KILL;
++    private final VariableLiveness inverse;
++    private VariableLiveness() {
++      inverse = this == READ ? KILL : READ;
++    }
++    VariableLiveness getInverse() {
++      return inverse;
++    }
++  }
+   private VariableLiveness isVariableReadBeforeKill(
+       Node n, String variable) {
+     if (NodeUtil.isName(n) && variable.equals(n.getString())) {
+@@ -344,5 +355,4 @@ class DeadAssignmentsElimination extends AbstractPostOrderCallback implements
+       }
+     }
+     return VariableLiveness.MAYBE_LIVE;
+-  }
+-}
++  }}

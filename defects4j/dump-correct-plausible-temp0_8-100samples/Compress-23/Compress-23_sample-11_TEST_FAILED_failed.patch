@@ -1,0 +1,38 @@
+diff --git a/src/main/java/org/apache/commons/compress/archivers/sevenz/Coders.java b/src/main/java/org/apache/commons/compress/archivers/sevenz/Coders.java
+index cd396b04..801f3dc4 100644
+--- a/src/main/java/org/apache/commons/compress/archivers/sevenz/Coders.java
++++ b/src/main/java/org/apache/commons/compress/archivers/sevenz/Coders.java
+@@ -104,19 +104,21 @@ class Coders {
+ 
+     static class LZMADecoder extends CoderBase {
+         @Override
+-        InputStream decode(final InputStream in, final Coder coder,
+-                byte[] password) throws IOException {
+-            byte propsByte = coder.properties[0];
+-            long dictSize = coder.properties[1];
+-            for (int i = 1; i < 4; i++) {
+-                dictSize |= (coder.properties[i + 1] << (8 * i));
+-            }
+-            if (dictSize > LZMAInputStream.DICT_SIZE_MAX) {
+-                throw new IOException("Dictionary larger than 4GiB maximum size");
+-            }
+-            return new LZMAInputStream(in, -1, propsByte, (int) dictSize);
++InputStream decode(final InputStream in, final Coder coder,
++            byte[] password) throws IOException {
++        if(coder.properties.length != 5){
++            throw new IOException("Invalid lzma properties");
+         }
+-    }
++        byte propsByte = coder.properties[0];
++        long dictSize = coder.properties[1];
++        for (int i = 1; i < 4; i++) {
++            dictSize |= (coder.properties[i + 1] << (8 * i));
++        }
++        if (dictSize > LZMAInputStream.DICT_SIZE_MAX) {
++            throw new IOException("Dictionary larger than 4GiB maximum size");
++        }
++        return new LZMAInputStream(in, -1, propsByte, (int) dictSize);
++    }    }
+     
+     static class DeflateDecoder extends CoderBase {
+         @Override

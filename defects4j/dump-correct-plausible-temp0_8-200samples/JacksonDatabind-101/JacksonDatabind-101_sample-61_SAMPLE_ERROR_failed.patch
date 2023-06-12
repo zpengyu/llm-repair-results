@@ -1,0 +1,28 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/deser/BeanDeserializer.java b/src/main/java/com/fasterxml/jackson/databind/deser/BeanDeserializer.java
+index 3c89dc109..e442b0bc5 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/deser/BeanDeserializer.java
++++ b/src/main/java/com/fasterxml/jackson/databind/deser/BeanDeserializer.java
+@@ -823,18 +820,18 @@ public class BeanDeserializer
+                 continue;
+             }
+         }
+-
+         // We hit END_OBJECT, so:
+-        Object bean;
++        if (t != JsonToken.END_OBJECT) {
++            return handleUnexpectedToken(ctxt, JsonToken.END_OBJECT, p);
++        }
+         try {
+-            bean = creator.build(ctxt, buffer);
++            Object bean = creator.build(ctxt, buffer);
++            return _unwrappedPropertyHandler.processUnwrapped(p, ctxt, bean, tokens);
+         } catch (Exception e) {
+             wrapInstantiationProblem(e, ctxt);
+             return null; // never gets here
+         }
+-        return _unwrappedPropertyHandler.processUnwrapped(p, ctxt, bean, tokens);
+     }
+-
+     /*
+     /**********************************************************
+     /* Handling for cases where we have property/-ies with

@@ -1,0 +1,30 @@
+diff --git a/src/org/mockito/internal/verification/VerificationOverTimeImpl.java b/src/org/mockito/internal/verification/VerificationOverTimeImpl.java
+index 092b9a548..854d8740b 100644
+--- a/src/org/mockito/internal/verification/VerificationOverTimeImpl.java
++++ b/src/org/mockito/internal/verification/VerificationOverTimeImpl.java
+@@ -86,13 +84,22 @@ public class VerificationOverTimeImpl implements VerificationMode {
+                     error = null;
+                 }
+             } catch (MockitoAssertionError e) {
+-                error = handleVerifyException(e);
++                if(e.getMessage().contains("Wanted but not invoked:")){
++                	throw e;
++                }
++                else{
++                	error = handleVerifyException(e);
++                }
+             }
+             catch (org.mockito.exceptions.verification.junit.ArgumentsAreDifferent e) {
+-                error = handleVerifyException(e);
++            	if(e.getMessage().contains("Wanted but not invoked:")){
++                	throw e;
++                }
++                else{
++                	error = handleVerifyException(e);
++                }
+             }
+         }
+-
+         if (error != null) {
+             throw error;
+         }

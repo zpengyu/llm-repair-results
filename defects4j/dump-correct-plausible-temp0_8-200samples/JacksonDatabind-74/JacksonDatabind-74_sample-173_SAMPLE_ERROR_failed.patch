@@ -1,0 +1,18 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/jsontype/impl/AsPropertyTypeDeserializer.java b/src/main/java/com/fasterxml/jackson/databind/jsontype/impl/AsPropertyTypeDeserializer.java
+index 8bad30e7c..cb45547a7 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/jsontype/impl/AsPropertyTypeDeserializer.java
++++ b/src/main/java/com/fasterxml/jackson/databind/jsontype/impl/AsPropertyTypeDeserializer.java
+@@ -143,7 +143,12 @@ public class AsPropertyTypeDeserializer extends AsArrayTypeDeserializer
+                 // must move to point to the first token:
+                 p.nextToken();
+             }
+-            return deser.deserialize(p, ctxt);
++            // need to merge...
++            Object result = deser.deserialize(p, ctxt);
++            if (p.nextToken() != JsonToken.END_OBJECT) {
++                handleUnknownProperty(p, ctxt, handledType(), p.getCurrentName());
++            }
++            return result;
+         }
+         // or, perhaps we just bumped into a "natural" value (boolean/int/double/String)?
+         Object result = TypeDeserializer.deserializeIfNatural(p, ctxt, _baseType);

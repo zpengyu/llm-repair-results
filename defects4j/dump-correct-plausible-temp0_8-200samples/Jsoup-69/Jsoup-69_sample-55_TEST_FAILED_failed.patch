@@ -1,0 +1,41 @@
+diff --git a/src/main/java/org/jsoup/nodes/FormElement.java b/src/main/java/org/jsoup/nodes/FormElement.java
+index baffcf1..b44ac59 100644
+--- a/src/main/java/org/jsoup/nodes/FormElement.java
++++ b/src/main/java/org/jsoup/nodes/FormElement.java
+@@ -45,8 +42,19 @@ public class FormElement extends Element {
+         elements.add(element);
+         return this;
+     }
+-
+-
++    /**
++     * Get the list of form control elements associated with this form by type.
++     * @param type input type to gather
++     * @return form controls with this type
++     */
++    public Elements elements(String type) {
++        Elements matched = new Elements();
++        for (Element el: elements) {
++            if (el.attr("type").equalsIgnoreCase(type))
++                matched.add(el);
++        }
++        return matched;
++    }
+     /**
+      * Prepare to submit this form. A Connection object is created with the request set up from the form values. You
+      * can then set up other options (like user-agent, timeout, cookies), then execute it.
+@@ -94,11 +98,9 @@ public class FormElement extends Element {
+                         data.add(HttpConnection.KeyVal.create(name, option.val()));
+                 }
+             } else if ("checkbox".equalsIgnoreCase(type) || "radio".equalsIgnoreCase(type)) {
+-                // only add checkbox or radio if they have the checked attribute
+-                if (el.hasAttr("checked")) {
+-                    final String val = el.val().length() >  0 ? el.val() : "on";
+-                    data.add(HttpConnection.KeyVal.create(name, val));
+-                }
++                Elements checked = el.select(":checked");
++                if (!checked.isEmpty())
++                    data.add(HttpConnection.KeyVal.create(name, checked.first().val()));
+             } else {
+                 data.add(HttpConnection.KeyVal.create(name, el.val()));
+             }

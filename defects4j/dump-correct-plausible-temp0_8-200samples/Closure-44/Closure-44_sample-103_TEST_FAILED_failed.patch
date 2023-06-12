@@ -1,0 +1,34 @@
+diff --git a/src/com/google/javascript/jscomp/CodeConsumer.java b/src/com/google/javascript/jscomp/CodeConsumer.java
+index 74978330..b4b5df6e 100644
+--- a/src/com/google/javascript/jscomp/CodeConsumer.java
++++ b/src/com/google/javascript/jscomp/CodeConsumer.java
+@@ -184,10 +183,10 @@ abstract class CodeConsumer {
+     if (newcode.length() == 0) {
+       return;
+     }
+-
+     char c = newcode.charAt(0);
++    char lc = getLastChar();
+     if ((isWordChar(c) || c == '\\') &&
+-        isWordChar(getLastChar())) {
++        isWordChar(lc)) {
+       // need space to separate. This is not pretty printing.
+       // For example: "return foo;"
+       append(" ");
+@@ -196,11 +195,13 @@ abstract class CodeConsumer {
+       // REGEXP DIV REGEXP
+       // is valid and should print like
+       // / // / /
++      if (lc != '/' || c != '/') {
++        append(newcode);
++      }
++    } else {
++      append(newcode);
+     }
+-
+-    append(newcode);
+   }
+-
+   void appendOp(String op, boolean binOp) {
+     append(op);
+   }

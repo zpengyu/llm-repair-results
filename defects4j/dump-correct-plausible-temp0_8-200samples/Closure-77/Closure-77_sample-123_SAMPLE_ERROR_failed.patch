@@ -1,0 +1,24 @@
+diff --git a/src/com/google/javascript/jscomp/CodeGenerator.java b/src/com/google/javascript/jscomp/CodeGenerator.java
+index a9d0a5b0..d022da44 100644
+--- a/src/com/google/javascript/jscomp/CodeGenerator.java
++++ b/src/com/google/javascript/jscomp/CodeGenerator.java
+@@ -1023,7 +1021,18 @@ class CodeGenerator {
+     sb.append(quote);
+     return sb.toString();
+   }
+-
++  private static void appendHexJavaScriptRepresentation(
++      StringBuilder sb, char c) {
++    // We use c >>> 8 and c & 0xff instead of Integer.toHexString(c)
++    // to avoid allocating a string on the heap.
++    sb.append("\\u")
++      .append(hexChar[c >>> 8])
++      .append(hexChar[c & 0xff]);
++  }
++  static final char[] hexChar = {
++    '0', '1', '2', '3', '4', '5', '6', '7',
++    '8', '9', 'a', 'b', 'c', 'd', 'e', 'f'
++  };
+   static String identifierEscape(String s) {
+     // First check if escaping is needed at all -- in most cases it isn't.
+     if (NodeUtil.isLatin(s)) {

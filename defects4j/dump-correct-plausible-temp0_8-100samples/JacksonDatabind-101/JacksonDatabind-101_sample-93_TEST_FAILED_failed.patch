@@ -1,0 +1,23 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/deser/BeanDeserializer.java b/src/main/java/com/fasterxml/jackson/databind/deser/BeanDeserializer.java
+index 3c89dc109..4496cd01f 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/deser/BeanDeserializer.java
++++ b/src/main/java/com/fasterxml/jackson/databind/deser/BeanDeserializer.java
+@@ -756,6 +753,8 @@ public class BeanDeserializer
+                 // Last creator property to set?
+                 if (buffer.assignParameter(creatorProp,
+                         _deserializeWithErrorWrapping(p, ctxt, creatorProp))) {
++                    // this is one of the very rare places where we can change the token for buffered
++                    // content and not have to look ahead to see if it might be last; so let's do it:
+                     t = p.nextToken(); // to move to following FIELD_NAME/END_OBJECT
+                     Object bean;
+                     try {
+@@ -829,8 +827,7 @@ public class BeanDeserializer
+         try {
+             bean = creator.build(ctxt, buffer);
+         } catch (Exception e) {
+-            wrapInstantiationProblem(e, ctxt);
+-            return null; // never gets here
++            return wrapInstantiationProblem(e, ctxt);
+         }
+         return _unwrappedPropertyHandler.processUnwrapped(p, ctxt, bean, tokens);
+     }

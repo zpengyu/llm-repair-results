@@ -1,0 +1,40 @@
+diff --git a/src/com/google/javascript/jscomp/TypedScopeCreator.java b/src/com/google/javascript/jscomp/TypedScopeCreator.java
+index 051f5c8e..e27c29ef 100644
+--- a/src/com/google/javascript/jscomp/TypedScopeCreator.java
++++ b/src/com/google/javascript/jscomp/TypedScopeCreator.java
+@@ -1441,19 +1441,18 @@ final class TypedScopeCreator implements ScopeCreator {
+      * @param parent The parent of n
+      */
+     @Override public void visit(NodeTraversal t, Node n, Node parent) {
+-      if (n == scope.getRootNode()) return;
+-
+-      if (n.getType() == Token.LP && parent == scope.getRootNode()) {
+-        handleFunctionInputs(parent);
++      if (n.getType() == Token.FUNCTION
++          || NodeUtil.isGetOrSetKey(parent)) {
+         return;
+       }
+-
+       attachLiteralTypes(n);
+       switch (n.getType()) {
+-        case Token.FUNCTION:
+-          if (parent.getType() == Token.NAME) {
+-            return;
++        case Token.LP:
++          if (parent == scope.getRootNode()) {
++            handleFunctionInputs(parent);
+           }
++          break;
++        case Token.FUNCTION:
+           defineDeclaredFunction(n, parent);
+           break;
+         case Token.CATCH:
+@@ -1464,7 +1463,7 @@ final class TypedScopeCreator implements ScopeCreator {
+           break;
+       }
+     }
+-
++  }
+     /** Handle bleeding functions and function parameters. */
+     private void handleFunctionInputs(Node fnNode) {
+       // Handle bleeding functions.

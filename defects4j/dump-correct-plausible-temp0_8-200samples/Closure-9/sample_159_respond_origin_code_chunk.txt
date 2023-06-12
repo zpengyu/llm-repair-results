@@ -1,0 +1,85 @@
+
+private static final String MODULE_SLASH = "/";
+private static final String MODULE_NAME_SEPARATOR = "\\$";
+private static final String MODULE_NAME_PREFIX = "module$";
+
+
+public String guessCJSModuleName(String filename) {
+  return toModuleName(normalizeSourceName(filename));
+}
+
+/**
+ * For every file that is being processed this returns the module that
+ * created for it.
+ */
+public JSModule getModule() {
+  return module;
+}
+
+/**
+ * Turns a filename into a JS identifier that is used for moduleNames in
+ * rewritten code. Removes leading ./, replaces / with $, removes trailing .js
+ * and replaces - with _. All moduleNames get a "module$" prefix.
+ */
+public static String toModuleName(String filename) {
+  return MODULE_NAME_PREFIX +
+      filename.replaceAll("^\\." + Pattern.quote(MODULE_SLASH), "")
+          .replaceAll(Pattern.quote(MODULE_SLASH), MODULE_NAME_SEPARATOR)
+          .replaceAll("\\.js$", "").replaceAll("-", "_");
+}
+
+/**
+ * Turn a filename into a moduleName with support for relative addressing
+ * with ./ and ../ based on currentFilename;
+ */
+public static String toModuleName(String requiredFilename,
+    String currentFilename) {
+  requiredFilename = requiredFilename.replaceAll("\\.js$", "");
+  currentFilename = currentFilename.replaceAll("\\.js$", "");
+
+  if (requiredFilename.startsWith("." + MODULE_SLASH) ||
+      requiredFilename.startsWith(".." + MODULE_SLASH)) {
+    try {
+      requiredFilename = (new URI(currentFilename)).resolve(new URI(requiredFilename))
+          .toString();
+    } catch (URISyntaxException e) {
+      throw new RuntimeException(e);
+    }
+  }
+  return toModuleName(requiredFilename);
+}
+
+
+/**
+ * Rename vars to not conflict in global scope.
+ */
+private class SuffixVarsCallback extends AbstractPostOrderCallback {
+
+  private static final String EXPORTS = "exports";
+
+  private final String suffix;
+
+  SuffixVarsCallback(String suffix) {
+    this.suffix = suffix;
+  }
+
+  @Override
+  public void visit(NodeTraversal t, Node n, Node parent) {
+    if (n.isName()) {
+      String name = n.getString();
+      if (suffix.equals(name)) {
+        return;
+      }
+      if (EXPORTS.equals(name)) {
+        n.setString(suffix);
+        n.putProp(Node.ORIGINALNAME_PROP, EXPORTS);
+      } else {
+        Scope.Var var = t.getScope().getVar(name);
+        if (var != null && var.isGlobal()) {
+          n.setString(name + "$$" + suffix);
+          n.putProp(Node.ORIGINALNAME_PROP, name);
+        }
+      }
+    }
+  }
+}

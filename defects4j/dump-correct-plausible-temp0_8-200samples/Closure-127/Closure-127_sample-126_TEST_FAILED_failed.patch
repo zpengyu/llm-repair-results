@@ -1,0 +1,31 @@
+diff --git a/src/com/google/javascript/jscomp/UnreachableCodeElimination.java b/src/com/google/javascript/jscomp/UnreachableCodeElimination.java
+index 3b323395..17a22639 100644
+--- a/src/com/google/javascript/jscomp/UnreachableCodeElimination.java
++++ b/src/com/google/javascript/jscomp/UnreachableCodeElimination.java
+@@ -84,7 +84,7 @@ class UnreachableCodeElimination implements CompilerPass {
+       });
+   }
+ 
+-  private class EliminationPass extends AbstractShallowCallback {
++private class EliminationPass extends AbstractShallowCallback {
+     private final ControlFlowGraph<Node> cfg;
+     private EliminationPass(ControlFlowGraph<Node> cfg) {
+       this.cfg = cfg;
+@@ -101,7 +100,9 @@ class UnreachableCodeElimination implements CompilerPass {
+       }
+       if (gNode.getAnnotation() != GraphReachability.REACHABLE ||
+           (removeNoOpStatements && !NodeUtil.mayHaveSideEffects(n, compiler))) {
+-        removeDeadExprStatementSafely(n);
++        if (n.isBlock() && !NodeUtil.isTryCatchNodeContainer(n)) {
++            removeDeadExprStatementSafely(n);
++        }
+         return;
+       }
+       tryRemoveUnconditionalBranching(n);
+@@ -246,5 +231,4 @@ class UnreachableCodeElimination implements CompilerPass {
+       }
+       NodeUtil.removeChild(n.getParent(), n);
+     }
+-  }
+-}
++  }}

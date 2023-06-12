@@ -1,0 +1,36 @@
+diff --git a/gson/src/main/java/com/google/gson/TypeInfoFactory.java b/gson/src/main/java/com/google/gson/TypeInfoFactory.java
+index 0aa1455a..828588b9 100644
+--- a/gson/src/main/java/com/google/gson/TypeInfoFactory.java
++++ b/gson/src/main/java/com/google/gson/TypeInfoFactory.java
+@@ -90,10 +86,28 @@ final class TypeInfoFactory {
+         int indexOfActualTypeArgument = getIndex(classTypeVariables, fieldTypeVariable);
+         Type[] actualTypeArguments = objParameterizedType.getActualTypeArguments();
+         return actualTypeArguments[indexOfActualTypeArgument];
+-
+-
++      } else if (parentType instanceof Class<?>) {
++        // For anonymous classes, we cannot use getGenericSuperclass because it returns
++        // the first non-anonymous type. For example,
++        // class Foo { ... }
++        // class Bar extends Foo { ... }
++        // class Baz extends Bar { class Foo { ... } }
++        // getGenericSuperclass(Baz.Foo.class) will return Bar. We want Foo.class
++        Class<?> parentRawClass = TypeUtils.toRawClass(parentType);
++        TypeVariable<?> fieldTypeVariable = (TypeVariable<?>) typeToEvaluate;
++        TypeVariable<?>[] classTypeVariables = rawParentClass.getTypeParameters();
++        int indexOfActualTypeArgument = getIndex(classTypeVariables, fieldTypeVariable);
++        Class<?> superClass = parentRawClass.getSuperclass();
++        if (superClass.equals(Object.class)) {
++          // The super class is Object, we are at the top of the hierarchy
++          return typeToEvaluate;
++        }
++        ParameterizedType objParameterizedType =
++            (ParameterizedType) getActualType(
++                parentType, superClass.getGenericSuperclass(), superClass);
++        Type[] actualTypeArguments = objParameterizedType.getActualTypeArguments();
++        return actualTypeArguments[indexOfActualTypeArgument];
+       }
+-
+       throw new UnsupportedOperationException("Expecting parameterized type, got " + parentType
+           + ".\n Are you missing the use of TypeToken idiom?\n See "
+           + "http://sites.google.com/site/gson/gson-user-guide#TOC-Serializing-and-Deserializing-Gener");

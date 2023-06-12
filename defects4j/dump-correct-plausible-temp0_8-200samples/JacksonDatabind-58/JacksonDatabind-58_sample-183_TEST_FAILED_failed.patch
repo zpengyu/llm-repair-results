@@ -1,0 +1,16 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/deser/BeanDeserializerFactory.java b/src/main/java/com/fasterxml/jackson/databind/deser/BeanDeserializerFactory.java
+index bc8e6736f..c75c1c510 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/deser/BeanDeserializerFactory.java
++++ b/src/main/java/com/fasterxml/jackson/databind/deser/BeanDeserializerFactory.java
+@@ -712,7 +711,10 @@ public class BeanDeserializerFactory
+             // [databind#877]: explicitly prevent forced access to `cause` of `Throwable`;
+             // never needed and attempts may cause problems on some platforms.
+             // !!! NOTE: should be handled better for 2.8 and later
+-                mutator.fixAccess(ctxt.isEnabled(MapperFeature.OVERRIDE_PUBLIC_ACCESS_MODIFIERS));
++            if (mutator != null && mutator.getName().equals("initCause")
++                    && mutator.getDeclaringClass().isAssignableFrom(Throwable.class)) {
++                mutator = null;
++            }
+         }
+         // note: this works since we know there's exactly one argument for methods
+         BeanProperty.Std property = new BeanProperty.Std(propDef.getFullName(),

@@ -1,0 +1,32 @@
+diff --git a/src/main/java/org/jsoup/helper/DataUtil.java b/src/main/java/org/jsoup/helper/DataUtil.java
+index 4bdf4fe..6fdab44 100644
+--- a/src/main/java/org/jsoup/helper/DataUtil.java
++++ b/src/main/java/org/jsoup/helper/DataUtil.java
+@@ -82,7 +82,6 @@ public class DataUtil {
+                 String foundCharset = meta.hasAttr("http-equiv") ? getCharsetFromContentType(meta.attr("content")) : meta.attr("charset");
+                 if (foundCharset != null && foundCharset.length() != 0 && !foundCharset.equals(defaultCharset)) { // need to re-decode
+                     charsetName = foundCharset;
+-                    byteData.rewind();
+                     docData = Charset.forName(foundCharset).decode(byteData).toString();
+                     doc = null;
+                 }
+@@ -95,13 +94,17 @@ public class DataUtil {
+             // there are times where there is a spurious byte-order-mark at the start of the text. Shouldn't be present
+             // in utf-8. If after decoding, there is a BOM, strip it; otherwise will cause the parser to go straight
+             // into head mode
+-
++            docData = stripBOM(docData);
+             doc = parser.parseInput(docData, baseUri);
+             doc.outputSettings().charset(charsetName);
+         }
+         return doc;
+     }
+-
++    static String stripBOM(String docData) {
++        if (docData.charAt(0) == '\uFEFF')
++            docData = docData.substring(1);
++        return docData;
++    }
+     static ByteBuffer readToByteBuffer(InputStream inStream) throws IOException {
+         byte[] buffer = new byte[bufferSize];
+         ByteArrayOutputStream outStream = new ByteArrayOutputStream(bufferSize);

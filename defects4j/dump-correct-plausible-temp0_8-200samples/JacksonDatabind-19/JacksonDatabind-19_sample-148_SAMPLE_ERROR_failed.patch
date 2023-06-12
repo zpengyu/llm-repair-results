@@ -1,0 +1,18 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/type/TypeFactory.java b/src/main/java/com/fasterxml/jackson/databind/type/TypeFactory.java
+index 6aeb747d2..7048cf186 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/type/TypeFactory.java
++++ b/src/main/java/com/fasterxml/jackson/databind/type/TypeFactory.java
+@@ -1025,7 +1025,12 @@ public final class TypeFactory
+         }
+         // but exactly 2 types if any found
+         if (typeParams.length != 2) {
+-            throw new IllegalArgumentException("Strange Map type "+rawClass.getName()+": can not determine type parameters");
++            if (typeParams.length != 1) {
++                throw new IllegalArgumentException("Strange Map type "+rawClass.getName()+": can not determine type parameters");
++            }
++            // If a single type parameter is found, we can still use that
++            JavaType keyType = _fromAny(null, typeParams[0], TypeBindings.emptyBindings());
++            return MapType.construct(rawClass, keyType, _unknownType());
+         }
+         return MapType.construct(rawClass, typeParams[0], typeParams[1]);
+     }

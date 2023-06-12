@@ -1,0 +1,58 @@
+diff --git a/src/com/google/javascript/rhino/jstype/ArrowType.java b/src/com/google/javascript/rhino/jstype/ArrowType.java
+index 0c0ef637..fd76d3af 100644
+--- a/src/com/google/javascript/rhino/jstype/ArrowType.java
++++ b/src/com/google/javascript/rhino/jstype/ArrowType.java
+@@ -132,27 +126,36 @@ final class ArrowType extends JSType {
+         // checked. Strictly speaking, this is not a correct formulation,
+         // because now a sub-function can required arguments that are var_args
+         // in the super-function. So we special-case this.
+-
+-      // don't advance if we have variable arguments
+-      if (!thisIsVarArgs) {
+-        thisParam = thisParam.getNext();
+-      }
+-      if (!thatIsVarArgs) {
+-        thatParam = thatParam.getNext();
+-      }
+-
+-      // both var_args indicates the end
+-      if (thisIsVarArgs && thatIsVarArgs) {
+-        thisParam = null;
+-        thatParam = null;
++      if (thisParam.isOptionalArg()) {
++        // don't advance if we have variable arguments
++        if (!thisIsVarArgs) {
++          thisParam = thisParam.getNext();
++        }
++        if (!thatIsVarArgs) {
++          thatParam = thatParam.getNext();
++        }
++        // both var_args indicates the end
++        if (thisIsVarArgs && thatIsVarArgs) {
++          thisParam = null;
++          thatParam = null;
++        }
++      } else {
++        // both non-optional, we need to match
++        if (!thisIsVarArgs && !thatIsVarArgs) {
++          thisParam = thisParam.getNext();
++          thatParam = thatParam.getNext();
++        } else {
++          // one is optional and the other is not
++          return false;
++        }
+       }
+     }
+-
+-    // "that" can't be a supertype, because it's missing a required arguement.
+-
++    // "that" can't be a supertype, because it's missing a required argument.
++    if (thatParam != null && !thatParam.isVarArgs() && !thatParam.isOptionalArg()) {
++      return false;
++    }
+     return true;
+   }
+-
+   /**
+    * @return True if our parameter spec is equal to {@code that}'s parameter
+    *     spec.

@@ -1,0 +1,136 @@
+public BaseNCodecInputStream(InputStream in, BaseNCodec baseNCodec, boolean doEncode) {
+        super(in);
+        this.doEncode = doEncode;
+        this.baseNCodec = baseNCodec;
+    }
+    /**
+     * Reads one <code>byte</code> from this input stream.
+     * 
+     * @return the byte as an integer in the range 0 to 255. Returns -1 if EOF has been reached.
+     * @throws IOException
+     *             if an I/O error occurs.
+     */
+    @Override
+    public int read() throws IOException {
+        int r = read(singleByte, 0, 1);
+        while (r == 0) {
+            r = read(singleByte, 0, 1);
+        }
+        if (r > 0) {
+            return singleByte[0] < 0 ? 256 + singleByte[0] : singleByte[0];
+        }
+        return EOF;
+    }
+    /**
+     * Attempts to read <code>len</code> bytes into the specified <code>b</code> array starting at <code>offset</code>
+     * from this InputStream.
+     * 
+     * @param b
+     *            destination byte array
+     * @param offset
+     *            where to start writing the bytes
+     * @param len
+     *            maximum number of bytes to read
+     * 
+     * @return number of bytes read
+     * @throws IOException
+     *             if an I/O error occurs.
+     * @throws NullPointerException
+     *             if the byte array parameter is null
+     * @throws IndexOutOfBoundsException
+     *             if offset, len or buffer size are invalid
+     */
+    @Override
+    public int read(byte b[], int offset, int len) throws IOException {
+        if (b == null) {
+            throw new NullPointerException();
+        } else if (offset < 0 || len < 0) {
+            throw new IndexOutOfBoundsException();
+        } else if (offset > b.length || offset + len > b.length) {
+            throw new IndexOutOfBoundsException();
+        } else if (len == 0) {
+            return 0;
+        } else {
+            final int readLen;
+            if (baseNCodec.hasData()) {
+                readLen = baseNCodec.readResults(b, offset, len);
+            } else {
+                final byte[] buf = new byte[doEncode ? 4096 : 8192];
+                int c = in.read(buf);
+                if (c == -1) {
+                    readLen = EOF;
+                } else if (c == 0) {
+                    readLen = 0;
+                } else {
+                    if (doEncode) {
+                        baseNCodec.encode(buf, 0, c);
+                    } else {
+                        baseNCodec.decode(buf, 0, c);
+                    }
+                    readLen = baseNCodec.readResults(b, offset, len);
+                }
+            }
+            return readLen;
+        }
+    }
+    /**
+     * {@inheritDoc}
+     * 
+     * @return false
+     */
+    @Override
+    public boolean markSupported() {
+        return false; // not an easy job to support marks
+    }
+    /**
+     * {@inheritDoc}
+     *
+     * @throws IllegalArgumentException if the provided skip length is negative
+     */
+    @Override
+    public long skip(final long n) throws IOException {
+        if (n < 0) {
+            throw new IllegalArgumentException("Negative skip length: " + n);
+        }
+        final int max = (int) Math.min(n, MAX_SKIP_BUFFER_SIZE);
+        final int skipBufferSize = (int) Math.min(max, baseNCodec.available());
+        if (skipBufferSize < 0) { // EOF
+            return 0;
+        }
+        final byte[] skipBuffer = new byte[skipBufferSize];
+        final long skip = baseNCodec.readResults(skipBuffer, 0, skipBufferSize);
+        if (skip > 0) {
+            return skip;
+        }
+        // skip in chunks of 512 bytes
+        final int chunkSize = max - skipBufferSize;
+        int totalSkipped = skipBufferSize;
+        int read;
+        int toRead = Math.min(chunkSize, baseNCodec.getEncodedBlockSize());
+        while (totalSkipped < max &&
+                (read = baseNCodec.readResults(skipBuffer, 0, Math.min(toRead, baseNCodec.available()))) > 0) {
+            totalSkipped += read;
+            toRead = Math.min(chunkSize, baseNCodec.getEncodedBlockSize());
+        }
+        return totalSkipped;
+    }
+    /**
+     * {@inheritDoc}
+     *
+     * @return <code>0</code> if the {@link InputStream} has reached <code>EOF</code>,
+     * <code>1</code> otherwise
+     */
+    @Override
+    public int available() throws IOException {
+        return baseNCodec.available() > 0 ? 1 : 0;
+    }
+    /**
+     * {@inheritDoc}
+     *
+     * @throws IOException if an I/O error occurs
+     */
+    @Override
+    public void close() throws IOException {
+        in.close();
+    }
+}

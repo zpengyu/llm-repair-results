@@ -1,0 +1,20 @@
+diff --git a/src/com/google/javascript/jscomp/NodeUtil.java b/src/com/google/javascript/jscomp/NodeUtil.java
+index 933d4ffa..f4e18f49 100644
+--- a/src/com/google/javascript/jscomp/NodeUtil.java
++++ b/src/com/google/javascript/jscomp/NodeUtil.java
+@@ -2487,7 +2486,14 @@ public final class NodeUtil {
+             "\n parent:" + value.getParent());
+     }
+   }
+-
++  private static boolean callHasLocalResult(Node call) {
++    Node fn = call.getFirstChild();
++    if (fn.isFunction()) {
++      return true;
++    }
++    return (fn.isQualifiedName() || fn.isGetProp() || fn.isGetElem())
++        && evaluatesToLocalValue(fn, Predicates.<Node>alwaysTrue());
++  }
+   /**
+    * Given the first sibling, this returns the nth
+    * sibling or null if no such sibling exists.

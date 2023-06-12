@@ -1,0 +1,51 @@
+diff --git a/src/main/java/org/jsoup/parser/TokenQueue.java b/src/main/java/org/jsoup/parser/TokenQueue.java
+index b2f5b48..7a2c387 100644
+--- a/src/main/java/org/jsoup/parser/TokenQueue.java
++++ b/src/main/java/org/jsoup/parser/TokenQueue.java
+@@ -258,31 +258,28 @@ public class TokenQueue {
+      * @return data matched from the queue
+      */
+     public String chompBalanced(char open, char close) {
+-        int start = -1;
+-        int end = -1;
++        if (isEmpty())
++            return "";
++        StringBuilder accum = new StringBuilder();
+         int depth = 0;
+         char last = 0;
+-
+-        do {
+-            if (isEmpty()) break;
+-            Character c = consume();
++        char ch = 0;
++        for (char c : queue.toCharArray()) {
++            if (depth > 0) {
++                accum.append(c);
++            }
+             if (last == 0 || last != ESC) {
+-                if (c.equals(open)) {
++                if (c == open) {
+                     depth++;
+-                    if (start == -1)
+-                        start = pos;
+-                }
+-                else if (c.equals(close))
++                } else if (c == close) {
+                     depth--;
++                }
+             }
+-
+-            if (depth > 0 && last != 0)
+-                end = pos; // don't include the outer match pair in the return
+-            last = c;
+-        } while (depth > 0);
+-        return (end >= 0) ? queue.substring(start, end) : "";
++            last = ch;
++            ch = c;
++        }
++        return accum.toString();
+     }    
+-    
+     /**
+      * Unescaped a \ escaped string.
+      * @param in backslash escaped string

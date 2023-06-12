@@ -1,0 +1,47 @@
+diff --git a/src/main/java/org/jsoup/helper/W3CDom.java b/src/main/java/org/jsoup/helper/W3CDom.java
+index fb864f5..0b6d995 100644
+--- a/src/main/java/org/jsoup/helper/W3CDom.java
++++ b/src/main/java/org/jsoup/helper/W3CDom.java
+@@ -68,7 +68,7 @@ public class W3CDom {
+     protected static class W3CBuilder implements NodeVisitor {
+         private static final String xmlnsKey = "xmlns";
+         private static final String xmlnsPrefix = "xmlns:";
+-
++        private static final String xmlnsColon = ":";
+         private final Document doc;
+         private final HashMap<String, String> namespaces = new HashMap<>();
+         private Element dest;
+@@ -80,11 +78,14 @@ public class W3CDom {
+         public void head(org.jsoup.nodes.Node source, int depth) {
+             if (source instanceof org.jsoup.nodes.Element) {
+                 org.jsoup.nodes.Element sourceEl = (org.jsoup.nodes.Element) source;
+-
+                 String prefix = updateNamespaces(sourceEl);
+                 String namespace = namespaces.get(prefix);
+-
+-                Element el = doc.createElementNS(namespace, sourceEl.tagName());
++                String tagName = sourceEl.tagName();
++                int pos = tagName.indexOf(xmlnsColon);
++                if (pos > 0) {
++                    tagName = tagName.substring(pos+1);
++                }
++                Element el = doc.createElementNS(namespace, tagName);
+                 copyAttributes(sourceEl, el);
+                 if (dest == null) { // sets up the root
+                     doc.appendChild(el);
+@@ -143,14 +141,11 @@ public class W3CDom {
+                 }
+                 namespaces.put(prefix, attr.getValue());
+             }
+-
+             // get the element prefix if any
+-            int pos = el.tagName().indexOf(":");
++            int pos = el.tagName().indexOf(xmlnsColon);
+             return pos > 0 ? el.tagName().substring(0, pos) : "";
+         }
+-
+     }
+-
+     /**
+      * Serialize a W3C document to a String.
+      * @param doc Document

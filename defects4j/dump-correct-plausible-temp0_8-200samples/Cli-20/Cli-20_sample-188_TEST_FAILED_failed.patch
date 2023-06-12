@@ -1,0 +1,44 @@
+diff --git a/src/java/org/apache/commons/cli/PosixParser.java b/src/java/org/apache/commons/cli/PosixParser.java
+index 2b1bbb1..96dbfb4 100644
+--- a/src/java/org/apache/commons/cli/PosixParser.java
++++ b/src/java/org/apache/commons/cli/PosixParser.java
+@@ -111,29 +108,28 @@ public class PosixParser extends Parser {
+             // handle long option --foo or --foo=bar
+             if (token.startsWith("--"))
+             {
+-                if (token.indexOf('=') != -1)
++                int pos = token.indexOf('=');
++                String longOpt = (pos == -1) ? token : token.substring(0, pos);
++                String longOptValue = (pos == -1) ? null : token.substring(pos + 1, token.length());
++                // processLongOption(longOpt, longOptValue);
++                if (longOptValue == null)
+                 {
+-                    tokens.add(token.substring(0, token.indexOf('=')));
+-                    tokens.add(token.substring(token.indexOf('=') + 1, token.length()));
++                    tokens.add(longOpt);
+                 }
+                 else
+                 {
+-                    tokens.add(token);
++                    tokens.add(longOpt);
++                    tokens.add(longOptValue);
+                 }
+             }
+-
+-            // single hyphen
+             else if ("-".equals(token))
+             {
+                 tokens.add(token);
+             }
+             else if (token.startsWith("-"))
+             {
+-                if (token.length() == 2)
+-                {
+-                    processOptionToken(token, stopAtNonOption);
+-                }
+-                else if (options.hasOption(token))
++                // processShortOption(token);
++                if (options.hasOption(token))
+                 {
+                     tokens.add(token);
+                 }

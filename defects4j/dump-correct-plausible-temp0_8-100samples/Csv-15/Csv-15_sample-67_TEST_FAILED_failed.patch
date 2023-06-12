@@ -1,0 +1,24 @@
+diff --git a/src/main/java/org/apache/commons/csv/CSVFormat.java b/src/main/java/org/apache/commons/csv/CSVFormat.java
+index 6d090b6..5daf5ad 100644
+--- a/src/main/java/org/apache/commons/csv/CSVFormat.java
++++ b/src/main/java/org/apache/commons/csv/CSVFormat.java
+@@ -1245,11 +1236,16 @@ public final class CSVFormat implements Serializable {
+                 out.append(value, start, pos + 1);
+                 // put the next starting position on the encapsulator so we will
+                 // write it out again with the next string (effectively doubling it)
+-                start = pos;
++                start = pos++;
++            } else if (c == LF || c == CR || c == delimChar) {
++                // write out the chunk up until this point
++                out.append(value, start, pos);
++                // put the next starting position after the newline
++                start = pos++;
++            } else {
++                pos++;
+             }
+-            pos++;
+         }
+-
+         // write the last segment
+         out.append(value, start, pos);
+         out.append(quoteChar);

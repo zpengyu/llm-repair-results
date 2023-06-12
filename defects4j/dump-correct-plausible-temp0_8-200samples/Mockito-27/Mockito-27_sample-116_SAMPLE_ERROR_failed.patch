@@ -1,0 +1,25 @@
+diff --git a/src/org/mockito/internal/util/MockUtil.java b/src/org/mockito/internal/util/MockUtil.java
+index 3c20596b0..b5e9c1b07 100644
+--- a/src/org/mockito/internal/util/MockUtil.java
++++ b/src/org/mockito/internal/util/MockUtil.java
+@@ -60,12 +60,15 @@ public class MockUtil {
+     }
+ 
+     public <T> void resetMock(T mock) {
+-        MockHandlerInterface<T> oldMockHandler = getMockHandler(mock);
+-        MockHandler<T> newMockHandler = new MockHandler<T>(oldMockHandler);
+-        MethodInterceptorFilter newFilter = new MethodInterceptorFilter(newMockHandler, (MockSettingsImpl) org.mockito.Mockito.withSettings().defaultAnswer(org.mockito.Mockito.RETURNS_DEFAULTS));
+-        ((Factory) mock).setCallback(0, newFilter);
++        if (mock == null) {
++            throw new NullPointerException("mock passed to reset() is null!");
++        }
++        if (!MockUtil.isMock(mock)) {
++            throw new NotAMockException(mock);
++        }
++        MethodInterceptorFilter filter = new MethodInterceptorFilter(new MockHandler(getMockHandler(mock)), (MockSettingsImpl) org.mockito.Mockito.withSettings().defaultAnswer(org.mockito.Mockito.RETURNS_DEFAULTS));
++        ((Factory) mock).setCallback(0, filter);
+     }
+-
+     private <T> MethodInterceptorFilter newMethodInterceptorFilter(MockSettingsImpl settings) {
+         MockHandler<T> mockHandler = new MockHandler<T>(settings);
+         InvocationNotifierHandler<T> invocationNotifierHandler = new InvocationNotifierHandler<T>(mockHandler, settings);

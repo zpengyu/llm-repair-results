@@ -1,0 +1,17 @@
+    public void serialize(Object value, JsonGenerator jgen, SerializerProvider provider) throws IOException {
+        String str;
+        if (value instanceof Date) {
+            Date date = (Date) value;
+            if (_useTimestamp) {
+                provider.defaultSerializeDateKey(date, jgen);
+            } else {
+                // 29-Nov-2010, tatu: This is bit awkward, but we must coerce to SQL style time value...
+                Calendar c = provider.getConfig().getCalendar();
+                c.setTimeInMillis(date.getTime());
+                str = _format.format(c, new StringBuffer(), new FieldPosition(0)).toString();
+            }
+        } else {
+            str = value.toString();
+        }
+        jgen.writeFieldName(str);
+    }

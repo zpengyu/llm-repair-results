@@ -1,0 +1,30 @@
+diff --git a/src/main/java/org/jsoup/helper/DataUtil.java b/src/main/java/org/jsoup/helper/DataUtil.java
+index e4fa18c..8ff2d3f 100644
+--- a/src/main/java/org/jsoup/helper/DataUtil.java
++++ b/src/main/java/org/jsoup/helper/DataUtil.java
+@@ -167,8 +161,23 @@ public final class DataUtil {
+                 throw e.ioException();
+             }
+             Charset charset = Charset.forName(charsetName);
+-            doc.outputSettings().charset(charset);
+-                // some charsets can read but not encode; switch to an encodable charset and update the meta el
++            if (charset.canEncode()) {
++                doc.outputSettings().charset(charset);
++            } else {
++                foundCharset = "UTF-8";
++                charsetName = foundCharset;
++                BufferedReader reader2 = new BufferedReader(new InputStreamReader(input, charsetName), bufferSize);
++                if (bomCharset != null && bomCharset.offset) // creating the buffered reader ignores the input pos, so must skip here
++                    reader2.skip(1);
++                try {
++                    doc = parser.parseInput(reader2, baseUri);
++                } catch (UncheckedIOException e) {
++                    // io exception when parsing (not seen before because reading the stream as we go)
++                    throw e.ioException();
++                }
++                doc.outputSettings().charset(charset);
++            }
++            // some charsets can read but not encode; switch to an encodable charset and update the meta el
+         }
+         input.close();
+         return doc;

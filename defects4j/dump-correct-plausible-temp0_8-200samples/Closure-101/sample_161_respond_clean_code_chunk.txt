@@ -1,0 +1,25 @@
+  protected CompilerOptions createOptions() {
+    CompilerOptions options = new CompilerOptions();
+    options.setCodingConvention(new ClosureCodingConvention());
+    CompilationLevel level = flags.compilation_level;
+    level.setOptionsForCompilationLevel(options);
+    if (flags.debug) {
+      level.setDebugOptionsForCompilationLevel(options);
+    }
+    WarningLevel wLevel = flags.warning_level;
+    wLevel.setOptionsForWarningLevel(options);
+    for (FormattingOption formattingOption : flags.formatting) {
+      formattingOption.applyToOptions(options);
+    }
+    if (flags.process_closure_primitives) {
+      options.closurePass = true;
+    }
+    boolean createSourceMap = flags.create_source_map;
+    boolean sourceMapFormatV3 = flags.source_map_format == SourceMap.Format.V3;
+    if (createSourceMap && sourceMapFormatV3) {
+      options.sourceMapFormat = SourceMap.Format.V3;
+    } else if (createSourceMap) {
+      options.sourceMapFormat = SourceMap.Format.DEFAULT;
+    }
+    return options;
+  }

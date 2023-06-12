@@ -1,0 +1,26 @@
+diff --git a/src/com/google/javascript/jscomp/FlowSensitiveInlineVariables.java b/src/com/google/javascript/jscomp/FlowSensitiveInlineVariables.java
+index 0a7f29c3..f6bc1861 100644
+--- a/src/com/google/javascript/jscomp/FlowSensitiveInlineVariables.java
++++ b/src/com/google/javascript/jscomp/FlowSensitiveInlineVariables.java
+@@ -94,7 +93,10 @@ class FlowSensitiveInlineVariables extends AbstractPostOrderCallback
+         if (n.isCall() && NodeUtil.functionCallHasSideEffects(n)) {
+           return true;
+         }
+-
++        // Change 1: Narrow down the scope of the function by changing if
++        // statement to if else if statement
++        // Change 2: We only want to check the constructor calls if the call
++        // is not a side effect free function call.
+         if (n.isNew() && NodeUtil.constructorCallHasSideEffects(n)) {
+           return true;
+         }
+@@ -106,8 +106,7 @@ class FlowSensitiveInlineVariables extends AbstractPostOrderCallback
+           }
+         }
+         return false;
+-      }
+-  };
++      }  };
+ 
+   public FlowSensitiveInlineVariables(AbstractCompiler compiler) {
+     this.compiler = compiler;

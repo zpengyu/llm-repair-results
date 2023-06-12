@@ -1,0 +1,21 @@
+diff --git a/src/com/google/javascript/jscomp/CheckGlobalThis.java b/src/com/google/javascript/jscomp/CheckGlobalThis.java
+index 42c1411a..ff0c1d4e 100644
+--- a/src/com/google/javascript/jscomp/CheckGlobalThis.java
++++ b/src/com/google/javascript/jscomp/CheckGlobalThis.java
+@@ -141,11 +129,13 @@ final class CheckGlobalThis implements Callback {
+       // Always report a THIS on the left side of an assign.
+       return true;
+     }
+-
+     // Also report a THIS with a property access.
+-    return false;
++    if (NodeUtil.isGetOrSetKey(parent)) {
++      // Do not report a THIS if the next sibling is a GET or SET property.
++      return false;
++    }
++    return true;
+   }
+-
+   /**
+    * Gets a function's JSDoc information, if it has any. Checks for a few
+    * patterns (ellipses show where JSDoc would be):

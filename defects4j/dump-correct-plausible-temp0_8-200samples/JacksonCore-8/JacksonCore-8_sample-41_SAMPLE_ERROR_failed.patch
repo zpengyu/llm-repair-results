@@ -1,0 +1,25 @@
+diff --git a/src/main/java/com/fasterxml/jackson/core/util/TextBuffer.java b/src/main/java/com/fasterxml/jackson/core/util/TextBuffer.java
+index 74f7b4ce..224a0641 100644
+--- a/src/main/java/com/fasterxml/jackson/core/util/TextBuffer.java
++++ b/src/main/java/com/fasterxml/jackson/core/util/TextBuffer.java
+@@ -306,9 +306,18 @@ public final class TextBuffer
+         // Nope; but does it fit in just one segment?
+         if (!_hasSegments)  return _currentSegment;
+         // Nope, need to have/create a non-segmented array and return it
+-        return contentsAsArray();
++        char[] result = _currentSegment = findBuffer(size());
++        int segLen = _currentSegment.length;
++        for (Segment s = _firstSegment; s != null; s = s.next()) {
++            int currLen = s.length();
++            if (currLen < segLen) {
++                result = growArrayBy(result, currLen);
++                segLen = result.length;
++            }
++            System.arraycopy(s.getBuffer(), 0, result, result.length, currLen);
++        }
++        return result;
+     }
+-
+     /*
+     /**********************************************************
+     /* Other accessors:

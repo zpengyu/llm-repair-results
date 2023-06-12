@@ -1,0 +1,88 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/ser/std/DateTimeSerializerBase.java b/src/main/java/com/fasterxml/jackson/databind/ser/std/DateTimeSerializerBase.java
+index ae5fd6538..5ff501f29 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/ser/std/DateTimeSerializerBase.java
++++ b/src/main/java/com/fasterxml/jackson/databind/ser/std/DateTimeSerializerBase.java
+@@ -61,39 +61,63 @@ public abstract class DateTimeSerializerBase<T>
+         if (shape.isNumeric()) {
+             return withFormat(Boolean.TRUE, null);
+         }
+-
+         // 08-Jun-2017, tatu: With [databind#1648], this gets bit tricky..
+         // First: custom pattern will override things
+-                if ((shape == JsonFormat.Shape.STRING) || format.hasPattern()
+-                                || format.hasLocale() || format.hasTimeZone()) {
+-                    TimeZone tz = format.getTimeZone();
+-                    final String pattern = format.hasPattern()
+-                                    ? format.getPattern()
+-                                    : StdDateFormat.DATE_FORMAT_STR_ISO8601;
++        if ((shape == JsonFormat.Shape.STRING) || format.hasPattern()
++                || format.hasLocale() || format.hasTimeZone()) {
++            TimeZone tz = format.getTimeZone();
++            final String pattern = format.hasPattern()
++                    ? format.getPattern()
++                    : StdDateFormat.DATE_FORMAT_STR_ISO8601;
+             final Locale loc = format.hasLocale()
+-                            ? format.getLocale()
+-                            : serializers.getLocale();
+-                    SimpleDateFormat df = new SimpleDateFormat(pattern, loc);
+-                    if (tz == null) {
+-                        tz = serializers.getTimeZone();
+-                    }
++                    ? format.getLocale()
++                    : serializers.getLocale();
++            SimpleDateFormat df = new SimpleDateFormat(pattern, loc);
++            if (tz == null) {
++                tz = serializers.getTimeZone();
++            }
+             df.setTimeZone(tz);
+             return withFormat(Boolean.FALSE, df);
+         }
+-
+         // Otherwise, need one of these changes:
+-
+-
++        // - Force `StdDateFormat`?
++        if (format.hasFeature(JsonFormat.Feature.WRITE_DATES_AS_TIMESTAMPS)) {
++            return withFormat(Boolean.TRUE, null);
++        }
++        // - For DateFormat: change to different format?
++        if (_customFormat != null) {
++            if (format.hasFeature(JsonFormat.Feature.WRITE_DATES_WITH_ZONE_ID)) {
++                return withFormat(Boolean.FALSE,
++                        _customFormat.withZone(serializers.getTimeZone().toZoneId()));
++            }
++            Locale loc = format.hasLocale() ? format.getLocale() : serializers.getLocale();
++            if (format.hasTimeZone()) {
++                return withFormat(Boolean.FALSE, _customFormat.withTimeZone(format.getTimeZone())
++                        .withLocale(loc));
++            }
++            return withFormat(Boolean.FALSE, _customFormat.withLocale(loc));
++        }
+         // Jackson's own `StdDateFormat` is quite easy to deal with...
+-
++        if (_useTimestamp) {
++            StdDateFormat df = StdDateFormat.getBlueprintISO8601Format(serializers.getLocale());
++            if (format.hasTimeZone()) {
++                df = (StdDateFormat) df.withTimeZone(format.getTimeZone());
++            } else {
++                df = (StdDateFormat) df.withTimeZone(serializers.getTimeZone());
++            }
++            if (format.hasLocale()) {
++                df = (StdDateFormat) df.withLocale(format.getLocale());
++            }
++            return withFormat(Boolean.TRUE, df);
++        }
+         // 08-Jun-2017, tatu: Unfortunately there's no generally usable
+         //    mechanism for changing `DateFormat` instances (or even clone()ing)
+         //    So: require it be `SimpleDateFormat`; can't config other types
+ //            serializers.reportBadDefinition(handledType(), String.format(
+-            // Ugh. No way to change `Locale`, create copy; must re-crete completely:
+-        return this;
++        // Ugh. No way to change `Locale`, create copy; must re-crete completely:
++        return withFormat(Boolean.FALSE, new SimpleDateFormat(_format.toPattern(),
++                serializers.getLocale()));
+     }
+-
+     /*
+     /**********************************************************
+     /* Accessors

@@ -1,0 +1,25 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/ser/std/DateTimeSerializerBase.java b/src/main/java/com/fasterxml/jackson/databind/ser/std/DateTimeSerializerBase.java
+index 7709acdcd..002b63c65 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/ser/std/DateTimeSerializerBase.java
++++ b/src/main/java/com/fasterxml/jackson/databind/ser/std/DateTimeSerializerBase.java
+@@ -77,9 +75,18 @@ public abstract class DateTimeSerializerBase<T>
+                 }
+             }
+         }
+-        return this;
++        if (_useTimestamp) {
++            return this;
++        }
++        // Otherwise... need to create a format object.
++        SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ");
++        TimeZone tz = serializers.getTimeZone();
++        if (tz == null) {
++            tz = TimeZone.getTimeZone("GMT");
++        }
++        df.setTimeZone(tz);
++        return withFormat(Boolean.FALSE, df);
+     }
+-
+     /*
+     /**********************************************************
+     /* Accessors

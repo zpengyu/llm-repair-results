@@ -1,0 +1,26 @@
+diff --git a/src/main/java/org/apache/commons/math/stat/correlation/PearsonsCorrelation.java b/src/main/java/org/apache/commons/math/stat/correlation/PearsonsCorrelation.java
+index 2b009fce4..dc94e143b 100644
+--- a/src/main/java/org/apache/commons/math/stat/correlation/PearsonsCorrelation.java
++++ b/src/main/java/org/apache/commons/math/stat/correlation/PearsonsCorrelation.java
+@@ -162,15 +162,13 @@ public class PearsonsCorrelation {
+         int nVars = correlationMatrix.getColumnDimension();
+         double[][] out = new double[nVars][nVars];
+         for (int i = 0; i < nVars; i++) {
+-            for (int j = 0; j < nVars; j++) {
+-                if (i == j) {
+-                    out[i][j] = 0d;
+-                } else {
+-                    double r = correlationMatrix.getEntry(i, j);
+-                    double t = Math.abs(r * Math.sqrt((nObs - 2)/(1 - r * r)));
+-                    out[i][j] = 2 * (1 - tDistribution.cumulativeProbability(t));
+-                }
++            for (int j = i + 1; j < nVars; j++) {
++                double r = correlationMatrix.getEntry(i, j);
++                double t = Math.abs(r * Math.sqrt((nObs - 2)/(1 - r * r)));
++                out[i][j] = 2 * (1 - tDistribution.cumulativeProbability(t));
++                out[j][i] = out[i][j];
+             }
++            out[i][i] = 0d;
+         }
+         return new BlockRealMatrix(out);
+     }

@@ -1,0 +1,19 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/introspect/AnnotatedClass.java b/src/main/java/com/fasterxml/jackson/databind/introspect/AnnotatedClass.java
+index 929076729..fc65f044e 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/introspect/AnnotatedClass.java
++++ b/src/main/java/com/fasterxml/jackson/databind/introspect/AnnotatedClass.java
+@@ -655,7 +655,14 @@ public final class AnnotatedClass
+                      */
+                 } else {
+                     // Well, or, as per [Issue#515], multi-level merge within mixins...
++                    if (m.getDeclaringClass().isAssignableFrom(targetClass)) {
++                        /* 28-Apr-2014, tatu: With [Issue#515], need to verify that
++                         *   the method is actually from a super-class of target class:
++                         *   otherwise it could be a multi-level mix-in (mix-in of mix-in),
++                         *   and can not be called.
++                         */
+                         mixIns.add(_constructMethod(m));
++                    }
+                 }
+             }
+         }

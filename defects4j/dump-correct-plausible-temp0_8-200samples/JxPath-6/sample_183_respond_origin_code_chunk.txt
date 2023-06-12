@@ -1,0 +1,69 @@
+    protected boolean equal(
+        EvalContext context,
+        Expression left,
+        Expression right) {
+        Object l = left.compute(context);
+        Object r = right.compute(context);
+
+//        System.err.println("COMPARING: " +
+//            (l == null ? "null" : l.getClass().getName()) + " " +
+//            (r == null ? "null" : r.getClass().getName()));
+
+        if (l instanceof InitialContext || l instanceof SelfContext) {
+            l = ((EvalContext) l).getSingleNodePointer();
+        }
+
+        if (r instanceof InitialContext || r instanceof SelfContext) {
+            r = ((EvalContext) r).getSingleNodePointer();
+        }
+
+        if (l instanceof Collection) {
+            l = ((Collection) l).iterator();
+        }
+
+        if (r instanceof Collection) {
+            r = ((Collection) r).iterator();
+        }
+
+        if ((l instanceof Iterator) && !(r instanceof Iterator)) {
+            return contains((Iterator) l, r);
+        }
+        if (!(l instanceof Iterator) && (r instanceof Iterator)) {
+            return contains((Iterator) r, l);
+        }
+        if (l instanceof Iterator && r instanceof Iterator) {
+            return findMatch((Iterator) l, (Iterator) r);
+        }
+
+
+        if (l == null || r == null) {
+            return false;
+        }
+        return equal(l, r);
+    }
+
+
+## Make Your Contributions
+
+In order to make your own contribution to this repository, please fork it first.
+After you have made and commited your changes to the forked repo, please send a pull request to the primary repo.
+
+I'll be accepting the pull requests after evaluation.
+
+## License
+
+It is completely free to use. However, if you are using this to produce results for your academic research, I would request you to cite our paper as follows:
+
+```
+@inproceedings{NachiappanMLP16,
+  author = {Nachiappan, Nagappan and Murphy, Brendan and Lawrie, Dan and Begel, Andreas},
+  title = {Predicting the Locality of Software Defects},
+  booktitle = {Proceedings of the 38th International Conference on Software Engineering},
+  series = {ICSE '16},
+  year = {2016},
+  location = {Austin, TX, USA},
+  pages = {461--471},
+  publisher = {ACM},
+  address = {New York, NY, USA},
+} 
+```

@@ -1,0 +1,24 @@
+diff --git a/src/main/java/org/jsoup/parser/TokeniserState.java b/src/main/java/org/jsoup/parser/TokeniserState.java
+index 9eac7f0..a404941 100644
+--- a/src/main/java/org/jsoup/parser/TokeniserState.java
++++ b/src/main/java/org/jsoup/parser/TokeniserState.java
+@@ -1588,12 +1588,14 @@ enum TokeniserState {
+     },
+     CdataSection {
+         void read(Tokeniser t, CharacterReader r) {
+-            String data = r.consumeTo("]]>");
+             t.emit(data);
+-            r.matchConsume("]]>");
+-            t.transition(Data);
+-        }
+-    };
++            if (r.matchConsume("]]>")) {
++                t.transition(Data);
++            } else {
++                t.emit("]]>");
++                t.transition(Data);
++            }
++        }    };
+ 
+ 
+     abstract void read(Tokeniser t, CharacterReader r);

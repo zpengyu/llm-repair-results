@@ -1,0 +1,21 @@
+diff --git a/src/com/google/javascript/jscomp/ProcessClosurePrimitives.java b/src/com/google/javascript/jscomp/ProcessClosurePrimitives.java
+index d1d12a3c..a2097440 100644
+--- a/src/com/google/javascript/jscomp/ProcessClosurePrimitives.java
++++ b/src/com/google/javascript/jscomp/ProcessClosurePrimitives.java
+@@ -806,8 +804,15 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback
+         }
+         compiler.reportCodeChange();
+       }
++      // Make sure that the definition is hoisted, if necessary.
++      if (firstNode != null && firstNode.getParent().getType() == Token.SCRIPT) {
++        // The parent node is the root. We can't move anything higher.
++        if (replacementNode != null) {
++          replacementNode.putBooleanProp(Node.IS_NAMESPACE, true);
++        }
++        return;
++      }
+     }
+-
+     /**
+      * Create the declaration node for this name, without inserting it
+      * into the AST.

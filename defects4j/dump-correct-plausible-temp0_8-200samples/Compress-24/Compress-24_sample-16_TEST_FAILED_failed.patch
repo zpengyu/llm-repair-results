@@ -1,0 +1,28 @@
+diff --git a/src/main/java/org/apache/commons/compress/archivers/tar/TarUtils.java b/src/main/java/org/apache/commons/compress/archivers/tar/TarUtils.java
+index 19d68e84..7540ff0c 100644
+--- a/src/main/java/org/apache/commons/compress/archivers/tar/TarUtils.java
++++ b/src/main/java/org/apache/commons/compress/archivers/tar/TarUtils.java
+@@ -103,11 +103,9 @@ public class TarUtils {
+         long    result = 0;
+         int     end = offset + length;
+         int     start = offset;
+-
+-        if (length < 2){
+-            throw new IllegalArgumentException("Length "+length+" must be at least 2");
++        if (length < 1){
++            throw new IllegalArgumentException("Length "+length+" must be at least 1");
+         }
+-
+         if (buffer[start] == 0) {
+             return 0L;
+         }
+@@ -145,6 +140,9 @@ public class TarUtils {
+                 throw new IllegalArgumentException(
+                         exceptionMessage(buffer, offset, length, start, currentByte));
+             }
++            if (result > 0x1ffffffffL) {
++                throw new NumberFormatException("Number exceeds maximum size of unsigned integer");
++            }
+             result = (result << 3) + (currentByte - '0'); // convert from ASCII
+             // CheckStyle:MagicNumber ON
+         }

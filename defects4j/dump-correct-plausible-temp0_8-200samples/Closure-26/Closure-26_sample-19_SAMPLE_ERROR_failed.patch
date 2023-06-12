@@ -1,0 +1,36 @@
+diff --git a/src/com/google/javascript/jscomp/ProcessCommonJSModules.java b/src/com/google/javascript/jscomp/ProcessCommonJSModules.java
+index f516e584..ecc3f4d6 100644
+--- a/src/com/google/javascript/jscomp/ProcessCommonJSModules.java
++++ b/src/com/google/javascript/jscomp/ProcessCommonJSModules.java
+@@ -239,7 +226,30 @@ public class ProcessCommonJSModules implements CompilerPass {
+       }
+     }
+   }
+-
++  /**
++   * Traverses the script node and suffixes all declared global variables with
++   * the given suffix.
++   */
++  private class SuffixVarsCallback extends AbstractPostOrderCallback {
++    private final String suffix;
++    public SuffixVarsCallback(String suffix) {
++      this.suffix = suffix;
++    }
++    @Override
++    public void visit(NodeTraversal t, Node n, Node parent) {
++      if (n.isName() && parent.isVar()) {
++        Node name = n;
++        String originalName = name.getString();
++        if (t.inGlobalScope()) {
++          // This is a global name, so suffix it.
++          String newName = originalName + suffix;
++          name.putProp(Node.ORIGINALNAME_PROP, originalName);
++          name.setString(newName);
++          compiler.reportCodeChange();
++        }
++      }
++    }
++  }
+   /**
+    * Traverses a node tree and appends a suffix to all global variable names.
+    */

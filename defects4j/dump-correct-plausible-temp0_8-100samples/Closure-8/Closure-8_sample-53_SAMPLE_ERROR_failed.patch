@@ -1,0 +1,70 @@
+diff --git a/src/com/google/javascript/jscomp/CollapseVariableDeclarations.java b/src/com/google/javascript/jscomp/CollapseVariableDeclarations.java
+index 26ca29ca..d618d787 100644
+--- a/src/com/google/javascript/jscomp/CollapseVariableDeclarations.java
++++ b/src/com/google/javascript/jscomp/CollapseVariableDeclarations.java
+@@ -61,64 +61,7 @@ import java.util.Set;
+  * <pre>var c = b = a = true;</pre>
+  *
+  */
+-class CollapseVariableDeclarations implements CompilerPass {
+-  /** Reference to JS Compiler */
+-  private final AbstractCompiler compiler;
+-
+-  /** Encapsulation of information about a variable declaration collapse */
+-  private static class Collapse {
+-    /**
+-     * Variable declaration that any following var nodes should be
+-     * collapsed into
+-     */
+-    final Node startNode;
+-
+-    /**
+-     * Last node (non-inclusive) of the chain of nodes to collapse.
+-     */
+-    final Node endNode;
+-
+-    /** Parent of the nodes to the collapse */
+-    final Node parent;
+-
+-    Collapse(Node startNode, Node endNode, Node parent) {
+-      this.startNode = startNode;
+-      this.endNode = endNode;
+-      this.parent = parent;
+-    }
+-  }
+-
+-  /**
+-   * Collapses to do in this pass.
+-   */
+-  private final List<Collapse> collapses = Lists.newArrayList();
+-
+-  /**
+-   * Nodes we've already looked at for collapsing, so that we don't look at them
+-   * again (we look ahead when examining what nodes can be collapsed, and the
+-   * node traversal may give them to us again)
+-   */
+-  private final Set<Node> nodesToCollapse = Sets.newHashSet();
+-
+-  CollapseVariableDeclarations(AbstractCompiler compiler) {
+-    Preconditions.checkState(!compiler.getLifeCycleStage().isNormalized());
+-    this.compiler = compiler;
+-  }
+-
+-  @Override
+-  public void process(Node externs, Node root) {
+-    collapses.clear();
+-    nodesToCollapse.clear();
+-
+-    NodeTraversal.traverse(compiler, root, new GatherCollapses());
+-
+-    if (!collapses.isEmpty()) {
+-      applyCollapses();
+-      compiler.reportCodeChange();
+-    }
+-  }
+-
+-  /**
++/**
+    * Gathers all of the variable declarations / assignments that should be
+    * collapsed into one.
+    *

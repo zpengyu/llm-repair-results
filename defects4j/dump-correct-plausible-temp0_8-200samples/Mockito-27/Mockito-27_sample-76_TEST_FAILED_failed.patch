@@ -1,0 +1,17 @@
+diff --git a/src/org/mockito/internal/util/MockUtil.java b/src/org/mockito/internal/util/MockUtil.java
+index 3c20596b0..c5e1a359e 100644
+--- a/src/org/mockito/internal/util/MockUtil.java
++++ b/src/org/mockito/internal/util/MockUtil.java
+@@ -63,9 +63,10 @@ public class MockUtil {
+         MockHandlerInterface<T> oldMockHandler = getMockHandler(mock);
+         MockHandler<T> newMockHandler = new MockHandler<T>(oldMockHandler);
+         MethodInterceptorFilter newFilter = new MethodInterceptorFilter(newMockHandler, (MockSettingsImpl) org.mockito.Mockito.withSettings().defaultAnswer(org.mockito.Mockito.RETURNS_DEFAULTS));
+-        ((Factory) mock).setCallback(0, newFilter);
++        if(!(mock instanceof Serializable)) {
++            ((Factory) mock).setCallback(0, newFilter);
++        }
+     }
+-
+     private <T> MethodInterceptorFilter newMethodInterceptorFilter(MockSettingsImpl settings) {
+         MockHandler<T> mockHandler = new MockHandler<T>(settings);
+         InvocationNotifierHandler<T> invocationNotifierHandler = new InvocationNotifierHandler<T>(mockHandler, settings);

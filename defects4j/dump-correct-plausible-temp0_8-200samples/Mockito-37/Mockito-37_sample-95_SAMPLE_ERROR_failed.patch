@@ -1,0 +1,31 @@
+diff --git a/src/org/mockito/internal/stubbing/answers/AnswersValidator.java b/src/org/mockito/internal/stubbing/answers/AnswersValidator.java
+index 5d8057846..c353e9da5 100644
+--- a/src/org/mockito/internal/stubbing/answers/AnswersValidator.java
++++ b/src/org/mockito/internal/stubbing/answers/AnswersValidator.java
+@@ -24,10 +20,23 @@ public class AnswersValidator {
+         if (answer instanceof DoesNothing) {
+             validateDoNothing((DoesNothing) answer, invocation);
+         }
+-        
++        if (answer instanceof CallsRealMethods) {
++            validateCallsRealMethods((CallsRealMethods) answer, invocation);
++        }
++        if (answer instanceof ReturnsArgumentAt) {
++            validateReturnsArgumentAt((ReturnsArgumentAt) answer, invocation);
++        }
++    }
++    private void validateReturnsArgumentAt(ReturnsArgumentAt answer, Invocation invocation) {
++        if (invocation.getMethod().getParameterTypes().length < answer.getIndex() && !invocation.isValidReturnType(invocation.getMethod().getParameterTypes()[answer.getIndex()])) {
++            reporter.wrongTypeOfReturnValue(invocation.printMethodReturnType(), invocation.printMethodParameterType(answer.getIndex()), invocation.getMethodName());
++        }
++    }
++    private void validateCallsRealMethods(CallsRealMethods answer, Invocation invocation) {
++        if (Modifier.isFinal(invocation.getMethod().getModifiers())) {
++            reporter.cannotCallRealMethodOnFinalMethod();
++        }
+     }
+-
+-
+     private void validateDoNothing(DoesNothing answer, Invocation invocation) {
+         if (!invocation.isVoid()) {
+             reporter.onlyVoidMethodsCanBeSetToDoNothing();

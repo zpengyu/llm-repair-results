@@ -1,0 +1,32 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/type/TypeFactory.java b/src/main/java/com/fasterxml/jackson/databind/type/TypeFactory.java
+index 6aeb747d2..9e90ba2e7 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/type/TypeFactory.java
++++ b/src/main/java/com/fasterxml/jackson/databind/type/TypeFactory.java
+@@ -1017,7 +1017,6 @@ public final class TypeFactory
+ 
+     private JavaType _mapType(Class<?> rawClass)
+     {
+-        // 28-May-2015, tatu: Properties are special, as per [databind#810]
+         JavaType[] typeParams = findTypeParameters(rawClass, Map.class);
+         // ok to have no types ("raw")
+         if (typeParams == null) {
+@@ -1025,11 +1024,17 @@ public final class TypeFactory
+         }
+         // but exactly 2 types if any found
+         if (typeParams.length != 2) {
+-            throw new IllegalArgumentException("Strange Map type "+rawClass.getName()+": can not determine type parameters");
++            return _mapType2(rawClass, typeParams);
+         }
+         return MapType.construct(rawClass, typeParams[0], typeParams[1]);
+     }
+-
++    protected JavaType _mapType2(Class<?> rawClass, JavaType[] typeParams)
++    {
++        if (typeParams.length != 0) {
++            throw new IllegalArgumentException("Strange Map type "+rawClass.getName()+": can not determine type parameters");
++        }
++        return MapType.construct(rawClass, _unknownType(), _unknownType());
++    }
+     private JavaType _collectionType(Class<?> rawClass)
+     {
+         JavaType[] typeParams = findTypeParameters(rawClass, Collection.class);

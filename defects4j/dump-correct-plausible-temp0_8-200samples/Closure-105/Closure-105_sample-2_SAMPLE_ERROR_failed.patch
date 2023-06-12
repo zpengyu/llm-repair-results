@@ -1,0 +1,45 @@
+diff --git a/src/com/google/javascript/jscomp/FoldConstants.java b/src/com/google/javascript/jscomp/FoldConstants.java
+index 003743b3..f25f5834 100644
+--- a/src/com/google/javascript/jscomp/FoldConstants.java
++++ b/src/com/google/javascript/jscomp/FoldConstants.java
+@@ -1458,6 +1458,12 @@ class FoldConstants extends AbstractPostOrderCallback
+   /**
+    * Try to fold an array join: ['a', 'b', 'c'].join('') -> 'abc';
+    */
++private String tryFoldStringJoin(String joinString, String s1, String s2) {
++  if (s1.length() + s2.length() + joinString.length() > MAX_STRING_LENGTH) {
++    return null;
++  }
++  return s1 + joinString + s2;
++}
+   void tryFoldStringJoin(NodeTraversal t, Node n, Node left, Node right,
+                          Node parent) {
+     if (!NodeUtil.isGetProp(left) || !NodeUtil.isImmutableValue(right)) {
+@@ -1540,9 +1539,27 @@ class FoldConstants extends AbstractPostOrderCallback
+           return;
+         }
+         arrayNode.detachChildren();
++        String last = null;
+         for (Node node : arrayFoldedChildren) {
++          if (node.getType() == Token.STRING) {
++            String cur = node.getString();
++            if (last != null) {
++              String concat = tryFoldStringJoin(joinString, last, cur);
++              if (concat != null) {
++                arrayNode.addChildToBack(Node.newString(concat));
++                last = null;
++                continue;
++              }
++            }
++            last = cur;
++          } else {
++            last = null;
++          }
+           arrayNode.addChildToBack(node);
+         }
++        if (last != null) {
++          arrayNode.addChildToBack(Node.newString(last));
++        }
+         break;
+     }
+     t.getCompiler().reportCodeChange();

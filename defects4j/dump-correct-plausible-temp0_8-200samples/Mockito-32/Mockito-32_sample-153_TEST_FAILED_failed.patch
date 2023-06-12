@@ -1,0 +1,33 @@
+diff --git a/src/org/mockito/internal/configuration/SpyAnnotationEngine.java b/src/org/mockito/internal/configuration/SpyAnnotationEngine.java
+index e292e1300..a0d06a9de 100644
+--- a/src/org/mockito/internal/configuration/SpyAnnotationEngine.java
++++ b/src/org/mockito/internal/configuration/SpyAnnotationEngine.java
+@@ -35,12 +35,22 @@ public class SpyAnnotationEngine implements AnnotationEngine {
+                 try {
+                     Object instance = field.get(testClass);
+                     if (instance == null) {
+-                        throw new MockitoException("Cannot create a @Spy for '" + field.getName() + "' field because the *instance* is missing\n" +
+-                        		  "The instance must be created *before* initMocks();\n" +
+-                                  "Example of correct usage of @Spy:\n" +
+-                            	  "   @Spy List mock = new LinkedList();\n" +
+-                            	  "   //also, don't forget about MockitoAnnotations.initMocks();");
+-
++                        try {
++                            instance = field.getType().newInstance();
++                        } catch (InstantiationException e) {
++                            throw new MockitoException("Cannot create a @Spy for '" + field.getName() + "' field because the *instance* is missing\n" +
++                          		  "The instance must be created *before* initMocks();\n" +
++                                    "Example of correct usage of @Spy:\n" +
++                              	  "   @Spy List mock = new LinkedList();\n" +
++                              	  "   //also, don't forget about MockitoAnnotations.initMocks();", e);
++                        } catch (IllegalAccessException e) {
++                            throw new MockitoException("Cannot create a @Spy for '" + field.getName() + "' field because the *instance* is missing\n" +
++                          		  "The instance must be created *before* initMocks();\n" +
++                                    "Example of correct usage of @Spy:\n" +
++                              	  "   @Spy List mock = new LinkedList();\n" +
++                              	  "   //also, don't forget about MockitoAnnotations.initMocks();", e);
++                        }
++                        field.set(testClass, instance);
+                     }
+                     if (new MockUtil().isMock(instance)) { 
+                         // instance has been spied earlier

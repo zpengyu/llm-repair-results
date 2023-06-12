@@ -1,0 +1,26 @@
+diff --git a/src/org/mockito/internal/configuration/DefaultInjectionEngine.java b/src/org/mockito/internal/configuration/DefaultInjectionEngine.java
+index 213ebf351..f5c51622c 100644
+--- a/src/org/mockito/internal/configuration/DefaultInjectionEngine.java
++++ b/src/org/mockito/internal/configuration/DefaultInjectionEngine.java
+@@ -90,10 +90,19 @@ public class DefaultInjectionEngine {
+ 
+     private void injectMockCandidate(Class<?> awaitingInjectionClazz, Set<Object> mocks, Object fieldInstance) {
+         for(Field field : orderedInstanceFieldsFrom(awaitingInjectionClazz)) {
+-            mockCandidateFilter.filterCandidate(mocks, field, fieldInstance).thenInject();
++            for(Object mock : mocks){
++                if(matchesField(mock, field)){
++                    inject(fieldInstance, field, mock);
++                }
++            }
+         }
+     }
+-
++    private boolean matchesField(Object mock, Field field) {
++        if(mock.getClass().equals(field.getType())){
++            return true;
++        }
++        return false;
++    }
+     private Field[] orderedInstanceFieldsFrom(Class<?> awaitingInjectionClazz) {
+         Field[] declaredFields = awaitingInjectionClazz.getDeclaredFields();
+         Arrays.sort(declaredFields, supertypesLast);

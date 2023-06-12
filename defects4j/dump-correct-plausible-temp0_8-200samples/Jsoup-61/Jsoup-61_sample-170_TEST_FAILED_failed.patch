@@ -1,0 +1,65 @@
+diff --git a/src/main/java/org/jsoup/nodes/Element.java b/src/main/java/org/jsoup/nodes/Element.java
+index 6aeaeb5..986144e 100644
+--- a/src/main/java/org/jsoup/nodes/Element.java
++++ b/src/main/java/org/jsoup/nodes/Element.java
+@@ -1089,48 +1089,25 @@ public class Element extends Node {
+      */
+     // performance sensitive
+     public boolean hasClass(String className) {
+-        final String classAttr = attributes.get("class");
+-        final int len = classAttr.length();
+-        final int wantLen = className.length();
+-
+-        if (len == 0 || len < wantLen) {
++        String classAttr = attributes.get("class");
++        if (classAttr == null || classAttr.length() == 0) {
+             return false;
+         }
+-
+-        // if both lengths are equal, only need compare the className with the attribute
+-        if (len == wantLen) {
+-            return className.equalsIgnoreCase(classAttr);
+-        }
+-
+-        // otherwise, scan for whitespace and compare regions (with no string or arraylist allocations)
+-        boolean inClass = false;
++        // trim leading and trailing whitespace
++        classAttr = classAttr.trim();
+         int start = 0;
+-        for (int i = 0; i < len; i++) {
+-            if (Character.isWhitespace(classAttr.charAt(i))) {
+-                if (inClass) {
+-                    // white space ends a class name, compare it with the requested one, ignore case
+-                    if (i - start == wantLen && classAttr.regionMatches(true, start, className, 0, wantLen)) {
+-                        return true;
+-                    }
+-                    inClass = false;
+-                }
+-            } else {
+-                if (!inClass) {
+-                    // we're in a class name : keep the start of the substring
+-                    inClass = true;
+-                    start = i;
+-                }
++        while (start < classAttr.length()) {
++            int checkStart = start;
++            while (checkStart < classAttr.length() && classAttr.charAt(checkStart) != ' ') {
++                checkStart++;
+             }
++            if (checkStart - start == className.length() && classAttr.substring(start, checkStart).equalsIgnoreCase(className)) {
++                return true;
++            }
++            start = checkStart + 1;
+         }
+-
+-        // check the last entry
+-        if (inClass && len - start == wantLen) {
+-            return classAttr.regionMatches(true, start, className, 0, wantLen);
+-        }
+-
+         return false;
+     }
+-
+     /**
+      Add a class name to this element's {@code class} attribute.
+      @param className class name to add

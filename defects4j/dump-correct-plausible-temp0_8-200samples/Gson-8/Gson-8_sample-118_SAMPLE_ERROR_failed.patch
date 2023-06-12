@@ -1,0 +1,35 @@
+diff --git a/gson/src/main/java/com/google/gson/internal/UnsafeAllocator.java b/gson/src/main/java/com/google/gson/internal/UnsafeAllocator.java
+index a72d3d10..2d7cda26 100644
+--- a/gson/src/main/java/com/google/gson/internal/UnsafeAllocator.java
++++ b/gson/src/main/java/com/google/gson/internal/UnsafeAllocator.java
+@@ -68,6 +66,9 @@ public abstract class UnsafeAllocator {
+         @Override
+         @SuppressWarnings("unchecked")
+         public <T> T newInstance(Class<T> c) throws Exception {
++          if (!isInstantiable(c)) {
++            throw new UnsupportedOperationException("Cannot allocate " + c);
++          }
+           return (T) newInstance.invoke(null, c, constructorId);
+         }
+       };
+@@ -87,6 +87,9 @@ public abstract class UnsafeAllocator {
+         @Override
+         @SuppressWarnings("unchecked")
+         public <T> T newInstance(Class<T> c) throws Exception {
++          if (!isInstantiable(c)) {
++            throw new UnsupportedOperationException("Cannot allocate " + c);
++          }
+           return (T) newInstance.invoke(null, c, Object.class);
+         }
+       };
+@@ -107,4 +108,9 @@ public abstract class UnsafeAllocator {
+    * throw an {@link java.lang.UnsupportedOperationException}
+    * @param c instance of the class to be checked
+    */
++  private static boolean isInstantiable(Class<?> c) {
++    boolean abstractModifier = (c.getModifiers() & Modifier.ABSTRACT) == Modifier.ABSTRACT;
++    boolean interfaceModifier = (c.getModifiers() & Modifier.INTERFACE) == Modifier.INTERFACE;
++    return !abstractModifier && !interfaceModifier;
++  }
+ }
+\ No newline at end of file

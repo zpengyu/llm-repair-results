@@ -1,0 +1,19 @@
+diff --git a/src/main/java/org/jsoup/helper/DataUtil.java b/src/main/java/org/jsoup/helper/DataUtil.java
+index 19d32d8..2a212e6 100644
+--- a/src/main/java/org/jsoup/helper/DataUtil.java
++++ b/src/main/java/org/jsoup/helper/DataUtil.java
+@@ -103,9 +101,12 @@ public final class DataUtil {
+         // read the start of the stream and look for a BOM or meta charset
+         input.mark(bufferSize);
+         ByteBuffer firstBytes = readToByteBuffer(input, firstReadBufferSize - 1); // -1 because we read one more to see if completed. First read is < buffer size, so can't be invalid.
+-        fullyRead = input.read() == -1;
++        if (firstBytes.limit() < firstReadBufferSize - 1) {
++            fullyRead = true;
++        } else {
++            fullyRead = input.read() == -1;
++        }
+         input.reset();
+-
+         // look for BOM - overrides any other header or input
+         BomCharset bomCharset = detectCharsetFromBom(firstBytes);
+         if (bomCharset != null)

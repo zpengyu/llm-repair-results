@@ -1,0 +1,30 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/deser/BasicDeserializerFactory.java b/src/main/java/com/fasterxml/jackson/databind/deser/BasicDeserializerFactory.java
+index 81acbdb27..655a8c2b3 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/deser/BasicDeserializerFactory.java
++++ b/src/main/java/com/fasterxml/jackson/databind/deser/BasicDeserializerFactory.java
+@@ -742,8 +740,24 @@ nonAnnotatedParamIndex, ctor);
+             creators.addPropertyCreator(candidate.creator(), true, properties);
+             return;
+         }
++        // 26-May-2018, tatu: Delegates -- not sure how I feel about this.
++        //    For now, let's just try see if we can get something working...
++        if (ctxt.isEnabled(MapperFeature.ALLOW_EXPLICIT_PROPERTY_RENAMING)) {
++            // and if so, we should be able to use it
++            PropertyName name0 = paramDef.getFullName();
++            if (name0 != null && name0.hasSimpleName()) {
++                final String nameStr = name0.getSimpleName();
++                if (nameStr.length() > 0) {
++                    // 07-Sep-2018, tatu: Should be ok to pass `null` as PropertyName here, right?
++                    SettableBeanProperty[] properties = new SettableBeanProperty[] {
++                            _propertyWithSimpleName(ctxt, param, nameStr)
++                    };
++                    creators.addPropertyCreator(candidate.creator(), true, properties);
++                    return;
++                }
++            }
++        }
+         _handleSingleArgumentCreator(creators, candidate.creator(), true, true);
+-
+         // one more thing: sever link to creator property, to avoid possible later
+         // problems with "unresolved" constructor property
+         if (paramDef != null) {

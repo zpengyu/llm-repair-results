@@ -1,0 +1,42 @@
+diff --git a/src/main/java/com/fasterxml/jackson/core/json/JsonGeneratorImpl.java b/src/main/java/com/fasterxml/jackson/core/json/JsonGeneratorImpl.java
+index 81b90fed..7fbd1f3f 100644
+--- a/src/main/java/com/fasterxml/jackson/core/json/JsonGeneratorImpl.java
++++ b/src/main/java/com/fasterxml/jackson/core/json/JsonGeneratorImpl.java
+@@ -194,4 +168,36 @@ public abstract class JsonGeneratorImpl extends GeneratorBase
+         writeFieldName(fieldName);
+         writeString(value);
+     }
++    /*
++    /**********************************************************
++    /* Public API, write methods, structural
++    /**********************************************************
++     */
++    @Override
++    public final void writeStartArray() throws IOException {
++        _verifyValueWrite("start an array");
++        _writeContext = _writeContext.createChildArrayContext();
++        if (_cfgPrettyPrinter != null) {
++            _cfgPrettyPrinter.writeStartArray(this);
++        } else {
++            if (Feature.WRITE_END_MARKER.enabledIn(_features)) {
++                _writeEndMarker();
++            }
++        }
++    }
++    @Override
++    public final void writeEndArray() throws IOException
++    {
++        if (!_writeContext.inArray()) {
++            _reportError("Current context not an ARRAY but "+_writeContext.typeDesc());
++        }
++        if (_cfgPrettyPrinter != null) {
++            _cfgPrettyPrinter.writeEndArray(this, _writeContext.getEntryCount());
++        } else {
++            if (Feature.WRITE_END_MARKER.enabledIn(_features)) {
++                _writeEndMarker();
++            }
++        }
++        _writeContext = _writeContext.clearAndGetParent();
++    }
+ }
+\ No newline at end of file

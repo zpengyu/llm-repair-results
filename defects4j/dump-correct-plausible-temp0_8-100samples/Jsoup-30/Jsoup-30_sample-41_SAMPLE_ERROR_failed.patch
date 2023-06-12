@@ -1,0 +1,16 @@
+diff --git a/src/main/java/org/jsoup/safety/Cleaner.java b/src/main/java/org/jsoup/safety/Cleaner.java
+index c6879b1..bdc02a3 100644
+--- a/src/main/java/org/jsoup/safety/Cleaner.java
++++ b/src/main/java/org/jsoup/safety/Cleaner.java
+@@ -88,7 +78,10 @@ public class Cleaner {
+                 }
+             } else if (source instanceof TextNode) {
+                 TextNode sourceText = (TextNode) source;
+-                TextNode destText = new TextNode(sourceText.getWholeText(), source.baseUri());
++                String wholeText = sourceText.getWholeText();
++                if (!whitelist.isSafeTag(sourceText.parent().nodeName()))
++                    wholeText = StringUtil.normaliseWhitespace(wholeText);
++                TextNode destText = new TextNode(wholeText, source.baseUri());
+                 destination.appendChild(destText);
+             }
+         }

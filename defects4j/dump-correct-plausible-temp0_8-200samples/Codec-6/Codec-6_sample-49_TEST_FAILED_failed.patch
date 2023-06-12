@@ -1,0 +1,61 @@
+diff --git a/src/java/org/apache/commons/codec/binary/Base64InputStream.java b/src/java/org/apache/commons/codec/binary/Base64InputStream.java
+index 90a35578..318baead 100644
+--- a/src/java/org/apache/commons/codec/binary/Base64InputStream.java
++++ b/src/java/org/apache/commons/codec/binary/Base64InputStream.java
+@@ -161,24 +160,41 @@ public class Base64InputStream extends FilterInputStream {
+              -----
+              This is a fix for CODEC-101
+             */
+-                if (!base64.hasData()) {
+-                    byte[] buf = new byte[doEncode ? 4096 : 8192];
+-                    int c = in.read(buf);
+-                    // A little optimization to avoid System.arraycopy()
+-                    // when possible.
+-                    if (c > 0 && b.length == len) {
+-                        base64.setInitialBuffer(b, offset, len);
+-                    }
+-                    if (doEncode) {
+-                        base64.encode(buf, 0, c);
+-                    } else {
+-                        base64.decode(buf, 0, c);
+-                    }
++            if (base64.hasData() == false) {
++                byte[] buf = new byte[doEncode ? 4096 : 8192];
++                int c = in.read(buf);
++                // A little optimization to avoid System.arraycopy()
++                // when possible.
++                if (c > 0 && b.length == len) {
++                    base64.setInitialBuffer(b, offset, len);
++                }
++                if (doEncode) {
++                    base64.encode(buf, 0, c);
++                } else {
++                    base64.decode(buf, 0, c);
++                }
++            }
++            int readLen = base64.readResults(b, offset, len);
++            while (readLen == 0) {
++                // We must be polling for more data.
++                if (in.available() <= 0) {
++                    break;
+                 }
+-            return base64.readResults(b, offset, len);
++                byte[] buf = new byte[doEncode ? 4096 : 8192];
++                int c = in.read(buf);
++                if (c == -1) {
++                    break;
++                }
++                if (doEncode) {
++                    base64.encode(buf, 0, c);
++                } else {
++                    base64.decode(buf, 0, c);
++                }
++                readLen = base64.readResults(b, offset, len);
++            }
++            return readLen;
+         }
+     }
+-
+     /**
+      * {@inheritDoc}
+      * 

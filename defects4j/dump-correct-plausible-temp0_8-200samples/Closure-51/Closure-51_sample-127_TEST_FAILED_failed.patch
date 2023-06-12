@@ -1,0 +1,19 @@
+diff --git a/src/com/google/javascript/jscomp/CodeConsumer.java b/src/com/google/javascript/jscomp/CodeConsumer.java
+index dbdb0a9b..0c01ddda 100644
+--- a/src/com/google/javascript/jscomp/CodeConsumer.java
++++ b/src/com/google/javascript/jscomp/CodeConsumer.java
+@@ -281,9 +240,11 @@ abstract class CodeConsumer {
+    * @return Whether the a line break can be added after the specified BLOCK.
+    */
+   boolean breakAfterBlockFor(Node n, boolean statementContext) {
+-    return statementContext;
++    // Never allow a line-break after a block in a CONTROL_BLOCK.
++    // e.g. "if (x) { foo(); }" or "while (x) { foo(); }"
++    // Instead we force line-breaks before such statements.
++    return statementContext && NodeUtil.isControlStructure(n.getParent());
+   }
+-
+   /** Called when we're at the end of a file. */
+   void endFile() {}
+ }
+\ No newline at end of file

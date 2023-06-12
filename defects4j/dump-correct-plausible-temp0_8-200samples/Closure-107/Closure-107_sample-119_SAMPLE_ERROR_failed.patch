@@ -1,0 +1,33 @@
+diff --git a/src/com/google/javascript/jscomp/CommandLineRunner.java b/src/com/google/javascript/jscomp/CommandLineRunner.java
+index eb937f1c..2b382c48 100644
+--- a/src/com/google/javascript/jscomp/CommandLineRunner.java
++++ b/src/com/google/javascript/jscomp/CommandLineRunner.java
+@@ -860,10 +850,26 @@ public class CommandLineRunner extends
+       // because the user didn't really ask for i18n.
+       options.messageBundle = new EmptyMessageBundle();
+     }
+-
++    if (flags.processCommonJsModules) {
++      options.setCommonJSModulePathPrefix(
++          getCommonJsPathPrefix(
++              Compiler.getNormalizedFilename(flags.commonJsEntryModule),
++              flags.commonJsPathPrefix));
++    }
+     return options;
+   }
+-
++  private String getCommonJsPathPrefix(
++      String commonJsEntryModule, String customPathPrefix) {
++    if (customPathPrefix != null) {
++      return customPathPrefix;
++    }
++    // Try to find the longest prefix in common JS entry module
++    int prefixIndex = commonJsEntryModule.lastIndexOf('/');
++    if (prefixIndex == -1) {
++      return "";
++    }
++    return commonJsEntryModule.substring(0, prefixIndex + 1);
++  }
+   @Override
+   protected Compiler createCompiler() {
+     return new Compiler(getErrorPrintStream());

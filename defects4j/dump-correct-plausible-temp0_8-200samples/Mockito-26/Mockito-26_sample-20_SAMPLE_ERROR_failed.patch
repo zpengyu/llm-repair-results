@@ -1,0 +1,89 @@
+diff --git a/src/org/mockito/internal/util/Primitives.java b/src/org/mockito/internal/util/Primitives.java
+index b44b8253d..4692e9361 100644
+--- a/src/org/mockito/internal/util/Primitives.java
++++ b/src/org/mockito/internal/util/Primitives.java
+@@ -9,52 +9,53 @@ import java.util.Map;
+ 
+ @SuppressWarnings("unchecked")
+ public class Primitives {
+-    
+-    public static <T> Class<T> primitiveTypeOf(Class<T> clazz) {
+-        if(clazz.isPrimitive()) {
++    public static <T> Class<T> wrapperOf(Class<T> clazz) {
++        if(!clazz.isPrimitive()) {
+             return clazz;
+         }
+-        return (Class<T>) primitiveTypes.get(clazz);
++        return (Class<T>) wrapperTypes.get(clazz);
+     }
+-
+-    public static boolean isPrimitiveWrapper(Class<?> type) {
+-        return wrapperReturnValues.containsKey(type);
++    public static boolean isWrapperType(Class<?> type) {
++        return wrapperTypes.containsValue(type);
+     }
+-
+-    public static <T> T primitiveWrapperOf(Class<T> type) {
+-        return (T) wrapperReturnValues.get(type);
++    public static <T> T defaultValue(Class<T> type) {
++        return (T) defaultValues.get(type);
+     }
+-
+     public static <T> T primitiveValueOrNullFor(Class<T> primitiveType) {
+         return (T) primitiveValues.get(primitiveType);
+     }
+     private static Map<Class<?>, Class<?>> wrapperTypes = new HashMap<Class<?>, Class<?>>();
+     private static Map<Class<?>, Class<?>> primitiveTypes = new HashMap<Class<?>, Class<?>>();
+-    private static Map<Class<?>, Object> wrapperReturnValues = new HashMap<Class<?>, Object>();
++    private static Map<Class<?>, Object> defaultValues = new HashMap<Class<?>, Object>();
+     private static Map<Class<?>, Object> primitiveValues = new HashMap<Class<?>, Object>();
+-
+     static {
+-        primitiveTypes.put(Boolean.class, Boolean.TYPE);
+-        primitiveTypes.put(Character.class, Character.TYPE);
+-        primitiveTypes.put(Byte.class, Byte.TYPE);
+-        primitiveTypes.put(Short.class, Short.TYPE);
+-        primitiveTypes.put(Integer.class, Integer.TYPE);
+-        primitiveTypes.put(Long.class, Long.TYPE);
+-        primitiveTypes.put(Float.class, Float.TYPE);
+-        primitiveTypes.put(Double.class, Double.TYPE);
++        wrapperTypes.put(Boolean.TYPE, Boolean.class);
++        wrapperTypes.put(Character.TYPE, Character.class);
++        wrapperTypes.put(Byte.TYPE, Byte.class);
++        wrapperTypes.put(Short.TYPE, Short.class);
++        wrapperTypes.put(Integer.TYPE, Integer.class);
++        wrapperTypes.put(Long.TYPE, Long.class);
++        wrapperTypes.put(Float.TYPE, Float.class);
++        wrapperTypes.put(Double.TYPE, Double.class);
+     }
+-
+     static {
+-        wrapperReturnValues.put(Boolean.class, false);
+-        wrapperReturnValues.put(Character.class, '\u0000');
+-        wrapperReturnValues.put(Byte.class, (byte) 0);
+-        wrapperReturnValues.put(Short.class, (short) 0);
+-        wrapperReturnValues.put(Integer.class, 0);
+-        wrapperReturnValues.put(Long.class, 0L);
+-        wrapperReturnValues.put(Float.class, 0F);
+-        wrapperReturnValues.put(Double.class, 0D);
++        defaultValues.put(boolean.class, false);
++        defaultValues.put(char.class, '\u0000');
++        defaultValues.put(byte.class, (byte) 0);
++        defaultValues.put(short.class, (short) 0);
++        defaultValues.put(int.class, 0);
++        defaultValues.put(long.class, 0L);
++        defaultValues.put(float.class, 0F);
++        defaultValues.put(double.class, 0D);
++        defaultValues.put(Boolean.class, false);
++        defaultValues.put(Character.class, '\u0000');
++        defaultValues.put(Byte.class, (byte) 0);
++        defaultValues.put(Short.class, (short) 0);
++        defaultValues.put(Integer.class, 0);
++        defaultValues.put(Long.class, 0L);
++        defaultValues.put(Float.class, 0F);
++        defaultValues.put(Double.class, 0D);
+     }
+-
+     static {
+         primitiveValues.put(boolean.class, false);
+         primitiveValues.put(char.class, '\u0000');

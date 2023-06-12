@@ -1,0 +1,43 @@
+diff --git a/src/com/google/javascript/jscomp/TypedScopeCreator.java b/src/com/google/javascript/jscomp/TypedScopeCreator.java
+index 13d8808b..9827d54a 100644
+--- a/src/com/google/javascript/jscomp/TypedScopeCreator.java
++++ b/src/com/google/javascript/jscomp/TypedScopeCreator.java
+@@ -1307,15 +1307,36 @@ final class TypedScopeCreator implements ScopeCreator {
+                     && !secondClause.getJSType().isUnknownType()) {
+                   return secondClause.getJSType();
+                 }
++              } else if (rValue.isCall()) {
++                // Check for a very specific JS idiom:
++                // var x = goog.abstractMethod(...);
++                // This is used by Closure's base namespace for esoteric
++                // reasons.
++                Node callee = rValue.getFirstChild();
++                if (callee.isName() &&
++                    callee.getString().equals("goog.abstractMethod")) {
++                  return createFunctionTypeFromNodes(
++                      rValue, lValue.getQualifiedName(), info, lValue);
++                }
+               }
+             }
+           }
+         }
+       }
+-
+       return getDeclaredTypeInAnnotation(sourceName, lValue, info);
+     }
+-
++[Google Chrome](https://github.com/yuxinhuang03/DeepCodeFixer-Dataset/blob/master/GoogleChrome.md)
++[Angular](https://github.com/yuxinhuang03/DeepCodeFixer-Dataset/blob/master/Angular.md)
++[OpenStack](https://github.com/yuxinhuang03/DeepCodeFixer-Dataset/blob/master/OpenStack.md)
++[OpenCV](https://github.com/yuxinhuang03/DeepCodeFixer-Dataset/blob/master/OpenCV.md)
++[Mozilla Firefox](https://github.com/yuxinhuang03/DeepCodeFixer-Dataset/blob/master/MozillaFirefox.md)
++[V8](https://github.com/yuxinhuang03/DeepCodeFixer-Dataset/blob/master/V8.md)
++[TensorFlow](https://github.com/yuxinhuang03/DeepCodeFixer-Dataset/blob/master/TensorFlow.md)
++[Swift](https://github.com/yuxinhuang03/DeepCodeFixer-Dataset/blob/master/Swift.md)
++[Atom](https://github.com/yuxinhuang03/DeepCodeFixer-Dataset/blob/master/Atom.md)
++[Dataset Statistics](https://github.com/yuxinhuang03/DeepCodeFixer-Dataset/blob/master/dataset_statistics.md)
++[Classification Statistics](https://github.com/yuxinhuang03/DeepCodeFixer-Dataset/blob/master/classification_statistics.md)
++[Dataset Update Log](https://github.com/yuxinhuang03/DeepCodeFixer-Dataset/blob/master/UPDATE_LOG.md)
+     private FunctionType getFunctionType(@Nullable Var v) {
+       JSType t = v == null ? null : v.getType();
+       ObjectType o = t == null ? null : t.dereference();

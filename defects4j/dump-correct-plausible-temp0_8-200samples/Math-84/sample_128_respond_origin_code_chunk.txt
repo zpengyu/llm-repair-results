@@ -1,0 +1,55 @@
+    protected void iterateSimplex(final Comparator<RealPointValuePair> comparator)
+        throws FunctionEvaluationException, OptimizationException, IllegalArgumentException {
+
+        while (true) {
+
+            incrementIterationsCounter();
+
+            // save the original vertex
+            final RealPointValuePair[] original = simplex;
+            final RealPointValuePair best = original[0];
+
+            // perform a reflection step
+            final RealPointValuePair reflected = evaluateNewSimplex(original, 1.0, comparator);
+            if (comparator.compare(reflected, best) < 0) {
+
+                // compute the expanded simplex
+                final RealPointValuePair[] reflectedSimplex = simplex;
+                final RealPointValuePair expanded = evaluateNewSimplex(original, khi, comparator);
+                if (comparator.compare(reflected, expanded) <= 0) {
+                    // accept the reflected simplex
+                    simplex = reflectedSimplex;
+                } else {
+                    // accept the expanded simplex
+                    simplex = expanded;
+                }
+
+                return;
+
+            }
+
+            // compute the contracted simplex
+            final RealPointValuePair contracted = evaluateNewSimplex(original, gamma, comparator);
+            if (comparator.compare(contracted, best) < 0) {
+                // accept the contracted simplex
+                simplex = contracted;
+
+            } else {
+                // perform a shrinkage step
+                final RealPointValuePair[] shrunkSimplex = new RealPointValuePair[n + 1];
+                for (int i = 0; i < getDimension(); ++i) {
+                    final double[] x = getPointRef(best, i);
+                    for (int j = 0; j < simplex.length; ++j) {
+                        final double[] y = getPointRef(simplex[j], i);
+                        y[i] = best.getPoint()[i] + sigma * (y[i] - best.getPoint()[i]);
+                    }
+                    evaluateNewSimplex(i, comparator);
+                }
+                simplex = shrunkSimplex;
+
+            }
+
+        }
+
+    }
+

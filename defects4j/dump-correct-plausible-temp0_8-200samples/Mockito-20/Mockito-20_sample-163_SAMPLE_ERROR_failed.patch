@@ -1,0 +1,32 @@
+diff --git a/src/org/mockito/internal/creation/bytebuddy/ByteBuddyMockMaker.java b/src/org/mockito/internal/creation/bytebuddy/ByteBuddyMockMaker.java
+index ddaada2f1..5ee9bdea1 100644
+--- a/src/org/mockito/internal/creation/bytebuddy/ByteBuddyMockMaker.java
++++ b/src/org/mockito/internal/creation/bytebuddy/ByteBuddyMockMaker.java
+@@ -34,7 +34,26 @@ public class ByteBuddyMockMaker implements MockMaker {
+             mockInstance = classInstantiator.instantiate(mockedProxyType);
+             MockMethodInterceptor.MockAccess mockAccess = (MockMethodInterceptor.MockAccess) mockInstance;
+             mockAccess.setMockitoInterceptor(new MockMethodInterceptor(asInternalMockHandler(handler), settings));
+-
++			MockMethodInterceptor interceptor = mockAccess.getMockitoInterceptor();
++			MockHandler mockHandler = new MockHandler() {
++				@Override
++				public InvocationContainer getInvocationContainer() {
++					return interceptor.getInvocationContainer();
++				}
++				@Override
++				public MockCreationSettings getMockSettings() {
++					return interceptor.getInvocationContainer().getInvocationStack().getMockSettings();
++				}
++				@Override
++				public Object handle(Invocation invocation) throws Throwable {
++					return interceptor.intercept(invocation.getMock(), invocation.getMethod(), invocation.getArguments(), invocation.getInvocationContext());
++				}
++				@Override
++				public void verifyNoMoreInteractions() {
++					interceptor.verifyNoMoreInteractions();
++				}
++			};
++			mockAccess.setMockitoInterceptor(new MockMethodInterceptor(mockHandler, settings));
+             return ensureMockIsAssignableToMockedType(settings, mockInstance);
+         } catch (ClassCastException cce) {
+             throw new MockitoException(join(

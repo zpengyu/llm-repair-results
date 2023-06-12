@@ -1,0 +1,31 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/jsontype/impl/AsWrapperTypeDeserializer.java b/src/main/java/com/fasterxml/jackson/databind/jsontype/impl/AsWrapperTypeDeserializer.java
+index e9bf3cdcb..6d89de348 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/jsontype/impl/AsWrapperTypeDeserializer.java
++++ b/src/main/java/com/fasterxml/jackson/databind/jsontype/impl/AsWrapperTypeDeserializer.java
+@@ -87,12 +87,12 @@ public class AsWrapperTypeDeserializer
+         }
+         // first, sanity checks
+         if (p.getCurrentToken() != JsonToken.START_OBJECT) {
+-            throw ctxt.wrongTokenException(p, JsonToken.START_OBJECT,
++            return ctxt.handleUnexpectedToken(handledType(), p.getCurrentToken(), p,
+                     "need JSON Object to contain As.WRAPPER_OBJECT type information for class "+baseTypeName());
+         }
+             // should always get field name, but just in case...
+             if (p.nextToken() != JsonToken.FIELD_NAME) {
+-                throw ctxt.wrongTokenException(p, JsonToken.FIELD_NAME,
++                return ctxt.handleUnexpectedToken(handledType(), p.getCurrentToken(), p,
+                         "need JSON String that contains type id (for subtype of "+baseTypeName()+")");
+             }
+         final String typeId = p.getText();
+@@ -113,9 +111,8 @@ public class AsWrapperTypeDeserializer
+         Object value = deser.deserialize(p, ctxt);
+         // And then need the closing END_OBJECT
+         if (p.nextToken() != JsonToken.END_OBJECT) {
+-            throw ctxt.wrongTokenException(p, JsonToken.END_OBJECT,
++            return ctxt.handleUnexpectedToken(handledType(), p.getCurrentToken(), p,
+                     "expected closing END_OBJECT after type information and deserialized value");
+         }
+         return value;
+-    }
+-}
++    }}

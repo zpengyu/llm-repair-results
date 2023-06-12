@@ -1,0 +1,30 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/deser/impl/BeanPropertyMap.java b/src/main/java/com/fasterxml/jackson/databind/deser/impl/BeanPropertyMap.java
+index aeaa0dc42..f8d3eecf0 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/deser/impl/BeanPropertyMap.java
++++ b/src/main/java/com/fasterxml/jackson/databind/deser/impl/BeanPropertyMap.java
+@@ -451,7 +450,24 @@ System.err.println("And new propr #"+slot+" '"+key+"'");
+         }
+         init(props);
+     }
+-
++    /**
++     * Method called to merge contents of another <code>POJOPropertiesCollector</code>
++     * into this object, for combining parts of separate POJO.
++     */
++    public void merge(POJOPropertiesCollector coll)
++    {
++        HashMap<String,SettableBeanProperty> src = coll.getPropertyMap();
++        for (Map.Entry<String, SettableBeanProperty> en : src.entrySet()) {
++            SettableBeanProperty prop = en.getValue();
++            String name = en.getKey();
++            if (findProperty(name) == null) {
++                addProperty(prop);
++            }
++        }
++        _anySetter = _anySetter == null ? coll.getAnySetter() : _anySetter;
++        _ignorableProps = _ignorableProps == null ? coll.getIgnorablePropertyNames() : _ignorableProps;
++        _injectables = _injectables == null ? coll.getInjectables() : _injectables;
++    }
+     /**
+      * Convenience method that tries to find property with given name, and
+      * if it is found, call {@link SettableBeanProperty#deserializeAndSet}

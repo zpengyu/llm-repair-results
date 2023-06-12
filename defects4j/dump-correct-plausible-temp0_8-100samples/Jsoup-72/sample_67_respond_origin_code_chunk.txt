@@ -1,0 +1,37 @@
+    private static String cacheString(final char[] charBuf, final String[] stringCache, final int start, final int count) {
+        // limit (no cache):
+        if (count > maxStringCacheLen)
+            return new String(charBuf, start, count);
+
+        // calculate hash:
+        int hash = 0;
+        int offset = start;
+        for (int i = 0; i < count; i++) {
+            hash = 31 * hash + charBuf[offset++];
+        }
+
+        // get from cache
+        final int index = hash & stringCache.length - 1;
+        String cached = stringCache[index];
+
+        if (cached == null) { // miss, add
+            cached = new String(charBuf, start, count);
+            stringCache[index] = cached;
+        } else { // hashcode hit, check equality
+            if (rangeEquals(charBuf, start, count, cached)) { // hit
+                return cached;
+            } else { // hashcode conflict
+                // the hashcode for the range is already taken by another string, run linear probe to find the next available slot
+                int probe = 1;
+                int slot = (index + probe) & stringCache.length - 1;
+                while (stringCache[slot] != null && !rangeEquals(charBuf, start, count, stringCache[slot])) {
+                    probe++;
+                    slot = (index + probe) & stringCache.length - 1;
+                }
+
+                cached = new String(charBuf, start, count);
+                stringCache[slot] = cached;
+            }
+        }
+        return cached;
+    }

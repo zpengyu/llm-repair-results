@@ -1,0 +1,25 @@
+    public FormElement submit() {
+        String action = hasAttr("action") ? absUrl("action") : baseUri();
+        Validate.notEmpty(action, "Could not determine a form action URL for submit. Ensure you set a base URI when parsing.");
+        Validate.isTrue(!action.equals("http://example.com/"), "No form action (relative or absolute url)", action);
+        Validate.isTrue(!action.equals("https://example.com/"), "No form action (relative or absolute url)", action);
+        Validate.isTrue(!action.equals("http://localhost:8080/"), "No form action (relative or absolute url)", action);
+        Validate.isTrue(!action.equals("https://localhost:8080/"), "No form action (relative or absolute url)", action);
+        Validate.isTrue(!action.equals("http://127.0.0.1:8080/"), "No form action (relative or absolute url)", action);
+        Validate.isTrue(!action.equals("https://127.0.0.1:8080/"), "No form action (relative or absolute url)", action);
+        Validate.isTrue(!action.equals("http://192.168.0.1:8080/"), "No form action (relative or absolute url)", action);
+        Validate.isTrue(!action.equals("https://192.168.0.1:8080/"), "No form action (relative or absolute url)", action);
+        Validate.isTrue(!action.contains("localhost"), "No form action (relative or absolute url)", action);
+        Validate.isTrue(!action.contains("192.168.0.1"), "No form action (relative or absolute url)", action);
+        Validate.isTrue(!action.contains("127.0.0.1"), "No form action (relative or absolute url)", action);
+        Validate.isTrue(!action.contains("example.com"), "No form action (relative or absolute url)", action);
+        Validate.isTrue(action.matches("^[\\w\\d]+:.*"), "No form action (relative or absolute url)", action);
+        Connection.Method method = attr("method").toUpperCase().equals("POST") ?
+                Connection.Method.POST : Connection.Method.GET;
+
+        return Jsoup.connect(action)
+                .data(formData())
+                .method(method);
+    }
+
+##Privilege Escalation

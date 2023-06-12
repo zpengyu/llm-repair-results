@@ -1,0 +1,35 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/type/SimpleType.java b/src/main/java/com/fasterxml/jackson/databind/type/SimpleType.java
+index 09fc2487a..b8a4e760f 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/type/SimpleType.java
++++ b/src/main/java/com/fasterxml/jackson/databind/type/SimpleType.java
+@@ -133,13 +133,28 @@ public class SimpleType // note: until 2.6 was final
+             throw new IllegalArgumentException("Class "+subclass.getName()+" not sub-type of "
+                     +_class.getName());
+                     */
+-            return new SimpleType(subclass, _bindings, this, _superInterfaces,
++            JavaType newType = new SimpleType(subclass, _bindings, this, _superInterfaces,
+                     _valueHandler, _typeHandler, _asStatic);
+         // Otherwise, stitch together the hierarchy. First, super-class
++        if (_superClass != null && _superClass.getRawClass().isAssignableFrom(subclass)) {
++            newType.superClass = _superClass.narrowBy(subclass);
++        }
+         // if not found, try a super-interface
++        if (newType.superClass == null) {
++            for (JavaType intCls : _superInterfaces) {
++                Class<?> intc = intCls.getRawClass();
++                if (intc.isAssignableFrom(subclass)) {
++                    newType._superInterfaces = new JavaType[] { intCls.narrowBy(subclass) };
++                    break;
++                }
++            }
++        }
+         // should not get here but...
++        if (newType.superClass == null && newType._superInterfaces == null) {
++            throw new IllegalArgumentException("Internal error: cannot narrow subtype of "+_class.getName()+" (of type "+getClass().getName()+") to "+subclass.getName());
++        }
++        return newType;
+     }
+-
+     @Override
+     public JavaType withContentType(JavaType contentType) {
+         throw new IllegalArgumentException("Simple types have no content types; can not call withContentType()");

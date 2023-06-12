@@ -1,0 +1,31 @@
+diff --git a/src/main/java/org/jsoup/parser/CharacterReader.java b/src/main/java/org/jsoup/parser/CharacterReader.java
+index c5d91e0..46b3201 100644
+--- a/src/main/java/org/jsoup/parser/CharacterReader.java
++++ b/src/main/java/org/jsoup/parser/CharacterReader.java
+@@ -442,14 +439,24 @@ public final class CharacterReader {
+         } else { // hashcode hit, check equality
+             if (rangeEquals(charBuf, start, count, cached)) { // hit
+                 return cached;
+-            } else { // hashcode conflict
++            } else if (hash == cached.hashCode() && equals(charBuf, start, count, cached)) { // hashcode conflict
+                 cached = new String(charBuf, start, count);
+                 stringCache[index] = cached; // update the cache, as recently used strings are more likely to show up again
+             }
+         }
+         return cached;
+     }
+-
++    static boolean equals(char[] charBuf, int start, int count, String cached) {
++        if (count != cached.length()) {
++            return false;
++        }
++        for (int i = 0; i < count; i++) {
++            if (charBuf[i + start] != cached.charAt(i)) {
++                return false;
++            }
++        }
++        return true;
++    }
+     /**
+      * Check if the value of the provided range equals the string.
+      */

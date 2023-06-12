@@ -1,0 +1,32 @@
+diff --git a/src/java/org/apache/commons/jxpath/ri/model/dom/DOMNodePointer.java b/src/java/org/apache/commons/jxpath/ri/model/dom/DOMNodePointer.java
+index a5bb202..95cbd7b 100644
+--- a/src/java/org/apache/commons/jxpath/ri/model/dom/DOMNodePointer.java
++++ b/src/java/org/apache/commons/jxpath/ri/model/dom/DOMNodePointer.java
+@@ -96,14 +95,14 @@ public class DOMNodePointer extends NodePointer {
+             NodeNameTest nodeNameTest = (NodeNameTest) test;
+             QName testName = nodeNameTest.getNodeName();
+             String namespaceURI = nodeNameTest.getNamespaceURI();
+-            boolean wildcard = nodeNameTest.isWildcard();
+             String testPrefix = testName.getPrefix();
++            String testLocal = testName.getLocalPart();
++            String nodeLocal = DOMNodePointer.getLocalName(node);
++            boolean wildcard = nodeNameTest.isWildcard();
+             if (wildcard && testPrefix == null) {
+                 return true;
+             }
+-            if (wildcard
+-                || testName.getName()
+-                        .equals(DOMNodePointer.getLocalName(node))) {
++            if (wildcard || testLocal.equals(nodeLocal)) {
+                 String nodeNS = DOMNodePointer.getNamespaceURI(node);
+                 return equalStrings(namespaceURI, nodeNS);
+             }
+@@ -114,7 +113,7 @@ public class DOMNodePointer extends NodePointer {
+             switch (((NodeTypeTest) test).getNodeType()) {
+                 case Compiler.NODE_TYPE_NODE :
+                     return nodeType == Node.ELEMENT_NODE
+-                            || nodeType == Node.DOCUMENT_NODE;
++                        || nodeType == Node.DOCUMENT_NODE;
+                 case Compiler.NODE_TYPE_TEXT :
+                     return nodeType == Node.CDATA_SECTION_NODE
+                         || nodeType == Node.TEXT_NODE;

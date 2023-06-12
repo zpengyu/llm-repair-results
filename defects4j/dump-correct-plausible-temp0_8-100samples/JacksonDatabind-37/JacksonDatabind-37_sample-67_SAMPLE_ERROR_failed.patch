@@ -1,0 +1,29 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/type/SimpleType.java b/src/main/java/com/fasterxml/jackson/databind/type/SimpleType.java
+index 0fda4d76f..0c7163914 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/type/SimpleType.java
++++ b/src/main/java/com/fasterxml/jackson/databind/type/SimpleType.java
+@@ -131,11 +131,22 @@ public class SimpleType // note: until 2.6 was final
+                     +_class.getName());
+         }
+         */
++        JavaType supertype = _superClass;
+         // 15-Jan-2015, tatu: Not correct; should really re-resolve...
+-        return new SimpleType(subclass, _bindings, _superClass, _superInterfaces,
++        if (supertype != null && supertype.getRawClass().isAssignableFrom(subclass)) {
++            supertype = supertype._narrow(subclass);
++        }
++        JavaType[] superInts = _superInterfaces;
++        int len = superInts.length;
++        for (int i = 0; i < len; ++i) {
++            JavaType t = superInts[i];
++            if (t.getRawClass().isAssignableFrom(subclass)) {
++                superInts[i] = t._narrow(subclass);
++            }
++        }
++        return new SimpleType(subclass, _bindings, supertype, superInts,
+                 _valueHandler, _typeHandler, _asStatic);
+     }
+-
+     @Override
+     public JavaType withContentType(JavaType contentType) {
+         throw new IllegalArgumentException("Simple types have no content types; can not call withContentType()");

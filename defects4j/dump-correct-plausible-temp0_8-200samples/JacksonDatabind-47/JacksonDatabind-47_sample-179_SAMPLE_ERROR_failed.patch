@@ -1,0 +1,49 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/AnnotationIntrospector.java b/src/main/java/com/fasterxml/jackson/databind/AnnotationIntrospector.java
+index 624a1fd7e..9ae522119 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/AnnotationIntrospector.java
++++ b/src/main/java/com/fasterxml/jackson/databind/AnnotationIntrospector.java
+@@ -797,16 +797,31 @@ public abstract class AnnotationIntrospector
+     {
+         JavaType type = baseType;
+         final TypeFactory tf = config.getTypeFactory();
+-        
++        // 30-Nov-2015, tatu: As per [databind#1023], need to allow forcing of
++        //    static typing this way
++        if (baseType.useStaticType()) {
++            type = type.withStaticTyping();
++        }
++        // First: maybe we had explicit static typing?
++        AnnotationIntrospector.ReferenceProperty prop = config.getAnnotationIntrospector().findReferenceType(a);
++        if (prop != null && prop.isManagedReference()) {
++            type = tf.constructReferenceType(type, prop.getType());
++            type.getContentType(); // just to force resolution
++        }
+         // 10-Oct-2015, tatu: For 2.7, we'll need to delegate back to
+         //    now-deprecated secondary methods; this because while
+         //    direct sub-class not yet retrofitted may only override
+         //    those methods. With 2.8 or later we may consider removal
+         //    of these methods
+-
+-        
+-        // Ok: start by refining the main type itself; common to all types
+         Class<?> serClass = findSerializationType(a);
++        if (serClass != null) {
++            // 23-Jan-2017, tatu: As per [databind#1425], also need to check for explicit
++            //   "None" here
++            if (serClass == JsonSerializable.None.class) {
++                serClass = null;
++            }
++        }
++        // Ok: start by refining the main type itself; common to all types
+         if (serClass != null) {
+             if (type.hasRawClass(serClass)) {
+                 // 30-Nov-2015, tatu: As per [databind#1023], need to allow forcing of
+@@ -816,7 +831,7 @@ public abstract class AnnotationIntrospector
+                 try {
+                     // 11-Oct-2015, tatu: For deser, we call `TypeFactory.constructSpecializedType()`,
+                     //   may be needed here too in future?
+-                        type = tf.constructGeneralizedType(type, serClass);
++                    type = tf.constructGeneralizedType(type, serClass);
+                 } catch (IllegalArgumentException iae) {
+                     throw new JsonMappingException(null,
+                             String.format("Failed to widen type %s with annotation (value %s), from '%s': %s",

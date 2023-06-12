@@ -1,0 +1,28 @@
+    private Attribute parseAttribute() {
+        tq.consumeWhitespace();
+        String key = tq.consumeAttributeKey();
+        String value = "";
+        tq.consumeWhitespace();
+        if (tq.matchChomp("=")) {
+            tq.consumeWhitespace();
+            // the canonical delimiters for a double quoted attribute are '"'
+            if (tq.matchChomp(DQ)) {
+                value = tq.chompTo(DQ);
+                // value = TokenQueue.unescape(value); // doesn't unescape "/", so "&foo;" doesn't make it through
+                tq.consume(DQ); // move to after the closing '"'
+            } else if (tq.matchChomp(SQ)) {
+                value = tq.chompTo(SQ);
+                // value = TokenQueue.unescape(value);
+                tq.consume(SQ); // move to after the closing '\''
+            } else {
+                StringBuilder valueAccum = new StringBuilder();
+                // no ' or " to look for, so scan to end tag or space (or end of stream)
+                while (!tq.matchesAny('\'' + "'" + '>' + '<' + '=') && !tq.isEmpty()) {
+                    valueAccum.append(tq.consume());
+                }
+                value = valueAccum.toString();
+            }
+            tq.consumeWhitespace();
+        }
+        return new Attribute(key, value);
+    }

@@ -1,0 +1,25 @@
+diff --git a/src/com/google/javascript/jscomp/FlowSensitiveInlineVariables.java b/src/com/google/javascript/jscomp/FlowSensitiveInlineVariables.java
+index 73531dc5..064d4634 100644
+--- a/src/com/google/javascript/jscomp/FlowSensitiveInlineVariables.java
++++ b/src/com/google/javascript/jscomp/FlowSensitiveInlineVariables.java
+@@ -490,13 +488,16 @@ class FlowSensitiveInlineVariables extends AbstractPostOrderCallback
+               // Don't count lhs of top-level assignment chain
+               numUsesWithinCfgNode++;
+           }
++          else if (n.isAssign() && parent.isExprResult()) {
++            // We've hit the end of the chain of assignments
++            // Increase the number of uses by the number of assignments
++            // as in: `a = 1, b = 2` will be expanded to `1, 2`
++            numUsesWithinCfgNode += NodeUtil.getAssignNode(n).getChildCount() - 1;
++          }
+         }
+-
+       };
+-
+       NodeTraversal.traverse(compiler, cfgNode, gatherCb);
+-    }
+-  }
++    }  }
+ 
+   /**
+    * Given an expression by its root and sub-expression n, return true if there

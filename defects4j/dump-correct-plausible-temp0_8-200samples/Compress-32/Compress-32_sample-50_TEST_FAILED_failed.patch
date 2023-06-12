@@ -1,0 +1,98 @@
+diff --git a/src/main/java/org/apache/commons/compress/archivers/tar/TarArchiveInputStream.java b/src/main/java/org/apache/commons/compress/archivers/tar/TarArchiveInputStream.java
+index 87ff4aab..a6ecb26e 100644
+--- a/src/main/java/org/apache/commons/compress/archivers/tar/TarArchiveInputStream.java
++++ b/src/main/java/org/apache/commons/compress/archivers/tar/TarArchiveInputStream.java
+@@ -494,29 +494,82 @@ public class TarArchiveInputStream extends ArchiveInputStream {
+             String key = ent.getKey();
+             String val = ent.getValue();
+             if ("path".equals(key)){
+-                currEntry.setName(val);
++                setPath(currEntry, val);
+             } else if ("linkpath".equals(key)){
+-                currEntry.setLinkName(val);
++                setLinkPath(currEntry, val);
+             } else if ("gid".equals(key)){
+-                currEntry.setGroupId(Integer.parseInt(val));
++                setGroupId(currEntry, val);
+             } else if ("gname".equals(key)){
+-                currEntry.setGroupName(val);
++                setGroupName(currEntry, val);
+             } else if ("uid".equals(key)){
+-                currEntry.setUserId(Integer.parseInt(val));
++                setUserId(currEntry, val);
+             } else if ("uname".equals(key)){
+-                currEntry.setUserName(val);
++                setUserName(currEntry, val);
+             } else if ("size".equals(key)){
+-                currEntry.setSize(Long.parseLong(val));
++                setSize(currEntry, val);
+             } else if ("mtime".equals(key)){
+-                currEntry.setModTime((long) (Double.parseDouble(val) * 1000));
++                setModTime(currEntry, val);
+             } else if ("SCHILY.devminor".equals(key)){
+-                currEntry.setDevMinor(Integer.parseInt(val));
++                setDevMinor(currEntry, val);
+             } else if ("SCHILY.devmajor".equals(key)){
+-                currEntry.setDevMajor(Integer.parseInt(val));
++                setDevMajor(currEntry, val);
+             }
+         }
+     }
+-
++    private void setPath(TarArchiveEntry currEntry, String path) {
++        currEntry.setName(path);
++    }
++    private void setLinkPath(TarArchiveEntry currEntry, String linkPath) {
++        currEntry.setLinkName(linkPath);
++    }
++    private void setGroupId(TarArchiveEntry currEntry, String groupId) {
++        try {
++            currEntry.setGroupId(Integer.parseInt(groupId));
++        } catch (NumberFormatException e) {
++            // ignore
++        }
++    }
++    private void setGroupName(TarArchiveEntry currEntry, String groupName) {
++        currEntry.setGroupName(groupName);
++    }
++    private void setUserId(TarArchiveEntry currEntry, String userId) {
++        try {
++            currEntry.setUserId(Integer.parseInt(userId));
++        } catch (NumberFormatException e) {
++            // ignore
++        }
++    }
++    private void setUserName(TarArchiveEntry currEntry, String userName) {
++        currEntry.setUserName(userName);
++    }
++    private void setSize(TarArchiveEntry currEntry, String size) {
++        try {
++            currEntry.setSize(Long.parseLong(size));
++        } catch (NumberFormatException e) {
++            // ignore
++        }
++    }
++    private void setModTime(TarArchiveEntry currEntry, String modTime) {
++        try {
++            currEntry.setModTime((long) (Double.parseDouble(modTime) * 1000));
++        } catch (NumberFormatException e) {
++            // ignore
++        }
++    }
++    private void setDevMinor(TarArchiveEntry currEntry, String devMinor) {
++        try {
++            currEntry.setDevMinor(Integer.parseInt(devMinor));
++        } catch (NumberFormatException e) {
++            // ignore
++        }
++    }
++    private void setDevMajor(TarArchiveEntry currEntry, String devMajor) {
++        try {
++            currEntry.setDevMajor(Integer.parseInt(devMajor));
++        } catch (NumberFormatException e) {
++            // ignore
++        }
++    }
+     /**
+      * Adds the sparse chunks from the current entry to the sparse chunks,
+      * including any additional sparse entries following the current entry.

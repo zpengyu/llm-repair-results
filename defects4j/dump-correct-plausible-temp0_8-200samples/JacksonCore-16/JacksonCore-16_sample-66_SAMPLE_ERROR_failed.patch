@@ -1,0 +1,49 @@
+diff --git a/src/main/java/com/fasterxml/jackson/core/util/JsonParserSequence.java b/src/main/java/com/fasterxml/jackson/core/util/JsonParserSequence.java
+index bed27f2b..1360decb 100644
+--- a/src/main/java/com/fasterxml/jackson/core/util/JsonParserSequence.java
++++ b/src/main/java/com/fasterxml/jackson/core/util/JsonParserSequence.java
+@@ -32,7 +30,7 @@ public class JsonParserSequence extends JsonParserDelegate
+      *
+      * @since 2.8
+      */
+-
++    protected boolean _hasToken = false;
+     /*
+      *******************************************************
+      * Construction
+@@ -103,6 +95,10 @@ public class JsonParserSequence extends JsonParserDelegate
+     @Override
+     public JsonToken nextToken() throws IOException, JsonParseException
+     {
++        if (_hasToken) {
++            _hasToken = false;
++            return _currToken;
++        }
+         JsonToken t = delegate.nextToken();
+         if (t != null) return t;
+         while (switchToNext()) {
+@@ -111,7 +107,23 @@ public class JsonParserSequence extends JsonParserDelegate
+         }
+         return null;
+     }
+-
++    @Override
++    public JsonToken nextValue() throws IOException
++    {
++        if (_hasToken) {
++            // as per [JACKSON-584], need to skip implicit conversion too
++            JsonToken t = _currToken;
++            _hasToken = false;
++            return (t == JsonToken.FIELD_NAME) ? delegate.nextToken() : t;
++        }
++        JsonToken t = delegate.nextValue();
++        if (t != null) return t;
++        while (switchToNext()) {
++            t = delegate.nextValue();
++            if (t != null) return t;
++        }
++        return null;
++    }
+     /*
+     /*******************************************************
+     /* Additional extended API

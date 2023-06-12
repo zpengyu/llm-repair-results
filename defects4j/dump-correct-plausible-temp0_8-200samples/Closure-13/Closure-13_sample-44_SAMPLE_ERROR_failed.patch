@@ -1,0 +1,28 @@
+diff --git a/src/com/google/javascript/jscomp/PeepholeOptimizationsPass.java b/src/com/google/javascript/jscomp/PeepholeOptimizationsPass.java
+index 7eda511e..2d9a5d17 100644
+--- a/src/com/google/javascript/jscomp/PeepholeOptimizationsPass.java
++++ b/src/com/google/javascript/jscomp/PeepholeOptimizationsPass.java
+@@ -127,16 +126,19 @@ class PeepholeOptimizationsPass
+         Node next = c.getNext();
+         c = next;
+       }
+-
+       visit(node);
+       visits++;
+-
++      // If the node is part of an expression, return it to the expression processor.
++      Node parent = node.getParent();
++      if (parent != null && NodeUtil.isAssignmentOp(parent)) {
++        parent.detachFromParent();
++        parent.detachChildren();
++        processor.process(null, parent);
++      }
+       Preconditions.checkState(visits < 10000, "too many interations");
+     } while (shouldRetraverse(node));
+-
+     exitNode(node);
+   }
+-
+   private boolean shouldRetraverse(Node node) {
+     if (node.getParent() != null && node.isFunction() || node.isScript()) {
+       ScopeState state = traversalState.peek();

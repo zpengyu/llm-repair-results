@@ -1,0 +1,63 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/ser/std/NumberSerializers.java b/src/main/java/com/fasterxml/jackson/databind/ser/std/NumberSerializers.java
+index 6d0db8734..ba9eb65c5 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/ser/std/NumberSerializers.java
++++ b/src/main/java/com/fasterxml/jackson/databind/ser/std/NumberSerializers.java
+@@ -55,7 +50,7 @@ public class NumberSerializers
+         protected final JsonParser.NumberType _numberType;
+         protected final String _schemaType;
+         protected final boolean _isInt;
+-
++        protected final Boolean _isLong;
+         protected Base(Class<?> cls, JsonParser.NumberType numberType, String schemaType) {
+             super(cls, false);
+             _numberType = numberType;
+@@ -64,8 +59,14 @@ public class NumberSerializers
+                     || (numberType == JsonParser.NumberType.LONG)
+                     || (numberType == JsonParser.NumberType.BIG_INTEGER)
+                     ;
++            if (numberType == JsonParser.NumberType.LONG ||
++                numberType == JsonParser.NumberType.INT ||
++                numberType == JsonParser.NumberType.BIG_INTEGER) {
++                _isLong = Boolean.TRUE;
++            } else {
++                _isLong = Boolean.FALSE;
++            }
+         }
+-
+         @Override
+         public JsonNode getSchema(SerializerProvider provider, Type typeHint) {
+             return createSchemaNode(_schemaType, true);
+@@ -91,6 +90,7 @@ public class NumberSerializers
+         public JsonSerializer<?> createContextual(SerializerProvider prov,
+                 BeanProperty property) throws JsonMappingException
+         {
++            JsonSerializer<?> ser = null;
+             if (property != null) {
+                 AnnotatedMember m = property.getMember();
+                 if (m != null) {
+@@ -98,16 +98,22 @@ public class NumberSerializers
+                     if (format != null) {
+                         switch (format.getShape()) {
+                         case STRING:
+-                            return ToStringSerializer.instance;
++                            ser = ToStringSerializer.instance;
++                            break;
+                         default:
+                         }
+                     }
+                 }
+             }
+-            return this;
++            if (ser == null) {
++                if (_isLong) {
++                    return this;
++                }
++                return new StdDelegatingSerializer(this);
++            }
++            return ser;
+         }
+     }
+-    
+     /*
+     /**********************************************************
+     /* Concrete serializers, numerics

@@ -1,0 +1,30 @@
+    protected JavaType _typeFromId(String id, DatabindContext ctxt) throws IOException
+    {
+        /* 30-Jan-2010, tatu: Most ids are basic class names; so let's first
+         *    check if any generics info is added; and only then ask factory
+         *    to do translation when necessary
+         */
+        TypeFactory tf = ctxt.getTypeFactory();
+        JavaType t;
+        try {
+            t = tf.constructFromCanonical(id);
+        } catch (IllegalArgumentException e) {
+            // 24-May-2016, tatu: Ok, this is pretty ugly, but we should always get
+            //   DeserializationContext, just playing it safe
+            if (ctxt instanceof DeserializationContext) {
+                DeserializationContext dctxt = (DeserializationContext) ctxt;
+                // First: we may have problem handlers that can deal with it?
+                return dctxt.handleUnknownTypeId(_baseType, id, this, "no such class found");
+            }
+            // ... meaning that we really should never get here.
+            return null;
+        }
+        // 17-Aug-2017, tatu: As per [databind#1735] need to ensure assignment
+        //    compatibility -- needed later anyway, and not doing so may open
+        //    security issues.
+        if (!_baseType.getRawClass().isAssignableFrom(t.getRawClass())) {
+            return ctxt.handleWeirdKey(_baseType, id,
+                    "Cannot narrow key type "+_baseType+" with concrete-type annotation (value "+id+"), from 'Id.class': value not compatible with raw key type "+_baseType.getRawClass().getName());
+        }
+        return t;
+    }

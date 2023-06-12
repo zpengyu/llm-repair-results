@@ -1,0 +1,43 @@
+diff --git a/src/java/org/apache/commons/cli/PosixParser.java b/src/java/org/apache/commons/cli/PosixParser.java
+index 2b1bbb1..2d047a0 100644
+--- a/src/java/org/apache/commons/cli/PosixParser.java
++++ b/src/java/org/apache/commons/cli/PosixParser.java
+@@ -151,13 +147,35 @@ public class PosixParser extends Parser {
+             {
+                 tokens.add(token);
+             }
+-
+             gobble(iter);
+         }
+-
+         return (String[]) tokens.toArray(new String[tokens.size()]);
+     }
+-
++    /**
++     * Process the token.
++     *
++     * If the token is '--' then all following tokens are treated as arguments
++     * even if they start with a hyphen.
++     *
++     * If the token is '-' then set the stopAtNonOption flag so that the
++     * following tokens are treated as arguments if they don't start with a
++     * hyphen.
++     *
++     * @param token the token to process
++     * @param stopAtNonOption stop processing options once a non option has
++     * been encountered
++     */
++    protected void process(String token, boolean stopAtNonOption)
++    {
++        if ("--".equals(token))
++        {
++            stopAtNonOption = true;
++        }
++        else if ("-".equals(token))
++        {
++            stopAtNonOption = false;
++        }
++    }
+     /**
+      * Adds the remaining tokens to the processed tokens list.
+      *

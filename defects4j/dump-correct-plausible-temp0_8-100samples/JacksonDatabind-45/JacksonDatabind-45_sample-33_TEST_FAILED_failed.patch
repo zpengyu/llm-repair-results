@@ -1,0 +1,16 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/ser/std/DateTimeSerializerBase.java b/src/main/java/com/fasterxml/jackson/databind/ser/std/DateTimeSerializerBase.java
+index 7709acdcd..a6a87d68c 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/ser/std/DateTimeSerializerBase.java
++++ b/src/main/java/com/fasterxml/jackson/databind/ser/std/DateTimeSerializerBase.java
+@@ -75,6 +73,11 @@ public abstract class DateTimeSerializerBase<T>
+                     df.setTimeZone(tz);
+                     return withFormat(Boolean.FALSE, df);
+                 }
++                // [databind#448] Should also consider @JsonFormat
++                JsonFormat.Value defValue = serializers.getConfig().getDefaultPropertyFormat(java.util.Date.class);
++                if (defValue != null) {
++                    return withFormat(defValue.getShape() == JsonFormat.Shape.STRING, null);
++                }
+             }
+         }
+         return this;

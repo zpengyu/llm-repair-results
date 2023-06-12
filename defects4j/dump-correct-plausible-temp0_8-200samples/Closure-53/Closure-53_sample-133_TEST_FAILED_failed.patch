@@ -1,0 +1,31 @@
+diff --git a/src/com/google/javascript/jscomp/InlineObjectLiterals.java b/src/com/google/javascript/jscomp/InlineObjectLiterals.java
+index 5b8fedb1..adccf002 100644
+--- a/src/com/google/javascript/jscomp/InlineObjectLiterals.java
++++ b/src/com/google/javascript/jscomp/InlineObjectLiterals.java
+@@ -326,8 +325,8 @@ class InlineObjectLiterals implements CompilerPass {
+                    Node.newString(Token.NAME, varmap.get(var)),
+                    NodeUtil.newUndefinedNode(null)));
+       }
+-
+       Node replacement;
++      if (ref.getParent().getParent().getType() == Token.EXPR_RESULT) {
+         // All assignments evaluate to true, so make sure that the
+         // expr statement evaluates to true in case it matters.
+         nodes.add(new Node(Token.TRUE));
+@@ -347,10 +345,14 @@ class InlineObjectLiterals implements CompilerPass {
+         }
+         cur.addChildToFront(nodes.get(i));
+         cur.addChildToFront(nodes.get(i + 1));
+-
++      } else {
++        // This is an assignment used in a control structure.  We want the
++        // value of the last assignment, so don't use a COMMA.
++        Preconditions.checkState(nodes.size() > 0);
++        replacement = nodes.get(nodes.size() - 1);
++      }
+       Node replace = ref.getParent();
+       replacement.copyInformationFromForTree(replace);
+-
+       if (replace.getType() == Token.VAR) {
+         replace.getParent().replaceChild(
+             replace, NodeUtil.newExpr(replacement));

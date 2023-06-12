@@ -1,0 +1,25 @@
+diff --git a/src/main/java/com/fasterxml/jackson/core/util/TextBuffer.java b/src/main/java/com/fasterxml/jackson/core/util/TextBuffer.java
+index 50c473e1..c412e55a 100644
+--- a/src/main/java/com/fasterxml/jackson/core/util/TextBuffer.java
++++ b/src/main/java/com/fasterxml/jackson/core/util/TextBuffer.java
+@@ -582,11 +582,18 @@ public final class TextBuffer
+         final char[] curr = _currentSegment;
+         // Let's grow by 50% by default
+         final int len = curr.length;
++        int newLen = len + (len >> 1);
+         // but above intended maximum, slow to increase by 25%
+-        int newLen = (len == MAX_SEGMENT_LEN) ? (MAX_SEGMENT_LEN+1) : Math.min(MAX_SEGMENT_LEN, len + (len >> 1));
++        if (newLen < 0) {
++            newLen = MAX_SEGMENT_LEN;
++        } else if (newLen > MAX_SEGMENT_LEN) {
++            newLen = MAX_SEGMENT_LEN;
++            if (newLen > curr.length) {
++                newLen = curr.length;
++            }
++        }
+         return (_currentSegment = Arrays.copyOf(curr, newLen));
+     }
+-
+     /**
+      * Method called to expand size of the current segment, to
+      * accommodate for more contiguous content. Usually only

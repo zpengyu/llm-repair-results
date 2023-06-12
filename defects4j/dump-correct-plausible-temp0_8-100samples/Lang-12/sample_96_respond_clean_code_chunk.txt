@@ -1,0 +1,61 @@
+    public static String random(int count, int start, int end, boolean letters, boolean numbers,
+                                char[] chars, Random random) {
+        if (count == 0) {
+            return "";
+        } else if (count < 0) {
+            throw new IllegalArgumentException("Requested random string length " + count + " is less than 0.");
+        }
+        if (start == 0 && end == 0) {
+            if (letters && numbers) {
+                end = 'z' + 1;
+                start = ' ';
+                if (chars != null) {
+                    chars = null;
+                }
+            } else {
+                if (chars != null) {
+                    chars = removeDuplicated(chars);
+                    if(chars.length == 0) {
+                        throw new IllegalArgumentException("The chars array must not be empty");
+                    }
+                    end = chars.length;
+                } else {
+                    if (letters) {
+                        end = 'z' + 1;
+                        start = 'a';
+                    } else if (numbers) {
+                        end = '9' + 1;
+                        start = '0';
+                    } else {
+                        end = Integer.MAX_VALUE;
+                    }
+                }
+            }
+        } else {
+            if (end <= start) {
+                throw new IllegalArgumentException("Parameter end (" + end + ") must be greater than start (" + start + ")");
+            }
+            if (chars != null) {
+                if (end - start != chars.length) {
+                    throw new IllegalArgumentException("Parameter end (" + end + ") must be equal to start (" + start + ") plus chars length (" + chars.length + ")");
+                }
+                chars = removeDuplicated(chars);
+            }
+        }
+        char[] buffer = new char[count];
+        int gap = end - start;
+        while (count-- != 0) {
+            char ch;
+            if (chars == null) {
+                ch = (char) (random.nextInt(gap) + start);
+            } else {
+                ch = chars[random.nextInt(gap) + start];
+            }
+            if (Character.isSurrogate(ch)) {
+                count++;
+            } else {
+                buffer[count] = ch;
+            }
+        }
+        return new String(buffer);
+    }

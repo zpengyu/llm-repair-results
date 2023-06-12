@@ -1,0 +1,25 @@
+diff --git a/src/com/google/javascript/jscomp/PeepholeFoldConstants.java b/src/com/google/javascript/jscomp/PeepholeFoldConstants.java
+index 0f2a6d44..10cfa8de 100644
+--- a/src/com/google/javascript/jscomp/PeepholeFoldConstants.java
++++ b/src/com/google/javascript/jscomp/PeepholeFoldConstants.java
+@@ -683,12 +678,19 @@ public class PeepholeFoldConstants extends AbstractPeepholeOptimization {
+         error(FRACTIONAL_BITWISE_OPERAND, right);
+         return n;
+       }
+-
+       switch (n.getType()) {
+         case Token.LSH:
++          if (lvalInt < 0) {
++            error(BAD_SHIFT_AMOUNT, right, Node.tokenToName(n.getType()));
++            return n;
++          }
+           result = lvalInt << rvalInt;
+           break;
+         case Token.RSH:
++          if (lvalInt < 0) {
++            error(BAD_SHIFT_AMOUNT, right, Node.tokenToName(n.getType()));
++            return n;
++          }
+           result = lvalInt >> rvalInt;
+           break;
+         case Token.URSH:

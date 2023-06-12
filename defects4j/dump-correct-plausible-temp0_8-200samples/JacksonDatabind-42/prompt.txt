@@ -1,0 +1,74 @@
+###Provide a fix for the buggy function
+###Buggy Function
+class FibonacciExample {
+    public static void main(String args[]) {
+        int n1 = 0, n2 = 1, n3, i, count = 10;
+
+        System.out.print(n1 + " " + n2);
+
+        for (i = 2; i < count; ++i) {
+            n3 = n1 - n2;
+            System.out.print(" " + n3);
+            n1 = n2;
+            n2 = n3;
+        }
+    }
+}
+
+###Fixed Function
+class FibonacciExample {
+    public static void main(String args[]) {
+        int n1 = 0, n2 = 1, n3, i, count = 10;
+
+        System.out.print(n1 + " " + n2);
+
+        for (i = 2; i < count; ++i) {
+            n3 = n1 + n2;
+            System.out.print(" " + n3);
+            n1 = n2;
+            n2 = n3;
+        }
+    }
+}
+
+###Provide a fix for the buggy function
+###Buggy Function
+public TokenBuffer deserialize(JsonParser jp, DeserializationContext ctxt) throws IOException
+{
+    copyCurrentStructure(jp);
+    return this;
+}
+###Fixed Function
+public TokenBuffer deserialize(JsonParser jp, DeserializationContext ctxt) throws IOException
+{
+    if (jp.getCurrentTokenId() != JsonToken.FIELD_NAME.id()) {
+        copyCurrentStructure(jp);
+        return this;
+    }
+    /* 28-Oct-2014, tatu: As per #592, need to support a special case of starting from
+     *    FIELD_NAME, which is taken to mean that we are missing START_OBJECT, but need
+     *    to assume one did exist.
+     */
+    JsonToken t;
+    writeStartObject();
+    do {
+        copyCurrentStructure(jp);
+    } while ((t = jp.nextToken()) == JsonToken.FIELD_NAME);
+    if (t != JsonToken.END_OBJECT) {
+        throw ctxt.mappingException("Expected END_OBJECT after copying contents of a JsonParser into TokenBuffer, got "+t);
+    }
+    writeEndObject();
+    return this;
+}
+###Provide a fix for the buggy function
+###Buggy Function
+        protected Object _deserializeFromEmptyString() throws IOException {
+            // As per [databind#398], URI requires special handling
+            if (_kind == STD_URI) {
+                return URI.create("");
+            }
+            // As per [databind#1123], Locale too
+            return super._deserializeFromEmptyString();
+        }
+
+###Fixed Function

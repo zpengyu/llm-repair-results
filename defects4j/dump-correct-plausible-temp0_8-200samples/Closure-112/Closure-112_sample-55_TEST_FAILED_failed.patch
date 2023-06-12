@@ -1,0 +1,29 @@
+diff --git a/src/com/google/javascript/jscomp/TypeInference.java b/src/com/google/javascript/jscomp/TypeInference.java
+index 6c9c7846..673b845b 100644
+--- a/src/com/google/javascript/jscomp/TypeInference.java
++++ b/src/com/google/javascript/jscomp/TypeInference.java
+@@ -1197,18 +1194,17 @@ class TypeInference
+     // replace it with UNKNOWN.
+     TemplateTypeReplacer replacer = new TemplateTypeReplacer(
+         registry, inferred);
+-    Node callTarget = n.getFirstChild();
+-
+     FunctionType replacementFnType = fnType.visit(replacer)
+         .toMaybeFunctionType();
+     Preconditions.checkNotNull(replacementFnType);
+-
+-    callTarget.setJSType(replacementFnType);
+-    n.setJSType(replacementFnType.getReturnType());
+-
++    // A function call with an unknown function type can
++    // only have the unknown type, so don't assign a templated type to the
++    // function call.
++    if (!replacementFnType.isUnknownType()) {
++      n.setJSType(replacementFnType.getReturnType());
++    }
+     return replacer.madeChanges;
+   }
+-
+   private FlowScope traverseNew(Node n, FlowScope scope) {
+     scope = traverseChildren(n, scope);
+ 

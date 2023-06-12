@@ -1,0 +1,33 @@
+diff --git a/src/main/java/org/joda/time/Period.java b/src/main/java/org/joda/time/Period.java
+index 8fce39c6..79093002 100644
+--- a/src/main/java/org/joda/time/Period.java
++++ b/src/main/java/org/joda/time/Period.java
+@@ -1621,20 +1621,23 @@ public final class Period
+         millis += (((long) getHours()) * ((long) DateTimeConstants.MILLIS_PER_HOUR));
+         millis += (((long) getDays()) * ((long) DateTimeConstants.MILLIS_PER_DAY));
+         millis += (((long) getWeeks()) * ((long) DateTimeConstants.MILLIS_PER_WEEK));
+-        Period result = new Period(millis, type, ISOChronology.getInstanceUTC());
+         int years = getYears();
+         int months = getMonths();
++        int days = getDays();
+         if (years != 0 || months != 0) {
++            int[] points = ISOChronology.getInstanceUTC().get(this, millis);
++            millis -= points[5] * DateTimeConstants.MILLIS_PER_DAY;
++            millis -= points[6] * DateTimeConstants.MILLIS_PER_WEEK;
++            millis -= points[7] * DateTimeConstants.MILLIS_PER_WEEK;
+             years = FieldUtils.safeAdd(years, months / 12);
+             months = months % 12;
+             if (years != 0) {
+-                result = result.withYears(years);
++                millis = type.getFieldType(DurationFieldType.years()).set(millis, years);
+             }
+             if (months != 0) {
+-                result = result.withMonths(months);
++                millis = type.getFieldType(DurationFieldType.months()).set(millis, months);
+             }
+         }
+-        return result;
++        return new Period(millis, type, ISOChronology.getInstanceUTC());
+     }
+-
+ }

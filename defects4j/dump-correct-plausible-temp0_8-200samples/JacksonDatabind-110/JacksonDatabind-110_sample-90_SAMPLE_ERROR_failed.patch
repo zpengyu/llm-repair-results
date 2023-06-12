@@ -1,0 +1,17 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/deser/impl/JavaUtilCollectionsDeserializers.java b/src/main/java/com/fasterxml/jackson/databind/deser/impl/JavaUtilCollectionsDeserializers.java
+index ddadb9ea8..7b9035bf2 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/deser/impl/JavaUtilCollectionsDeserializers.java
++++ b/src/main/java/com/fasterxml/jackson/databind/deser/impl/JavaUtilCollectionsDeserializers.java
+@@ -55,7 +46,11 @@ public abstract class JavaUtilCollectionsDeserializers
+         CLASS_SINGLETON_LIST = list.getClass();
+         CLASS_UNMODIFIABLE_LIST = Collections.unmodifiableList(list).getClass();
+         // for [databind#2265]
+-
++        try {
++            CLASS_UNMODIFIABLE_LIST = Class.forName("java.util.Collections$UnmodifiableRandomAccessList");
++        } catch (ClassNotFoundException e) {
++            throw new RuntimeException(e);
++        }
+         Map<?,?> map = Collections.singletonMap("a", "b");
+         CLASS_SINGLETON_MAP = map.getClass();
+         CLASS_UNMODIFIABLE_MAP = Collections.unmodifiableMap(map).getClass();

@@ -1,0 +1,21 @@
+diff --git a/src/com/google/javascript/jscomp/TypeCheck.java b/src/com/google/javascript/jscomp/TypeCheck.java
+index 6030d48d..d084f987 100644
+--- a/src/com/google/javascript/jscomp/TypeCheck.java
++++ b/src/com/google/javascript/jscomp/TypeCheck.java
+@@ -1555,7 +1553,15 @@ public class TypeCheck implements NodeTraversal.Callback, CompilerPass {
+     // If it is a function type, then validate parameters.
+     if (childType instanceof FunctionType) {
+       FunctionType functionType = (FunctionType) childType;
+-
++      // When a function is called with a property access,
++      // the type of this must be a subtype of the declared type of this in
++      // the function.
++      if (n.getParent().getType() == Token.GETPROP &&
++          !getJSType(n.getParent()).getThisType()
++          .isSubtype(functionType.getTypeOfThis())) {
++        report(t, n, INVALID_THIS_TYPE_IN_BIND, functionType.toString(),
++            getJSType(n.getParent()).getThisType().toString());
++      }
+       boolean isExtern = false;
+       JSDocInfo functionJSDocInfo = functionType.getJSDocInfo();
+       if(functionJSDocInfo != null) {

@@ -1,0 +1,23 @@
+diff --git a/src/com/google/javascript/jscomp/PeepholeSubstituteAlternateSyntax.java b/src/com/google/javascript/jscomp/PeepholeSubstituteAlternateSyntax.java
+index 17a02960..813887de 100644
+--- a/src/com/google/javascript/jscomp/PeepholeSubstituteAlternateSyntax.java
++++ b/src/com/google/javascript/jscomp/PeepholeSubstituteAlternateSyntax.java
+@@ -526,10 +526,16 @@ public class PeepholeSubstituteAlternateSyntax
+           // http://code.google.com/p/closure-compiler/issues/detail?id=291
+           // We try to detect this case, and not fold EXPR_RESULTs
+           // into other expressions.
+-
+             // We only have to worry about methods with an implicit 'this'
+             // param, or this doesn't happen.
+-
++          if (NodeUtil.isFunctionExpression(maybeExpr)) {
++            Node parent = n.getParent();
++            // Consider only the function expressions that are used as the
++            // value of a call or new node.
++            if (NodeUtil.isCallOrNewTarget(parent)) {
++              return false;
++            }
++          }
+           return NodeUtil.isExpressionNode(maybeExpr);
+       }
+     }

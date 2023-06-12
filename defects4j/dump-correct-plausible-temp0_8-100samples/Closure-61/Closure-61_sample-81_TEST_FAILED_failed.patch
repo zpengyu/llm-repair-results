@@ -1,0 +1,65 @@
+diff --git a/src/com/google/javascript/jscomp/NodeUtil.java b/src/com/google/javascript/jscomp/NodeUtil.java
+index 53389622..95fa816c 100644
+--- a/src/com/google/javascript/jscomp/NodeUtil.java
++++ b/src/com/google/javascript/jscomp/NodeUtil.java
+@@ -923,13 +923,11 @@ public final class NodeUtil {
+    * @param compiler A compiler object to provide program state changing
+    *     context information. Can be null.
+    */
+-  static boolean functionCallHasSideEffects(
+-      Node callNode, @Nullable AbstractCompiler compiler) {
++static boolean functionCallHasSideEffects(Node callNode, AbstractCompiler compiler) {
+     if (callNode.getType() != Token.CALL) {
+-      throw new IllegalStateException(
+-          "Expected CALL node, got " + Token.name(callNode.getType()));
++      throw new IllegalStateException("Expected CALL node, got " +
++          Token.name(callNode.getType()));
+     }
+-
+     if (callNode.isNoSideEffectsCall()) {
+       return false;
+     }
+@@ -943,31 +939,28 @@ public final class NodeUtil {
+         return false;
+       }
+     } else if (nameNode.getType() == Token.GETPROP) {
+-      if (callNode.hasOneChild()
+-          && OBJECT_METHODS_WITHOUT_SIDEEFFECTS.contains(
+-                nameNode.getLastChild().getString())) {
++      if (callNode.hasOneChild() &&
++          OBJECT_METHODS_WITHOUT_SIDEEFFECTS.contains(
++              nameNode.getLastChild().getString())) {
+         return false;
+       }
+-
+-      if (callNode.isOnlyModifiesThisCall()
+-          && evaluatesToLocalValue(nameNode.getFirstChild())) {
++      if (callNode.isOnlyModifiesThisCall() &&
++          evaluatesToLocalValue(nameNode.getFirstChild())) {
+         return false;
+       }
+-
+       // Functions in the "Math" namespace have no side effects.
+-
+       if (compiler != null && !compiler.hasRegExpGlobalReferences()) {
+-        if (nameNode.getFirstChild().getType() == Token.REGEXP
+-            && REGEXP_METHODS.contains(nameNode.getLastChild().getString())) {
++        if (nameNode.getFirstChild().getType() == Token.REGEXP &&
++            REGEXP_METHODS.contains(nameNode.getLastChild().getString())) {
+           return false;
+-        } else if (nameNode.getFirstChild().getType() == Token.STRING
+-            && STRING_REGEXP_METHODS.contains(
+-                nameNode.getLastChild().getString())) {
++        } else if (nameNode.getFirstChild().getType() == Token.STRING &&
++            STRING_REGEXP_METHODS.contains(nameNode.getLastChild().getString())) {
+           Node param = nameNode.getNext();
+           if (param != null &&
+               (param.getType() == Token.STRING
+-                  || param.getType() == Token.REGEXP))
+-          return false;
++                  || param.getType() == Token.REGEXP)) {
++            return false;
++          }
+         }
+       }
+     }

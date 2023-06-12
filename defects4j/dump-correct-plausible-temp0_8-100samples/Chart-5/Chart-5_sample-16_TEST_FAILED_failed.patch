@@ -1,0 +1,35 @@
+diff --git a/source/org/jfree/data/xy/XYSeries.java b/source/org/jfree/data/xy/XYSeries.java
+index 0b37e6e..9244d34 100644
+--- a/source/org/jfree/data/xy/XYSeries.java
++++ b/source/org/jfree/data/xy/XYSeries.java
+@@ -545,15 +544,23 @@ public class XYSeries extends Series implements Cloneable, Serializable {
+         // if we get to here, we know that duplicate X values are not permitted
+         XYDataItem overwritten = null;
+         int index = indexOf(x);
+-        if (index >= 0 && !this.allowDuplicateXValues) {
++        if (index >= 0) {
+             XYDataItem existing = (XYDataItem) this.data.get(index);
+-            try {
+-                overwritten = (XYDataItem) existing.clone();
+-            }
+-            catch (CloneNotSupportedException e) {
+-                throw new SeriesException("Couldn't clone XYDataItem!");
++            if (this.allowDuplicateXValues) {
++                try {
++                    overwritten = (XYDataItem) existing.clone();
++                } catch (CloneNotSupportedException e) {
++                    throw new SeriesException("Couldn't clone XYDataItem!");
++                }
++                existing.setY(y);
++            } else {
++                try {
++                    overwritten = (XYDataItem) existing.clone();
++                } catch (CloneNotSupportedException e) {
++                    throw new SeriesException("Couldn't clone XYDataItem!");
++                }
++                existing.setY(y);
+             }
+-            existing.setY(y);
+         }
+         else {
+             // if the series is sorted, the negative index is a result from

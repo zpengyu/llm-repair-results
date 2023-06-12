@@ -1,0 +1,21 @@
+diff --git a/src/main/java/org/apache/commons/csv/CSVFormat.java b/src/main/java/org/apache/commons/csv/CSVFormat.java
+index 6d090b6..8436663 100644
+--- a/src/main/java/org/apache/commons/csv/CSVFormat.java
++++ b/src/main/java/org/apache/commons/csv/CSVFormat.java
+@@ -1246,6 +1237,16 @@ public final class CSVFormat implements Serializable {
+                 // put the next starting position on the encapsulator so we will
+                 // write it out again with the next string (effectively doubling it)
+                 start = pos;
++            } else if (c == LF || c == CR) {
++                // handle this case by encoding the line break and then resuming from the next
++                // position after the line break
++                out.append(value, start, pos);
++                if (c == CR && pos != end - 1 && value.charAt(pos + 1) == LF) {
++                    // skip over the LF part of CRLF
++                    pos++;
++                }
++                encodeLineBreak(out);
++                start = pos + 1;
+             }
+             pos++;
+         }

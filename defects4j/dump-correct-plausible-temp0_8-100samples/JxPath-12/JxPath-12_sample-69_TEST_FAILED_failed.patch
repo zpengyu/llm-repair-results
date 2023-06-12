@@ -1,0 +1,33 @@
+diff --git a/src/java/org/apache/commons/jxpath/ri/model/dom/DOMNodePointer.java b/src/java/org/apache/commons/jxpath/ri/model/dom/DOMNodePointer.java
+index a5bb202..0fb27d9 100644
+--- a/src/java/org/apache/commons/jxpath/ri/model/dom/DOMNodePointer.java
++++ b/src/java/org/apache/commons/jxpath/ri/model/dom/DOMNodePointer.java
+@@ -98,11 +97,24 @@ public class DOMNodePointer extends NodePointer {
+             String namespaceURI = nodeNameTest.getNamespaceURI();
+             boolean wildcard = nodeNameTest.isWildcard();
+             String testPrefix = testName.getPrefix();
+-            if (wildcard && testPrefix == null) {
+-                return true;
++            if (wildcard) {
++                if (testPrefix == null) {
++                    return true;
++                }
++                // If the namespace URI is not specified, it should match the
++                // node's namespace URI.
++                if (namespaceURI == null) {
++                    String nodeNS = DOMNodePointer.getNamespaceURI(node);
++                    if (!equalStrings(namespaceURI, nodeNS)) {
++                        return false;
++                    }
++                }
++                // If the prefix is specified, it should match the node's
++                // namespace prefix
++                String nodePrefix = DOMNodePointer.getPrefix(node);
++                return equalStrings(testPrefix, nodePrefix);
+             }
+-            if (wildcard
+-                || testName.getName()
++            if (testName.getName()
+                         .equals(DOMNodePointer.getLocalName(node))) {
+                 String nodeNS = DOMNodePointer.getNamespaceURI(node);
+                 return equalStrings(namespaceURI, nodeNS);

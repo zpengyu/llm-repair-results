@@ -1,0 +1,22 @@
+diff --git a/src/com/google/javascript/jscomp/CodeConsumer.java b/src/com/google/javascript/jscomp/CodeConsumer.java
+index 47ecfb1d..a5d31c39 100644
+--- a/src/com/google/javascript/jscomp/CodeConsumer.java
++++ b/src/com/google/javascript/jscomp/CodeConsumer.java
+@@ -262,10 +261,15 @@ abstract class CodeConsumer {
+         add(Long.toString(value));
+       }
+     } else {
+-      add(String.valueOf(x));
++      String value = String.valueOf(x);
++      // To avoid parsing errors, we need to add a space after a minus.
++      if (value.charAt(0) == '-' || value.charAt(0) == '+') {
++        add(value.charAt(0) + " " + value.substring(1));
++      } else {
++        add(value);
++      }
+     }
+   }
+-
+   static boolean isNegativeZero(double x) {
+     return x == 0.0 && Math.copySign(1, x) == -1.0;
+   }

@@ -1,0 +1,21 @@
+diff --git a/src/com/google/javascript/rhino/jstype/PrototypeObjectType.java b/src/com/google/javascript/rhino/jstype/PrototypeObjectType.java
+index 77c5441e..c126e969 100644
+--- a/src/com/google/javascript/rhino/jstype/PrototypeObjectType.java
++++ b/src/com/google/javascript/rhino/jstype/PrototypeObjectType.java
+@@ -574,8 +573,14 @@ class PrototypeObjectType extends ObjectType {
+                 .getLeastSupertype(propType);
+           }
+           defineInferredProperty(prop, typeToInfer, null);
++        } else if (
++            // The property's type is already declared and it does not include
++            // the constraint.
++            !getPropertyType(prop).isSubtypeOf(propType)) {
++          // TODO(dimvar): maybe we can be more aggressive here
++          // and unify the declared type with the constraint.
++          return;
+         }
+       }
+     }
+-  }
+-}
++  }}

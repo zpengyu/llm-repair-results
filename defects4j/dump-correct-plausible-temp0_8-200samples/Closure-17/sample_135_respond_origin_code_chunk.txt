@@ -1,0 +1,101 @@
+    private JSType getDeclaredType(String sourceName, JSDocInfo info,
+        Node lValue, @Nullable Node rValue) {
+      if (info != null && info.hasType()) {
+        return getDeclaredTypeInAnnotation(sourceName, lValue, info);
+      } else if (rValue != null && rValue.isFunction() &&
+          shouldUseFunctionLiteralType(
+              JSType.toMaybeFunctionType(rValue.getJSType()), info, lValue)) {
+        return rValue.getJSType();
+      } else if (info != null) {
+        if (info.hasEnumParameterType()) {
+          if (rValue != null && rValue.isObjectLit()) {
+            return rValue.getJSType();
+          } else {
+            return createEnumTypeFromNodes(
+                rValue, lValue.getQualifiedName(), info, lValue);
+          }
+        } else if (info.isConstructor() || info.isInterface()) {
+          return createFunctionTypeFromNodes(
+              rValue, lValue.getQualifiedName(), info, lValue);
+        } else {
+          // Check if this is constant, and if it has a known type.
+          if (info.isConstant()) {
+            JSType knownType = null;
+            if (rValue != null) {
+              if (rValue.getJSType() != null && !rValue.getJSType().isUnknownType()) {
+                // If rValue has a type-cast, we use the type in the type-cast.
+                // If rValue's type was already computed during scope creation,
+                // then we can safely use that.
+                return rValue.getJSType();
+              } else if (rValue.isOr()) {
+                // Check for a very specific JS idiom:
+                // var x = x || TYPE;
+                // This is used by Closure's base namespace for esoteric
+                // reasons.
+                Node firstClause = rValue.getFirstChild();
+                Node secondClause = firstClause.getNext();
+                boolean namesMatch = firstClause.isName()
+                    && lValue.isName()
+                    && firstClause.getString().equals(lValue.getString());
+                if (namesMatch && secondClause.getJSType() != null
+                    && !secondClause.getJSType().isUnknownType()) {
+                  return secondClause.getJSType();
+                }
+              }
+            }
+          }
+        }
+      }
+      JSType type = null;
+      if (info != null) {
+        type = getDeclaredTypeInAnnotation(sourceName, lValue, info);
+      }
+      if (type != null) {
+        return type;
+      }
+      return createTypeFromCommentNode(sourceName, lValue, info);
+    }
+
+    /**
+     * Creates a type from a {@link JSDocInfo} on a declaration node.
+     *
+     * @param sourceName The name of the file containing the {@code node}
+     * @param node The node with the {@code info}.
+     * @param info The {@link JSDocInfo} from the {@code node}.
+     * @return A type object described by the {@code info}.
+     */
+    @Nullable
+    private JSType getDeclaredTypeInAnnotation(
+        String sourceName, Node node, JSDocInfo info) {
+      Preconditions.checkState(info.hasType());
+      if (info.getType() == null) {
+        return null;
+      }
+
+      JSType type = info.getType().evaluate(this, sourceName);
+      if (type == null) {
+        return null;
+      }
+
+      if (info.hasEnumParameterType()) {
+        // If this is an enum, cache the type we're creating, so that we can
+        // add the keys to it.
+        typeRegistry.put(null, info.getType().toString(), type);
+      }
+
+      if (!info.getBaseType().isEmpty()
+          && (info.isConstructor() || info.isInterface())) {
+        String baseTypeName = info.getBaseType().get(0);
+        if (baseTypeName.equals("Function")) {
+          baseTypeName = "Function";
+        }
+
+        JSType baseType = createTypeFromCommentNode(sourceName, node, info);
+        FunctionType functionType = type.toMaybeFunctionType();
+        if (functionType != null) {
+          functionType.setPrototypeBasedOn(baseType);
+        }
+      }
+
+      return type;
+    }

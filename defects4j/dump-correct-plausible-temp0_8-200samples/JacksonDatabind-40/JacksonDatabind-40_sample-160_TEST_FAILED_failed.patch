@@ -1,0 +1,61 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/deser/std/NumberDeserializers.java b/src/main/java/com/fasterxml/jackson/databind/deser/std/NumberDeserializers.java
+index a76403c86..c4b1453f7 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/deser/std/NumberDeserializers.java
++++ b/src/main/java/com/fasterxml/jackson/databind/deser/std/NumberDeserializers.java
+@@ -118,20 +118,40 @@ public class NumberDeserializers
+         extends StdScalarDeserializer<T>
+     {
+         private static final long serialVersionUID = 1L;
+-
+         protected final T _nullValue;
+         protected final boolean _primitive;
+-
++        protected final boolean _isEmptyStringToNull;
+         protected PrimitiveOrWrapperDeserializer(Class<T> vc, T nvl) {
+             super(vc);
+             _nullValue = nvl;
+             _primitive = vc.isPrimitive();
++            _isEmptyStringToNull = false;
++        }
++        protected PrimitiveOrWrapperDeserializer(PrimitiveOrWrapperDeserializer<T> src, Boolean emptyStrings) {
++            super(src);
++            _nullValue = src._nullValue;
++            _primitive = src._primitive;
++            _isEmptyStringToNull = emptyStrings;
++        }
++        protected PrimitiveOrWrapperDeserializer(PrimitiveOrWrapperDeserializer<T> src, T nvl) {
++            super(src);
++            _nullValue = nvl;
++            _primitive = src._primitive;
++            _isEmptyStringToNull = src._isEmptyStringToNull;
++        }
++        protected PrimitiveOrWrapperDeserializer(PrimitiveOrWrapperDeserializer<T> src) {
++            super(src);
++            _nullValue = src._nullValue;
++            _primitive = src._primitive;
++            _isEmptyStringToNull = src._isEmptyStringToNull;
+         }
+-
+         @Override
+         public final T getNullValue(DeserializationContext ctxt) throws JsonMappingException
+         {
+-            if (_primitive && ctxt.isEnabled(DeserializationFeature.FAIL_ON_NULL_FOR_PRIMITIVES)) {
++            // [databind#1095]: Should not allow coercion from into null from Empty String
++            // either, if `null` not allowed
++            if (_primitive && !_isEmptyStringToNull
++                    && ctxt.isEnabled(DeserializationFeature.FAIL_ON_NULL_FOR_PRIMITIVES)) {
+                 throw ctxt.mappingException(
+                         "Can not map JSON null into type %s (set DeserializationConfig.DeserializationFeature.FAIL_ON_NULL_FOR_PRIMITIVES to 'false' to allow)",
+                         handledType().toString());
+@@ -144,11 +163,7 @@ public class NumberDeserializers
+         public final T getNullValue() {
+             return _nullValue;
+         }
+-
+-            // [databind#1095]: Should not allow coercion from into null from Empty String
+-            // either, if `null` not allowed
+     }
+-
+     /*
+     /**********************************************************
+     /* Then primitive/wrapper types

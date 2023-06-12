@@ -1,0 +1,40 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/deser/BuilderBasedDeserializer.java b/src/main/java/com/fasterxml/jackson/databind/deser/BuilderBasedDeserializer.java
+index 316efa3a9..d8107b7c6 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/deser/BuilderBasedDeserializer.java
++++ b/src/main/java/com/fasterxml/jackson/databind/deser/BuilderBasedDeserializer.java
+@@ -583,18 +581,13 @@ public class BuilderBasedDeserializer
+                 if (buffer.assignParameter(creatorProp, creatorProp.deserialize(p, ctxt))) {
+                     t = p.nextToken();
+                     Object bean;
+-                    try {
+-                        bean = creator.build(ctxt, buffer);
+-                    } catch (Exception e) {
+-                        wrapAndThrow(e, _beanType.getRawClass(), propName, ctxt);
+-                        continue;
+-                    }
+                     while (t == JsonToken.FIELD_NAME) {
+                         p.nextToken();
+                         tokens.copyCurrentStructure(p);
+                         t = p.nextToken();
+                     }
+                     tokens.writeEndObject();
++                    bean = creator.build(ctxt, buffer);
+                     if (bean.getClass() != _beanType.getRawClass()) {
+                         ctxt.reportMappingException("Can not create polymorphic instances with unwrapped values");
+                         return null;
+@@ -628,14 +620,9 @@ public class BuilderBasedDeserializer
+         // We hit END_OBJECT, so:
+         Object bean;
+         // !!! 15-Feb-2012, tatu: Need to modify creator to use Builder!
+-        try {
+-            bean = creator.build(ctxt, buffer);
+-        } catch (Exception e) {
+-            return wrapInstantiationProblem(e, ctxt);
+-        }
++        bean = creator.build(ctxt, buffer);
+         return _unwrappedPropertyHandler.processUnwrapped(p, ctxt, bean, tokens);
+     }
+-
+     /*
+     /**********************************************************
+     /* Handling for cases where we have property/-ies with

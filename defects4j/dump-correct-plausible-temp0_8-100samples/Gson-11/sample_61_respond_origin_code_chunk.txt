@@ -1,0 +1,18 @@
+          @Override public T1 read(JsonReader in) throws IOException {
+            if (requestedType == JSONObject.class) {
+              // instead of parsing, read the raw json and construct a JSONObject from that
+              return (T1) new JSONObject(new JSONTokener(in.nextString()));
+            } else if (requestedType == JSONArray.class) {
+              // same as above
+              return (T1) new JSONArray(new JSONTokener(in.nextString()));
+            } else {
+              T1 result = typeAdapter.read(in);
+              if (result != null && !requestedType.isInstance(result)) {
+                throw new JsonSyntaxException("Expected a " + requestedType.getName()
+                    + " but was " + result.getClass().getName());
+              }
+              return result;
+            }
+          }
+ 
+

@@ -1,0 +1,36 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/deser/std/JdkDeserializers.java b/src/main/java/com/fasterxml/jackson/databind/deser/std/JdkDeserializers.java
+index 2b7efe9c9..fef3ff07e 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/deser/std/JdkDeserializers.java
++++ b/src/main/java/com/fasterxml/jackson/databind/deser/std/JdkDeserializers.java
+@@ -24,25 +24,24 @@ public class JdkDeserializers
+         for (Class<?> cls : types) { _classNames.add(cls.getName()); }
+         for (Class<?> cls : FromStringDeserializer.types()) { _classNames.add(cls.getName()); }
+     }
+-
+-    public static JsonDeserializer<?> find(Class<?> rawType, String clsName)
++    public static JsonDeserializer<?> find(JavaType type, String clsName)
+     {
+         if (_classNames.contains(clsName)) {
+-            JsonDeserializer<?> d = FromStringDeserializer.findDeserializer(rawType);
++            JsonDeserializer<?> d = FromStringDeserializer.findDeserializer(type);
+             if (d != null) {
+                 return d;
+             }
+-            if (rawType == UUID.class) {
++            if (type.hasRawClass(UUID.class)) {
+                 return new UUIDDeserializer();
+             }
+-            if (rawType == StackTraceElement.class) {
++            if (type.hasRawClass(StackTraceElement.class)) {
+                 return new StackTraceElementDeserializer();
+             }
+-            if (rawType == AtomicBoolean.class) {
++            if (type.hasRawClass(AtomicBoolean.class)) {
+                 // (note: AtomicInteger/Long work due to single-arg constructor. For now?
+                 return new AtomicBooleanDeserializer();
+             }
+-            if (rawType == ByteBuffer.class) {
++            if (type.hasRawClass(ByteBuffer.class)) {
+                 return new ByteBufferDeserializer();
+             }
+         }

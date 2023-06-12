@@ -1,0 +1,50 @@
+    protected void iterateSimplex(final Comparator<RealPointValuePair> comparator)
+        throws FunctionEvaluationException, OptimizationException, IllegalArgumentException {
+        while (true) {
+            incrementIterationsCounter();
+            // save the original vertex
+            final RealPointValuePair[] original = simplex;
+            final RealPointValuePair best = original[0];
+            // perform a reflection step
+            final RealPointValuePair reflected = evaluateNewSimplex(original, 1.0, comparator);
+            if (comparator.compare(reflected, best) < 0) {
+                // compute the expanded simplex
+                final RealPointValuePair[] reflectedSimplex = simplex;
+                final RealPointValuePair expanded = evaluateNewSimplex(original, khi, comparator);
+                if (comparator.compare(best, expanded) <= 0 &&
+                    comparator.compare(reflected, expanded) <= 0) {
+                    // accept the expanded simplex
+                    simplex = reflectedSimplex;
+                } else {
+                    // accept the reflected simplex
+                    simplex = reflectedSimplex;
+                }
+                return;
+            }
+            // compute the contracted simplex
+            final RealPointValuePair contracted = evaluateNewSimplex(original, gamma, comparator);
+            if (comparator.compare(contracted, best) <= 0) {
+                // accept the contracted simplex
+                return;
+            }
+            // compute the reduced simplex
+            final RealPointValuePair[] reduced = new RealPointValuePair[n];
+            for (int i = 0; i < n; ++i) {
+                final double[] xi = original[i].getPointRef();
+                final double[] xr = best.getPointRef();
+                final double[] xs = reduced[i].getPoint();
+                for (int j = 0; j < n; ++j) {
+                    xs[j] = xi[j] + sigma * (xi[j] - xr[j]);
+                }
+            }
+            sort(reduced, comparator);
+            if (comparator.compare(reduced[0], best) < 0) {
+                // accept the reduced simplex
+                simplex = reduced;
+                return;
+            }
+            // reject the reduced simplex and try again with
+            // the reflection coefficient reduced by a factor of 2
+            alpha *= 0.5;
+        }
+    }

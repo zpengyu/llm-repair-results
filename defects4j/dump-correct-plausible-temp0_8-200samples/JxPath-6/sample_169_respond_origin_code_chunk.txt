@@ -1,0 +1,85 @@
+    protected boolean equal(
+        EvalContext context,
+        Expression left,
+        Expression right) 
+    {
+        Object l = left.compute(context);
+        Object r = right.compute(context);
+
+        if (l == r)
+            return true;
+
+        if (l == null || r == null)
+            return false;
+
+        if (l instanceof InitialContext || l instanceof SelfContext) {
+            l = ((EvalContext) l).getSingleNodePointer();
+        }
+
+        if (r instanceof InitialContext || r instanceof SelfContext) {
+            r = ((EvalContext) r).getSingleNodePointer();
+        }
+
+        if (l instanceof Collection) {
+            l = ((Collection) l).iterator();
+        }
+
+        if (r instanceof Collection) {
+            r = ((Collection) r).iterator();
+        }
+
+        if ((l instanceof Iterator) && !(r instanceof Iterator)) {
+            return contains((Iterator) l, r);
+        }
+        if (!(l instanceof Iterator) && (r instanceof Iterator)) {
+            return contains((Iterator) r, l);
+        }
+        if (l instanceof Iterator && r instanceof Iterator) {
+            return findMatch((Iterator) l, (Iterator) r);
+        }
+        return equal(l, r);
+    }
+
+    private boolean equal(Object l, Object r) {
+        if (l instanceof String && r instanceof String) {
+            return ((String) l).equals(r);
+        }
+        if (l instanceof Number && r instanceof Number) {
+            Number ln = (Number) l;
+            Number rn = (Number) r;
+            if (ln instanceof Double || ln instanceof Float
+                || rn instanceof Double || rn instanceof Float) {
+                double ld = ln.doubleValue();
+                double rd = rn.doubleValue();
+                return (ld == rd) || (Double.isNaN(ld) && Double.isNaN(rd));
+            } else {
+                long ll = ln.longValue();
+                long rl = rn.longValue();
+                return ll == rl;
+            }
+        }
+        if (l instanceof Boolean && r instanceof Boolean) {
+            return ((Boolean) l).booleanValue()
+                == ((Boolean) r).booleanValue();
+        }
+        return l == r;
+    }
+
+    protected boolean findMatch(Iterator l, Iterator r) {
+        while (l.hasNext()) {
+            if (contains(r, l.next())) {
+                return true;
+            }
+        }
+        return false;
+    }
+    protected boolean contains(Iterator iter, Object value) {
+        while (iter.hasNext()) {
+            if (equal(iter.next(), value)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+

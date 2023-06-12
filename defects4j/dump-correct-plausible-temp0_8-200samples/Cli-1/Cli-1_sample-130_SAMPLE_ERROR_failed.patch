@@ -1,0 +1,74 @@
+diff --git a/src/java/org/apache/commons/cli/CommandLine.java b/src/java/org/apache/commons/cli/CommandLine.java
+index de23601..be482b9 100644
+--- a/src/java/org/apache/commons/cli/CommandLine.java
++++ b/src/java/org/apache/commons/cli/CommandLine.java
+@@ -37,19 +37,37 @@ import java.util.Map;
+  * @author <a href="mailto:jstrachan@apache.org">James Strachan</a>
+  * @author John Keyes (john at integralsource.com)
+  */
++package jakarta.apache.commons.cli;
++import java.util.List;
++import java.util.HashMap;
++import java.util.Map;
++import java.util.HashSet;
++import java.util.Set;
++import java.util.Collection;
++import java.util.Iterator;
++import java.util.ArrayList;
++import java.util.LinkedList;
++/**
++ * <p><code>CommandLine</code> stores argument values parsed from
++ * <code>String[]</code> command line tokens.</p>
++ * 
++ * <p>It supports only simple arguments - those that have no values
++ * associated with them. A single dash ('-') is used to introduce
++ * each option. Each option may occur more than once and option values
++ * may be optional.</p>
++ *
++ * @author John Keyes (john at integralsource.com)
++ * @version $Revision$
++ */
+ public class CommandLine {
+-
+     /** the unrecognised options/arguments */
+     private List args = new LinkedList();
+-
+     /** the processed options */
+     private Map options = new HashMap();
+     private Map names = new HashMap();
+-
+     /** Map of unique options for ease to get complete list of options */
+-//    private Set allOptions = new HashSet();
++    private Set allOptions = new HashSet();
+     private Map hashcodeMap = new HashMap();
+-
+     /**
+      * Creates a command line.
+      */
+@@ -160,15 +164,22 @@ public class CommandLine {
+             return ((Option) options.get(key)).getValues();
+         }
+         return null;
+-        }
+-
++    }
+     /**
+      * <p>Retrieves the option object given the long or short option as a String</p>
+      * @param opt short or long name of the option
+      * @return Canonicalized option
+      */
+-
+-
++    public Option getOption(String opt)
++    {
++        opt = Util.stripLeadingHyphens(opt);
++        String key = opt;
++        if (names.containsKey(opt))
++        {
++            key = (String) names.get(opt);
++        }
++        return (Option) options.get(key);
++    }
+     /** 
+      * Retrieves the array of values, if any, of an option.
+      *

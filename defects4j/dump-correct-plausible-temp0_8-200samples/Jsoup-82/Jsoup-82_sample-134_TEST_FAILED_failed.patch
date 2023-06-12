@@ -1,0 +1,25 @@
+diff --git a/src/main/java/org/jsoup/helper/DataUtil.java b/src/main/java/org/jsoup/helper/DataUtil.java
+index e4fa18c..a2df437 100644
+--- a/src/main/java/org/jsoup/helper/DataUtil.java
++++ b/src/main/java/org/jsoup/helper/DataUtil.java
+@@ -92,7 +92,7 @@ public final class DataUtil {
+         }
+     }
+ 
+-    static Document parseInputStream(InputStream input, String charsetName, String baseUri, Parser parser) throws IOException  {
++    static Document parseInputStream(InputStream input, String charsetName, String baseUri, Parser parser) throws IOException {
+         if (input == null) // empty body
+             return new Document(baseUri);
+         input = ConstrainableInputStream.wrap(input, bufferSize, 0);
+@@ -103,9 +101,9 @@ public final class DataUtil {
+         // read the start of the stream and look for a BOM or meta charset
+         input.mark(bufferSize);
+         ByteBuffer firstBytes = readToByteBuffer(input, firstReadBufferSize - 1); // -1 because we read one more to see if completed. First read is < buffer size, so can't be invalid.
+-        fullyRead = input.read() == -1;
++        if (firstBytes.remaining() == firstReadBufferSize - 1)
++            fullyRead = input.read() == -1;
+         input.reset();
+-
+         // look for BOM - overrides any other header or input
+         BomCharset bomCharset = detectCharsetFromBom(firstBytes);
+         if (bomCharset != null)

@@ -1,0 +1,29 @@
+diff --git a/gson/src/main/java/com/google/gson/stream/JsonReader.java b/gson/src/main/java/com/google/gson/stream/JsonReader.java
+index 4541941d..7ddca604 100644
+--- a/gson/src/main/java/com/google/gson/stream/JsonReader.java
++++ b/gson/src/main/java/com/google/gson/stream/JsonReader.java
+@@ -726,10 +718,21 @@ public class JsonReader implements Closeable {
+         }
+       }
+     }
+-
+     // We've read a complete number. Decide if it's a PEEKED_LONG or a PEEKED_NUMBER.
+-    if (last == NUMBER_CHAR_DIGIT && fitsInLong && (value != Long.MIN_VALUE || negative)) {
+-      peekedLong = negative ? value : -value;
++    if (last == NUMBER_CHAR_DIGIT && fitsInLong) {
++      if (i >= 9) {
++        peekedLong = negative ? Long.MIN_VALUE : Long.MAX_VALUE;
++      } else {
++        if (negative) {
++          value = -value;
++        }
++        if (value >= 0) {
++          peekedLong = value;
++        } else {
++          // The value overflows to a signed long, pull back to a safer value.
++          peekedLong = 0;
++        }
++      }
+       pos += i;
+       return peeked = PEEKED_LONG;
+     } else if (last == NUMBER_CHAR_DIGIT || last == NUMBER_CHAR_FRACTION_DIGIT

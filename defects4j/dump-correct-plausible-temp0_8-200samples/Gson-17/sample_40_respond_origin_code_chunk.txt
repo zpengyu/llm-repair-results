@@ -1,0 +1,16 @@
+  public Date read(JsonReader in) throws IOException {
+    if (in.peek() == JsonToken.NUMBER) {
+      long value = in.nextLong();
+      return new Date(value);
+    }
+    else if (in.peek() == JsonToken.STRING) {
+      try {
+        return ISO8601Utils.parse(in.nextString(), new ParsePosition(0));
+      } catch (ParseException e) {
+        throw new JsonSyntaxException(e);
+      }
+    }
+    else {
+      throw new JsonParseException("The date should be a string value");
+    }
+  }

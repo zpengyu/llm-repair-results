@@ -1,0 +1,36 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/jsontype/impl/TypeDeserializerBase.java b/src/main/java/com/fasterxml/jackson/databind/jsontype/impl/TypeDeserializerBase.java
+index e8942ba4b..a068b9c4a 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/jsontype/impl/TypeDeserializerBase.java
++++ b/src/main/java/com/fasterxml/jackson/databind/jsontype/impl/TypeDeserializerBase.java
+@@ -155,17 +155,21 @@ public abstract class TypeDeserializerBase
+              */
+             JavaType type = _idResolver.typeFromId(ctxt, typeId);
+             if (type == null) {
+-                // use the default impl if no type id available:
+-                deser = _findDefaultImplDeserializer(ctxt);
+-                if (deser == null) {
+-                    // 10-May-2016, tatu: We may get some help...
+-                    JavaType actual = _handleUnknownTypeId(ctxt, typeId);
+-                    if (actual == null) { // what should this be taken to mean?
+-                        // 17-Jan-2019, tatu: As per [databind#2221], better NOT return `null` but...
+-                        return null;
++                if (_defaultImpl != null) {
++                    deser = _findDefaultImplDeserializer(ctxt);
++                } else {
++                    // use the default impl if no type id available:
++                    deser = _findDefaultImplDeserializer(ctxt);
++                    if (deser == null) {
++                        // 10-May-2016, tatu: We may get some help...
++                        JavaType actual = _handleUnknownTypeId(ctxt, typeId);
++                        if (actual == null) { // what should this be taken to mean?
++                            // 17-Jan-2019, tatu: As per [databind#2221], better NOT return `null` but...
++                            return null;
++                        }
++                        // ... would this actually work?
++                        deser = ctxt.findContextualValueDeserializer(actual, _property);
+                     }
+-                    // ... would this actually work?
+-                    deser = ctxt.findContextualValueDeserializer(actual, _property);
+                 }
+             } else {
+                 /* 16-Dec-2010, tatu: Since nominal type we get here has no (generic) type parameters,

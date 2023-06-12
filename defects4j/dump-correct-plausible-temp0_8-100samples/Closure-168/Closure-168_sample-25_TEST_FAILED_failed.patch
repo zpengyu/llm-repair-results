@@ -1,0 +1,29 @@
+diff --git a/src/com/google/javascript/jscomp/TypedScopeCreator.java b/src/com/google/javascript/jscomp/TypedScopeCreator.java
+index 5e7bfa3f..df0386b3 100644
+--- a/src/com/google/javascript/jscomp/TypedScopeCreator.java
++++ b/src/com/google/javascript/jscomp/TypedScopeCreator.java
+@@ -2022,9 +2018,11 @@ final class TypedScopeCreator implements ScopeCreator {
+             data.get(ownerScope.getRootNode()).recordEscapedVarName(name);
+           }
+         }
+-      } else if (n.isGetProp() && n.isUnscopedQualifiedName() &&
+-          NodeUtil.isLValue(n)) {
+-        String name = NodeUtil.getRootOfQualifiedName(n).getString();
++      } else if (n.isGetProp() && NodeUtil.isLValue(n)) {
++        // Since we visit the GETPROP in the traversal, we don't want to
++        // record the qualified name, since it might be visited more than once
++        // in the traversal.
++        String name = n.getFirstChild().getString();
+         Scope scope = t.getScope();
+         Var var = scope.getVar(name);
+         if (var != null) {
+@@ -2035,8 +2033,7 @@ final class TypedScopeCreator implements ScopeCreator {
+           }
+         }
+       }
+-    }
+-  }
++    }  }
+ 
+   private AstFunctionContents getFunctionAnalysisResults(@Nullable Node n) {
+     if (n == null) {

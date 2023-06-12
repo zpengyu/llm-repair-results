@@ -1,0 +1,19 @@
+    public Object complete(JsonParser p, DeserializationContext ctxt,
+            PropertyValueBuffer buffer, PropertyBasedCreator creator)
+        throws IOException
+    {
+        final int len = _properties.length;
+        Object[] values = new Object[len];
+        for (int i = 0; i < len; ++i) {
+            values[i] = _deserializeIfPresent(p, ctxt, i);
+        }
+        // third: assign non-creator properties
+        for (int i = 0; i < len; ++i) {
+            if (values[i] != null) {
+                SettableBeanProperty prop = _properties[i].getProperty();
+                prop.set(buffer.buffered().bean(), values[i]);
+            }
+        }
+        return buffer.buffered().bean();
+    }
+ 

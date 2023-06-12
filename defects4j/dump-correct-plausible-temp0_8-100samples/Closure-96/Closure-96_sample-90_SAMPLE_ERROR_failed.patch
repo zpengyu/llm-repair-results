@@ -1,0 +1,37 @@
+diff --git a/src/com/google/javascript/jscomp/TypeCheck.java b/src/com/google/javascript/jscomp/TypeCheck.java
+index 83a73c74..4fae8447 100644
+--- a/src/com/google/javascript/jscomp/TypeCheck.java
++++ b/src/com/google/javascript/jscomp/TypeCheck.java
+@@ -1409,10 +1408,9 @@ public class TypeCheck implements NodeTraversal.Callback, CompilerPass {
+            parameters.hasNext()) {
+       // If there are no parameters left in the list, then the while loop
+       // above implies that this must be a var_args function.
+-        parameter = parameters.next();
++      parameter = parameters.next();
+       argument = arguments.next();
+       ordinal++;
+-
+       validator.expectArgumentMatchesParameter(t, argument,
+           getJSType(argument), getJSType(parameter), call, ordinal);
+     }
+@@ -1426,9 +1423,19 @@ public class TypeCheck implements NodeTraversal.Callback, CompilerPass {
+               String.valueOf(numArgs), String.valueOf(minArgs),
+               maxArgs != Integer.MAX_VALUE ?
+               " and no more than " + maxArgs + " argument(s)" : "");
++    } else {
++      int lastIndex = call.getChildCount() - 1;
++      Node lastArg = call.getChildAtIndex(lastIndex);
++      boolean isVarArgs = call.getChildCount() == maxArgs;
++      while (parameters.hasNext()) {
++        parameter = parameters.next();
++        ordinal++;
++        validator.expectArgumentMatchesParameter(t, lastArg,
++            getJSType(lastArg), getJSType(parameter), call, ordinal,
++            isVarArgs);
++      }
+     }
+   }
+-
+   /**
+    * Visits a RETURN node.
+    *

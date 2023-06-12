@@ -1,0 +1,28 @@
+diff --git a/src/com/google/javascript/jscomp/LightweightMessageFormatter.java b/src/com/google/javascript/jscomp/LightweightMessageFormatter.java
+index 54758d68..6ebeddbd 100644
+--- a/src/com/google/javascript/jscomp/LightweightMessageFormatter.java
++++ b/src/com/google/javascript/jscomp/LightweightMessageFormatter.java
+@@ -105,6 +101,23 @@ public class LightweightMessageFormatter extends AbstractMessageFormatter {
+           }
+         }
+         b.append("^\n");
++      } else {
++        // charno isn't in the line, but it might be in the next one
++        if (charno > 0 && charno < sourceExcerpt.length()) {
++          int lineStart = sourceExcerpt.indexOf("\n", 0);
++          if (lineStart != -1 && charno < lineStart) {
++            b.append("\n");
++            for (int i = 0; i < charno; i++) {
++              char c = sourceExcerpt.charAt(i);
++              if (Character.isWhitespace(c)) {
++                b.append(c);
++              } else {
++                b.append(' ');
++              }
++            }
++            b.append("^\n");
++          }
++        }
+       }
+     }
+     return b.toString();

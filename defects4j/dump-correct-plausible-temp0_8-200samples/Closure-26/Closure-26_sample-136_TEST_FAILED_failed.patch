@@ -1,0 +1,26 @@
+diff --git a/src/com/google/javascript/jscomp/ProcessCommonJSModules.java b/src/com/google/javascript/jscomp/ProcessCommonJSModules.java
+index f516e584..fe5ca10d 100644
+--- a/src/com/google/javascript/jscomp/ProcessCommonJSModules.java
++++ b/src/com/google/javascript/jscomp/ProcessCommonJSModules.java
+@@ -175,6 +169,9 @@ public class ProcessCommonJSModules implements CompilerPass {
+           "CompilerInput / script node");
+       String moduleName = guessCJSModuleName(normalizeSourceName(script
+           .getSourceFileName()));
++      Node exportDecl = IR.var(IR.name("module$exports"), IR.objectlit());
++      exportDecl.copyInformationFromForTree(script);
++      script.addChildToFront(exportDecl);
+       script.addChildToFront(IR.var(IR.name(moduleName), IR.objectlit())
+           .copyInformationFromForTree(script));
+       if (reportDependencies) {
+@@ -187,9 +184,9 @@ public class ProcessCommonJSModules implements CompilerPass {
+       script.addChildToFront(IR.exprResult(
+           IR.call(IR.getprop(IR.name("goog"), IR.string("provide")),
+               IR.string(moduleName))).copyInformationFromForTree(script));
+-
++      // NOTE: We emit the module exports override immediately after the provide
++      // call but we may move it later if there are any goog.require calls.
+       emitOptionalModuleExportsOverride(script, moduleName);
+-
+       // Rename vars to not conflict in global scope.
+       NodeTraversal.traverse(compiler, script, new SuffixVarsCallback(
+           moduleName));

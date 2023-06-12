@@ -1,0 +1,25 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/deser/BeanDeserializer.java b/src/main/java/com/fasterxml/jackson/databind/deser/BeanDeserializer.java
+index cd54e7788..6c5daac34 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/deser/BeanDeserializer.java
++++ b/src/main/java/com/fasterxml/jackson/databind/deser/BeanDeserializer.java
+@@ -846,7 +844,12 @@ public class BeanDeserializer
+                 buffer.bufferAnyProperty(_anySetter, propName, _anySetter.deserialize(p, ctxt));
+             }
+         }
+-
++        // error?
++        if (t == null) {
++            ctxt.reportInputMismatch(handledType(),
++                "Unexpected end-of-input when binding data into %s",
++                handledType().getName());
++        }
+         // We hit END_OBJECT; resolve the pieces:
+         try {
+             return ext.complete(p, ctxt, buffer, creator);
+@@ -854,5 +857,4 @@ public class BeanDeserializer
+             wrapInstantiationProblem(e, ctxt);
+             return null; // never gets here
+         }
+-    }
+-}
++    }}

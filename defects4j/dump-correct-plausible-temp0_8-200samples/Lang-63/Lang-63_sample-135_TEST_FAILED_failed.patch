@@ -1,0 +1,46 @@
+diff --git a/src/java/org/apache/commons/lang/time/DurationFormatUtils.java b/src/java/org/apache/commons/lang/time/DurationFormatUtils.java
+index 8ced282e..ae3c6fd2 100644
+--- a/src/java/org/apache/commons/lang/time/DurationFormatUtils.java
++++ b/src/java/org/apache/commons/lang/time/DurationFormatUtils.java
+@@ -259,9 +259,7 @@ public class DurationFormatUtils {
+      * @param timezone the millis are defined in
+      * @return the time as a String
+      */
+-    public static String formatPeriod(long startMillis, long endMillis, String format, boolean padWithZeros, 
+-            TimeZone timezone) {
+-
++    public static String formatPeriod(long startMillis, long endMillis, String format, boolean padWithZeros, TimeZone timezone) {
+         long millis = endMillis - startMillis;
+         if (millis < 28 * DateUtils.MILLIS_PER_DAY) {
+             return formatDuration(millis, format, padWithZeros);
+@@ -337,7 +330,8 @@ public class DurationFormatUtils {
+             }
+         }
+         if (!Token.containsTokenWithValue(tokens, M)) {
+-            days += end.get(Calendar.DAY_OF_YEAR) - start.get(Calendar.DAY_OF_YEAR);
++            //days += end.get(Calendar.DAY_OF_YEAR) - start.get(Calendar.DAY_OF_YEAR);
++            days += getMonthsRemaining(start, end, months);
+             months = 0;
+         }
+         if (!Token.containsTokenWithValue(tokens, d)) {
+@@ -356,10 +350,18 @@ public class DurationFormatUtils {
+             milliseconds += 1000 * seconds;
+             seconds = 0;
+         }
+-
+         return format(tokens, years, months, days, hours, minutes, seconds, milliseconds, padWithZeros);
+     }
+-
++//HEN: Fixed the buggy function
++private static int getMonthsRemaining(Calendar start, Calendar end, int months) {
++        if (months == 0) {
++            int days = end.get(Calendar.DAY_OF_YEAR) - start.get(Calendar.DAY_OF_YEAR);
++            months = days / 30;
++            return days % 30;
++        } else {
++            return 0;
++        }
++    }
+     //-----------------------------------------------------------------------
+     /**
+      * <p>The internal method to do the formatting.</p>

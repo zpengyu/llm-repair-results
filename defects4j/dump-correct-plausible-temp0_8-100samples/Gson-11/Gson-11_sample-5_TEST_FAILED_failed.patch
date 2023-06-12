@@ -1,0 +1,23 @@
+diff --git a/gson/src/main/java/com/google/gson/internal/bind/TypeAdapters.java b/gson/src/main/java/com/google/gson/internal/bind/TypeAdapters.java
+index 2364c717..828af75b 100644
+--- a/gson/src/main/java/com/google/gson/internal/bind/TypeAdapters.java
++++ b/gson/src/main/java/com/google/gson/internal/bind/TypeAdapters.java
+@@ -907,14 +907,16 @@ public final class TypeAdapters {
+           }
+ 
+           @Override public T1 read(JsonReader in) throws IOException {
++            if (requestedType.isInterface()) {
++              throw new IllegalArgumentException("interface can not be used as a bean type");
++            }
+             T1 result = typeAdapter.read(in);
+             if (result != null && !requestedType.isInstance(result)) {
+               throw new JsonSyntaxException("Expected a " + requestedType.getName()
+                   + " but was " + result.getClass().getName());
+             }
+             return result;
+-          }
+-        };
++          }        };
+       }
+       @Override public String toString() {
+         return "Factory[typeHierarchy=" + clazz.getName() + ",adapter=" + typeAdapter + "]";

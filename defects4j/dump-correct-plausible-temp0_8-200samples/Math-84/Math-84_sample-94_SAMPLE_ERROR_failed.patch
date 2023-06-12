@@ -1,0 +1,51 @@
+diff --git a/src/main/java/org/apache/commons/math/optimization/direct/MultiDirectional.java b/src/main/java/org/apache/commons/math/optimization/direct/MultiDirectional.java
+index 2fa8c34bf..ba90cdf72 100644
+--- a/src/main/java/org/apache/commons/math/optimization/direct/MultiDirectional.java
++++ b/src/main/java/org/apache/commons/math/optimization/direct/MultiDirectional.java
+@@ -79,25 +74,36 @@ public class MultiDirectional extends DirectSearchOptimizer {
+                 if (comparator.compare(reflected, expanded) <= 0) {
+                     // accept the reflected simplex
+                     simplex = reflectedSimplex;
++                } else {
++                    // accept the expanded simplex
++                    simplex = newSimplex;
+                 }
+-
+                 return;
+-
+             }
+-
+             // compute the contracted simplex
+             final RealPointValuePair contracted = evaluateNewSimplex(original, gamma, comparator);
+-            if (comparator.compare(contracted, best) < 0) {
++            if (comparator.compare(contracted, best) <= 0) {
+                 // accept the contracted simplex
+-
+-            // check convergence
+-                return;
++                simplex = newSimplex;
++            } else {
++                // perform a shrink step
++                final RealPointValuePair[] shrunkSimplex = new RealPointValuePair[n + 1];
++                shrunkSimplex[0] = original[0];
++                for (int i = 1; i <= n; ++i) {
++                    final double[] x = new double[n];
++                    for (int j = 0; j < n; ++j) {
++                        final double aj = original[i].getPoint()[j];
++                        final double bj = original[0].getPoint()[j];
++                        x[j] = bj + sigma * (aj - bj);
++                    }
++                    final double value = function.value(x);
++                    shrunkSimplex[i] = new RealPointValuePair(x, value);
++                }
++                // evaluate the points of the shrunk simplex
++                evaluateNewSimplex(shrunkSimplex, comparator);
+             }
+-
+         }
+-
+     }
+-
+     /** Compute and evaluate a new simplex.
+      * @param original original simplex (to be preserved)
+      * @param coeff linear coefficient

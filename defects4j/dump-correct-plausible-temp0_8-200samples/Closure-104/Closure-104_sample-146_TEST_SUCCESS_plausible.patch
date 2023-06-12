@@ -1,0 +1,26 @@
+diff --git a/src/com/google/javascript/rhino/jstype/UnionType.java b/src/com/google/javascript/rhino/jstype/UnionType.java
+index f543a6d8..2350bf2d 100644
+--- a/src/com/google/javascript/rhino/jstype/UnionType.java
++++ b/src/com/google/javascript/rhino/jstype/UnionType.java
+@@ -287,16 +286,13 @@ public class UnionType extends JSType {
+     } else if (that.isSubtype(this)) {
+       builder.addAlternate(that);
+     }
+-    JSType result = builder.build();
+-    if (result != null) {
+-      return result;
+-    } else if (this.isObject() && that.isObject()) {
+-      return getNativeType(JSTypeNative.NO_OBJECT_TYPE);
+-    } else {
+-      return getNativeType(JSTypeNative.NO_TYPE);
++    // TODO(nicksantos): This should go away if we can fix the unions
++    // algorithm to always do the right thing.
++    if (this.isObject() && that.isObject()) {
++      builder.addAlternate(getNativeType(JSTypeNative.NO_OBJECT_TYPE));
+     }
++    return builder.build();
+   }
+-
+   /**
+    * Two union types are equal if they have the same number of alternates
+    * and all alternates are equal.

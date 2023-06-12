@@ -1,0 +1,22 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/type/TypeFactory.java b/src/main/java/com/fasterxml/jackson/databind/type/TypeFactory.java
+index 87b165830..24982f570 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/type/TypeFactory.java
++++ b/src/main/java/com/fasterxml/jackson/databind/type/TypeFactory.java
+@@ -926,9 +923,15 @@ public final class TypeFactory
+          *   for resolution to catch those.
+          */
+         context._addPlaceholder(name);
+-        return _constructType(bounds[0], context);
++        JavaType boundType = _constructType(bounds[0], context);
++        /* 19-Mar-2015, tatu: Should not matter either way, but to be bit
++         *   more robust, let's ensure that there is an actual type name.
++         */
++        if (boundType.hasGenericTypes()) {
++            return boundType.withUnwrappedType(name);
++        }
++        return boundType;
+     }
+-
+     protected JavaType _fromWildcard(WildcardType type, TypeBindings context)
+     {
+         /* Similar to challenges with TypeVariable, we may have

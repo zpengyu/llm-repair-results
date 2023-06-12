@@ -1,0 +1,29 @@
+diff --git a/src/com/google/javascript/jscomp/InlineObjectLiterals.java b/src/com/google/javascript/jscomp/InlineObjectLiterals.java
+index 5b8fedb1..3d36e75a 100644
+--- a/src/com/google/javascript/jscomp/InlineObjectLiterals.java
++++ b/src/com/google/javascript/jscomp/InlineObjectLiterals.java
+@@ -347,18 +344,17 @@ class InlineObjectLiterals implements CompilerPass {
+         }
+         cur.addChildToFront(nodes.get(i));
+         cur.addChildToFront(nodes.get(i + 1));
+-
+       Node replace = ref.getParent();
+       replacement.copyInformationFromForTree(replace);
+-
+-      if (replace.getType() == Token.VAR) {
+-        replace.getParent().replaceChild(
+-            replace, NodeUtil.newExpr(replacement));
++      Preconditions.checkState(replace.getType() == Token.VAR);
++      Node parent = replace.getParent();
++      if (parent.getType() == Token.VAR) {
++        parent.getParent().replaceChild(
++            parent, NodeUtil.newExpr(replacement));
+       } else {
+-        replace.getParent().replaceChild(replace, replacement);
++        parent.replaceChild(replace, replacement);
+       }
+     }
+-
+     /**
+      * Splits up the object literal into individual variables, and
+      * updates all uses.

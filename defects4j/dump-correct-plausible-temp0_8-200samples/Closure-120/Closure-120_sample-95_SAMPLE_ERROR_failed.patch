@@ -1,0 +1,23 @@
+diff --git a/src/com/google/javascript/jscomp/ReferenceCollectingCallback.java b/src/com/google/javascript/jscomp/ReferenceCollectingCallback.java
+index fefd3926..2c255487 100644
+--- a/src/com/google/javascript/jscomp/ReferenceCollectingCallback.java
++++ b/src/com/google/javascript/jscomp/ReferenceCollectingCallback.java
+@@ -430,13 +429,15 @@ class ReferenceCollectingCallback implements ScopedCallback,
+         if (block.isFunction) {
+           break;
+         } else if (block.isLoop) {
+-          return false;
++          // found a loop, this might still be ok if the variable is a
++          // local variable. A local variable is never declared outside
++          // of the function so the loop can't run long enough to wipe
++          // out the assignment.
++          return variable.scope.isLocal();
+         }
+       }
+-
+       return true;
+     }
+-
+     /**
+      * @return The one and only assignment. Returns if there are 0 or 2+
+      *    assignments.

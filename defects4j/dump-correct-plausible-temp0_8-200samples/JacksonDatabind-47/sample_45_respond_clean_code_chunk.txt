@@ -1,0 +1,64 @@
+     public JavaType refineSerializationType(final MapperConfig<?> config,
+            final Annotated a, final JavaType baseType) throws JsonMappingException
+    {
+        JavaType type = baseType;
+        final TypeFactory tf = config.getTypeFactory();
+        Class<?> serClass = findSerializationType(a);
+        if (serClass != null) {
+            if (!(type instanceof SimpleType) || !type.hasRawClass(serClass)) {
+                try {
+                    type = tf.constructGeneralizedType(type, serClass);
+                } catch (IllegalArgumentException iae) {
+                    throw new JsonMappingException(null,
+                            String.format("Failed to widen type %s with annotation (value %s), from '%s': %s",
+                                    type, serClass.getName(), a.getName(), iae.getMessage()),
+                                    iae);
+                }
+            }
+        }
+        // Then further processing for container types
+        if (type.isContainerType()) {
+            JavaType keyType = type.getKeyType();
+            if (keyType != null) {
+                final Class<?> keyClass = findSerializationKeyType(a, keyType);
+                if (keyClass != null) {
+                    if (!(keyType instanceof SimpleType) || !keyType.hasRawClass(keyClass)) {
+                        try {
+                            keyType = tf.constructSpecializedType(keyType, keyClass);
+                        } catch (IllegalArgumentException iae) {
+                            throw new JsonMappingException(null,
+                                    String.format("Failed to narrow key type of %s with concrete-type annotation (value %s), from '%s': %s",
+                                            type, keyClass.getName(), a.getName(), iae.getMessage()),
+                                            iae);
+                        }
+                        // must redefine whole type
+                        if (type instanceof MapLikeType) {
+                            type = ((MapLikeType) type).withKeyType(keyType);
+                        } else {
+                            type = tf.constructMapLikeType(type.getRawClass(), keyType, type.getContentType());
+                        }
+                    }
+                }
+            }
+            // And then value types for all containers:
+            JavaType contentType = type.getContentType();
+            if (contentType != null) {
+                Class<?> contentClass = findSerializationContentType(a, contentType);
+                if (contentClass != null) {
+                    if (!(contentType instanceof SimpleType) || !contentType.hasRawClass(contentClass)) {
+                        try {
+                            contentType = tf.constructSpecializedType(contentType, contentClass);
+                        } catch (IllegalArgumentException iae) {
+                            throw new JsonMappingException(null,
+                                    String.format("Failed to narrow value type of %s with concrete-type annotation (value %s), from '%s': %s",
+                                            type, contentClass.getName(), a.getName(), iae.getMessage()),
+                                            iae);
+                        }
+                        // must redefine whole type
+                        type = type.withContentType(contentType);
+                    }
+                }
+            }
+        }
+        return type;
+    }

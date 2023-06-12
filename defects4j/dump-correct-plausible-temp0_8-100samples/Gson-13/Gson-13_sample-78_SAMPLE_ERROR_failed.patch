@@ -1,0 +1,29 @@
+diff --git a/gson/src/main/java/com/google/gson/stream/JsonReader.java b/gson/src/main/java/com/google/gson/stream/JsonReader.java
+index 4541941d..459352e4 100644
+--- a/gson/src/main/java/com/google/gson/stream/JsonReader.java
++++ b/gson/src/main/java/com/google/gson/stream/JsonReader.java
+@@ -712,13 +704,18 @@ public class JsonReader implements Closeable {
+           value = -(c - '0');
+           last = NUMBER_CHAR_DIGIT;
+         } else if (last == NUMBER_CHAR_DIGIT) {
+-          if (value == 0) {
+-            return PEEKED_NONE; // Leading '0' prefix is not allowed (since it could be octal).
++          // check for overflows
++          if (value < -922337203685477580L) {
++            return PEEKED_NONE;
++          }
++          value = value * 10 - (c - '0');
++          if (value < 0) {
++            fitsInLong &= value > MIN_INCOMPLETE_INTEGER
++                || (value == MIN_INCOMPLETE_INTEGER && fitsInLong);
++          } else {
++            fitsInLong &= value < MAX_INCOMPLETE_INTEGER
++                || (value == MAX_INCOMPLETE_INTEGER && fitsInLong);
+           }
+-          long newValue = value * 10 - (c - '0');
+-          fitsInLong &= value > MIN_INCOMPLETE_INTEGER
+-              || (value == MIN_INCOMPLETE_INTEGER && newValue < value);
+-          value = newValue;
+         } else if (last == NUMBER_CHAR_DECIMAL) {
+           last = NUMBER_CHAR_FRACTION_DIGIT;
+         } else if (last == NUMBER_CHAR_EXP_E || last == NUMBER_CHAR_EXP_SIGN) {

@@ -1,0 +1,75 @@
+diff --git a/src/main/java/org/apache/commons/codec/binary/BaseNCodecInputStream.java b/src/main/java/org/apache/commons/codec/binary/BaseNCodecInputStream.java
+index 78f4d67e..bd1d2ab9 100644
+--- a/src/main/java/org/apache/commons/codec/binary/BaseNCodecInputStream.java
++++ b/src/main/java/org/apache/commons/codec/binary/BaseNCodecInputStream.java
+@@ -113,6 +106,10 @@ public class BaseNCodecInputStream extends FilterInputStream {
+                 if (!baseNCodec.hasData()) {
+                     byte[] buf = new byte[doEncode ? 4096 : 8192];
+                     int c = in.read(buf);
++                    if (c == -1) {
++                        baseNCodec.decode(buf, 0, 0);
++                        break;
++                    }
+                     if (doEncode) {
+                         baseNCodec.encode(buf, 0, c);
+                     } else {
+@@ -139,20 +135,49 @@ public class BaseNCodecInputStream extends FilterInputStream {
+      *
+      * @throws IllegalArgumentException if the provided skip length is negative
+      */
+-
+-        // skip in chunks of 512 bytes
+-
+-
++    @Override
++    public long skip(final long n) throws IOException {
++        if (n < 0) {
++            throw new IllegalArgumentException("Negative skip length: " + n);
++        }
++        final int bufferLength = 2048;
++        if (n < bufferLength) {
++            // not worth doing buffering if we are only skipping a few bytes
++            return super.skip(n);
++        }
++        final byte[] skipBuffer = new byte[bufferLength];
++        long totalSkipped = 0;
++        while (totalSkipped < n) {
++            final long skipped = in.read(skipBuffer, 0, (int) Math.min(n - totalSkipped, bufferLength));
++            if (skipped == -1) {
++                // we reached EOF before we had to
++                return totalSkipped;
++            }
++            totalSkipped += skipped;
++        }
++        return totalSkipped;
++    }
+     /**
+      * {@inheritDoc}
+      *
+      * @return <code>0</code> if the {@link InputStream} has reached <code>EOF</code>,
+      * <code>1</code> otherwise
+      */
+-        // Note: the logic is similar to the InflaterInputStream:
+-        //       as long as we have not reached EOF, indicate that there is more
+-        //       data available. As we do not know for sure how much data is left,
+-        //       just return 1 as a safe guess.
+-
++    @Override
++    public int available() throws IOException {
+         // use the EOF flag of the underlying codec instance
++        if (baseNCodec.hasData()) {
++            // unknown how much data we have buffered, so make an educated guess
++            return 1;
++        }
++        return super.available();
++    }
++    /**
++     * {@inheritDoc}
++     */
++    @Override
++    public void close() throws IOException {
++        baseNCodec.reset();
++        super.close();
++    }
+ }
+\ No newline at end of file

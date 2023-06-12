@@ -1,0 +1,23 @@
+diff --git a/gson/src/main/java/com/google/gson/stream/JsonReader.java b/gson/src/main/java/com/google/gson/stream/JsonReader.java
+index 4541941d..4a53d41e 100644
+--- a/gson/src/main/java/com/google/gson/stream/JsonReader.java
++++ b/gson/src/main/java/com/google/gson/stream/JsonReader.java
+@@ -638,7 +638,7 @@ public class JsonReader implements Closeable {
+     return peeked = peeking;
+   }
+ 
+-  private int peekNumber() throws IOException {
++private int peekNumber() throws IOException {
+     // Like nextNonWhitespace, this uses locals 'p' and 'l' to save inner-loop field access.
+     char[] buffer = this.buffer;
+     int p = pos;
+@@ -720,6 +712,9 @@ public class JsonReader implements Closeable {
+               || (value == MIN_INCOMPLETE_INTEGER && newValue < value);
+           value = newValue;
+         } else if (last == NUMBER_CHAR_DECIMAL) {
++          if (value == 0) {
++            return PEEKED_NONE; // Leading '0' prefix is not allowed (since it could be octal).
++          }
+           last = NUMBER_CHAR_FRACTION_DIGIT;
+         } else if (last == NUMBER_CHAR_EXP_E || last == NUMBER_CHAR_EXP_SIGN) {
+           last = NUMBER_CHAR_EXP_DIGIT;

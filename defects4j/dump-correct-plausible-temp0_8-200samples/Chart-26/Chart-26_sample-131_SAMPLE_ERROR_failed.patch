@@ -1,0 +1,146 @@
+diff --git a/source/org/jfree/chart/axis/Axis.java b/source/org/jfree/chart/axis/Axis.java
+index 78a6c66..9a0c4ac 100644
+--- a/source/org/jfree/chart/axis/Axis.java
++++ b/source/org/jfree/chart/axis/Axis.java
+@@ -1109,83 +1106,83 @@ public abstract class Axis implements Cloneable, Serializable {
+         FontMetrics fm = g2.getFontMetrics();
+         Rectangle2D labelBounds = TextUtilities.getTextBounds(label, g2, fm);
+         Shape hotspot = null;
+-        
+         if (edge == RectangleEdge.TOP) {
+-            AffineTransform t = AffineTransform.getRotateInstance(
+-                    getLabelAngle(), labelBounds.getCenterX(), 
+-                    labelBounds.getCenterY());
+-            Shape rotatedLabelBounds = t.createTransformedShape(labelBounds);
+-            labelBounds = rotatedLabelBounds.getBounds2D();
+-            float w = (float) labelBounds.getWidth();
+-            float h = (float) labelBounds.getHeight();
+             float labelx = (float) dataArea.getCenterX();
+             float labely = (float) (state.getCursor() - insets.getBottom() 
+-                    - h / 2.0);
+-            TextUtilities.drawRotatedString(label, g2, labelx, labely, 
+-                    TextAnchor.CENTER, getLabelAngle(), TextAnchor.CENTER);
+-            hotspot = new Rectangle2D.Float(labelx - w / 2.0f, 
+-                    labely - h / 2.0f, w, h);
++                    - labelBounds.getHeight() / 2);
++            if (this.isVerticalTickLabels()) {
++                double xx = labelx;
++                double yy = state.getCursor() - insets.getBottom();
++                AffineTransform rot = AffineTransform.getRotateInstance(
++                        Math.PI / 2.0, xx, yy);
++                g2.setTransform(rot);
++                TextUtilities.drawAlignedString(label, g2, (float) yy, 
++                        (float) xx, TextAnchor.CENTER);
++                g2.setTransform(new AffineTransform());
++            }
++            else {
++                TextUtilities.drawAlignedString(label, g2, labelx, labely, 
++                        TextAnchor.CENTER);
++            }
+             state.cursorUp(insets.getTop() + labelBounds.getHeight() 
+                     + insets.getBottom());
+         }
+         else if (edge == RectangleEdge.BOTTOM) {
+-            AffineTransform t = AffineTransform.getRotateInstance(
+-                    getLabelAngle(), labelBounds.getCenterX(), 
+-                    labelBounds.getCenterY());
+-            Shape rotatedLabelBounds = t.createTransformedShape(labelBounds);
+-            labelBounds = rotatedLabelBounds.getBounds2D();
+-            float w = (float) labelBounds.getWidth();
+-            float h = (float) labelBounds.getHeight();
+             float labelx = (float) dataArea.getCenterX();
+             float labely = (float) (state.getCursor() + insets.getTop() 
+-                    + h / 2.0);
+-            TextUtilities.drawRotatedString(label, g2, labelx, labely, 
+-                    TextAnchor.CENTER, getLabelAngle(), TextAnchor.CENTER);
+-            hotspot = new Rectangle2D.Float(labelx - w / 2.0f, 
+-                    labely - h / 2.0f, w, h);
++                    + labelBounds.getHeight() / 2);
++            if (this.isVerticalTickLabels()) {
++                AffineTransform rot = AffineTransform.getRotateInstance(
++                        Math.PI / 2.0, labelx, labely);
++                g2.setTransform(rot);
++                TextUtilities.drawAlignedString(label, g2, labely, labelx, 
++                        TextAnchor.CENTER);
++                g2.setTransform(new AffineTransform());
++            }
++            else {
++                TextUtilities.drawAlignedString(label, g2, labelx, labely, 
++                        TextAnchor.CENTER);
++            }
+             state.cursorDown(insets.getTop() + labelBounds.getHeight() 
+                     + insets.getBottom());
+         }
+         else if (edge == RectangleEdge.LEFT) {
+-            AffineTransform t = AffineTransform.getRotateInstance(
+-                    getLabelAngle() - Math.PI / 2.0, labelBounds.getCenterX(), 
+-                    labelBounds.getCenterY());
+-            Shape rotatedLabelBounds = t.createTransformedShape(labelBounds);
+-            labelBounds = rotatedLabelBounds.getBounds2D();
+-            float w = (float) labelBounds.getWidth();
+-            float h = (float) labelBounds.getHeight();
+-            float labelx = (float) (state.getCursor() - insets.getRight() 
+-                    - w / 2.0);
+-            float labely = (float) dataArea.getCenterY();
+-            TextUtilities.drawRotatedString(label, g2, labelx, labely, 
+-                    TextAnchor.CENTER, getLabelAngle() - Math.PI / 2.0, 
+-                    TextAnchor.CENTER);
+-            hotspot = new Rectangle2D.Float(labelx - w / 2.0f, 
+-                    labely - h / 2.0f, w, h);
++            double labelx = state.getCursor() - insets.getRight();
++            double labely = dataArea.getCenterY();
++            if (this.isVerticalTickLabels()) {
++                double xx = state.getCursor() - insets.getRight();
++                double yy = dataArea.getY() + dataArea.getHeight() / 2.0;
++                AffineTransform rot = AffineTransform.getRotateInstance(
++                        Math.PI / 2.0, xx, yy);
++                g2.setTransform(rot);
++                TextUtilities.drawAlignedString(label, g2, (float) yy, 
++                        (float) xx, TextAnchor.CENTER);
++                g2.setTransform(new AffineTransform());
++            }
++            else {
++                TextUtilities.drawAlignedString(label, g2, (float) labelx, 
++                        (float) labely, TextAnchor.CENTER);
++            }
+             state.cursorLeft(insets.getLeft() + labelBounds.getWidth() 
+                     + insets.getRight());
+         }
+         else if (edge == RectangleEdge.RIGHT) {
+-
+-            AffineTransform t = AffineTransform.getRotateInstance(
+-                    getLabelAngle() + Math.PI / 2.0, 
+-                    labelBounds.getCenterX(), labelBounds.getCenterY());
+-            Shape rotatedLabelBounds = t.createTransformedShape(labelBounds);
+-            labelBounds = rotatedLabelBounds.getBounds2D();
+-            float w = (float) labelBounds.getWidth();
+-            float h = (float) labelBounds.getHeight();
+-            float labelx = (float) (state.getCursor() 
+-                            + insets.getLeft() + w / 2.0);
+-            float labely = (float) (dataArea.getY() + dataArea.getHeight() 
+-                    / 2.0);
+-            TextUtilities.drawRotatedString(label, g2, labelx, labely, 
+-                    TextAnchor.CENTER, getLabelAngle() + Math.PI / 2.0, 
+-                    TextAnchor.CENTER);
+-            hotspot = new Rectangle2D.Float(labelx - w / 2.0f, 
+-                    labely - h / 2.0f, w, h);
++            double labelx = state.getCursor() + insets.getLeft();
++            double labely = dataArea.getY() + dataArea.getHeight() / 2.0;
++            if (this.isVerticalTickLabels()) {
++                AffineTransform rot = AffineTransform.getRotateInstance(
++                        Math.PI / 2.0, labelx, labely);
++                g2.setTransform(rot);
++                TextUtilities.drawAlignedString(label, g2, labely, labelx, 
++                        TextAnchor.CENTER);
++                g2.setTransform(new AffineTransform());
++            }
++            else {
++                TextUtilities.drawAlignedString(label, g2, (float) labelx, 
++                        (float) labely, TextAnchor.CENTER);
++            }
+             state.cursorRight(insets.getLeft() + labelBounds.getWidth() 
+                     + insets.getRight());
+-
+         }
+         if (plotState != null && hotspot != null) {
+             ChartRenderingInfo owner = plotState.getOwner();

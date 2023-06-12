@@ -1,0 +1,33 @@
+diff --git a/src/com/google/javascript/jscomp/ProcessClosurePrimitives.java b/src/com/google/javascript/jscomp/ProcessClosurePrimitives.java
+index d1d12a3c..4a41bb35 100644
+--- a/src/com/google/javascript/jscomp/ProcessClosurePrimitives.java
++++ b/src/com/google/javascript/jscomp/ProcessClosurePrimitives.java
+@@ -754,14 +753,17 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback
+       // Handle the case where there is a duplicate definition for an explicitly
+       // provided symbol.
+       if (candidateDefinition != null && explicitNode != null) {
++        Node newNode = NodeUtil.newQName(
++            compiler, namespace).srcrefTree(explicitNode);
++        Node assignNode = IR.assign(newNode, candidateDefinition.cloneTree())
++            .srcref(explicitNode);
++        explicitNode.getParent().addChildBefore(assignNode, explicitNode);
+         explicitNode.detachFromParent();
+         compiler.reportCodeChange();
+-
+         // Does this need a VAR keyword?
+-        replacementNode = candidateDefinition;
+         if (NodeUtil.isExpressionNode(candidateDefinition)) {
+           candidateDefinition.putBooleanProp(Node.IS_NAMESPACE, true);
+-          Node assignNode = candidateDefinition.getFirstChild();
++          assignNode = candidateDefinition.getFirstChild();
+           Node nameNode = assignNode.getFirstChild();
+           if (nameNode.getType() == Token.NAME) {
+             // Need to convert this assign to a var declaration.
+@@ -775,7 +777,6 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback
+                 candidateDefinition, varNode);
+             nameNode.setJSDocInfo(assignNode.getJSDocInfo());
+             compiler.reportCodeChange();
+-            replacementNode = varNode;
+           }
+         }
+       } else {

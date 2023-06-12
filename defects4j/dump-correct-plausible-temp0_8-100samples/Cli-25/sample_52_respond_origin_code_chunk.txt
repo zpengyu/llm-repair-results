@@ -1,0 +1,73 @@
+    protected StringBuffer renderWrappedText(StringBuffer sb, int width, 
+                                             int nextLineTabStop, String text)
+    {
+        int pos = findWrapPos(text, width, 0);
+
+        if (pos == -1)
+        {
+            sb.append(rtrim(text));
+
+            return sb;
+        }
+        sb.append(rtrim(text.substring(0, pos))).append(defaultNewLine);
+
+        if (nextLineTabStop >= width)
+        {
+            // stops infinite loop happening
+            nextLineTabStop = width - 1;
+        }
+
+        // all following lines must be padded with nextLineTabStop space 
+        // characters
+        final String padding = createPadding(nextLineTabStop);
+
+        while (true)
+        {
+            text = padding + text.substring(pos).trim();
+            pos = findWrapPos(text, width, 0);
+
+            if (pos == -1)
+            {
+                sb.append(text);
+
+                return sb;
+            }
+            
+            if ( (text.length() > width) && (pos == nextLineTabStop - 1) ) 
+            {
+                pos = width;
+            }
+
+            sb.append(rtrim(text.substring(0, pos))).append(defaultNewLine);
+        }
+    }
+
+    public static int findWrapPos(String text, int startPos, int max) 
+    {
+        int spaceToWrapAt = -1;
+        char space = ' ';
+
+        for (int i = startPos; i < text.length(); i++) 
+        {
+            if (text.charAt(i) == space) 
+            {
+                spaceToWrapAt = i;
+            }
+            else if (i >= max) 
+            {
+                // look for the first previous space, to avoid breaking words
+                for (int j = i; j >= 0; j--) 
+                {
+                    if (text.charAt(j) == space) 
+                    {
+                        spaceToWrapAt = j;
+                        break;
+                    }
+                }
+                break;
+            }
+        }
+
+        return spaceToWrapAt;
+    }
+

@@ -1,0 +1,36 @@
+diff --git a/src/main/java/org/jsoup/nodes/FormElement.java b/src/main/java/org/jsoup/nodes/FormElement.java
+index baffcf1..43d80dc 100644
+--- a/src/main/java/org/jsoup/nodes/FormElement.java
++++ b/src/main/java/org/jsoup/nodes/FormElement.java
+@@ -42,11 +39,15 @@ public class FormElement extends Element {
+      * @return this form element, for chaining
+      */
+     public FormElement addElement(Element element) {
+-        elements.add(element);
++        if (element.tag().getName().equals("select")) {
++            if (!element.select("option").isEmpty()) {
++                elements.add(element);
++            }
++        } else {
++            elements.add(element);
++        }
+         return this;
+     }
+-
+-
+     /**
+      * Prepare to submit this form. A Connection object is created with the request set up from the form values. You
+      * can then set up other options (like user-agent, timeout, cookies), then execute it.
+@@ -85,8 +82,10 @@ public class FormElement extends Element {
+                 Elements options = el.select("option[selected]");
+                 boolean set = false;
+                 for (Element option: options) {
+-                    data.add(HttpConnection.KeyVal.create(name, option.val()));
+-                    set = true;
++                    if(option.hasAttr("value")) {
++                        data.add(HttpConnection.KeyVal.create(name, option.val()));
++                        set = true;
++                    }
+                 }
+                 if (!set) {
+                     Element option = el.select("option").first();

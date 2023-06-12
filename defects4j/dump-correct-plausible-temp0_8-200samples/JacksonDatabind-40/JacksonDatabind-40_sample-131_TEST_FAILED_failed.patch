@@ -1,0 +1,29 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/deser/std/NumberDeserializers.java b/src/main/java/com/fasterxml/jackson/databind/deser/std/NumberDeserializers.java
+index a76403c86..e040a91a0 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/deser/std/NumberDeserializers.java
++++ b/src/main/java/com/fasterxml/jackson/databind/deser/std/NumberDeserializers.java
+@@ -118,19 +118,21 @@ public class NumberDeserializers
+         extends StdScalarDeserializer<T>
+     {
+         private static final long serialVersionUID = 1L;
+-
+         protected final T _nullValue;
+         protected final boolean _primitive;
+-
++        protected final boolean _acceptsNull;
+         protected PrimitiveOrWrapperDeserializer(Class<T> vc, T nvl) {
+             super(vc);
+             _nullValue = nvl;
+             _primitive = vc.isPrimitive();
++            _acceptsNull = (_nullValue == null);
+         }
+-
+         @Override
+         public final T getNullValue(DeserializationContext ctxt) throws JsonMappingException
+         {
++            if (_acceptsNull) {
++                return _nullValue;
++            }
+             if (_primitive && ctxt.isEnabled(DeserializationFeature.FAIL_ON_NULL_FOR_PRIMITIVES)) {
+                 throw ctxt.mappingException(
+                         "Can not map JSON null into type %s (set DeserializationConfig.DeserializationFeature.FAIL_ON_NULL_FOR_PRIMITIVES to 'false' to allow)",

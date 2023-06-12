@@ -1,0 +1,35 @@
+diff --git a/src/com/google/javascript/jscomp/PeepholeSubstituteAlternateSyntax.java b/src/com/google/javascript/jscomp/PeepholeSubstituteAlternateSyntax.java
+index dee765a1..5c1382bd 100644
+--- a/src/com/google/javascript/jscomp/PeepholeSubstituteAlternateSyntax.java
++++ b/src/com/google/javascript/jscomp/PeepholeSubstituteAlternateSyntax.java
+@@ -209,7 +209,8 @@ class PeepholeSubstituteAlternateSyntax
+     Preconditions.checkState(n.isCall());
+     Node callTarget = n.getFirstChild();
+     if (callTarget != null && callTarget.isName() &&
+-          callTarget.getString().equals("String")) {
++          callTarget.getString().equals("String") &&
++          callTarget.getNext() != null) {
+       // Fold String(a) to '' + (a) on immutable literals,
+       // which allows further optimizations
+       //
+@@ -217,14 +218,12 @@ class PeepholeSubstituteAlternateSyntax
+       // slightly different semantics than '' + (a). See
+       // http://code.google.com/p/closure-compiler/issues/detail?id=759
+       Node value = callTarget.getNext();
+-      if (value != null) {
+-        Node addition = IR.add(
+-            IR.string("").srcref(callTarget),
+-            value.detachFromParent());
+-        n.getParent().replaceChild(n, addition);
+-        reportCodeChange();
+-        return addition;
+-      }
++      Node addition = IR.add(
++          IR.string("").srcref(callTarget),
++          value.detachFromParent());
++      n.getParent().replaceChild(n, addition);
++      reportCodeChange();
++      return addition;
+     }
+     return n;
+   }

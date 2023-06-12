@@ -1,0 +1,47 @@
+diff --git a/src/main/java/org/apache/commons/math3/analysis/differentiation/DSCompiler.java b/src/main/java/org/apache/commons/math3/analysis/differentiation/DSCompiler.java
+index fc9944c36..4526835be 100644
+--- a/src/main/java/org/apache/commons/math3/analysis/differentiation/DSCompiler.java
++++ b/src/main/java/org/apache/commons/math3/analysis/differentiation/DSCompiler.java
+@@ -1379,10 +1379,9 @@ public class DSCompiler {
+      * be the input array)
+      * @param resultOffset offset of the result in its array
+      */
+-    public void atan2(final double[] y, final int yOffset,
++public void atan2(final double[] y, final int yOffset,
+                       final double[] x, final int xOffset,
+                       final double[] result, final int resultOffset) {
+-
+         // compute r = sqrt(x^2+y^2)
+         double[] tmp1 = new double[getSize()];
+         multiply(x, xOffset, x, xOffset, tmp1, 0);      // x^2
+@@ -1407,18 +1402,23 @@ public class DSCompiler {
+             subtract(tmp1, 0, x, xOffset, tmp2, 0);     // r - x
+             divide(y, yOffset, tmp2, 0, tmp1, 0);       // y /(r - x)
+             atan(tmp1, 0, tmp2, 0);                     // atan(y / (r - x))
+-            result[resultOffset] =
+-                    ((tmp2[0] <= 0) ? -FastMath.PI : FastMath.PI) - 2 * tmp2[0]; // +/-pi - 2 * atan(y / (r - x))
++            double result0 = ((tmp2[0] <= 0) ? -FastMath.PI : FastMath.PI) - 2 * tmp2[0]; // +/-pi - 2 * atan(y / (r - x))
++            // fix value to take special cases (+0/+0, +0/-0, -0/+0, -0/-0, +/-infinity) correctly
++            if (Double.isNaN(result0)) {
++                if (y[yOffset] == 0 || (x[xOffset] == Double.NEGATIVE_INFINITY && y[yOffset] == Double.NEGATIVE_INFINITY)) {
++                    result0 = -FastMath.PI;
++                } else if (x[xOffset] == Double.NEGATIVE_INFINITY && y[yOffset] == Double.POSITIVE_INFINITY) {
++                    result0 = FastMath.PI;
++                } else {
++                    result0 = Double.NaN;
++                }
++            }
++            result[resultOffset] = result0;
+             for (int i = 1; i < tmp2.length; ++i) {
+                 result[resultOffset + i] = -2 * tmp2[i]; // +/-pi - 2 * atan(y / (r - x))
+             }
+-
+         }
+-
+-        // fix value to take special cases (+0/+0, +0/-0, -0/+0, -0/-0, +/-infinity) correctly
+-
+     }
+-
+     /** Compute hyperbolic cosine of a derivative structure.
+      * @param operand array holding the operand
+      * @param operandOffset offset of the operand in its array

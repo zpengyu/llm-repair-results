@@ -1,0 +1,17 @@
+diff --git a/src/org/mockito/internal/configuration/SpyAnnotationEngine.java b/src/org/mockito/internal/configuration/SpyAnnotationEngine.java
+index e292e1300..d20220b00 100644
+--- a/src/org/mockito/internal/configuration/SpyAnnotationEngine.java
++++ b/src/org/mockito/internal/configuration/SpyAnnotationEngine.java
+@@ -46,7 +45,11 @@ public class SpyAnnotationEngine implements AnnotationEngine {
+                         // instance has been spied earlier
+                         Mockito.reset(instance);
+                     } else {
+-                        field.set(testClass, Mockito.spy(instance));
++                    	if (Modifier.isAbstract(field.getType().getModifiers())) {
++                    		field.set(testClass, Mockito.mock(field.getType()));
++                    	} else {
++                    		field.set(testClass, Mockito.spy(instance));
++                    	}
+                     }
+                 } catch (IllegalAccessException e) {
+                     throw new MockitoException("Problems initiating spied field " + field.getName(), e);

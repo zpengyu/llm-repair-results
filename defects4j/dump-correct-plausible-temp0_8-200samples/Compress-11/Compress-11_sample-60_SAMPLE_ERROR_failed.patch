@@ -1,0 +1,64 @@
+diff --git a/src/main/java/org/apache/commons/compress/archivers/ArchiveStreamFactory.java b/src/main/java/org/apache/commons/compress/archivers/ArchiveStreamFactory.java
+index e2847a61..da3598fa 100644
+--- a/src/main/java/org/apache/commons/compress/archivers/ArchiveStreamFactory.java
++++ b/src/main/java/org/apache/commons/compress/archivers/ArchiveStreamFactory.java
+@@ -203,12 +202,15 @@ public class ArchiveStreamFactory {
+         if (!in.markSupported()) {
+             throw new IllegalArgumentException("Mark is not supported.");
+         }
+-
+-        final byte[] signature = new byte[12];
+-        in.mark(signature.length);
+         try {
+-            int signatureLength = in.read(signature);
+-            in.reset();
++            final byte[] signature = new byte[12];
++            in.mark(signature.length);
++            int signatureLength = 0;
++            try {
++                signatureLength = IOUtils.readFully(in, signature);
++            } finally {
++                in.reset();
++            }
+             if (ZipArchiveInputStream.matches(signature, signatureLength)) {
+                 return new ZipArchiveInputStream(in);
+             } else if (JarArchiveInputStream.matches(signature, signatureLength)) {
+@@ -222,8 +223,12 @@ public class ArchiveStreamFactory {
+             // Dump needs a bigger buffer to check the signature;
+             final byte[] dumpsig = new byte[32];
+             in.mark(dumpsig.length);
+-            signatureLength = in.read(dumpsig);
+-            in.reset();
++            signatureLength = 0;
++            try {
++                signatureLength = IOUtils.readFully(in, dumpsig);
++            } finally {
++                in.reset();
++            }
+             if (DumpArchiveInputStream.matches(dumpsig, signatureLength)) {
+                 return new DumpArchiveInputStream(in);
+             }
+@@ -231,8 +235,12 @@ public class ArchiveStreamFactory {
+             // Tar needs an even bigger buffer to check the signature; read the first block
+             final byte[] tarheader = new byte[512];
+             in.mark(tarheader.length);
+-            signatureLength = in.read(tarheader);
+-            in.reset();
++            signatureLength = 0;
++            try {
++                signatureLength = IOUtils.readFully(in, tarheader);
++            } finally {
++                in.reset();
++            }
+             if (TarArchiveInputStream.matches(tarheader, signatureLength)) {
+                 return new TarArchiveInputStream(in);
+             }
+@@ -249,7 +257,5 @@ public class ArchiveStreamFactory {
+         } catch (IOException e) {
+             throw new ArchiveException("Could not use reset and mark operations.", e);
+         }
+-
+         throw new ArchiveException("No Archiver found for the stream signature");
+-    }
+-}
++    }}

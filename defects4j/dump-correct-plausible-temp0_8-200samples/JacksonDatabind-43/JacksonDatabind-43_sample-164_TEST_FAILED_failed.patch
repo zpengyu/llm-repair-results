@@ -1,0 +1,39 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/deser/impl/ObjectIdValueProperty.java b/src/main/java/com/fasterxml/jackson/databind/deser/impl/ObjectIdValueProperty.java
+index d4ca3f544..aabf33e2d 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/deser/impl/ObjectIdValueProperty.java
++++ b/src/main/java/com/fasterxml/jackson/databind/deser/impl/ObjectIdValueProperty.java
+@@ -72,8 +72,8 @@ public final class ObjectIdValueProperty
+     }
+ 
+     @Override
+-    public Object deserializeSetAndReturn(JsonParser p,
+-		DeserializationContext ctxt, Object instance) throws IOException
++public Object deserializeSetAndReturn(JsonParser p,
++    		DeserializationContext ctxt, Object instance) throws IOException
+     {
+         Object id = _valueDeserializer.deserialize(p, ctxt);
+         /* 02-Apr-2015, tatu: Actually, as per [databind#742], let it be;
+@@ -82,15 +82,14 @@ public final class ObjectIdValueProperty
+          *  quite yet. Typical use case is with DB inserts.
+          */
+         // note: no null checks (unlike usually); deserializer should fail if one found
+-        if (id == null) {
+-            return null;
+-        }
+-        ReadableObjectId roid = ctxt.findObjectId(id, _objectIdReader.generator, _objectIdReader.resolver);
+-        roid.bindItem(instance);
+-        // also: may need to set a property value as well
+-        SettableBeanProperty idProp = _objectIdReader.idProperty;
+-        if (idProp != null) {
+-            return idProp.setAndReturn(instance, id);
++        if (id != null) {
++            ReadableObjectId roid = ctxt.findObjectId(id, _objectIdReader.generator, _objectIdReader.resolver);
++            roid.bindItem(instance);
++            // also: may need to set a property value as well
++            SettableBeanProperty idProp = _objectIdReader.idProperty;
++            if (idProp != null) {
++                return idProp.setAndReturn(instance, id);
++            }
+         }
+         return instance;
+     }

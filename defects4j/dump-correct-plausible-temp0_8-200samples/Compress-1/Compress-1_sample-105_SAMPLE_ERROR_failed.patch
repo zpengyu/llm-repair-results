@@ -1,0 +1,19 @@
+diff --git a/src/main/java/org/apache/commons/compress/archivers/cpio/CpioArchiveOutputStream.java b/src/main/java/org/apache/commons/compress/archivers/cpio/CpioArchiveOutputStream.java
+index 485dad14..a208a21c 100644
+--- a/src/main/java/org/apache/commons/compress/archivers/cpio/CpioArchiveOutputStream.java
++++ b/src/main/java/org/apache/commons/compress/archivers/cpio/CpioArchiveOutputStream.java
+@@ -343,7 +343,13 @@ public class CpioArchiveOutputStream extends ArchiveOutputStream implements
+      */
+     public void close() throws IOException {
+         if (!this.closed) {
+-            super.close();
++            if (this.method != null && this.method.hasRequestBody()
++                    && this.method.getRequestContentLength() != -1
++                    && this.method.getRequestContentLength() < 0) {
++                this.method.abort();
++            } else {
++                super.close();
++            }
+             this.closed = true;
+         }
+     }

@@ -1,0 +1,35 @@
+    public PropertyName findNameForSerialization(Annotated a)
+    {
+        String name = null;
+
+        JsonGetter jg = _findAnnotation(a, JsonGetter.class);
+        if (jg != null) {
+            name = jg.value();
+        } else {
+            JsonProperty pann = _findAnnotation(a, JsonProperty.class);
+            if (pann != null) {
+                name = pann.value();
+                /* 22-Apr-2014, tatu: Should figure out a better way to do this, but
+                 *   it's actually bit tricky to do it more efficiently (meta-annotations
+                 *   add more lookups; AnnotationMap costs etc)
+                 */
+            } else if (_hasAnnotation(a, JsonSerialize.class)
+                    || _hasAnnotation(a, JsonView.class)
+                    || _hasAnnotation(a, JsonRawValue.class)
+                    || _hasAnnotation(a, JsonValue.class)) {
+                name = "";
+            } else {
+                return null;
+            }
+        }
+        return PropertyName.construct(name);
+    }
+
+## References
+[1] Martin Monperrus, ``What do you mean by correct? Proposal for a continuous evaluation model for software repair'', IEEE 20th International Conference on Program Comprehension, 2012. [Online] Available: https://hal.inria.fr/inria-00596090.
+
+[2] Anshuman Singh, and Martin Monperrus, "Automatic Patch Generation for Java programs, a reproducible evaluation", in Proceedings of the 10th Joint Meeting on Foundations of Software Engineering (ESEC/FSE '13), 2013. [Online] Available: https://hal.inria.fr/hal-00839510/file/esecfse2013.pdf
+
+[3] Anshuman Singh, Martin Monperrus, Yves Le Traon, Raul Barbosa, and Walid Maalej, ``An empirical comparison of manual and automatic repairs of a large corpus of bugs in Java programs'', Proceedings of the 2014 10th Joint Meeting on Foundations of Software Engineering, 2014. [Online] Available: https://hal.inria.fr/hal-01065024
+
+[4] Anshuman Singh, Martin Monperrus, Yves Le Traon, and Raul Barbosa, ``Finding and fixing bugs in Java programs: an empirical evaluation of Defects4J'', Proceedings of the 2015 10th Joint Meeting on Foundations of Software Engineering, 2015. [Online] Available: https://hal.inria.fr/hal-01171135

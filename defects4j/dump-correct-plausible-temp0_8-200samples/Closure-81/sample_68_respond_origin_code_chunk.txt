@@ -1,0 +1,28 @@
+    Node processFunctionNode(FunctionNode functionNode) {
+      Node node = newNode(Token.FUNCTION);
+
+      Name name = functionNode.getFunctionName();
+      if (name != null) {
+        node.addChildToBack(transform(name));
+      }
+
+      if (functionNode.getLp() == -1) {
+        throw new IllegalStateException("No left paren in " + functionNode);
+      }
+      int lpColumn = functionNode.getAbsolutePosition() +
+          functionNode.getLp();
+
+      Node lp = newNode(Token.LP);
+      lp.setCharno(position2charno(lpColumn));
+      node.addChildToBack(lp);
+
+      for (AstNode param : functionNode.getParams()) {
+        lp.addChildToBack(transform(param));
+      }
+
+      Node bodyNode = transform(functionNode.getBody());
+      parseDirectives(bodyNode);
+      node.addChildToBack(bodyNode);
+     return node;
+    }
+

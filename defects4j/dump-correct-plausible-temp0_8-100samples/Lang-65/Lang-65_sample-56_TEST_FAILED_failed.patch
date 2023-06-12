@@ -1,0 +1,58 @@
+diff --git a/src/java/org/apache/commons/lang/time/DateUtils.java b/src/java/org/apache/commons/lang/time/DateUtils.java
+index 324dd037..00eb162a 100644
+--- a/src/java/org/apache/commons/lang/time/DateUtils.java
++++ b/src/java/org/apache/commons/lang/time/DateUtils.java
+@@ -627,17 +625,28 @@ public class DateUtils {
+         //
+         // Manually truncate milliseconds, seconds and minutes, rather than using
+         // Calendar methods.
+-
+-
+-        // truncate milliseconds
+-
+-        // truncate seconds
+-
+-        // truncate minutes
+-
+-        // reset time
++        int millis = val.get(Calendar.MILLISECOND);
++        if (round && millis < 500) {
++            val.set(Calendar.MILLISECOND, 0);
++        } else {
++            val.set(Calendar.MILLISECOND, 1000);
++            val.add(Calendar.SECOND, 1);
++        }
++        int seconds = val.get(Calendar.SECOND);
++        if (round && seconds < 30) {
++            val.set(Calendar.SECOND, 0);
++        } else {
++            val.set(Calendar.SECOND, 60);
++            val.add(Calendar.MINUTE, 1);
++        }
++        int minutes = val.get(Calendar.MINUTE);
++        if (round && minutes < 30) {
++            val.set(Calendar.MINUTE, 0);
++        } else {
++            val.set(Calendar.MINUTE, 60);
++            val.add(Calendar.HOUR_OF_DAY, 1);
++        }
+         // ----------------- Fix for LANG-59 ----------------------- END ----------------
+-
+         boolean roundUp = false;
+         for (int i = 0; i < fields.length; i++) {
+             for (int j = 0; j < fields[i].length; j++) {
+@@ -706,12 +715,12 @@ public class DateUtils {
+                 roundUp = offset > ((max - min) / 2);
+             }
+             //We need to remove this field
++            if (offset != 0) {
+                 val.set(fields[i][0], val.get(fields[i][0]) - offset);
++            }
+         }
+         throw new IllegalArgumentException("The field " + field + " is not supported");
+-
+     }
+-
+     //-----------------------------------------------------------------------
+     /**
+      * <p>This constructs an <code>Iterator</code> over each day in a date

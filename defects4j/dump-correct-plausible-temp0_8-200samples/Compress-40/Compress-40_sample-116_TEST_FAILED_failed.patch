@@ -1,0 +1,37 @@
+diff --git a/src/main/java/org/apache/commons/compress/utils/BitInputStream.java b/src/main/java/org/apache/commons/compress/utils/BitInputStream.java
+index 4086c8b5..d542a24f 100644
+--- a/src/main/java/org/apache/commons/compress/utils/BitInputStream.java
++++ b/src/main/java/org/apache/commons/compress/utils/BitInputStream.java
+@@ -95,16 +95,26 @@ public class BitInputStream implements Closeable {
+             }
+             bitsCachedSize += 8;
+         }
+-            // bitsCachedSize >= 57 and left-shifting it 8 bits would cause an overflow
+-
+         final long bitsOut;
+-            if (byteOrder == ByteOrder.LITTLE_ENDIAN) {
++        if (byteOrder == ByteOrder.LITTLE_ENDIAN) {
++            if(bitsCachedSize < 64) {
+                 bitsOut = (bitsCached & MASKS[count]);
+                 bitsCached >>>= count;
++                bitsCachedSize -= count;
+             } else {
++                bitsOut = (bitsCached & MASKS[bitsCachedSize - count]);
++                bitsCached >>>= bitsCachedSize - count;
++                bitsCachedSize = count;
++            }
++        } else {
++            if(bitsCachedSize < 64) {
+                 bitsOut = (bitsCached >> (bitsCachedSize - count)) & MASKS[count];
++                bitsCachedSize -= count;
++            } else {
++                bitsOut = (bitsCached >> (64 - count)) & MASKS[count];
++                bitsCached <<= count;
++                bitsCachedSize = bitsCachedSize - count;
+             }
+-            bitsCachedSize -= count;
++        }
+         return bitsOut;
+-    }
+-}
++    }}

@@ -1,0 +1,27 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/deser/BasicDeserializerFactory.java b/src/main/java/com/fasterxml/jackson/databind/deser/BasicDeserializerFactory.java
+index 81acbdb27..47fdcfdbf 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/deser/BasicDeserializerFactory.java
++++ b/src/main/java/com/fasterxml/jackson/databind/deser/BasicDeserializerFactory.java
+@@ -742,15 +740,15 @@ nonAnnotatedParamIndex, ctor);
+             creators.addPropertyCreator(candidate.creator(), true, properties);
+             return;
+         }
+-        _handleSingleArgumentCreator(creators, candidate.creator(), true, true);
+-
+-        // one more thing: sever link to creator property, to avoid possible later
+-        // problems with "unresolved" constructor property
+-        if (paramDef != null) {
+-            ((POJOPropertyBuilder) paramDef).removeConstructors();
++        /* 25-May-2018, tatu: as per [databind#2051] we have to wait to create single
++         *    argument until we know this is a delegating creator.
++         */
++        if (!_handleSingleArgumentCreator(creators, candidate.creator(), true, true)) {
++            if (paramDef != null) {
++                ((POJOPropertyBuilder) paramDef).removeConstructors();
++            }
+         }
+     }
+-
+     private boolean _checkIfCreatorPropertyBased(AnnotationIntrospector intr,
+             AnnotatedWithParams creator, BeanPropertyDefinition propDef)
+     {

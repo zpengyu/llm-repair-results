@@ -1,0 +1,30 @@
+diff --git a/src/com/google/javascript/jscomp/TypedScopeCreator.java b/src/com/google/javascript/jscomp/TypedScopeCreator.java
+index a5b356fb..a3353b05 100644
+--- a/src/com/google/javascript/jscomp/TypedScopeCreator.java
++++ b/src/com/google/javascript/jscomp/TypedScopeCreator.java
+@@ -942,8 +936,24 @@ final class TypedScopeCreator implements ScopeCreator {
+           }
+         }
+       }
++      // Check for conflicting property declarations.
++      if (n.getType() == Token.GETPROP &&
++          !(type instanceof FunctionType)) {
++        Node maybeQname = n.getFirstChild();
++        if (maybeQname.getType() == Token.NAME) {
++          String propName = maybeQname.getString();
++          JSType ctorType =
++              getDeclaredTypeOfNode(maybeQname).restrictByNotNullOrUndefined();
++          if (ctorType != null && ctorType.isConstructor()) {
++            if (ctorType.toMaybeFunctionType().hasProperty(propName)) {
++              maybeQname = n.getFirstChild().getNext();
++              report(JSError.make(sourceName, maybeQname,
++                      CONFLICTING_EXTENDED_TYPE_PROPERTY_JSDOC, propName));
++            }
++          }
++        }
++      }
+     }
+-
+     /**
+      * Check if the given node is a property of a name in the global scope.
+      */

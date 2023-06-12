@@ -1,0 +1,30 @@
+diff --git a/src/com/google/javascript/jscomp/InlineObjectLiterals.java b/src/com/google/javascript/jscomp/InlineObjectLiterals.java
+index a26b500d..be40bc7b 100644
+--- a/src/com/google/javascript/jscomp/InlineObjectLiterals.java
++++ b/src/com/google/javascript/jscomp/InlineObjectLiterals.java
+@@ -178,9 +176,14 @@ class InlineObjectLiterals implements CompilerPass {
+           // We short-circuit this problem by bailing out if we see a reference
+           // to a property that isn't defined on the object literal. This
+           // isn't a perfect algorithm, but it should catch most cases.
++          //
++          // NOTE: This is a bug, as it incorrectly prevents us from
++          // inlining if the referenced object literal is a prototype
++          // object, but it's a bug that's existed since the dawn of
++          // Closure Compiler, and we don't have a good way to fix it.
++          // See b/2079651
+           continue;
+         }
+-
+         // Only rewrite VAR declarations or simple assignment statements
+         if (!isVarOrAssignExprLhs(name)) {
+            return false;
+@@ -196,8 +197,7 @@ class InlineObjectLiterals implements CompilerPass {
+         if (!val.isObjectLit()) {
+           return false;
+         }
+-
+-        // Make sure that the value is not self-refential. IOW,
++        // Make sure that the value is not self-referential. IOW,
+         // disallow things like x = {b: x.a}.
+         //
+         // TODO: Only exclude unorderable self-referential

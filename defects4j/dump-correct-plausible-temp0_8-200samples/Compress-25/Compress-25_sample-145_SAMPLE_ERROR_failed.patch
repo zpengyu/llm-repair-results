@@ -1,0 +1,33 @@
+diff --git a/src/main/java/org/apache/commons/compress/archivers/zip/ZipArchiveInputStream.java b/src/main/java/org/apache/commons/compress/archivers/zip/ZipArchiveInputStream.java
+index 84eb7403..ae60ee3c 100644
+--- a/src/main/java/org/apache/commons/compress/archivers/zip/ZipArchiveInputStream.java
++++ b/src/main/java/org/apache/commons/compress/archivers/zip/ZipArchiveInputStream.java
+@@ -174,15 +174,26 @@ public class ZipArchiveInputStream extends ArchiveInputStream {
+     public ZipArchiveInputStream(InputStream inputStream,
+                                  String encoding,
+                                  boolean useUnicodeExtraFields,
+-                                 boolean allowStoredEntriesWithDataDescriptor) {
++                                 boolean allowStoredEntriesWithDataDescriptor) throws IOException {
+         zipEncoding = ZipEncodingHelper.getZipEncoding(encoding);
+         this.useUnicodeExtraFields = useUnicodeExtraFields;
+         in = new PushbackInputStream(inputStream, buf.capacity());
+         this.allowStoredEntriesWithDataDescriptor =
+             allowStoredEntriesWithDataDescriptor;
+         // haven't read anything so far
++        int readByte = in.read();
++        if (readByte == -1) {
++            // zipped inputstream is empty
++            throw new ZipException("archive is empty");
++        }
++        if (((readByte << 24) | (readByte << 16) | (readByte << 8) | readByte) == 0x504b0304) {
++            // actually a PKZIP header.
++            in.unread(readByte);
++        } else {
++            // something in the header is invalid
++            throw new ZipException("archive is not a ZIP archive");
++        }
+     }
+-
+     public ZipArchiveEntry getNextZipEntry() throws IOException {
+         boolean firstEntry = true;
+         if (closed || hitCentralDirectory) {

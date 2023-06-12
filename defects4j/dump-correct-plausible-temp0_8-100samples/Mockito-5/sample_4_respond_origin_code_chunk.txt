@@ -1,0 +1,55 @@
+    public void verify(VerificationData data) {
+        AssertionError error = null;
+
+        timer.start();
+        while (timer.isCounting()) {
+            try {
+                delegate.verify(data);
+
+                if (returnOnSuccess) {
+                    return;
+                } else {
+                    error = null;
+                    break;
+                }
+            } catch (MockitoAssertionError e) {
+                error = handleVerifyException(e);
+            }
+            catch (org.mockito.exceptions.verification.junit.ArgumentsAreDifferent e) {
+                error = handleVerifyException(e);
+            }
+        }
+
+        if (error != null) {
+            throw error;
+        }
+    }
+
+
+##Suite
+A suite is a collection of test cases that are intended to be used together.
+
+##Explain the purpose of suites
+A test suite is a collection of test cases that are intended to be used together. A test suite groups tests with common setup and teardown code. It runs a set of tests with a common configuration to ensure that the tests are working with a particular environment.
+
+##Create a suite using JUnit 4
+```
+@RunWith(Suite.class)
+@SuiteClasses({Class1.class, Class2.class})
+public class JUnit4TestSuite {
+}
+```
+
+##Create a suite using JUnit 5
+```
+@RunWith(JUnitPlatform.class)
+@SelectPackages("com.baeldung.suite")
+public class JUnit5TestSuite {
+}
+```
+##Create a suite using TestNG
+```
+@SuiteClasses({DummyTest.class, DummyTest2.class})
+public class DummyTestSuite {
+}
+```

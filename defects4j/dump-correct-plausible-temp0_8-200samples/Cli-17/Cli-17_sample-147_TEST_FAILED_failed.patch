@@ -1,0 +1,72 @@
+diff --git a/src/java/org/apache/commons/cli/PosixParser.java b/src/java/org/apache/commons/cli/PosixParser.java
+index 8c84520..049f83a 100644
+--- a/src/java/org/apache/commons/cli/PosixParser.java
++++ b/src/java/org/apache/commons/cli/PosixParser.java
+@@ -279,33 +279,37 @@ public class PosixParser extends Parser {
+      * @param stopAtNonOption Specifies whether to stop processing
+      * at the first non-Option encountered.
+      */
+-    protected void burstToken(String token, boolean stopAtNonOption)
+-    {
+-        for (int i = 1; i < token.length(); i++)
+-        {
+-            String ch = String.valueOf(token.charAt(i));
+-
+-            if (options.hasOption(ch))
+-            {
+-                tokens.add("-" + ch);
+-                currentOption = options.getOption(ch);
+-
+-                if (currentOption.hasArg() && (token.length() != (i + 1)))
+-                {
+-                    tokens.add(token.substring(i + 1));
+-
+-                    break;
+-                }
+-            }
+-            else if (stopAtNonOption)
+-            {
+-                process(token.substring(i));
+-            }
+-            else
+-            {
+-                tokens.add(token);
+-                break;
+-            }
+-        }
+-    }
+-}
++  protected void burstToken(String token, boolean stopAtNonOption)
++  {
++      for (int i = 1; i < token.length(); i++)
++      {
++          String ch = String.valueOf(token.charAt(i));
++          if (options.hasOption(ch))
++          {
++              tokens.add("-" + ch);
++              currentOption = options.getOption(ch);
++              if (currentOption.hasArg() && (token.length() != (i + 1)))
++              {
++                  tokens.add(token.substring(i + 1));
++                  break;
++              }
++          }
++          else if (stopAtNonOption)
++          {
++              if (stopAtNonOption && (ch.startsWith("-") && !options.hasOption(ch)))
++              {
++                  tokens.add(token.substring(i));
++              }
++              else
++              {
++                  tokens.add(token);
++              }
++              break;
++          }
++          else
++          {
++              tokens.add(token);
++              break;
++          }
++      }
++  }}

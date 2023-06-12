@@ -1,0 +1,22 @@
+diff --git a/src/com/google/javascript/jscomp/GlobalNamespace.java b/src/com/google/javascript/jscomp/GlobalNamespace.java
+index a00893b3..917da7b3 100644
+--- a/src/com/google/javascript/jscomp/GlobalNamespace.java
++++ b/src/com/google/javascript/jscomp/GlobalNamespace.java
+@@ -356,12 +354,12 @@ class GlobalNamespace
+               case Token.GETPROP:
+                 return;
+               case Token.FUNCTION:
+-                Node gramps = parent.getParent();
+-                if (gramps == null || NodeUtil.isFunctionExpression(parent)) {
+-                  return;
++                if (n == parent.getFirstChild() && !n.hasChildren() &&
++                    parent.getParent().getType() == Token.ASSIGN &&
++                    parent.getParent().getFirstChild() == parent) {
++                  isSet = true;
++                  type = Name.Type.FUNCTION;
+                 }
+-                isSet = true;
+-                type = Name.Type.FUNCTION;
+                 break;
+               case Token.INC:
+               case Token.DEC:

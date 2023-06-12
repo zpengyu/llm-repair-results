@@ -1,0 +1,22 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/jsontype/impl/TypeDeserializerBase.java b/src/main/java/com/fasterxml/jackson/databind/jsontype/impl/TypeDeserializerBase.java
+index 339362e1e..69a4efced 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/jsontype/impl/TypeDeserializerBase.java
++++ b/src/main/java/com/fasterxml/jackson/databind/jsontype/impl/TypeDeserializerBase.java
+@@ -156,10 +156,14 @@ public abstract class TypeDeserializerBase
+                     JavaType actual = _handleUnknownTypeId(ctxt, typeId, _idResolver, _baseType);
+                     if (actual == null) { // what should this be taken to mean?
+                         // TODO: try to figure out something better
+-                        return null;
++                        deser = getMissingTypeDeserializer(ctxt, actual);
++                        if (deser == null) {
++                            return null;
++                        }
++                    } else {
++                        // ... would this actually work?
++                        deser = ctxt.findContextualValueDeserializer(actual, _property);
+                     }
+-                    // ... would this actually work?
+-                    deser = ctxt.findContextualValueDeserializer(actual, _property);
+                 }
+             } else {
+                 /* 16-Dec-2010, tatu: Since nominal type we get here has no (generic) type parameters,

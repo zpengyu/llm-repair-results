@@ -1,0 +1,35 @@
+diff --git a/src/com/google/javascript/jscomp/TypedScopeCreator.java b/src/com/google/javascript/jscomp/TypedScopeCreator.java
+index 5e7bfa3f..3bf10793 100644
+--- a/src/com/google/javascript/jscomp/TypedScopeCreator.java
++++ b/src/com/google/javascript/jscomp/TypedScopeCreator.java
+@@ -2004,8 +2002,7 @@ final class TypedScopeCreator implements ScopeCreator {
+         // no reason to do this extra computation for them.
+         return;
+       }
+-
+-      if (n.isName() && NodeUtil.isLValue(n) &&
++      if (NodeUtil.isNameDeclaration(parent) &&
+           // Be careful of bleeding functions, which create variables
+           // in the inner scope, not the scope where the name appears.
+           !NodeUtil.isBleedingFunctionName(n)) {
+@@ -2022,8 +2018,8 @@ final class TypedScopeCreator implements ScopeCreator {
+             data.get(ownerScope.getRootNode()).recordEscapedVarName(name);
+           }
+         }
+-      } else if (n.isGetProp() && n.isUnscopedQualifiedName() &&
+-          NodeUtil.isLValue(n)) {
++      } else if (NodeUtil.isVarOrSimpleAssignLhs(n, parent) &&
++          n.isUnscopedQualifiedName()) {
+         String name = NodeUtil.getRootOfQualifiedName(n).getString();
+         Scope scope = t.getScope();
+         Var var = scope.getVar(name);
+@@ -2035,8 +2031,7 @@ final class TypedScopeCreator implements ScopeCreator {
+           }
+         }
+       }
+-    }
+-  }
++    }  }
+ 
+   private AstFunctionContents getFunctionAnalysisResults(@Nullable Node n) {
+     if (n == null) {

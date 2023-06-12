@@ -1,0 +1,26 @@
+diff --git a/src/com/google/javascript/jscomp/CheckSideEffects.java b/src/com/google/javascript/jscomp/CheckSideEffects.java
+index b5a0ab44..19a6508e 100644
+--- a/src/com/google/javascript/jscomp/CheckSideEffects.java
++++ b/src/com/google/javascript/jscomp/CheckSideEffects.java
+@@ -211,10 +211,17 @@ final class CheckSideEffects extends AbstractPostOrderCallback
+         // so we can remove goog.reflect.sinkValue as well.
+         if (target.isName() && target.getString().equals(PROTECTOR_FN)) {
+           Node expr = n.getLastChild();
+-          n.detachChildren();
+-          parent.replaceChild(n, expr);
++          // In case of a function call, the node is not to be replaced directly
++          // with the expression
++          if (expr.isFunction()) {
++              n.replaceChild(target, expr);
++              target.detachFromParent();
++              expr.detachFromParent();
++          } else {
++              n.detachChildren();
++              parent.replaceChild(n, expr);
++          }
+         }
+       }
+-    }
+-  }
++    }  }
+ }

@@ -1,0 +1,19 @@
+diff --git a/src/main/java/org/jsoup/nodes/Node.java b/src/main/java/org/jsoup/nodes/Node.java
+index 0d0f9d4..be8c785 100644
+--- a/src/main/java/org/jsoup/nodes/Node.java
++++ b/src/main/java/org/jsoup/nodes/Node.java
+@@ -170,6 +169,14 @@ public abstract class Node implements Cloneable {
+                     return abs.toExternalForm();
+                 }
+                 // workaround: java resolves '//path/file + ?foo' to '//path/?foo', not '//path/file?foo' as desired
++                if(base.getQuery() != null){
++                    // path: /path/file
++                    String path = base.getPath();
++                    // query: foo
++                    String query = base.getQuery();
++                    // new url: /path/file?foo
++                    base = new URL(base.getProtocol(),base.getHost(),base.getPort(),path+"?"+query);
++                }
+                 URL abs = new URL(base, relUrl);
+                 return abs.toExternalForm();
+             } catch (MalformedURLException e) {

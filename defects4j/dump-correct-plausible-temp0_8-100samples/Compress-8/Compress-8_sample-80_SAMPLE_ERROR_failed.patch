@@ -1,0 +1,44 @@
+diff --git a/src/main/java/org/apache/commons/compress/archivers/tar/TarUtils.java b/src/main/java/org/apache/commons/compress/archivers/tar/TarUtils.java
+index cfa8f73c..28fad48a 100644
+--- a/src/main/java/org/apache/commons/compress/archivers/tar/TarUtils.java
++++ b/src/main/java/org/apache/commons/compress/archivers/tar/TarUtils.java
+@@ -82,10 +78,37 @@ public class TarUtils {
+             result = (result << 3) + (currentByte - '0'); // convert from ASCII
+             // CheckStyle:MagicNumber ON
+         }
+-
+         return result;
+     }
+-
++    /**
++     * Creates an error message indicating the illegal byte and its
++     * position.
++     *
++     * @param buffer the byte array
++     * @param offset the start offset in the buffer
++     * @param length the number of bytes in the buffer to use
++     * @param start the first byte of the sequence
++     * @param current the current byte being parsed
++     * @return the exception message
++     */
++    private static String exceptionMessage(final byte[] buffer, final int offset,
++            final int length, final int start, final byte current) {
++        final StringBuilder sb = new StringBuilder();
++        sb.append("Failed to parse octal number: ");
++        for (int i = 0; i < length; i++) {
++            final byte b = buffer[offset + i];
++            if (b == 0) {
++                break;
++            }
++            sb.append((char) b);
++        }
++        sb.append(" at index ");
++        sb.append(start);
++        sb.append(" (decimal ");
++        sb.append(current);
++        sb.append(')');
++        return sb.toString();
++    }
+     // Helper method to generate the exception message
+     private static String exceptionMessage(byte[] buffer, final int offset,
+             final int length, int current, final byte currentByte) {

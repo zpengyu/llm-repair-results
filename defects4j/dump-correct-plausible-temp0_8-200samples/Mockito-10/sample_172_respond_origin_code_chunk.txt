@@ -1,0 +1,71 @@
+public class ReturnsDeepStubs implements Answer<Object>, Serializable {
+
+    private static final long serialVersionUID = -7105341425736035847L;
+
+    public Object answer(InvocationOnMock invocation) throws Throwable {
+        Class<?> typeToMock = invocation.getMock().getClass().getSuperclass();
+        if (!mockitoCore().isTypeMockable(typeToMock)) {
+            return delegate().returnValueFor(typeToMock);
+        }
+
+        return deepStub(invocation, typeToMock);
+    }
+
+    private Object deepStub(InvocationOnMock invocation, Class<?> typeToMock) throws Throwable {
+        InternalMockHandler<Object> handler = new MockUtil().getMockHandler(invocation.getMock());
+        InvocationContainerImpl container = (InvocationContainerImpl) handler.getInvocationContainer();
+
+        // matches invocation for verification
+        for (StubbedInvocationMatcher stubbedInvocationMatcher : container.getStubbedInvocations()) {
+            if (container.getInvocationForStubbing().matches(stubbedInvocationMatcher.getInvocation())) {
+                return stubbedInvocationMatcher.answer(invocation);
+            }
+        }
+
+        // record deep stub answer
+        return recordDeepStubAnswer(
+                newDeepStubMock(typeToMock),
+                container
+        );
+    }
+
+    private Object newDeepStubMock(Class<?> typeToMock) {
+        return mockitoCore().mock(
+                typeToMock,
+                Mockito.withSettings()
+                        .serializable()
+                        .defaultAnswer(Mockito.RETURNS_DEEP_STUBS)
+        );
+    }
+
+    private Object recordDeepStubAnswer(final Object mock, InvocationContainerImpl container) throws Throwable {
+        container.addAnswer(new DeeplyStubbedAnswer(mock), false);
+        return mock;
+    }
+
+    private static class DeeplyStubbedAnswer implements Answer<Object>, Serializable {
+        @SuppressWarnings("serial") // serialization will fail with a nice message if mock not serializable
+        private final Object mock;
+
+        DeeplyStubbedAnswer(Object mock) {
+            this.mock = mock;
+        }
+        public Object answer(InvocationOnMock invocation) throws Throwable {
+            return mock;
+        }
+    }
+
+    private static MockitoCore mockitoCore() {
+        return LazyHolder.MOCKITO_CORE;
+    }
+
+    private static ReturnsEmptyValues delegate() {
+        return LazyHolder.DELEGATE;
+    }
+
+    private static class LazyHolder {
+        private static final MockitoCore MOCKITO_CORE = new MockitoCore();
+        private static final ReturnsEmptyValues DELEGATE = new ReturnsEmptyValues();
+    }
+}
+

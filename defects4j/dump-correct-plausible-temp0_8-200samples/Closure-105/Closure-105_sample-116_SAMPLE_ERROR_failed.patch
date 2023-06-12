@@ -1,0 +1,125 @@
+diff --git a/src/com/google/javascript/jscomp/FoldConstants.java b/src/com/google/javascript/jscomp/FoldConstants.java
+index 003743b3..ce73603d 100644
+--- a/src/com/google/javascript/jscomp/FoldConstants.java
++++ b/src/com/google/javascript/jscomp/FoldConstants.java
+@@ -1458,96 +1458,31 @@ class FoldConstants extends AbstractPostOrderCallback
+   /**
+    * Try to fold an array join: ['a', 'b', 'c'].join('') -> 'abc';
+    */
+-  void tryFoldStringJoin(NodeTraversal t, Node n, Node left, Node right,
+-                         Node parent) {
+-    if (!NodeUtil.isGetProp(left) || !NodeUtil.isImmutableValue(right)) {
+-      return;
+-    }
+-
+-    Node arrayNode = left.getFirstChild();
+-    Node functionName = arrayNode.getNext();
+-
+-    if ((arrayNode.getType() != Token.ARRAYLIT) ||
+-        !functionName.getString().equals("join")) {
+-      return;
+-    }
+-
+-    String joinString = NodeUtil.getStringValue(right);
+-    List<Node> arrayFoldedChildren = Lists.newLinkedList();
+-    StringBuilder sb = new StringBuilder();
+-    int foldedSize = 0;
+-    Node elem = arrayNode.getFirstChild();
+-    // Merges adjacent String nodes.
+-    while (elem != null) {
+-      if (NodeUtil.isImmutableValue(elem)) {
+-        if (sb.length() > 0) {
+-          sb.append(joinString);
+-        }
+-        sb.append(NodeUtil.getStringValue(elem));
+-      } else {
+-        if (sb.length() > 0) {
+-          // + 2 for the quotes.
+-          foldedSize += sb.length() + 2;
+-          arrayFoldedChildren.add(Node.newString(sb.toString()));
+-          sb = new StringBuilder();
+-        }
+-        foldedSize += InlineCostEstimator.getCost(elem);
+-        arrayFoldedChildren.add(elem);
+-      }
+-      elem = elem.getNext();
+-    }
+-
+-    if (sb.length() > 0) {
+-      // + 2 for the quotes.
+-      foldedSize += sb.length() + 2;
+-      arrayFoldedChildren.add(Node.newString(sb.toString()));
+-    }
+-    // one for each comma.
+-    foldedSize += arrayFoldedChildren.size() - 1;
+-
+-    int originalSize = InlineCostEstimator.getCost(n);
+-    switch (arrayFoldedChildren.size()) {
+-      case 0:
+-        Node emptyStringNode = Node.newString("");
+-        parent.replaceChild(n, emptyStringNode);
+-        break;
+-
+-      case 1:
+-        Node foldedStringNode = arrayFoldedChildren.remove(0);
+-        if (foldedSize > originalSize) {
+-          return;
+-        }
+-        arrayNode.detachChildren();
+-        if (foldedStringNode.getType() != Token.STRING) {
+-          // If the Node is not a string literal, ensure that
+-          // it is coerced to a string.
+-          Node replacement = new Node(Token.ADD,
+-              Node.newString(""), foldedStringNode);
+-          foldedStringNode = replacement;
+-        }
+-        parent.replaceChild(n, foldedStringNode);
+-        break;
+-
+-      default:
+-        // No folding could actually be performed.
+-        if (arrayFoldedChildren.size() == arrayNode.getChildCount()) {
+-          return;
+-        }
+-        int kJoinOverhead = "[].join()".length();
+-        foldedSize += kJoinOverhead;
+-        foldedSize += InlineCostEstimator.getCost(right);
+-        if (foldedSize > originalSize) {
+-          return;
+-        }
+-        arrayNode.detachChildren();
+-        for (Node node : arrayFoldedChildren) {
+-          arrayNode.addChildToBack(node);
+-        }
+-        break;
+-    }
+-    t.getCompiler().reportCodeChange();
++private Node tryFoldJsTypeofValueOf(Node n) {
++  Node parent = n.getParent();
++  Node first = n.getFirstChild();
++  Node second = first.getNext();
++  // pattern match: (typeof x.valueOf())
++  if (NodeUtil.isGet(first)
++      && first.getFirstChild().getType() == Token.NAME
++      && first.getLastChild().getType() == Token.STRING
++      && first.getLastChild().getString().equals("valueOf")
++      && parent.getType() == Token.NOT
++      && second.getType() == Token.CALL
++      && second.getFirstChild().equals(first)
++      && second.getLastChild() == null
++      && NodeUtil.isExpressionNode(parent.getParent())) {
++    Node call = IR.call(IR.getprop(IR.name("JSCompiler_StaticMethods_typeOf"),
++                                   IR.string("call")),
++                        IR.thisNode(), first.getFirstChild().detachFromParent());
++    n.getParent().getParent().replaceChild(
++        n.getParent(),
++        call.srcrefTree(n.getParent()));
++    reportCodeChange();
++    return call;
+   }
+-
++  return n;
++}
+   /**
+    * Try to fold array-element. e.g [1, 2, 3][10];
+    */

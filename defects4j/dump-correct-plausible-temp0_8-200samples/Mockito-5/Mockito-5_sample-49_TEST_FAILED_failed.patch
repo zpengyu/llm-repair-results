@@ -1,0 +1,34 @@
+diff --git a/src/org/mockito/internal/verification/VerificationOverTimeImpl.java b/src/org/mockito/internal/verification/VerificationOverTimeImpl.java
+index 092b9a548..07f27b17c 100644
+--- a/src/org/mockito/internal/verification/VerificationOverTimeImpl.java
++++ b/src/org/mockito/internal/verification/VerificationOverTimeImpl.java
+@@ -74,12 +74,11 @@ public class VerificationOverTimeImpl implements VerificationMode {
+      */
+     public void verify(VerificationData data) {
+         AssertionError error = null;
+-
++        boolean timedOut = false;
+         timer.start();
+-        while (timer.isCounting()) {
++        while (timer.isCounting() && !timedOut) {
+             try {
+                 delegate.verify(data);
+-
+                 if (returnOnSuccess) {
+                     return;
+                 } else {
+@@ -87,12 +86,13 @@ public class VerificationOverTimeImpl implements VerificationMode {
+                 }
+             } catch (MockitoAssertionError e) {
+                 error = handleVerifyException(e);
++                timedOut = true;
+             }
+             catch (org.mockito.exceptions.verification.junit.ArgumentsAreDifferent e) {
+                 error = handleVerifyException(e);
++                timedOut = true;
+             }
+         }
+-
+         if (error != null) {
+             throw error;
+         }

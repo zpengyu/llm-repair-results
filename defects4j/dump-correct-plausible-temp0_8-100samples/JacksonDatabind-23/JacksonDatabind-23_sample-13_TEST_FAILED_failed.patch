@@ -1,0 +1,206 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/ser/std/NumberSerializers.java b/src/main/java/com/fasterxml/jackson/databind/ser/std/NumberSerializers.java
+index 6d0db8734..ca243942f 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/ser/std/NumberSerializers.java
++++ b/src/main/java/com/fasterxml/jackson/databind/ser/std/NumberSerializers.java
+@@ -19,12 +19,10 @@ import com.fasterxml.jackson.databind.ser.ContextualSerializer;
+  * Container class for serializers used for handling standard JDK-provided types.
+  */
+ @SuppressWarnings("serial")
+-public class NumberSerializers
+-{
+-    protected NumberSerializers() { }
+-
+-    public static void addAll(Map<String, JsonSerializer<?>> allDeserializers)
+-    {
++public class NumberSerializers {
++    protected NumberSerializers() {
++    }
++    public static void addAll(Map<String, JsonSerializer<?>> allDeserializers) {
+         final JsonSerializer<?> intS = new IntegerSerializer();
+         allDeserializers.put(Integer.class.getName(), intS);
+         allDeserializers.put(Integer.TYPE.getName(), intS);
+@@ -47,11 +43,7 @@ public class NumberSerializers
+     /* Shared base class
+     /**********************************************************
+      */
+-
+-    protected abstract static class Base<T> extends StdScalarSerializer<T>
+-        implements ContextualSerializer
+-    {
+-
++    protected abstract static class Base<T> extends StdScalarSerializer<T> implements ContextualSerializer {
+         protected final JsonParser.NumberType _numberType;
+         protected final String _schemaType;
+         protected final boolean _isInt;
+@@ -60,20 +51,14 @@ public class NumberSerializers
+             super(cls, false);
+             _numberType = numberType;
+             _schemaType = schemaType;
+-            _isInt = (numberType == JsonParser.NumberType.INT)
+-                    || (numberType == JsonParser.NumberType.LONG)
+-                    || (numberType == JsonParser.NumberType.BIG_INTEGER)
+-                    ;
++            _isInt = (numberType == JsonParser.NumberType.INT) || (numberType == JsonParser.NumberType.LONG) || (numberType == JsonParser.NumberType.BIG_INTEGER);
+         }
+-
+         @Override
+         public JsonNode getSchema(SerializerProvider provider, Type typeHint) {
+             return createSchemaNode(_schemaType, true);
+         }
+-
+         @Override
+-        public void acceptJsonFormatVisitor(JsonFormatVisitorWrapper visitor, JavaType typeHint) throws JsonMappingException
+-        {
++        public void acceptJsonFormatVisitor(JsonFormatVisitorWrapper visitor, JavaType typeHint) throws JsonMappingException {
+             if (_isInt) {
+                 JsonIntegerFormatVisitor v2 = visitor.expectIntegerFormat(typeHint);
+                 if (v2 != null) {
+@@ -86,20 +71,18 @@ public class NumberSerializers
+                 }
+             }
+         }
+-
+         @Override
+         public JsonSerializer<?> createContextual(SerializerProvider prov,
+-                BeanProperty property) throws JsonMappingException
+-        {
++                                                  BeanProperty property) throws JsonMappingException {
+             if (property != null) {
+                 AnnotatedMember m = property.getMember();
+                 if (m != null) {
+                     JsonFormat.Value format = prov.getAnnotationIntrospector().findFormat(m);
+                     if (format != null) {
+                         switch (format.getShape()) {
+-                        case STRING:
+-                            return ToStringSerializer.instance;
+-                        default:
++                            case STRING:
++                                return ToStringSerializer.instance;
++                            default:
+                         }
+                     }
+                 }
+@@ -113,15 +95,12 @@ public class NumberSerializers
+     /* Concrete serializers, numerics
+     /**********************************************************
+      */
+-
+     @JacksonStdImpl
+-    public final static class ShortSerializer extends Base<Short>
+-    {
++    public final static class ShortSerializer extends Base<Short> {
+         final static ShortSerializer instance = new ShortSerializer();
+-
+-        public ShortSerializer() { super(Short.class, JsonParser.NumberType.INT, "number"); }
+-
+-
++        public ShortSerializer() {
++            super(Short.class, JsonParser.NumberType.INT, "number");
++        }
+         @Override
+         public void serialize(Short value, JsonGenerator gen, SerializerProvider provider) throws IOException {
+             gen.writeNumber(value.shortValue());
+@@ -139,10 +117,10 @@ public class NumberSerializers
+      * of bridge methods.
+      */
+     @JacksonStdImpl
+-    public final static class IntegerSerializer extends Base<Object>
+-    {
+-        public IntegerSerializer() { super(Integer.class, JsonParser.NumberType.INT ,"integer"); }
+-    
++    public final static class IntegerSerializer extends Base<Object> {
++        public IntegerSerializer() {
++            super(Integer.class, JsonParser.NumberType.INT, "integer");
++        }
+         @Override
+         public void serialize(Object value, JsonGenerator gen, SerializerProvider provider) throws IOException {
+             gen.writeNumber(((Integer) value).intValue());
+@@ -151,7 +128,7 @@ public class NumberSerializers
+         // IMPORTANT: copied from `NonTypedScalarSerializerBase`
+         @Override
+         public void serializeWithType(Object value, JsonGenerator gen,
+-                SerializerProvider provider, TypeSerializer typeSer) throws IOException {
++                                      SerializerProvider provider, TypeSerializer typeSer) throws IOException {
+             // no type info, just regular serialization
+             serialize(value, gen, provider);
+         }
+@@ -164,10 +139,8 @@ public class NumberSerializers
+      * by calling {@link java.lang.Number#intValue}.
+      */
+     @JacksonStdImpl
+-    public final static class IntLikeSerializer extends Base<Number>
+-    {
++    public final static class IntLikeSerializer extends Base<Number> {
+         final static IntLikeSerializer instance = new IntLikeSerializer();
+-
+         public IntLikeSerializer() {
+             super(Number.class, JsonParser.NumberType.INT, "integer");
+         }
+@@ -178,31 +149,23 @@ public class NumberSerializers
+             gen.writeNumber(value.intValue());
+         }
+     }
+-
+     @JacksonStdImpl
+-    public final static class LongSerializer extends Base<Object>
+-    {
+-
++    public final static class LongSerializer extends Base<Object> {
+         final static LongSerializer instance = new LongSerializer();
+-
+-        public LongSerializer() { super(Long.class, JsonParser.NumberType.LONG, "number"); }
+-
+-
++        public LongSerializer() {
++            super(Long.class, JsonParser.NumberType.LONG, "number");
++        }
+         @Override
+         public void serialize(Object value, JsonGenerator gen, SerializerProvider provider) throws IOException {
+             gen.writeNumber(((Long) value).longValue());
+         }
+     }
+-
+     @JacksonStdImpl
+-    public final static class FloatSerializer extends Base<Object>
+-    {
+-
++    public final static class FloatSerializer extends Base<Object> {
+         final static FloatSerializer instance = new FloatSerializer();
+-
+-        public FloatSerializer() { super(Float.class, JsonParser.NumberType.FLOAT, "number"); }
+-
+-
++        public FloatSerializer() {
++            super(Float.class, JsonParser.NumberType.FLOAT, "number");
++        }
+         @Override
+         public void serialize(Object value, JsonGenerator gen, SerializerProvider provider) throws IOException {
+             gen.writeNumber(((Float) value).floatValue());
+@@ -217,14 +179,11 @@ public class NumberSerializers
+      * included on serialization (unlike for most scalar types as of 1.5)
+      */
+     @JacksonStdImpl
+-    public final static class DoubleSerializer extends Base<Object>
+-    {
+-
++    public final static class DoubleSerializer extends Base<Object> {
+         final static DoubleSerializer instance = new DoubleSerializer();
+-
+-        public DoubleSerializer() { super(Double.class, JsonParser.NumberType.DOUBLE, "number"); }
+-
+-
++        public DoubleSerializer() {
++            super(Double.class, JsonParser.NumberType.DOUBLE, "number");
++        }
+         @Override
+         public void serialize(Object value, JsonGenerator gen, SerializerProvider provider) throws IOException {
+             gen.writeNumber(((Double) value).doubleValue());
+@@ -233,7 +191,7 @@ public class NumberSerializers
+         // IMPORTANT: copied from `NonTypedScalarSerializerBase`
+         @Override
+         public void serializeWithType(Object value, JsonGenerator gen,
+-                SerializerProvider provider, TypeSerializer typeSer) throws IOException {
++                                      SerializerProvider provider, TypeSerializer typeSer) throws IOException {
+             // no type info, just regular serialization
+             serialize(value, gen, provider);
+         }

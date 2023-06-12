@@ -1,0 +1,45 @@
+private void removeDeadExprStatementSafely(Node n) {
+    Node parent = n.getParent();
+    if (n.getType() == Token.EMPTY ||
+        (n.getType() == Token.BLOCK && !n.hasChildren())) {
+      // Not always trivial to remove, let FoldContants work its magic later.
+      return;
+    }
+    switch (n.getType()) {
+      // Removing an unreachable DO node is messy because it means we still have
+      // to execute one iteration. If the DO's body has breaks in the middle, it
+      // can get even more trickier and code size might actually increase.
+      case Token.DO:
+        return;
+      case Token.BLOCK:
+        // BLOCKs are used in several ways including wrapping CATCH blocks in TRYs
+        if (parent.getType() == Token.TRY) {
+          if (NodeUtil.isTryCatchNodeContainer(n)) {
+            return;
+          }
+        }
+        break;
+      case Token.CATCH:
+        Node tryNode = parent.getParent();
+        NodeUtil.maybeAddFinally(tryNode);
+        break;
+    }
+    NodeUtil.redeclareVarsInsideBranch(n);
+    compiler.reportCodeChange();
+    if (logger.isLoggable(Level.FINE)) {
+      logger.fine("Removing " + n.toString());
+    }
+    if (n.getType() == Token.SWITCH) {
+      if (parent.getType() == Token.BLOCK) {
+        if (parent.hasChildren()) {
+          NodeUtil.removeChild(n.getParent(), n);
+        } else {
+          NodeUtil.removeChild(n.getParent().getParent(), n.getParent());
+        }
+      } else {
+        NodeUtil.removeChild(n.getParent(), n);
+      }
+    } else {
+      NodeUtil.removeChild(n.getParent(), n);
+    }
+  }

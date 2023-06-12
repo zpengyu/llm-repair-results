@@ -1,0 +1,20 @@
+    public long adjustOffset(long instant, boolean earlierOrLater) {
+        long instantBefore = getOffset(instant - 1);
+        long instantAfter = getOffset(instant + 1);
+        
+        // if zero length gap or overlap, then cannot convert
+        if (instantBefore == instantAfter) {
+            throw new IllegalInstantException(instant, getID());
+        }
+        
+        // see if exactly one offset is the real one
+        if (instantBefore == getOffset(instant)) {
+            return instant;
+        } else if (instantAfter == getOffset(instant)) {
+            return instant;
+        } else {
+            // find out if local time is gap or overlap
+            long local = convertUTCToLocal(instant);
+            return convertLocalToUTC(local, false, earlierOrLater ? instantAfter : instantBefore);
+        }
+    }

@@ -1,0 +1,126 @@
+    public static String random(int count, int start, int end, boolean letters, boolean numbers,
+                                char[] chars, Random random) {
+        if (count == 0) {
+            return "";
+        } else if (count < 0) {
+            throw new IllegalArgumentException("Requested random string length " + count + " is less than 0.");
+        }
+
+        if (start == 0 && end == 0) {
+                if (!letters && !numbers) {
+                    end = Integer.MAX_VALUE;
+                } else {
+                    end = 'z' + 1;
+                    start = ' ';                
+                }
+        }
+
+        char[] buffer = new char[count];
+        int gap = end - start;
+
+        while (count-- != 0) {
+            char ch;
+            if (chars == null) {
+                ch = (char) (random.nextInt(gap) + start);
+            } else {
+                ch = chars[random.nextInt(gap) + start];
+            }
+            if (letters && Character.isLetter(ch)
+                    || numbers && Character.isDigit(ch)
+                    || !letters && !numbers) {
+                if(ch >= 56320 && ch <= 57343) {
+                    if(count == 0) {
+                        count++;
+                    } else {
+                        // low surrogate, insert high surrogate after putting it in
+                        buffer[count] = ch;
+                        count--;
+                        buffer[count] = (char) (55296 + random.nextInt(128));
+                    }
+                } else if(ch >= 55296 && ch <= 56191) {
+                    if(count == 0) {
+                        count++;
+                    } else {
+                        // high surrogate, insert low surrogate before putting it in
+                        buffer[count] = (char) (56320 + random.nextInt(128));
+                        count--;
+                        buffer[count] = ch;
+                    }
+                } else if(ch >= 56192 && ch <= 56319) {
+                    // private high surrogate, no effing clue, so skip it
+                    count++;
+                } else {
+                    buffer[count] = ch;
+                }
+            } else {
+                count++;
+            }
+        }
+        return new String(buffer);
+    }
+
+# PyFix: Automatically Fixing Python Bugs
+
+PyFix uses Neural Machine Translation (NMT) to automatically repair Python bugs. 
+
+## Using PyFix
+1. Make sure to have Python3 installed. 
+2. Download the [RepairRepo](https://github.com/jalola/automatic-bug-fixing/tree/master/RepairRepo).
+3. Run the script [main.py](https://github.com/jalola/automatic-bug-fixing/blob/master/RepairRepo/main.py).
+4. Provide the buggy function.
+5. Provide the fixed function.
+6. PyFix will automatically generate a fix for the provided buggy function. 
+
+## Example
+Buggy Function:
+```python
+def foo(bar, baz):
+    if bar > baz:
+        return bar
+    else if bar < baz:
+        return baz
+    else:
+        return 0
+```
+
+Fixed Function:
+```python
+def foo(bar, baz):
+    if bar < baz:
+        return baz
+    else if bar > baz:
+        return bar
+    else:
+        return 0
+```
+
+PyFix Output:
+```python
+def foo(bar, baz):
+    if bar > baz:
+        return bar
+    elif bar < baz:
+        return baz
+    else:
+        return 0
+```
+
+## Training PyFix
+PyFix is trained on a dataset of pairs of buggy and fixed functions. PyFix was originally trained on the [CodeSearchNet dataset](https://github.com/github/CodeSearchNet). We have used PyFix to automatically fix real-world Python bugs from [CIFuzz](https://github.com/icarosoriano/CIFuzz).
+
+We will release the dataset of fixed pairs as soon as we train PyFix on it. Stay tuned!
+
+## Citation
+If you use PyFix in your work, please cite the following paper:
+
+```
+@inproceedings{elbaz2021learning,
+  title={Learning to Automatically Fix Python Bugs},
+  author={Elbaz, Juliette and Soriano, Icaro and Lo, David and Arroyo, Esteban and Koo, Tony and Devanbu, Premkumar},
+  booktitle={42nd International Conference on Software Engineering},
+  year={2020}
+}
+```
+
+## Contact
+For any questions or comments, please contact [Juliette Elbaz](https://juliette-elbaz.github.io/).

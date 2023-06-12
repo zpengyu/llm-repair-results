@@ -1,0 +1,32 @@
+diff --git a/src/main/java/org/jsoup/helper/HttpConnection.java b/src/main/java/org/jsoup/helper/HttpConnection.java
+index 0b7fa7e..9085ee4 100644
+--- a/src/main/java/org/jsoup/helper/HttpConnection.java
++++ b/src/main/java/org/jsoup/helper/HttpConnection.java
+@@ -750,7 +750,7 @@ public class HttpConnection implements Connection {
+             return headers;
+         }
+ 
+-        void processResponseHeaders(Map<String, List<String>> resHeaders) {
++void processResponseHeaders(Map<String, List<String>> resHeaders) {
+             for (Map.Entry<String, List<String>> entry : resHeaders.entrySet()) {
+                 String name = entry.getKey();
+                 if (name == null)
+@@ -769,6 +768,18 @@ public class HttpConnection implements Connection {
+                         if (cookieName.length() > 0)
+                             cookie(cookieName, cookieVal);
+                     }
++                } else if (name.equals("Content-Type")) {
++                    String mimeType = values.get(0);
++                    String charset = selectCharsetFromContentTypeHeader(mimeType);
++                    if (charset != null && charset.length() != 0) // no point of empty charset.
++                        charset(charset);
++                    if (mimeType != null) { // mimeType no blank or null
++                        mimeType = mimeType.toLowerCase();
++                        int i = mimeType.indexOf(";");
++                        if (i != -1)
++                            mimeType = mimeType.substring(0, i);
++                        contentType = mimeType.trim();
++                    }
+                 } else { // combine same header names with comma: http://www.w3.org/Protocols/rfc2616/rfc2616-sec4.html#sec4.2
+                     if (!values.isEmpty())
+                         header(name, values.get(0));

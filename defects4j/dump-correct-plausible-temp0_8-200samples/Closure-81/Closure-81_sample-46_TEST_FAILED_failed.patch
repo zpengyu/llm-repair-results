@@ -1,0 +1,23 @@
+diff --git a/src/com/google/javascript/jscomp/parsing/IRFactory.java b/src/com/google/javascript/jscomp/parsing/IRFactory.java
+index 32a15610..0223ea16 100644
+--- a/src/com/google/javascript/jscomp/parsing/IRFactory.java
++++ b/src/com/google/javascript/jscomp/parsing/IRFactory.java
+@@ -554,13 +552,14 @@ public class IRFactory {
+         lp.addChildToBack(transform(param));
+       }
+       node.addChildToBack(lp);
+-
+       Node bodyNode = transform(functionNode.getBody());
+       parseDirectives(bodyNode);
+-      node.addChildToBack(bodyNode);
+-     return node;
++      // We don't want the node for a function to have a DIRECTIVE_CHILD
++      // here, because that would cause the function to be captured as
++      // a directive.
++      node.addChildToBack(bodyNode.removeChildren());
++      return node;
+     }
+-
+     @Override
+     Node processIfStatement(IfStatement statementNode) {
+       Node node = newNode(Token.IF);

@@ -1,0 +1,46 @@
+    protected void iterateSimplex(final Comparator<RealPointValuePair> comparator)
+        throws FunctionEvaluationException, OptimizationException, IllegalArgumentException {
+        while (true) {
+            incrementIterationsCounter();
+            // save the original vertex
+            final RealPointValuePair[] original = simplex;
+            final RealPointValuePair best = original[0];
+            // perform a reflection step
+            final RealPointValuePair reflected = evaluateNewSimplex(original, 1.0, comparator);
+            if (comparator.compare(reflected, best) < 0) {
+                // compute the expanded simplex
+                final RealPointValuePair[] reflectedSimplex = simplex;
+                final RealPointValuePair expanded = evaluateNewSimplex(original, khi, comparator);
+                if (comparator.compare(reflected, expanded) <= 0) {
+                    // accept the reflected simplex
+                    simplex = reflectedSimplex;
+                } else {
+                    // accept the expanded simplex
+                    simplex = newSimplex;
+                }
+                return;
+            }
+            // compute the contracted simplex
+            final RealPointValuePair contracted = evaluateNewSimplex(original, gamma, comparator);
+            if (comparator.compare(contracted, best) <= 0) {
+                // accept the contracted simplex
+                simplex = newSimplex;
+            } else {
+                // perform a shrink step
+                final RealPointValuePair[] shrunkSimplex = new RealPointValuePair[n + 1];
+                shrunkSimplex[0] = original[0];
+                for (int i = 1; i <= n; ++i) {
+                    final double[] x = new double[n];
+                    for (int j = 0; j < n; ++j) {
+                        final double aj = original[i].getPoint()[j];
+                        final double bj = original[0].getPoint()[j];
+                        x[j] = bj + sigma * (aj - bj);
+                    }
+                    final double value = function.value(x);
+                    shrunkSimplex[i] = new RealPointValuePair(x, value);
+                }
+                // evaluate the points of the shrunk simplex
+                evaluateNewSimplex(shrunkSimplex, comparator);
+            }
+        }
+    }

@@ -1,0 +1,25 @@
+diff --git a/src/com/google/javascript/jscomp/ProcessClosurePrimitives.java b/src/com/google/javascript/jscomp/ProcessClosurePrimitives.java
+index d1d12a3c..2f948c87 100644
+--- a/src/com/google/javascript/jscomp/ProcessClosurePrimitives.java
++++ b/src/com/google/javascript/jscomp/ProcessClosurePrimitives.java
+@@ -802,6 +800,20 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback
+           }
+         }
+         if (explicitNode != null) {
++          Node parent = explicitNode.getParent();
++          if (parent.isCall() && parent.getFirstChild() == explicitNode &&
++              NodeUtil.isGet(explicitNode)) {
++            // Don't remove a constructor call.
++            // Call expression is: NAME.CALL(...)
++            Node callNode = explicitNode.getNext();
++            Node maybeThisNode = callNode.getNext();
++            if (maybeThisNode.isThis() &&
++                !callNode.hasOneChild()) {
++              // Don't remove a constructor call.
++              // Call expression is: NAME.CALL(this, ...)
++              explicitNode = explicitNode.getParent();
++            }
++          }
+           explicitNode.detachFromParent();
+         }
+         compiler.reportCodeChange();

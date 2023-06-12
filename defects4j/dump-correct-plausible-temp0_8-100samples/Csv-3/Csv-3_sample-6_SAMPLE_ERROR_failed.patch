@@ -1,0 +1,22 @@
+diff --git a/src/main/java/org/apache/commons/csv/Lexer.java b/src/main/java/org/apache/commons/csv/Lexer.java
+index c161334..6f73939 100644
+--- a/src/main/java/org/apache/commons/csv/Lexer.java
++++ b/src/main/java/org/apache/commons/csv/Lexer.java
+@@ -108,7 +108,17 @@ abstract class Lexer {
+             throw new IOException("EOF whilst processing escape sequence");
+         default:
+             // Now check for meta-characters
++            if (c == EOF) {
++                return END_OF_STREAM;
++            } else if (c == '\\') {
+                 return c;
++            } else if (c < ' ') {
++                errorHandler.error(new StringBuffer("invalid character ")
++                        .append((char)c).append(" in escape sequence").toString());
++                return c;
++            } else {
++                return c;
++            }
+             // indicate unexpected char - available from in.getLastChar()
+         }
+     }

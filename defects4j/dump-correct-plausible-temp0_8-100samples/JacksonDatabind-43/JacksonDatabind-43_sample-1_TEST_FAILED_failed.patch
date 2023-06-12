@@ -1,0 +1,28 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/deser/impl/ObjectIdValueProperty.java b/src/main/java/com/fasterxml/jackson/databind/deser/impl/ObjectIdValueProperty.java
+index d4ca3f544..167b716cb 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/deser/impl/ObjectIdValueProperty.java
++++ b/src/main/java/com/fasterxml/jackson/databind/deser/impl/ObjectIdValueProperty.java
+@@ -73,17 +73,15 @@ public final class ObjectIdValueProperty
+ 
+     @Override
+     public Object deserializeSetAndReturn(JsonParser p,
+-		DeserializationContext ctxt, Object instance) throws IOException
++    		DeserializationContext ctxt, Object instance) throws IOException
+     {
+         Object id = _valueDeserializer.deserialize(p, ctxt);
+-        /* 02-Apr-2015, tatu: Actually, as per [databind#742], let it be;
+-         *  missing or null id is needed for some cases, such as cases where id
+-         *  will be generated externally, at a later point, and is not available
+-         *  quite yet. Typical use case is with DB inserts.
+-         */
+-        // note: no null checks (unlike usually); deserializer should fail if one found
+         if (id == null) {
+-            return null;
++            if (_objectIdReader.generator == null) {
++                // 06-Jan-2015, tatu: Intentionally missing id is legal, if there is no generator
++                return instance;
++            }
++            throw new IllegalStateException("Could not resolve Object Id [" + id + "] -- unresolved forward-reference?");
+         }
+         ReadableObjectId roid = ctxt.findObjectId(id, _objectIdReader.generator, _objectIdReader.resolver);
+         roid.bindItem(instance);

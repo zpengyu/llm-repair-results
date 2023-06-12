@@ -1,0 +1,14 @@
+        public ArrayNode deserialize(JsonParser p, DeserializationContext ctxt) throws IOException
+        {
+            if (p.isExpectedStartArrayToken()) {
+                return deserializeArray(p, ctxt, ctxt.getNodeFactory());
+            }
+            if (!p.hasToken(JsonToken.FIELD_NAME)) {
+                throw ctxt.mappingException(ArrayNode.class);
+            }
+            ArrayNode node = ctxt.getNodeFactory().arrayNode();
+            node.add(p.getCurrentName());
+            p.nextToken();
+            node.add(deserializeArray(p, ctxt, ctxt.getNodeFactory()));
+            return node;
+        }

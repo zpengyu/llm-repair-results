@@ -1,0 +1,18 @@
+diff --git a/src/com/google/javascript/rhino/jstype/NamedType.java b/src/com/google/javascript/rhino/jstype/NamedType.java
+index cddc8a88..32f9e474 100644
+--- a/src/com/google/javascript/rhino/jstype/NamedType.java
++++ b/src/com/google/javascript/rhino/jstype/NamedType.java
+@@ -202,9 +200,11 @@ class NamedType extends ProxyObjectType {
+     if (detectImplicitPrototypeCycle()) {
+       handleTypeCycle(t);
+     }
+-
++    // This is the change: super.resolveInternal may change this type from
++    // unresolved to resolved, so we need to test isResolved again.
++    boolean wasResolved = isResolved();
+     super.resolveInternal(t, enclosing);
+-    if (isResolved()) {
++    if (wasResolved || isResolved()) {
+       finishPropertyContinuations();
+     }
+     return registry.isLastGeneration() ?

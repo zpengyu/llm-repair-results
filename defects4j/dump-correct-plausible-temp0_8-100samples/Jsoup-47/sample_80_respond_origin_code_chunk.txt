@@ -1,0 +1,60 @@
+static void escape(StringBuilder accum, String string, Document.OutputSettings out,
+                       boolean inAttribute, boolean normaliseWhite, boolean stripLeadingWhite) {
+        final int length = string.length();
+        boolean lastWasWhite = false;
+        boolean reachedNonWhite = false;
+        final EscapeMode escapeMode = out.escapeMode();
+        final CharsetEncoder encoder = out.encoder();
+        final CoreCharset coreCharset = CoreCharset.byName(encoder.charset().name());
+        final Map<Character, String> map = escapeMode.getMap();
+        final int length = string.length();
+
+        for (int offset = 0; offset < length; ) {
+            final int codepoint = string.codePointAt(offset);
+            offset += Character.charCount(codepoint);
+
+            if (normaliseWhite) {
+                if (StringUtil.isWhitespace(codepoint)) {
+                    if ((stripLeadingWhite && !reachedNonWhite) || lastWasWhite)
+                        continue;
+                    accum.append(' ');
+                    lastWasWhite = true;
+                    continue;
+                } else {
+                    lastWasWhite = false;
+                    reachedNonWhite = true;
+                }
+            }
+
+            // surrogate pairs, split implementation for efficiency on single char common case (saves creating strings, char[]):
+            if (codepoint < Character.MIN_SUPPLEMENTARY_CODE_POINT) {
+                final char c = (char) codepoint;
+                // html specific and required escapes:
+                if (escapeMode == EscapeMode.extended) {
+                    // add extra escapes for extended mode (as used in XHTML)
+                    switch (c) {
+                        case '\'':
+                            accum.append("&#x27;");
+                            break;
+                        default:
+                            if (canEncode(coreCharset, c, encoder))
+                                accum.append(c);
+                            else
+                                accum.append("&#x").append(Integer.toHexString(codepoint)).append(';');
+                    }
+                } else {
+                    // no extra escapes for base escape mode (as used in HTML)
+                    if (canEncode(coreCharset, c, encoder))
+                        accum.append(c);
+                    else
+                        accum.append("&#x").append(Integer.toHexString(codepoint)).append(';');
+                }
+            } else {
+                final String c = new String(Character.toChars(codepoint));
+                if (encoder.canEncode(c)) // uses fallback encoder for simplicity
+                    accum.append(c);
+                else
+                    accum.append("&#x").append(Integer.toHexString(codepoint)).append(';');
+            }
+        }
+    }

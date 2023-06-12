@@ -1,0 +1,31 @@
+    public PropertyName findNameForSerialization(Annotated a)
+    {
+        PropertyName name = null;
+
+        JsonGetter jg = _findAnnotation(a, JsonGetter.class);
+        if (jg != null) {
+            name = PropertyName.construct(jg.value());
+        } else {
+            JsonProperty pann = _findAnnotation(a, JsonProperty.class);
+            if (pann != null) {
+                name = PropertyName.construct(pann.value());
+            } else {
+                JsonSerialize ann = _findAnnotation(a, JsonSerialize.class);
+                if (ann != null) {
+                    String str = ann.as();
+                    if (str.length() > 0) {
+                        name = PropertyName.construct(str);
+                    }
+                }
+                /* 22-Apr-2014, tatu: Should figure out a better way to do this, but
+                 *   it's actually bit tricky to do it more efficiently (meta-annotations
+                 *   add more lookups; AnnotationMap costs etc)
+                 */
+                if ((ann == null) && !_hasAnnotation(a, JsonView.class)
+                        && !_hasAnnotation(a, JsonRawValue.class)) {
+                    return null;
+                }
+            }
+        }
+        return name;
+    }

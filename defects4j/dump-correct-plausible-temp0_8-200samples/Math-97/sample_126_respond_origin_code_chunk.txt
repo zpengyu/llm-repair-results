@@ -1,0 +1,48 @@
+    public double solve(double min, double max) throws MaxIterationsExceededException, 
+        FunctionEvaluationException {
+        
+        clearResult();
+        verifyInterval(min, max);
+        
+        double ret = Double.NaN;
+        
+        double yMin = f.value(min);
+        double yMax = f.value(max);
+        
+        // Verify bracketing
+        double sign = yMin * yMax;
+        if (sign < 0) {
+            // solve using only the first endpoint as initial guess
+            ret = solve(min, yMin, max, yMax, min, yMin);
+        } else if (sign > 0) {
+            // check if either value is close to a zero
+            if (Precision.equals(yMin, 0.0, 1) || Precision.equals(yMax, 0.0, 1)) {
+                // at least one of the values is very close to zero
+                if (Precision.equals(yMin, 0.0, 1)) {
+                    // yMin is close to zero, so return min
+                    ret = min;
+                } else {
+                    // yMax is close to zero, so return max
+                    ret = max;
+                }
+            } else {
+                // neither value is close to zero and min and max do not bracket root.
+                throw new IllegalArgumentException
+                ("Function values at endpoints do not have different signs." +
+                        "  Endpoints: [" + min + "," + max + "]" + 
+                        "  Values: [" + yMin + "," + yMax + "]");
+            }
+        } else {
+            // both values are zero
+            if (Precision.equals(yMin, 0.0, 1)) {
+                // yMin is zero, so return min
+                ret = min;
+            } else {
+                // yMax is zero, so return max
+                ret = max;
+            }
+        }
+
+        return ret;
+    }
+

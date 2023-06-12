@@ -1,0 +1,34 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/introspect/JacksonAnnotationIntrospector.java b/src/main/java/com/fasterxml/jackson/databind/introspect/JacksonAnnotationIntrospector.java
+index f66075ef7..ca9b187ea 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/introspect/JacksonAnnotationIntrospector.java
++++ b/src/main/java/com/fasterxml/jackson/databind/introspect/JacksonAnnotationIntrospector.java
+@@ -731,7 +731,7 @@ public class JacksonAnnotationIntrospector
+     public PropertyName findNameForSerialization(Annotated a)
+     {
+         String name = null;
+-
++        Boolean bool = null;
+         JsonGetter jg = _findAnnotation(a, JsonGetter.class);
+         if (jg != null) {
+             name = jg.value();
+@@ -739,6 +739,7 @@ public class JacksonAnnotationIntrospector
+             JsonProperty pann = _findAnnotation(a, JsonProperty.class);
+             if (pann != null) {
+                 name = pann.value();
++                bool = pann.required();
+                 /* 22-Apr-2014, tatu: Should figure out a better way to do this, but
+                  *   it's actually bit tricky to do it more efficiently (meta-annotations
+                  *   add more lookups; AnnotationMap costs etc)
+@@ -751,9 +752,11 @@ public class JacksonAnnotationIntrospector
+                 return null;
+             }
+         }
++        if ((bool != null) && !bool.booleanValue()) {
++            return PropertyName.construct(name, null);
++        }
+         return PropertyName.construct(name);
+     }
+-
+     @Override
+     public boolean hasAsValueAnnotation(AnnotatedMethod am) {
+         JsonValue ann = _findAnnotation(am, JsonValue.class);

@@ -1,0 +1,19 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/type/TypeFactory.java b/src/main/java/com/fasterxml/jackson/databind/type/TypeFactory.java
+index 6aeb747d2..a3d7e75ab 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/type/TypeFactory.java
++++ b/src/main/java/com/fasterxml/jackson/databind/type/TypeFactory.java
+@@ -1027,9 +1027,12 @@ public final class TypeFactory
+         if (typeParams.length != 2) {
+             throw new IllegalArgumentException("Strange Map type "+rawClass.getName()+": can not determine type parameters");
+         }
+-        return MapType.construct(rawClass, typeParams[0], typeParams[1]);
++        JavaType type = MapType.construct(rawClass, typeParams[0], typeParams[1]);
++        if (typeParams[0].getRawClass() == String.class && typeParams[1] instanceof SimpleType) {
++            _factoryConfig.addDuckType(type, _findMixInClassFor(rawClass));
++        }
++        return type;
+     }
+-
+     private JavaType _collectionType(Class<?> rawClass)
+     {
+         JavaType[] typeParams = findTypeParameters(rawClass, Collection.class);

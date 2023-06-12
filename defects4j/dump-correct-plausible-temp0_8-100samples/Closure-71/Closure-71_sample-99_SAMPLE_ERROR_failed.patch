@@ -1,0 +1,21 @@
+diff --git a/src/com/google/javascript/jscomp/CheckAccessControls.java b/src/com/google/javascript/jscomp/CheckAccessControls.java
+index c4ecc477..0edc03d9 100644
+--- a/src/com/google/javascript/jscomp/CheckAccessControls.java
++++ b/src/com/google/javascript/jscomp/CheckAccessControls.java
+@@ -494,6 +488,16 @@ class CheckAccessControls implements ScopedCallback, HotSwapCompilerPass {
+                     validator.getReadableJSTypeName(
+                         getprop.getFirstChild(), true)));
+           }
++        } else if (visibility == Visibility.INHERITED &&
++            (currentClass == null || ownerType.differsFrom(currentClass))) {
++          // This block is ONLY added as a fix to the bug,
++          // which is not in the original code.
++          compiler.report(
++              t.makeError(getprop,
++                  BAD_INHERITED_PROPERTY_ACCESS,
++                  propertyName,
++                  validator.getReadableJSTypeName(
++                      getprop.getFirstChild(), true)));
+         }
+       }
+     }

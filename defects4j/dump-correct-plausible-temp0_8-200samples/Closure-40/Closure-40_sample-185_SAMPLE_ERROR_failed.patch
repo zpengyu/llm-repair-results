@@ -1,0 +1,54 @@
+diff --git a/src/com/google/javascript/jscomp/NameAnalyzer.java b/src/com/google/javascript/jscomp/NameAnalyzer.java
+index 25e2b5d4..148134ce 100644
+--- a/src/com/google/javascript/jscomp/NameAnalyzer.java
++++ b/src/com/google/javascript/jscomp/NameAnalyzer.java
+@@ -924,7 +913,48 @@ final class NameAnalyzer implements CompilerPass {
+         }
+       }
+     }
+-
++    private boolean maybeRecordAlias(String name, Node n,
++        NameInformation referring, String referringName) {
++      if (n.isGetProp() && referring != null) {
++        // When we encounter a GETPROP, there are a couple things we need to
++        // check:
++        //    1) If the GETPROP's parent is an assignment, we have an
++        //       alias. For example, x.y = z -> x is an alias for z.
++        //    2) If this is a prototype property, we have an alias.
++        //       For example, x.prototype.y = z -> x is an alias for z.
++        Node parent = n.getParent();
++        if (NodeUtil.isAssignmentOp(parent) &&
++            parent.getFirstChild() == n) {
++          // x.y = z
++          recordAlias(referringName, name);
++          return true;
++        }
++        if (n.isQualifiedName() &&
++            referring.isPrototype &&
++            parent.isExprResult() &&
++            // Only handle a literal value assignment
++            //   foo.prototype.bar = 1;
++            // not a function expression or reference.
++            //   foo.prototype.bar = function() {}
++            //   foo.prototype.bar = otherFunc;
++            parent.getFirstChild() == n.getParent() &&
++            n.getNext().isString()) {
++          // This is an assignment like:
++          //     foo.prototype.bar = 1;
++          // We can use the right hand side of the assignment as an
++          // alias for the referring name.
++          Node maybeAliasNode = n.getNext().getNext();
++          if (maybeAliasNode.isString() ||
++              maybeAliasNode.isNumber() ||
++              maybeAliasNode.isObjectLit() ||
++              maybeAliasNode.isArrayLit()) {
++            recordAlias(referringName, name);
++            return true;
++          }
++        }
++      }
++      return false;
++    }
+     /**
+      * A value whose result is the return value of a function call
+      * can be an alias to global object. The dependency on the call target will

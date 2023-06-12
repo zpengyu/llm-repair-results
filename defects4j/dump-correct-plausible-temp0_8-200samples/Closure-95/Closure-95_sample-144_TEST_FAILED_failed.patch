@@ -1,0 +1,39 @@
+diff --git a/src/com/google/javascript/jscomp/TypedScopeCreator.java b/src/com/google/javascript/jscomp/TypedScopeCreator.java
+index a5b356fb..0d38467b 100644
+--- a/src/com/google/javascript/jscomp/TypedScopeCreator.java
++++ b/src/com/google/javascript/jscomp/TypedScopeCreator.java
+@@ -896,22 +894,14 @@ final class TypedScopeCreator implements ScopeCreator {
+       // scope where the root object appears. This helps out people
+       // who declare "global" names in an anonymous namespace.
+       Scope scopeToDeclareIn = scope;
+-
+-        // don't try to declare in the global scope if there's
+-        // already a symbol there with this name.
+-
+       // declared in closest scope?
+       if (scopeToDeclareIn.isDeclared(variableName, false)) {
+         Var oldVar = scopeToDeclareIn.getVar(variableName);
+         validator.expectUndeclaredVariable(
+             sourceName, n, parent, oldVar, variableName, type);
+       } else {
+-        if (!inferred) {
+-          setDeferredType(n, type);
+-        }
+         CompilerInput input = compiler.getInput(sourceName);
+         scopeToDeclareIn.declare(variableName, n, type, input, inferred);
+-
+         if (shouldDeclareOnGlobalThis) {
+           ObjectType globalThis =
+               typeRegistry.getNativeObjectType(JSTypeNative.GLOBAL_THIS);
+@@ -942,8 +931,10 @@ final class TypedScopeCreator implements ScopeCreator {
+           }
+         }
+       }
++      if (!inferred) {
++        setDeferredType(n, type);
++      }
+     }
+-
+     /**
+      * Check if the given node is a property of a name in the global scope.
+      */

@@ -1,0 +1,34 @@
+diff --git a/src/main/java/org/joda/time/format/DateTimeParserBucket.java b/src/main/java/org/joda/time/format/DateTimeParserBucket.java
+index 2accc16d..b77cc85f 100644
+--- a/src/main/java/org/joda/time/format/DateTimeParserBucket.java
++++ b/src/main/java/org/joda/time/format/DateTimeParserBucket.java
+@@ -342,6 +342,29 @@ public class DateTimeParserBucket {
+             DurationField days = DurationFieldType.days().getField(iChrono);
+             DurationField first = savedFields[0].iField.getDurationField();
+             if (compareReverse(first, months) >= 0 && compareReverse(first, days) <= 0) {
++                // bug [1646646]
++                int month = getFieldValue(months);
++                if (month < 0) {
++                    // Look for either month-day or day-month.
++                    SavedField field = savedFields[0];
++                    if (compareReverse(field.iField.getDurationField(), days) < 0) {
++                        saveField(DateTimeFieldType.monthOfYear(), 12 + month);
++                        if (getFieldValue(DateTimeFieldType.dayOfMonth()) < 0) {
++                            saveField(DateTimeFieldType.dayOfMonth(), 1);
++                        }
++                    } else {
++                        saveField(DateTimeFieldType.dayOfMonth(), month);
++                        if (getFieldValue(DateTimeFieldType.monthOfYear()) < 0) {
++                            saveField(DateTimeFieldType.monthOfYear(), 1);
++                        }
++                    }
++                } else {
++                    // Most likely month-day.
++                    saveField(DateTimeFieldType.monthOfYear(), month);
++                    if (getFieldValue(DateTimeFieldType.dayOfMonth()) < 0) {
++                        saveField(DateTimeFieldType.dayOfMonth(), 1);
++                    }
++                }
+                 saveField(DateTimeFieldType.year(), iDefaultYear);
+                 return computeMillis(resetFields, text);
+             }

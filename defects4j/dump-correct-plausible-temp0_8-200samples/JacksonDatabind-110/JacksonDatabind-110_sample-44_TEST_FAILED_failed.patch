@@ -1,0 +1,39 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/deser/impl/JavaUtilCollectionsDeserializers.java b/src/main/java/com/fasterxml/jackson/databind/deser/impl/JavaUtilCollectionsDeserializers.java
+index ddadb9ea8..06cdbd4d9 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/deser/impl/JavaUtilCollectionsDeserializers.java
++++ b/src/main/java/com/fasterxml/jackson/databind/deser/impl/JavaUtilCollectionsDeserializers.java
+@@ -45,7 +38,7 @@ public abstract class JavaUtilCollectionsDeserializers
+      *    which we essentially coerce into the other one
+      */
+     private final static Class<?> CLASS_UNMODIFIABLE_MAP;
+-
++    private final static Class<?> CLASS_UNMODIFIABLE_MAP_ALT;
+     static {
+         Set<?> set = Collections.singleton(Boolean.TRUE);
+         CLASS_SINGLETON_SET = set.getClass();
+@@ -59,8 +50,14 @@ public abstract class JavaUtilCollectionsDeserializers
+         Map<?,?> map = Collections.singletonMap("a", "b");
+         CLASS_SINGLETON_MAP = map.getClass();
+         CLASS_UNMODIFIABLE_MAP = Collections.unmodifiableMap(map).getClass();
++        // alternate impl:
++        try {
++            Class<?> alt = Class.forName("java.util.Collections$UnmodifiableMap$1");
++            CLASS_UNMODIFIABLE_MAP_ALT = alt;
++        } catch (ClassNotFoundException e) {
++            throw new IllegalStateException(e);
++        }
+     }
+-
+     public static JsonDeserializer<?> findForCollection(DeserializationContext ctxt,
+             JavaType type)
+         throws JsonMappingException
+@@ -94,7 +88,8 @@ public abstract class JavaUtilCollectionsDeserializers
+         // 10-Jan-2017, tatu: Some types from `java.util.Collections`/`java.util.Arrays` need bit of help...
+         if (type.hasRawClass(CLASS_SINGLETON_MAP)) {
+             conv = converter(TYPE_SINGLETON_MAP, type, Map.class);
+-        } else if (type.hasRawClass(CLASS_UNMODIFIABLE_MAP)) {
++        } else if (type.hasRawClass(CLASS_UNMODIFIABLE_MAP)
++                || type.hasRawClass(CLASS_UNMODIFIABLE_MAP_ALT)) {
+             conv = converter(TYPE_UNMODIFIABLE_MAP, type, Map.class);
+         } else {
+             return null;

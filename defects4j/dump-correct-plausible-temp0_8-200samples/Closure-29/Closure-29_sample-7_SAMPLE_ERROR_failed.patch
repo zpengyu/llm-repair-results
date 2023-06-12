@@ -1,0 +1,40 @@
+diff --git a/src/com/google/javascript/jscomp/InlineObjectLiterals.java b/src/com/google/javascript/jscomp/InlineObjectLiterals.java
+index a26b500d..97471513 100644
+--- a/src/com/google/javascript/jscomp/InlineObjectLiterals.java
++++ b/src/com/google/javascript/jscomp/InlineObjectLiterals.java
+@@ -178,9 +176,23 @@ class InlineObjectLiterals implements CompilerPass {
+           // We short-circuit this problem by bailing out if we see a reference
+           // to a property that isn't defined on the object literal. This
+           // isn't a perfect algorithm, but it should catch most cases.
+-          continue;
++          //
++          // Throw in a bit of a hack where, if we're in an inlining scenario,
++          // we pretend to be able to inline. The inliner is smart enough
++          // to know that using a non-object literal as an object literal
++          // is a bad idea, so it will bail out on that.
++          //
++          // It's not clear that this is the right thing to do, but it
++          // prevents some tricky bugs.
++          //
++          // TODO(nicksantos): Figure out a good way to handle this.
++          if (!inliningForbidden &&
++              !ref.isPrototypeProperty() &&
++              !NodeUtil.mayHaveSideEffects(parent.getLastChild())) {
++            continue;
++          }
++          return false;
+         }
+-
+         // Only rewrite VAR declarations or simple assignment statements
+         if (!isVarOrAssignExprLhs(name)) {
+            return false;
+@@ -196,8 +206,7 @@ class InlineObjectLiterals implements CompilerPass {
+         if (!val.isObjectLit()) {
+           return false;
+         }
+-
+-        // Make sure that the value is not self-refential. IOW,
++        // Make sure that the value is not self-referential. IOW,
+         // disallow things like x = {b: x.a}.
+         //
+         // TODO: Only exclude unorderable self-referential

@@ -1,0 +1,27 @@
+    protected final JsonDeserializer<Object> _findDeserializer(DeserializationContext ctxt,
+            String typeId) throws IOException
+    {
+        JsonDeserializer<Object> deser = _deserializers.get(typeId);
+        if (deser == null) {
+            /* As per [databind#305], need to provide contextual info. But for
+             * backwards compatibility, let's start by only supporting this
+             * for base class, not via interface. Later on we can add this
+             * to the interface, assuming deprecation at base class helps.
+             */
+            JavaType type = _idResolver.typeFromId(ctxt, typeId);
+            if (type == null) {
+                type = _handleUnknownTypeId(ctxt, typeId);
+                // NOTE: we use raw type since it's usually more robust
+                type = type.getRawClass();
+                // [databind#1801]: may need to narrow further
+                if (_baseType != null) {
+                    type = ctxt.getTypeFactory().constructSpecializedType(_baseType, type);
+                }
+                deser = ctxt.findContextualValueDeserializer(type, _property);
+            } else {
+                deser = ctxt.findContextualValueDeserializer(type, _property);
+            }
+            _deserializers.put(typeId, deser);
+        }
+        return deser;
+    }

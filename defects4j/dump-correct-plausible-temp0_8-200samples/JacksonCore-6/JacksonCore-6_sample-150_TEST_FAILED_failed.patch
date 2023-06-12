@@ -1,0 +1,35 @@
+diff --git a/src/main/java/com/fasterxml/jackson/core/JsonPointer.java b/src/main/java/com/fasterxml/jackson/core/JsonPointer.java
+index 3429137c..79c6df61 100644
+--- a/src/main/java/com/fasterxml/jackson/core/JsonPointer.java
++++ b/src/main/java/com/fasterxml/jackson/core/JsonPointer.java
+@@ -184,9 +184,7 @@ public class JsonPointer
+ 
+     private final static int _parseIndex(String str) {
+         final int len = str.length();
+-        // [core#133]: beware of super long indexes; assume we never
+-        // have arrays over 2 billion entries so ints are fine.
+-        if (len == 0 || len > 10) {
++        if (len == 0) {
+             return -1;
+         }
+         // [core#176]: no leading zeroes allowed
+@@ -196,15 +194,12 @@ public class JsonPointer
+                 return -1;
+             }
+         }
+-        if (len == 10) {
+-            long l = NumberInput.parseLong(str);
+-            if (l > Integer.MAX_VALUE) {
+-                return -1;
+-            }
++        int result = NumberInput.parseInt(str);
++        if (result < 0) {
++            return -1;
+         }
+-        return NumberInput.parseInt(str);
++        return result;
+     }    
+-    
+     protected static JsonPointer _parseTail(String input) {
+         final int end = input.length();
+ 

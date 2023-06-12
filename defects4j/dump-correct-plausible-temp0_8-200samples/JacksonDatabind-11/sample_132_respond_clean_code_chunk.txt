@@ -1,0 +1,19 @@
+    protected JavaType _fromVariable(TypeVariable<?> type, TypeBindings context)
+    {
+        final String name = type.getName();
+        if (context == null) {
+            // Without context, all we can check are bounds
+            return _unknownType();
+        }
+        final JavaType actualType = context.findType(name);
+        // 19-Mar-2015, tatu: As per [databind#609], may need to allow
+        //   unresolved type variables to handle some cases where bounds
+        //   are enough. Let's hope it does not hide real fail cases.
+        //   If so, we'll need to add a way to clear the type resolver
+        //   cache; to remove false hits.
+        if (actualType == null) {
+            return _unknownType();
+        }
+        // And then finally, do recursive resolution:
+        return actualType.narrowBy(type.getBounds()[0]);
+    }

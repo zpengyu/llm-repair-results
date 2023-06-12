@@ -1,0 +1,26 @@
+diff --git a/src/com/google/javascript/rhino/jstype/NamedType.java b/src/com/google/javascript/rhino/jstype/NamedType.java
+index cddc8a88..b2d22aac 100644
+--- a/src/com/google/javascript/rhino/jstype/NamedType.java
++++ b/src/com/google/javascript/rhino/jstype/NamedType.java
+@@ -202,15 +200,18 @@ class NamedType extends ProxyObjectType {
+     if (detectImplicitPrototypeCycle()) {
+       handleTypeCycle(t);
+     }
+-
++    boolean referencedTypeResolved = false;
++    if (referencedType instanceof NamedType) {
++      ((NamedType) referencedType).resolve(t, enclosing);
++      referencedTypeResolved = ((NamedType) referencedType).isResolved();
++    }
+     super.resolveInternal(t, enclosing);
+     if (isResolved()) {
+       finishPropertyContinuations();
+     }
+-    return registry.isLastGeneration() ?
++    return (referencedTypeResolved || referencedType.isNominalType()) ?
+         getReferencedType() : this;
+   }
+-
+   /**
+    * Resolves a named type by looking it up in the registry.
+    * @return True if we resolved successfully.

@@ -1,0 +1,22 @@
+diff --git a/src/com/google/javascript/jscomp/PeepholeSubstituteAlternateSyntax.java b/src/com/google/javascript/jscomp/PeepholeSubstituteAlternateSyntax.java
+index dee765a1..0351b323 100644
+--- a/src/com/google/javascript/jscomp/PeepholeSubstituteAlternateSyntax.java
++++ b/src/com/google/javascript/jscomp/PeepholeSubstituteAlternateSyntax.java
+@@ -225,6 +225,17 @@ class PeepholeSubstituteAlternateSyntax
+         reportCodeChange();
+         return addition;
+       }
++    } else if (callTarget != null && callTarget.isName() &&
++          callTarget.getString().equals("String")) {
++      Node value = callTarget.getNext();
++      if (value != null) {
++        Node addition = IR.add(
++            IR.string("").srcref(callTarget),
++            value.detachFromParent());
++        n.getParent().replaceChild(n, addition);
++        reportCodeChange();
++        return addition;
++      }
+     }
+     return n;
+   }

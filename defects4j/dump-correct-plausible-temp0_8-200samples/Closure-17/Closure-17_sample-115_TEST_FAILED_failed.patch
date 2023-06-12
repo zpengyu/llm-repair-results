@@ -1,0 +1,22 @@
+diff --git a/src/com/google/javascript/jscomp/TypedScopeCreator.java b/src/com/google/javascript/jscomp/TypedScopeCreator.java
+index 13d8808b..683425b9 100644
+--- a/src/com/google/javascript/jscomp/TypedScopeCreator.java
++++ b/src/com/google/javascript/jscomp/TypedScopeCreator.java
+@@ -1307,6 +1307,17 @@ final class TypedScopeCreator implements ScopeCreator {
+                     && !secondClause.getJSType().isUnknownType()) {
+                   return secondClause.getJSType();
+                 }
++              } else if (rValue.isName()) {
++                // Check for a specific JS idiom:
++                // var x = x;
++                // This is used by Closure's base namespace for esoteric
++                // reasons.
++                if (rValue.getJSType() != null
++                    && !rValue.getJSType().isUnknownType()
++                    && lValue.isName()
++                    && rValue.getString().equals(lValue.getString())) {
++                  return rValue.getJSType();
++                }
+               }
+             }
+           }

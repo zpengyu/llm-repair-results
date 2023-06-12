@@ -1,0 +1,43 @@
+diff --git a/src/main/java/org/apache/commons/math3/analysis/differentiation/DSCompiler.java b/src/main/java/org/apache/commons/math3/analysis/differentiation/DSCompiler.java
+index fc9944c36..aa30d89a9 100644
+--- a/src/main/java/org/apache/commons/math3/analysis/differentiation/DSCompiler.java
++++ b/src/main/java/org/apache/commons/math3/analysis/differentiation/DSCompiler.java
+@@ -1412,13 +1407,34 @@ public class DSCompiler {
+             for (int i = 1; i < tmp2.length; ++i) {
+                 result[resultOffset + i] = -2 * tmp2[i]; // +/-pi - 2 * atan(y / (r - x))
+             }
+-
+         }
+-
+         // fix value to take special cases (+0/+0, +0/-0, -0/+0, -0/-0, +/-infinity) correctly
+-
++        final long txBits = Double.doubleToLongBits(x[xOffset]);
++        final long tyBits = Double.doubleToLongBits(y[yOffset]);
++        final int ix = (int)(txBits >>> 32);
++        final int iy = (int)(tyBits >>> 32);
++        if ((ix | iy) == 0) {
++            result[resultOffset] = y[yOffset] * 0.0; // +/-0.0
++        } else {
++            final int sx = ix >>> 31;
++            final int sy = iy >>> 31;
++            if (sx == sy) {
++                final long rlBits = Double.doubleToLongBits(result[resultOffset]);
++                final long ires = (rlBits >>> 32) & 0x80000000;
++                if (ires == (sy << 31)) {
++                    // result has correct sign
++                    return;
++                }
++                if (Double.isInfinite(result[resultOffset])) {
++                    // infinities with opposite sign
++                    result[resultOffset] = y[yOffset] * 0.0;
++                }
++            } else {
++                // result has correct sign
++                return;
++            }
++        }
+     }
+-
+     /** Compute hyperbolic cosine of a derivative structure.
+      * @param operand array holding the operand
+      * @param operandOffset offset of the operand in its array

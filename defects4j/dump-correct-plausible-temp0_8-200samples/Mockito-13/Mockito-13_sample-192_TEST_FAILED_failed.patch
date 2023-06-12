@@ -1,0 +1,27 @@
+diff --git a/src/org/mockito/internal/MockHandler.java b/src/org/mockito/internal/MockHandler.java
+index 9452f1664..fe6dc4b83 100644
+--- a/src/org/mockito/internal/MockHandler.java
++++ b/src/org/mockito/internal/MockHandler.java
+@@ -92,9 +86,8 @@ public class MockHandler<T> implements MockitoInvocationHandler, MockHandlerInte
+         if (stubbedInvocation != null) {
+             stubbedInvocation.captureArgumentsFrom(invocation);
+             return stubbedInvocation.answer(invocation);
+-        } else {
++        } else if(null == verificationMode) {
+             Object ret = mockSettings.getDefaultAnswer().answer(invocation);
+-
+             // redo setting invocation for potential stubbing in case of partial
+             // mocks / spies.
+             // Without it, the real method inside 'when' might have delegated
+@@ -102,9 +95,10 @@ public class MockHandler<T> implements MockitoInvocationHandler, MockHandlerInte
+             // with a different one. The reset is required to avoid runtime exception that validates return type with stubbed method signature.
+             invocationContainerImpl.resetInvocationForPotentialStubbing(invocationMatcher);
+             return ret;
++        } else {
++            return null;
+         }
+     }
+-
+     public VoidMethodStubbable<T> voidMethodStubbable(T mock) {
+         return new VoidMethodStubbableImpl<T>(mock, invocationContainerImpl);
+     }

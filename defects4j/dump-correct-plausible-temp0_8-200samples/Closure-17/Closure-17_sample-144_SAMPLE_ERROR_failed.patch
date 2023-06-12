@@ -1,0 +1,42 @@
+diff --git a/src/com/google/javascript/jscomp/TypedScopeCreator.java b/src/com/google/javascript/jscomp/TypedScopeCreator.java
+index 13d8808b..22a7de80 100644
+--- a/src/com/google/javascript/jscomp/TypedScopeCreator.java
++++ b/src/com/google/javascript/jscomp/TypedScopeCreator.java
+@@ -1309,13 +1309,35 @@ final class TypedScopeCreator implements ScopeCreator {
+                 }
+               }
+             }
++          } else {
++            if (rValue != null) {
++              if (rValue.getJSType() != null && !rValue.getJSType().isUnknownType()) {
++                // If rValue has a type-cast, we use the type in the type-cast.
++                // If rValue's type was already computed during scope creation,
++                // then we can safely use that.
++                return rValue.getJSType();
++              } else if (rValue.isOr()) {
++                // Check for a very specific JS idiom:
++                // var x = x || TYPE;
++                // This is used by Closure's base namespace for esoteric
++                // reasons.
++                Node firstClause = rValue.getFirstChild();
++                Node secondClause = firstClause.getNext();
++                boolean namesMatch = firstClause.isName()
++                    && lValue.isName()
++                    && firstClause.getString().equals(lValue.getString());
++                if (namesMatch && secondClause.getJSType() != null
++                    && !secondClause.getJSType().isUnknownType()) {
++                  return secondClause.getJSType();
++                }
++              }
++            }
+           }
+         }
+       }
+-
+       return getDeclaredTypeInAnnotation(sourceName, lValue, info);
+     }
+-
++  }
+     private FunctionType getFunctionType(@Nullable Var v) {
+       JSType t = v == null ? null : v.getType();
+       ObjectType o = t == null ? null : t.dereference();

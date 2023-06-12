@@ -1,0 +1,25 @@
+diff --git a/src/com/google/javascript/jscomp/CheckGlobalThis.java b/src/com/google/javascript/jscomp/CheckGlobalThis.java
+index d6770e15..8fff5326 100644
+--- a/src/com/google/javascript/jscomp/CheckGlobalThis.java
++++ b/src/com/google/javascript/jscomp/CheckGlobalThis.java
+@@ -141,10 +135,18 @@ final class CheckGlobalThis implements Callback {
+         }
+       }
+     }
+-
++    // https://github.com/google/closure-compiler/issues/1258
++    else if (parent != null && parent.getType() == Token.STRING &&
++             n.getType() == Token.CALL &&
++             n.getFirstChild().getType() == Token.GETPROP &&
++             (n.getFirstChild().getNext().getString().equals("match") ||
++             n.getFirstChild().getNext().getString().equals("search") ||
++             n.getFirstChild().getNext().getString().equals("replace")) &&
++             n.getChildAtIndex(1).getFirstChild().getType() == Token.STRING) {
++      return false;
++    }
+     return true;
+   }
+-
+   public void visit(NodeTraversal t, Node n, Node parent) {
+     if (n.getType() == Token.THIS && shouldReportThis(n, parent)) {
+       compiler.report(t.makeError(n, level, GLOBAL_THIS));

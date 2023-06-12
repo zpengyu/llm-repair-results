@@ -1,0 +1,31 @@
+diff --git a/src/main/java/org/apache/commons/compress/archivers/zip/ZipArchiveInputStream.java b/src/main/java/org/apache/commons/compress/archivers/zip/ZipArchiveInputStream.java
+index 5d4c0a82..e9b345b5 100644
+--- a/src/main/java/org/apache/commons/compress/archivers/zip/ZipArchiveInputStream.java
++++ b/src/main/java/org/apache/commons/compress/archivers/zip/ZipArchiveInputStream.java
+@@ -217,25 +217,14 @@ public ZipArchiveInputStream(final InputStream inputStream,
+     }
+ 
+     public ZipArchiveEntry getNextZipEntry() throws IOException {
+-        boolean firstEntry = true;
+         if (closed || hitCentralDirectory) {
+             return null;
+         }
+         if (current != null) {
+             closeEntry();
+-            firstEntry = false;
+         }
+-
+         try {
+-            if (firstEntry) {
+-                // split archives have a special signature before the
+-                // first local file header - look for it and fail with
+-                // the appropriate error message if this is a split
+-                // archive.
+-                readFirstLocalFileHeader(LFH_BUF);
+-            } else {
+-                readFully(LFH_BUF);
+-            }
++            readFully(LFH_BUF);
+         } catch (final EOFException e) {
+             return null;
+         }

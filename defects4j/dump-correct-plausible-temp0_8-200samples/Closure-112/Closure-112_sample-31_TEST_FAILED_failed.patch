@@ -1,0 +1,24 @@
+diff --git a/src/com/google/javascript/jscomp/TypeInference.java b/src/com/google/javascript/jscomp/TypeInference.java
+index 6c9c7846..c05950fd 100644
+--- a/src/com/google/javascript/jscomp/TypeInference.java
++++ b/src/com/google/javascript/jscomp/TypeInference.java
+@@ -1202,13 +1198,13 @@ class TypeInference
+     FunctionType replacementFnType = fnType.visit(replacer)
+         .toMaybeFunctionType();
+     Preconditions.checkNotNull(replacementFnType);
+-
+-    callTarget.setJSType(replacementFnType);
+-    n.setJSType(replacementFnType.getReturnType());
+-
+-    return replacer.madeChanges;
++    if (replacer.madeChanges) {
++      callTarget.setJSType(replacementFnType);
++      n.setJSType(replacementFnType.getReturnType());
++      return true;
++    }
++    return false;
+   }
+-
+   private FlowScope traverseNew(Node n, FlowScope scope) {
+     scope = traverseChildren(n, scope);
+ 

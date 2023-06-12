@@ -1,0 +1,22 @@
+public boolean hasClass(String className) {
+    String classAttr = attributes.get("class");
+    if (classAttr == null || classAttr.length() == 0)
+        return false;
+    int start = 0;
+    while (classAttr.indexOf(className, start) != -1) {
+        if (start != 0) {
+            char prev = classAttr.charAt(start - 1);
+            // using ASCII to avoid i18n issues: if prev is a letter, it's a partial match;
+            // still have to check for trailing whitespace
+            if (Character.isLetter(prev))
+                break;
+            if (!Character.isWhitespace(prev))
+                start++;
+        }
+        int next = classAttr.indexOf(className, start) + className.length();
+        if (next == classAttr.length() || Character.isWhitespace(classAttr.charAt(next)))
+            return true;
+        start = next;
+    }
+    return false;
+}

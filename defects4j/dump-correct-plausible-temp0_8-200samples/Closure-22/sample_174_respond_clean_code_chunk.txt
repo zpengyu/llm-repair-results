@@ -1,0 +1,16 @@
+    public void visit(NodeTraversal t, Node n, Node parent) {
+      if (n.isCall()) {
+        Node target = n.getFirstChild();
+        if (target.isName() && target.getString().equals(PROTECTOR_FN)) {
+          Node args = target.getNext();
+          if (args.hasChildren()) {
+            Node expr = args.getFirstChild();
+            if (NodeUtil.isExprAssign(expr)
+                || NodeUtil.isExprResult(expr)) {
+              n.detachChildren();
+              parent.replaceChild(n, expr);
+            }
+          }
+        }
+      }
+    }

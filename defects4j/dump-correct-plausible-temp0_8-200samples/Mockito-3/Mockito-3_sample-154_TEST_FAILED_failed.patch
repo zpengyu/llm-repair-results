@@ -1,0 +1,31 @@
+diff --git a/src/org/mockito/internal/invocation/InvocationMatcher.java b/src/org/mockito/internal/invocation/InvocationMatcher.java
+index a3a7c08df..4bd0bc625 100644
+--- a/src/org/mockito/internal/invocation/InvocationMatcher.java
++++ b/src/org/mockito/internal/invocation/InvocationMatcher.java
+@@ -95,18 +80,15 @@ public class InvocationMatcher implements DescribedInvocation, CapturesArgumensF
+         //sometimes java generates forwarding methods when generics are in play see JavaGenericsForwardingMethodsTest
+         Method m1 = invocation.getMethod();
+         Method m2 = candidate.getMethod();
+-        
+         if (m1.getName() != null && m1.getName().equals(m2.getName())) {
+-        	/* Avoid unnecessary cloning */
+-        	Class[] params1 = m1.getParameterTypes();
+-        	Class[] params2 = m2.getParameterTypes();
+-        	if (params1.length == params2.length) {
+-        	    for (int i = 0; i < params1.length; i++) {
+-        		if (params1[i] != params2[i])
+-        		    return false;
+-        	    }
+-        	    return true;
+-        	}
++            boolean methodsHaveSameArguments = Arrays.equals(m1.getParameterTypes(), m2.getParameterTypes());
++            if (methodsHaveSameArguments) {
++                return true;
++            } else {
++                if (m1.getName().equals("equals") && m1.getParameterTypes().length == 1) {
++                    return true;
++                }
++            }
+         }
+         return false;
+     }

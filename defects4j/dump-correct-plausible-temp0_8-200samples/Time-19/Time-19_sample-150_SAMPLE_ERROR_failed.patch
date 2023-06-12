@@ -1,0 +1,30 @@
+diff --git a/src/main/java/org/joda/time/DateTimeZone.java b/src/main/java/org/joda/time/DateTimeZone.java
+index 17672725..598878aa 100644
+--- a/src/main/java/org/joda/time/DateTimeZone.java
++++ b/src/main/java/org/joda/time/DateTimeZone.java
+@@ -894,22 +894,13 @@ public abstract class DateTimeZone implements Serializable {
+                 long nextLocal = nextTransition(instantAdjusted);
+                 long nextAdjusted = nextTransition(instantLocal - offsetAdjusted);
+                 if (nextLocal != nextAdjusted) {
+-                    return offsetLocal;
+-                }
+-            }
+-        } else if (offsetLocal > 0) {
+-            long prev = previousTransition(instantAdjusted);
+-            if (prev < instantAdjusted) {
+-                int offsetPrev = getOffset(prev);
+-                int diff = offsetPrev - offsetLocal;
+-                if (instantAdjusted - prev <= diff) {
+-                    return offsetPrev;
++                    long diff = nextLocal - nextAdjusted;
++                    instantAdjusted += diff;
+                 }
+             }
+         }
+-        return offsetAdjusted;
++        return getOffset(instantAdjusted);
+     }
+-
+     /**
+      * Converts a standard UTC instant to a local instant with the same
+      * local time. This conversion is used before performing a calculation

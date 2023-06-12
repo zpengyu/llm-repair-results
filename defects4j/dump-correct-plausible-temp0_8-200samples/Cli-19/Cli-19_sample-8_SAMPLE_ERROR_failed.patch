@@ -1,0 +1,45 @@
+diff --git a/src/java/org/apache/commons/cli/PosixParser.java b/src/java/org/apache/commons/cli/PosixParser.java
+index 4920852..0bd7833 100644
+--- a/src/java/org/apache/commons/cli/PosixParser.java
++++ b/src/java/org/apache/commons/cli/PosixParser.java
+@@ -226,18 +226,33 @@ public class PosixParser extends Parser {
+      */
+     private void processOptionToken(String token, boolean stopAtNonOption)
+     {
+-        if (options.hasOption(token))
++        if (currentOption != null)
+         {
+-            currentOption = options.getOption(token);
+-            tokens.add(token);
++            if (currentOption.hasArg())
++            {
++                hasMatched = true;
++                currentOption.addValueForProcessing(token);
++            }
++            else if (stopAtNonOption)
++            {
++                eatTheRest = true;
++                tokens.add(token);
++            }
+         }
+-        else if (stopAtNonOption)
++        if (!hasMatched)
+         {
+-            eatTheRest = true;
+-            tokens.add(token);
++            if (options.hasOption(token))
++            {
++                currentOption = options.getOption(token);
++                tokens.add(token);
++            }
++            else if (stopAtNonOption)
++            {
++                eatTheRest = true;
++                tokens.add(token);
++            }
+         }
+     }
+-
+     /**
+      * <p>Breaks <code>token</code> into its constituent parts
+      * using the following algorithm.

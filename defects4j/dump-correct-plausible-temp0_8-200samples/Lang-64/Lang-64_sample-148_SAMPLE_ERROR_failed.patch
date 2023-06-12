@@ -1,0 +1,38 @@
+diff --git a/src/java/org/apache/commons/lang/enums/ValuedEnum.java b/src/java/org/apache/commons/lang/enums/ValuedEnum.java
+index 0823e77d..588ae604 100644
+--- a/src/java/org/apache/commons/lang/enums/ValuedEnum.java
++++ b/src/java/org/apache/commons/lang/enums/ValuedEnum.java
+@@ -102,8 +102,7 @@ import org.apache.commons.lang.ClassUtils;
+  * @since 2.1 (class existed in enum package from v1.0)
+  * @version $Id$
+  */
+-public abstract class ValuedEnum extends Enum {
+-    
++public abstract class ValuedEnum extends Enum implements Comparable {
+     /**
+      * Required for serialization support.
+      * 
+@@ -189,10 +182,19 @@ public abstract class ValuedEnum extends Enum {
+      * @param other  the object to determine the value for
+      * @return the value
+      */
+-            // ignore - should never happen
+-            // ignore - should never happen
+-            // ignore - should never happen
+-
++    private static int getValue(ValuedEnum other) {
++        try {
++            Field field = other.getClass().getDeclaredField("iValue");
++            field.setAccessible(true);
++            int value = field.getInt(other);
++            field.setAccessible(false);
++            return value;
++        } catch (NoSuchFieldException e) {
++            throw new IllegalStateException(e.getMessage());
++        } catch (IllegalAccessException e) {
++            throw new IllegalStateException(e.getMessage());
++        }
++    }
+     /**
+      * <p>Human readable description of this <code>Enum</code> item.</p>
+      *

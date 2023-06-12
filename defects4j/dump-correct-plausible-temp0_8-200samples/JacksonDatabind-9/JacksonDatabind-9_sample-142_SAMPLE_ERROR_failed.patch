@@ -1,0 +1,24 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/ser/std/StdKeySerializer.java b/src/main/java/com/fasterxml/jackson/databind/ser/std/StdKeySerializer.java
+index 60ce578bf..608331223 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/ser/std/StdKeySerializer.java
++++ b/src/main/java/com/fasterxml/jackson/databind/ser/std/StdKeySerializer.java
+@@ -24,9 +24,17 @@ public class StdKeySerializer extends StdSerializer<Object>
+     @Override
+     public void serialize(Object value, JsonGenerator jgen, SerializerProvider provider) throws IOException {
+         String str;
+-
+         if (value instanceof Date) {
+-            provider.defaultSerializeDateKey((Date) value, jgen);
++            Date date = (Date) value;
++            if (canUseTimestamp(provider)) {
++                // Timestamp here actually means an array of values
++                jgen.writeStartArray();
++                jgen.writeNumber(date.getTime());
++                jgen.writeEndArray();
++                return;
++            }
++            // otherwise, regular format works fine
++            provider.defaultSerializeDateKey(date, jgen);
+             return;
+         } else {
+             str = value.toString();

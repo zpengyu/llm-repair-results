@@ -1,0 +1,79 @@
+###Provide a fix for the buggy function
+###Buggy Function
+class FibonacciExample {
+    public static void main(String args[]) {
+        int n1 = 0, n2 = 1, n3, i, count = 10;
+
+        System.out.print(n1 + " " + n2);
+
+        for (i = 2; i < count; ++i) {
+            n3 = n1 - n2;
+            System.out.print(" " + n3);
+            n1 = n2;
+            n2 = n3;
+        }
+    }
+}
+
+###Fixed Function
+class FibonacciExample {
+    public static void main(String args[]) {
+        int n1 = 0, n2 = 1, n3, i, count = 10;
+
+        System.out.print(n1 + " " + n2);
+
+        for (i = 2; i < count; ++i) {
+            n3 = n1 + n2;
+            System.out.print(" " + n3);
+            n1 = n2;
+            n2 = n3;
+        }
+    }
+}
+
+###Provide a fix for the buggy function
+###Buggy Function
+private static boolean isReduceableFunctionExpression(Node n) {
+  return NodeUtil.isFunctionExpression(n);
+}
+###Fixed Function
+private static boolean isReduceableFunctionExpression(Node n) {
+  return NodeUtil.isFunctionExpression(n)
+      && !NodeUtil.isGetOrSetKey(n.getParent());
+}
+###Provide a fix for the buggy function
+###Buggy Function
+  private void visitParameterList(NodeTraversal t, Node call,
+      FunctionType functionType) {
+    Iterator<Node> arguments = call.children().iterator();
+    arguments.next(); // skip the function name
+
+    Iterator<Node> parameters = functionType.getParameters().iterator();
+    int ordinal = 0;
+    Node parameter = null;
+    Node argument = null;
+    while (arguments.hasNext() &&
+           parameters.hasNext()) {
+      // If there are no parameters left in the list, then the while loop
+      // above implies that this must be a var_args function.
+        parameter = parameters.next();
+      argument = arguments.next();
+      ordinal++;
+
+      validator.expectArgumentMatchesParameter(t, argument,
+          getJSType(argument), getJSType(parameter), call, ordinal);
+    }
+
+    int numArgs = call.getChildCount() - 1;
+    int minArgs = functionType.getMinArguments();
+    int maxArgs = functionType.getMaxArguments();
+    if (minArgs > numArgs || maxArgs < numArgs) {
+      report(t, call, WRONG_ARGUMENT_COUNT,
+              validator.getReadableJSTypeName(call.getFirstChild(), false),
+              String.valueOf(numArgs), String.valueOf(minArgs),
+              maxArgs != Integer.MAX_VALUE ?
+              " and no more than " + maxArgs + " argument(s)" : "");
+    }
+  }
+
+###Fixed Function

@@ -1,0 +1,21 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/deser/BeanDeserializer.java b/src/main/java/com/fasterxml/jackson/databind/deser/BeanDeserializer.java
+index 3c89dc109..2c05a3695 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/deser/BeanDeserializer.java
++++ b/src/main/java/com/fasterxml/jackson/databind/deser/BeanDeserializer.java
+@@ -823,7 +820,15 @@ public class BeanDeserializer
+                 continue;
+             }
+         }
+-
++        if (t == JsonToken.END_ARRAY) {
++            t = p.nextToken();
++            if (t == JsonToken.END_OBJECT) {
++                // 15-Aug-2016, tatu: Fine as is, but perhaps indicate we support this better now?
++                tokens.writeEndObject();
++                return _unwrappedPropertyHandler.processUnwrapped(p, ctxt,
++                        creator.build(ctxt, buffer), tokens);
++            }
++        }
+         // We hit END_OBJECT, so:
+         Object bean;
+         try {

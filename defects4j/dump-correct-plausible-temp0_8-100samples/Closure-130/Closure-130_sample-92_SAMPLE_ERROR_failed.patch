@@ -1,0 +1,23 @@
+diff --git a/src/com/google/javascript/jscomp/CollapseProperties.java b/src/com/google/javascript/jscomp/CollapseProperties.java
+index c24c69b2..cb913d15 100644
+--- a/src/com/google/javascript/jscomp/CollapseProperties.java
++++ b/src/com/google/javascript/jscomp/CollapseProperties.java
+@@ -182,8 +180,17 @@ class CollapseProperties implements CompilerPass {
+             }
+           }
+         }
++      } else if (name.globalSets == 0 && name.localSets > 0 &&
++                 name.aliasingGets > 0 && name.localGets == 0) {
++        List<Ref> refs = Lists.newArrayList(name.getRefs());
++        for (Ref ref : refs) {
++          if (ref.type == Type.ALIASING_GET && ref.scope.isLocal()) {
++            if (inlineAliasIfPossible(ref, namespace)) {
++              name.removeRef(ref);
++            }
++          }
++        }
+       }
+-
+       // Check if {@code name} has any aliases left after the
+       // local-alias-inlining above.
+       if ((name.type == Name.Type.OBJECTLIT ||

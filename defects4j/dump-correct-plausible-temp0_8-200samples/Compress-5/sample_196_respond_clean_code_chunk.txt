@@ -1,0 +1,53 @@
+    public int read(byte[] buffer, int start, int length) throws IOException {
+        if (buffer == null) {
+            throw new NullPointerException();
+        } else if (start < 0 || length < 0 || length > buffer.length - start) {
+            throw new IndexOutOfBoundsException();
+        } else if (length == 0) {
+            return 0;
+        }
+        if (this.size != -1 && this.crc != null) {
+            if (this.entryEOF) {
+                return -1;
+            }
+            if (this.inf.needsInput()) {
+                fill();
+                if (this.lengthOfLastRead == -1) {
+                    this.entryEOF = true;
+                    return -1;
+                }
+            }
+        } else if (this.entryEOF) {
+            return -1;
+        }
+        int readBytes = 0;
+        int toRead = length;
+        if (this.size != -1 && this.crc != null) {
+            toRead = (int) Math.min(toRead, this.size - this.bytesReadOfEntry);
+        }
+        try {
+            readBytes = this.inf.inflate(buffer, start, toRead);
+        } catch (DataFormatException dfe) {
+            String msg = dfe.getMessage();
+            throw new ZipException(msg != null ? msg : "Invalid ZLIB data format");
+        }
+        if (readBytes == 0) {
+            if (this.inf.finished()) {
+                this.entryEOF = true;
+                return -1;
+            }
+            if (this.inf.needsDictionary()) {
+                throw new ZipException("ZLIB dictionary is needed for inflation");
+            }
+        } else {
+            start += readBytes;
+            if (this.crc != null) {
+                this.crc.update(buffer, start, readBytes);
+                this.bytesReadOfEntry += readBytes;
+            }
+            if (this.size != -1 && this.bytesReadOfEntry >= this.size) {
+                this.entryEOF = true;
+            }
+        }
+        return readBytes;
+    }

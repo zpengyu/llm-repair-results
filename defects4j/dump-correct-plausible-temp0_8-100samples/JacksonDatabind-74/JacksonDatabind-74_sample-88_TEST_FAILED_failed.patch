@@ -1,0 +1,25 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/jsontype/impl/AsPropertyTypeDeserializer.java b/src/main/java/com/fasterxml/jackson/databind/jsontype/impl/AsPropertyTypeDeserializer.java
+index 8bad30e7c..1d703ecb9 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/jsontype/impl/AsPropertyTypeDeserializer.java
++++ b/src/main/java/com/fasterxml/jackson/databind/jsontype/impl/AsPropertyTypeDeserializer.java
+@@ -143,7 +143,9 @@ public class AsPropertyTypeDeserializer extends AsArrayTypeDeserializer
+                 // must move to point to the first token:
+                 p.nextToken();
+             }
+-            return deser.deserialize(p, ctxt);
++            if (p.getCurrentToken() == JsonToken.START_ARRAY) {
++                return deser.deserialize(p, ctxt);
++            }
+         }
+         // or, perhaps we just bumped into a "natural" value (boolean/int/double/String)?
+         Object result = TypeDeserializer.deserializeIfNatural(p, ctxt, _baseType);
+@@ -154,6 +156,9 @@ public class AsPropertyTypeDeserializer extends AsArrayTypeDeserializer
+         if (p.getCurrentToken() == JsonToken.START_ARRAY) {
+             return super.deserializeTypedFromAny(p, ctxt);
+         }
++        if (p.getCurrentToken() == JsonToken.START_OBJECT) {
++            return super.deserializeTypedFromObject(p, ctxt);
++        }
+         ctxt.reportWrongTokenException(p, JsonToken.FIELD_NAME,
+                 "missing property '"+_typePropertyName+"' that is to contain type id  (for class "+baseTypeName()+")");
+         return null;

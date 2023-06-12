@@ -1,0 +1,54 @@
+    protected String[] flatten(Options options, String[] arguments, boolean stopAtNonOption)
+    {
+        init();
+        this.options = options;
+        // an iterator for the command line tokens
+        Iterator iter = Arrays.asList(arguments).iterator();
+        // process each command line token
+        while (iter.hasNext())
+        {
+            // get the next command line token
+            String token = (String) iter.next();
+            // handle long option --foo or --foo=bar
+            if (token.startsWith("--"))
+            {
+                int pos = token.indexOf('=');
+                String opt = token.substring(2, token.length());
+                if ((pos == -1) || (options.hasOption(opt)))
+                {
+                    tokens.add(token);
+                }
+                else
+                {
+                    tokens.add(token.substring(0, pos));
+                    tokens.add(token.substring(pos + 1, token.length()));
+                }
+            }
+            // single hyphen
+            else if ("-".equals(token))
+            {
+                tokens.add(token);
+            }
+            // handle a cluster of short options -foo -bar etc
+            else if (token.startsWith("-") && token.length() > 2)
+            {
+                burstToken(token, stopAtNonOption);
+            }
+            // handle a single short option -f
+            else if (token.startsWith("-") && token.length() == 2)
+            {
+                processOptionToken(token, stopAtNonOption);
+            }
+            // the token is either a non-option or an option requiring an argument
+            else if (stopAtNonOption)
+            {
+                process(token);
+            }
+            else
+            {
+                tokens.add(token);
+            }
+            gobble(iter);
+        }
+        return (String[]) tokens.toArray(new String[tokens.size()]);
+    }

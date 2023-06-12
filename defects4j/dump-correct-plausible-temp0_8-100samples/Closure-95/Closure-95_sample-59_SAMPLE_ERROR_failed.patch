@@ -1,0 +1,48 @@
+diff --git a/src/com/google/javascript/jscomp/TypedScopeCreator.java b/src/com/google/javascript/jscomp/TypedScopeCreator.java
+index a5b356fb..77460953 100644
+--- a/src/com/google/javascript/jscomp/TypedScopeCreator.java
++++ b/src/com/google/javascript/jscomp/TypedScopeCreator.java
+@@ -896,16 +894,8 @@ final class TypedScopeCreator implements ScopeCreator {
+       // scope where the root object appears. This helps out people
+       // who declare "global" names in an anonymous namespace.
+       Scope scopeToDeclareIn = scope;
+-
+-        // don't try to declare in the global scope if there's
+-        // already a symbol there with this name.
+-
+-      // declared in closest scope?
+-      if (scopeToDeclareIn.isDeclared(variableName, false)) {
+-        Var oldVar = scopeToDeclareIn.getVar(variableName);
+-        validator.expectUndeclaredVariable(
+-            sourceName, n, parent, oldVar, variableName, type);
+-      } else {
++      boolean isExtern = false;
++      if (!scopeToDeclareIn.isDeclared(variableName, false)) {
+         if (!inferred) {
+           setDeferredType(n, type);
+         }
+@@ -915,7 +904,7 @@ final class TypedScopeCreator implements ScopeCreator {
+         if (shouldDeclareOnGlobalThis) {
+           ObjectType globalThis =
+               typeRegistry.getNativeObjectType(JSTypeNative.GLOBAL_THIS);
+-          boolean isExtern = input.isExtern();
++          isExtern = input.isExtern();
+           if (inferred) {
+             globalThis.defineInferredProperty(variableName,
+                 type == null ?
+@@ -941,9 +929,14 @@ final class TypedScopeCreator implements ScopeCreator {
+                     getNativeType(OBJECT_TYPE)));
+           }
+         }
++      } else {
++        Var oldVar = scopeToDeclareIn.getVar(variableName);
++        validator.expectUndeclaredVariable(
++            sourceName, n, parent, oldVar, variableName, type);
+       }
+     }
+-
++  }
++}
+     /**
+      * Check if the given node is a property of a name in the global scope.
+      */

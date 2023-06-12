@@ -1,0 +1,70 @@
+diff --git a/src/main/java/com/fasterxml/jackson/core/json/JsonGeneratorImpl.java b/src/main/java/com/fasterxml/jackson/core/json/JsonGeneratorImpl.java
+index 81b90fed..1a8d694c 100644
+--- a/src/main/java/com/fasterxml/jackson/core/json/JsonGeneratorImpl.java
++++ b/src/main/java/com/fasterxml/jackson/core/json/JsonGeneratorImpl.java
+@@ -29,7 +28,27 @@ public abstract class JsonGeneratorImpl extends GeneratorBase
+      * (first 128 character codes), used for single-byte UTF-8 characters.
+      */
+     protected final static int[] sOutputEscapes = CharTypes.get7BitOutputEscapes();
+-    
++    /**
++     * Bit mask for enabling output escaping for quotes and/or backslash; applied
++     * when serializing as double-quoted JSON String.
++     *
++     * @since 2.9
++     */
++    protected final static int ESCAPE_NONE = 0;
++    /**
++     * Bit mask for enabling output escaping for quotes; applied
++     * when serializing as double-quoted JSON String.
++     *
++     * @since 2.9
++     */
++    protected final static int ESCAPE_QUOTES = 0x01;
++    /**
++     * Bit mask for enabling output escaping for backslash; applied
++     * when serializing as double-quoted JSON String.
++     *
++     * @since 2.9
++     */
++    protected final static int ESCAPE_BACKSLASH = 0x02;
+     /*
+     /**********************************************************
+     /* Configuration, basic I/O
+@@ -51,7 +67,13 @@ public abstract class JsonGeneratorImpl extends GeneratorBase
+      * customizable
+      */
+     protected int[] _outputEscapes = sOutputEscapes;
+-
++    /**
++     * Bit mask for enabling output escaping of quotes, backslash (as
++     * well as others); applied when serializing as double-quoted JSON String.
++     *
++     * @since 2.9
++     */
++    protected int _quoteEscaping = ESCAPE_QUOTES;
+     /**
+      * Value between 128 (0x80) and 65535 (0xFFFF) that indicates highest
+      * Unicode code point that will not need escaping; or 0 to indicate
+@@ -107,8 +123,9 @@ public abstract class JsonGeneratorImpl extends GeneratorBase
+             _maximumNonEscapedChar = 127;
+         }
+         _cfgUnqNames = !Feature.QUOTE_FIELD_NAMES.enabledIn(features);
++        _quoteEscaping = Feature.QUOTE_NON_NUMERIC_NUMBERS.enabledIn(features)
++                ? ESCAPE_QUOTES : ESCAPE_NONE;
+     }
+-
+     /*
+     /**********************************************************
+     /* Overridden configuration methods
+@@ -129,8 +143,9 @@ public abstract class JsonGeneratorImpl extends GeneratorBase
+     protected void _checkStdFeatureChanges(int newFeatureFlags, int changedFeatures) {
+         super._checkStdFeatureChanges(newFeatureFlags, changedFeatures);
+         _cfgUnqNames = !Feature.QUOTE_FIELD_NAMES.enabledIn(newFeatureFlags);
++        _quoteEscaping = Feature.QUOTE_NON_NUMERIC_NUMBERS.enabledIn(newFeatureFlags)
++                ? ESCAPE_QUOTES : ESCAPE_NONE;
+     }
+-
+     @Override
+     public JsonGenerator setHighestNonEscapedChar(int charCode) {
+         _maximumNonEscapedChar = (charCode < 0) ? 0 : charCode;

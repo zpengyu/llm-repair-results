@@ -1,0 +1,54 @@
+diff --git a/src/main/java/org/apache/commons/compress/archivers/zip/ZipArchiveInputStream.java b/src/main/java/org/apache/commons/compress/archivers/zip/ZipArchiveInputStream.java
+index 5d4c0a82..df65dbcb 100644
+--- a/src/main/java/org/apache/commons/compress/archivers/zip/ZipArchiveInputStream.java
++++ b/src/main/java/org/apache/commons/compress/archivers/zip/ZipArchiveInputStream.java
+@@ -316,9 +297,48 @@ public ZipArchiveEntry getNextZipEntry() throws IOException {
+                         new BoundedInputStream(in, current.entry.getCompressedSize()));
+             } else if (current.entry.getMethod() == ZipMethod.BZIP2.getCode()) {
+                 current.in = new BZip2CompressorInputStream(new BoundedInputStream(in, current.entry.getCompressedSize()));
++            } else if (current.entry.getMethod() == ZipMethod.STORED.getCode()) {
++                current.in = in;
++            } else {
++                current.in = new InflaterInputStream(in, new Inflater(true)) {
++                    private final byte[] oneByte = new byte[1];
++                    private boolean isClosed = false;
++                    @Override
++                    public int available() throws IOException {
++                        if (isClosed) {
++                            return 0;
++                        }
++                        return super.available();
++                    }
++                    @Override
++                    public int read() throws IOException {
++                        final int read = read(oneByte, 0, 1);
++                        if (read == -1) {
++                            return -1;
++                        }
++                        return oneByte[0] & 0xff;
++                    }
++                    @Override
++                    public int read(final byte[] b, final int off, int len) throws IOException {
++                        if (isClosed) {
++                            return -1;
++                        }
++                        try {
++                            return super.read(b, off, len);
++                        } catch (final EOFException e) {
++                            // in.close();
++                            isClosed = true;
++                            return -1;
++                        }
++                    }
++                    @Override
++                    public void close() throws IOException {
++                        isClosed = true;
++                        super.close();
++                    }
++                };
+             }
+         }
+-        
+         entriesRead++;
+         return current.entry;
+     }

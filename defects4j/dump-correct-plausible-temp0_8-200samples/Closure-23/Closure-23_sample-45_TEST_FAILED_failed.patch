@@ -1,0 +1,31 @@
+diff --git a/src/com/google/javascript/jscomp/PeepholeFoldConstants.java b/src/com/google/javascript/jscomp/PeepholeFoldConstants.java
+index 805db9af..93debe6c 100644
+--- a/src/com/google/javascript/jscomp/PeepholeFoldConstants.java
++++ b/src/com/google/javascript/jscomp/PeepholeFoldConstants.java
+@@ -1424,10 +1424,11 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
+     // If GETPROP/GETELEM is used as assignment target the array literal is
+     // acting as a temporary we can't fold it here:
+     //    "[][0] += 1"
+-    if (isAssignmentTarget(n)) {
++    if (isAssignmentTarget(n)
++        || NodeUtil.isAssignmentOp(parent)
++        || NodeUtil.isForIn(parent)) {
+       return n;
+     }
+-
+     if (!right.isNumber()) {
+       // Sometimes people like to use complex expressions to index into
+       // arrays, or strings to index into array methods.
+@@ -1449,11 +1447,9 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
+     Node current = left.getFirstChild();
+     Node elem = null;
+     for (int i = 0; current != null && i < intIndex; i++) {
+-        elem = current;
+-
++      elem = current;
+       current = current.getNext();
+     }
+-
+     if (elem == null) {
+       error(INDEX_OUT_OF_BOUNDS_ERROR, right);
+       return n;

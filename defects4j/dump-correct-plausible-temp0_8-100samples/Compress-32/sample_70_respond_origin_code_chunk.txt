@@ -1,0 +1,49 @@
+    private void applyPaxHeadersToCurrentEntry(Map<String, String> headers) {
+        /*
+         * The following headers are defined for Pax.
+         * atime, ctime, charset: cannot use these without changing TarArchiveEntry fields
+         * mtime
+         * comment
+         * gid, gname
+         * linkpath
+         * size
+         * uid,uname
+         * SCHILY.devminor, SCHILY.devmajor: don't have setters/getters for those
+         */
+        for (Entry<String, String> ent : headers.entrySet()){
+            String key = ent.getKey();
+            String val = ent.getValue();
+            if ("path".equals(key)){
+                if (currEntry != null)
+                    currEntry.setName(val);
+            } else if ("linkpath".equals(key)){
+                if (currEntry != null)
+                    currEntry.setLinkName(val);
+            } else if ("gid".equals(key)){
+                if (currEntry != null)
+                    currEntry.setGroupId(Integer.parseInt(val));
+            } else if ("gname".equals(key)){
+                if (currEntry != null)
+                    currEntry.setGroupName(val);
+            } else if ("uid".equals(key)){
+                if (currEntry != null)
+                    currEntry.setUserId(Integer.parseInt(val));
+            } else if ("uname".equals(key)){
+                if (currEntry != null)
+                    currEntry.setUserName(val);
+            } else if ("size".equals(key)){
+                if (currEntry != null)
+                    currEntry.setSize(Long.parseLong(val));
+            } else if ("mtime".equals(key)){
+                if (currEntry != null)
+                    currEntry.setModTime((long) (Double.parseDouble(val) * 1000));
+            } else if ("SCHILY.devminor".equals(key)){
+                if (currEntry != null)
+                    currEntry.setDevMinor(Integer.parseInt(val));
+            } else if ("SCHILY.devmajor".equals(key)){
+                if (currEntry != null)
+                    currEntry.setDevMajor(Integer.parseInt(val));
+            }
+        }
+    }
+    

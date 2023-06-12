@@ -1,0 +1,18 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/node/TreeTraversingParser.java b/src/main/java/com/fasterxml/jackson/databind/node/TreeTraversingParser.java
+index afb9f1869..eee49aced 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/node/TreeTraversingParser.java
++++ b/src/main/java/com/fasterxml/jackson/databind/node/TreeTraversingParser.java
+@@ -364,6 +364,13 @@ public class TreeTraversingParser extends ParserMinimalBase
+             if (data != null) {
+                 return data;
+             }
++            // Also: coerce non-standard base64 variant?
++            if (n.isTextual()) {
++                String text = ((TextNode) n).textValue();
++                ByteArrayBuilder builder = Base64Variants.getDefaultVariant().getByteArrayBuilder();
++                _decodeBase64(text, builder, b64variant);
++                return builder.toByteArray();
++            }
+             if (n.isPojo()) {
+                 Object ob = ((POJONode) n).getPojo();
+                 if (ob instanceof byte[]) {

@@ -1,0 +1,25 @@
+diff --git a/src/main/java/org/apache/commons/compress/archivers/zip/ZipArchiveInputStream.java b/src/main/java/org/apache/commons/compress/archivers/zip/ZipArchiveInputStream.java
+index fc7b80d5..1090a59b 100644
+--- a/src/main/java/org/apache/commons/compress/archivers/zip/ZipArchiveInputStream.java
++++ b/src/main/java/org/apache/commons/compress/archivers/zip/ZipArchiveInputStream.java
+@@ -237,7 +236,19 @@ public class ZipArchiveInputStream extends ArchiveInputStream {
+                 throw new ZipException(e.getMessage());
+             }
+             if (read == 0 && inf.finished()) {
+-                return -1;
++                if (!inf.needsDictionary()) {
++                    entryEOF = true;
++                    ZipArchiveEntry localEntry = current;
++                    if (localEntry != null
++                        && crc.getValue() != localEntry.getCrc()) {
++                        throw new ZipException("invalid entry CRC (expected 0x"
++                            + Long.toHexString(localEntry.getCrc())
++                            + " but got 0x"
++                            + Long.toHexString(crc.getValue()) + ")");
++                    }
++                } else {
++                    read = -1;
++                }
+             }
+             crc.update(buffer, start, read);
+             return read;

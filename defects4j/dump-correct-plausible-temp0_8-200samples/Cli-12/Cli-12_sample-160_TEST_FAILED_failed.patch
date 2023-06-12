@@ -1,0 +1,45 @@
+diff --git a/src/java/org/apache/commons/cli/GnuParser.java b/src/java/org/apache/commons/cli/GnuParser.java
+index 14a9cc0..f5b0dea 100644
+--- a/src/java/org/apache/commons/cli/GnuParser.java
++++ b/src/java/org/apache/commons/cli/GnuParser.java
+@@ -80,10 +76,27 @@ public class GnuParser extends Parser {
+                 {
+                     if (options.hasOption(arg.substring(0, 2)))
+                     {
+-                        // the format is --foo=value or -foo=value
+-                        // the format is a special properties option (-Dproperty=value)
+-                        tokens.add(arg.substring(0, 2)); // -D
+-                        tokens.add(arg.substring(2)); // property=value
++                        if (arg.length() >= 4)
++                        {
++                            // the format is --foo=value or -foo=value
++                            if (arg.startsWith("--"))
++                            {
++                                tokens.add(arg.substring(0, 5)); // --foo=
++                                tokens.add(arg.substring(5)); // value
++                            }
++                            else
++                            {
++                                tokens.add(arg.substring(0, 3)); // -foo=
++                                tokens.add(arg.substring(3)); // value
++                            }
++                        }
++                        else
++                        {
++                            // the format is a special properties option
++                            // (-Dproperty=value)
++                            tokens.add(arg.substring(0, 2)); // -D
++                            tokens.add(arg.substring(2)); // property=value
++                        }
+                     }
+                     else
+                     {
+@@ -105,7 +117,5 @@ public class GnuParser extends Parser {
+                 }
+             }
+         }
+-
+         return (String[]) tokens.toArray(new String[tokens.size()]);
+-    }
+-}
++    }}

@@ -1,0 +1,26 @@
+diff --git a/src/main/java/org/jsoup/parser/Parser.java b/src/main/java/org/jsoup/parser/Parser.java
+index 8cc01d2..7489f45 100644
+--- a/src/main/java/org/jsoup/parser/Parser.java
++++ b/src/main/java/org/jsoup/parser/Parser.java
+@@ -116,7 +116,7 @@ public class Parser {
+     private void parseStartTag() {
+         tq.consume("<");
+         String tagName = tq.consumeWord();
+-
++        tq.consumeWhitespace();
+         if (tagName.length() == 0) { // doesn't look like a start tag after all; put < back on stack and handle as text
+             tq.addFirst("&lt;");
+             parseTextNode();
+@@ -128,11 +127,10 @@ public class Parser {
+             Attribute attribute = parseAttribute();
+             if (attribute != null)
+                 attributes.put(attribute);
++            tq.consumeWhitespace();
+         }
+-
+         Tag tag = Tag.valueOf(tagName);
+         Element child = new Element(tag, baseUri, attributes);
+-
+         boolean isEmptyElement = tag.isEmpty(); // empty element if empty tag (e.g. img) or self-closed el (<div/>
+         if (tq.matchChomp("/>")) { // close empty element or tag
+             isEmptyElement = true;

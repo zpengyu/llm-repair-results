@@ -1,0 +1,24 @@
+diff --git a/src/main/java/org/apache/commons/compress/archivers/zip/ZipFile.java b/src/main/java/org/apache/commons/compress/archivers/zip/ZipFile.java
+index fd5d1894..d252366e 100644
+--- a/src/main/java/org/apache/commons/compress/archivers/zip/ZipFile.java
++++ b/src/main/java/org/apache/commons/compress/archivers/zip/ZipFile.java
+@@ -805,6 +805,7 @@ public class ZipFile {
+         // the hashcode - see COMPRESS-164
+         // Map needs to be reconstructed in order to keep central
+         // directory order
++        Map<ZipArchiveEntry, OffsetEntry> newMap = new LinkedHashMap<>();
+         for (ZipArchiveEntry ze : entries.keySet()) {
+             OffsetEntry offsetEntry = entries.get(ze);
+             long offset = offsetEntry.headerOffset;
+@@ -839,9 +839,10 @@ public class ZipFile {
+                     nameMap.put(ze.getName(), ze);
+                 }
+             }
++            newMap.put(ze, offsetEntry);
+         }
++        entries = newMap;
+     }
+-
+     /**
+      * Checks whether the archive starts with a LFH.  If it doesn't,
+      * it may be an empty archive.

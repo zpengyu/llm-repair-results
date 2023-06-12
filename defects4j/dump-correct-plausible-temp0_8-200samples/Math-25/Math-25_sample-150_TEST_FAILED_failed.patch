@@ -1,0 +1,28 @@
+diff --git a/src/main/java/org/apache/commons/math3/optimization/fitting/HarmonicFitter.java b/src/main/java/org/apache/commons/math3/optimization/fitting/HarmonicFitter.java
+index 42399c04d..1892bab32 100644
+--- a/src/main/java/org/apache/commons/math3/optimization/fitting/HarmonicFitter.java
++++ b/src/main/java/org/apache/commons/math3/optimization/fitting/HarmonicFitter.java
+@@ -320,14 +314,19 @@ public class HarmonicFitter extends CurveFitter<HarmonicOscillator.Parametric> {
+                 }
+                 a = 0.5 * (yMax - yMin);
+             } else {
+-                    // In some ill-conditioned cases (cf. MATH-844), the guesser
+-                    // procedure cannot produce sensible results.
+-
++                // In some ill-conditioned cases (cf. MATH-844), the guesser
++                // procedure cannot produce sensible results.
++                double xRange = observations[observations.length - 1].getX() - observations[0].getX();
++                if (xRange == 0) {
++                    throw new ZeroException();
++                }
+                 a = FastMath.sqrt(c1 / c2);
+                 omega = FastMath.sqrt(c2 / c3);
++                if (omega > Math.PI / xRange) {
++                    omega = Math.PI / xRange;
++                }
+             }
+         }
+-
+         /**
+          * Estimate a first guess of the phase.
+          */

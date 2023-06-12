@@ -1,0 +1,42 @@
+diff --git a/src/com/google/javascript/jscomp/FlowSensitiveInlineVariables.java b/src/com/google/javascript/jscomp/FlowSensitiveInlineVariables.java
+index 73531dc5..f7ba0adb 100644
+--- a/src/com/google/javascript/jscomp/FlowSensitiveInlineVariables.java
++++ b/src/com/google/javascript/jscomp/FlowSensitiveInlineVariables.java
+@@ -471,8 +471,7 @@ class FlowSensitiveInlineVariables extends AbstractPostOrderCallback
+      * Computes the number of uses of the variable varName and store it in
+      * numUseWithinUseCfgNode.
+      */
+-    private void getNumUseInUseCfgNode(final Node cfgNode) {
+-
++     private void getNumUseInUseCfgNode(final Node cfgNode) {
+       numUsesWithinCfgNode = 0;
+       AbstractCfgNodeTraversalCallback gatherCb =
+           new AbstractCfgNodeTraversalCallback() {
+@@ -486,17 +484,22 @@ class FlowSensitiveInlineVariables extends AbstractPostOrderCallback
+             // TODO(blickly): Make the SIDE_EFFECT_PREDICATE check more exact
+             //   and remove this special case.
+               !(parent.isAssign() &&
+-               (parent.getFirstChild() == n))) {
++               (parent.getFirstChild() == n)) &&
++            // We make a special exception for CODE_ADD nodes, because in some
++            // cases the CALL nodes on the left-hand-side of an expression get
++            // converted to CODE_ADD with the CALL node as a child and the
++            // call expression as a grandchild. In those cases, we want to
++            // ignore the node, since it is the grandchild that gets replaced.
++              !(NodeUtil.isExpressionNode(parent) &&
++                parent.getType() != Token.CODE_ADD)) {
+               // Don't count lhs of top-level assignment chain
++              // Don't count CODE_ADD nodes' children that are replaced.
+               numUsesWithinCfgNode++;
+           }
+         }
+-
+       };
+-
+       NodeTraversal.traverse(compiler, cfgNode, gatherCb);
+-    }
+-  }
++    }  }
+ 
+   /**
+    * Given an expression by its root and sub-expression n, return true if there

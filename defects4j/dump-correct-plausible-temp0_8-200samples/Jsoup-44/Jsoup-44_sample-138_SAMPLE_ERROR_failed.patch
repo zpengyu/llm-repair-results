@@ -1,0 +1,42 @@
+diff --git a/src/main/java/org/jsoup/parser/TreeBuilder.java b/src/main/java/org/jsoup/parser/TreeBuilder.java
+index f4faad4..be17b52 100644
+--- a/src/main/java/org/jsoup/parser/TreeBuilder.java
++++ b/src/main/java/org/jsoup/parser/TreeBuilder.java
+@@ -33,12 +30,10 @@ abstract class TreeBuilder {
+         stack = new ArrayList<Element>(32);
+         this.baseUri = baseUri;
+     }
+-
+-    Document parse(String input, String baseUri) {
++    public Document parse(String input, String baseUri) {
+         return parse(input, baseUri, ParseErrorList.noTracking());
+     }
+-
+-    Document parse(String input, String baseUri, ParseErrorList errors) {
++    public Document parse(String input, String baseUri, ParseErrorList errors) {
+         initialiseParse(input, baseUri, errors);
+         runParser();
+         return doc;
+@@ -60,8 +51,7 @@ abstract class TreeBuilder {
+     protected boolean processStartTag(String name) {
+         return process(start.reset().name(name));
+     }
+-
+-    public boolean processStartTag(String name, Attributes attrs) {
++    protected boolean processStartTag(String name, Attributes attrs) {
+         start.reset();
+         start.nameAttr(name, attrs);
+         return process(start);
+@@ -76,4 +63,11 @@ abstract class TreeBuilder {
+         int size = stack.size();
+         return size > 0 ? stack.get(size-1) : null;
+     }
++    protected void setCurrentElement(Element element) {
++        if (stack.size() == 0) {
++            stack.add(element);
++        } else {
++            stack.set(stack.size()-1, element);
++        }
++    }
+ }
+\ No newline at end of file

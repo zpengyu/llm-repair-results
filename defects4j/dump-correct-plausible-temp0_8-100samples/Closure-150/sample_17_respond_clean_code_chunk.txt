@@ -1,0 +1,34 @@
+    @Override public void visit(NodeTraversal t, Node n, Node parent) {
+      if (n == scope.getRootNode()) return;
+      if (isFunctionDeclaration(n)) return;
+      if (n.getType() == Token.LP && parent == scope.getRootNode()) {
+        handleFunctionInputs(parent);
+        return;
+      }
+      attachLiteralTypes(n);
+      switch (n.getType()) {
+        case Token.FUNCTION:
+          if (parent.getType() == Token.NAME) {
+            return;
+          }
+          defineDeclaredFunction(n, parent);
+          break;
+        case Token.CATCH:
+          defineCatch(n, parent);
+          break;
+        case Token.VAR:
+          defineVar(n, parent);
+          break;
+      }
+    }
+    private static boolean isFunctionDeclaration(Node n) {
+      if (n.getType() != Token.FUNCTION) {
+        return false;
+      }
+      Node name = n.getFirstChild();
+      Node parent = n.getParent();
+      return (name.getString().isEmpty() || parent.isBlock()) && !isFunctionExpression(n);
+    }
+    private static boolean isFunctionExpression(Node n) {
+      return n.getBooleanProp(Node.FUNCTION_EXPRESSION);
+    }

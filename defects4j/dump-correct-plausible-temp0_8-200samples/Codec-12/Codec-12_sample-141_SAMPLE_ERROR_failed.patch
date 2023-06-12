@@ -1,0 +1,101 @@
+diff --git a/src/main/java/org/apache/commons/codec/binary/BaseNCodecInputStream.java b/src/main/java/org/apache/commons/codec/binary/BaseNCodecInputStream.java
+index 78f4d67e..ca1b6898 100644
+--- a/src/main/java/org/apache/commons/codec/binary/BaseNCodecInputStream.java
++++ b/src/main/java/org/apache/commons/codec/binary/BaseNCodecInputStream.java
+@@ -113,10 +106,14 @@ public class BaseNCodecInputStream extends FilterInputStream {
+                 if (!baseNCodec.hasData()) {
+                     byte[] buf = new byte[doEncode ? 4096 : 8192];
+                     int c = in.read(buf);
+-                    if (doEncode) {
+-                        baseNCodec.encode(buf, 0, c);
++                    if (c == -1) {
++                        baseNCodec.flush(); // ignore EOF
+                     } else {
+-                        baseNCodec.decode(buf, 0, c);
++                        if (doEncode) {
++                            baseNCodec.encode(buf, 0, c);
++                        } else {
++                            baseNCodec.decode(buf, 0, c);
++                        }
+                     }
+                 }
+                 readLen = baseNCodec.readResults(b, offset, len);
+@@ -139,20 +135,67 @@ public class BaseNCodecInputStream extends FilterInputStream {
+      *
+      * @throws IllegalArgumentException if the provided skip length is negative
+      */
+-
+-        // skip in chunks of 512 bytes
+-
+-
++    @Override
++    public synchronized void reset() {
++        try {
++            baseNCodec.reset();
++            in.reset();
++        } catch (final IOException e) {
++            throw new IllegalArgumentException(e);
++        }
++    }
++    /**
++     * {@inheritDoc}
++     *
++     * @throws IOException if the InputStream has already been closed
++     */
++    @Override
++    public synchronized void close() throws IOException {
++        if (in != null) {
++            try {
++                if (doEncode) {
++                    baseNCodec.encode(EMPTY_BYTES, 0, -1); // Notify encoder of EOF (-1).
++                } else {
++                    baseNCodec.decode(EMPTY_BYTES, 0, -1); // Notify decoder of EOF (-1).
++                }
++                flush();
++            } finally {
++                baseNCodec.reset();
++                in.close();
++                in = null;
++            }
++        }
++    }
++    /**
++     * {@inheritDoc}
++     *
++     * @throws IOException if an I/O error occurs
++     */
++    @Override
++    public long skip(final long n) throws IOException {
++        if (n < 0) {
++            throw new IllegalArgumentException();
++        }
++        final int bufferLen = doEncode ? 4096 : 8192;
++        final byte[] skipBuffer = new byte[bufferLen];
++        long todo = n;
++        while (todo > 0) {
++            final int skipped = read(skipBuffer, 0, (int) Math.min(todo, bufferLen));
++            if (skipped == EOF) {
++                break;
++            }
++            todo -= skipped;
++        }
++        return n - todo;
++    }
+     /**
+      * {@inheritDoc}
+      *
+      * @return <code>0</code> if the {@link InputStream} has reached <code>EOF</code>,
+      * <code>1</code> otherwise
+      */
+-        // Note: the logic is similar to the InflaterInputStream:
+-        //       as long as we have not reached EOF, indicate that there is more
+-        //       data available. As we do not know for sure how much data is left,
+-        //       just return 1 as a safe guess.
+-
+-        // use the EOF flag of the underlying codec instance
++    @Override
++    public int available() throws IOException {
++        return baseNCodec.hasData() ? 1 : in.available();
++    }
+ }
+\ No newline at end of file

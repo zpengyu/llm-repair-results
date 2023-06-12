@@ -1,0 +1,37 @@
+diff --git a/gson/src/main/java/com/google/gson/internal/UnsafeAllocator.java b/gson/src/main/java/com/google/gson/internal/UnsafeAllocator.java
+index a72d3d10..87c863bc 100644
+--- a/gson/src/main/java/com/google/gson/internal/UnsafeAllocator.java
++++ b/gson/src/main/java/com/google/gson/internal/UnsafeAllocator.java
+@@ -45,6 +44,10 @@ public abstract class UnsafeAllocator {
+         @Override
+         @SuppressWarnings("unchecked")
+         public <T> T newInstance(Class<T> c) throws Exception {
++          if (c.isInterface() || Modifier.isAbstract(c.getModifiers())) {
++            throw new UnsupportedOperationException(
++                "Cannot allocate " + c + ". Need a non-abstract class without final modifiers");
++          }
+           return (T) allocateInstance.invoke(unsafe, c);
+         }
+       };
+@@ -68,6 +70,10 @@ public abstract class UnsafeAllocator {
+         @Override
+         @SuppressWarnings("unchecked")
+         public <T> T newInstance(Class<T> c) throws Exception {
++          if (c.isInterface() || Modifier.isAbstract(c.getModifiers())) {
++            throw new UnsupportedOperationException(
++                "Cannot allocate " + c + ". Need a non-abstract class without final modifiers");
++          }
+           return (T) newInstance.invoke(null, c, constructorId);
+         }
+       };
+@@ -87,6 +92,10 @@ public abstract class UnsafeAllocator {
+         @Override
+         @SuppressWarnings("unchecked")
+         public <T> T newInstance(Class<T> c) throws Exception {
++          if (c.isInterface() || Modifier.isAbstract(c.getModifiers())) {
++            throw new UnsupportedOperationException(
++                "Cannot allocate " + c + ". Need a non-abstract class without final modifiers");
++          }
+           return (T) newInstance.invoke(null, c, Object.class);
+         }
+       };

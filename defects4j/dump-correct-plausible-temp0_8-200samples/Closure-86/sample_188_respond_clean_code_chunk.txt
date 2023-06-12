@@ -1,0 +1,55 @@
+  /**
+   * Given an expression that is a result of a variable, property, or array
+   * read return the root of the expression.
+   * @return The root of the returned expression or the expression itself if it
+   *     is not part of a result expression.
+   */
+  public static Node getBestLValueRoot(Node n) {
+    Node result = n;
+    while (true) {
+      switch (result.getType()) {
+        case Token.COMMA:
+          result = result.getLastChild();
+          break;
+        case Token.AND:
+        case Token.OR:
+        case Token.HOOK:
+        case Token.COALESCE:
+          result = result.getFirstChild();
+          break;
+        default:
+          return result;
+      }
+    }
+  }
+  /**
+   * Determines whether the given expression is a local result of a function call.
+   * @param n The node to check
+   */
+  static boolean callHasLocalResult(Node n) {
+    Preconditions.checkArgument(n.isCall());
+    return isLocalResult(n);
+  }
+  /**
+   * Determines whether the given expression is a local result of a function call.
+   * The expression is local if the function is local to the scope.
+   * @param n The node to check
+   */
+  private static boolean isLocalResult(Node n) {
+    if (n.isFunction()) {
+      // TODO(sdh): This is currently needed to support alias analysis in the
+      // case where the alias comes from a local function.  We should find a way
+      // to do this without storing the function node.
+      return n.getJSType().isLocalType();
+    } else {
+      Node fnName = n.getFirstChild();
+      Node fnNode = NodeUtil.getBestLValueRoot(fnName);
+      if (fnNode != null && fnNode.isName()) {
+        // TODO(sdh): This is currently needed to support alias analysis in the
+        // case where the alias comes from a local function.  We should find a way
+        // to do this without storing the function node.
+        return fnNode.getJSType().isLocalType();
+      }
+      return false;
+    }
+  }

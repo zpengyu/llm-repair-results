@@ -1,0 +1,30 @@
+diff --git a/src/main/java/org/apache/commons/compress/compressors/bzip2/BZip2CompressorInputStream.java b/src/main/java/org/apache/commons/compress/compressors/bzip2/BZip2CompressorInputStream.java
+index d0c0d43c..261f6c1c 100644
+--- a/src/main/java/org/apache/commons/compress/compressors/bzip2/BZip2CompressorInputStream.java
++++ b/src/main/java/org/apache/commons/compress/compressors/bzip2/BZip2CompressorInputStream.java
+@@ -165,19 +165,19 @@ public class BZip2CompressorInputStream extends CompressorInputStream implements
+         if (this.in == null) {
+             throw new IOException("stream closed");
+         }
+-
+-        final int hi = offs + len;
++        int c = 0;
+         int destOffs = offs;
+         int b;
+-        while (destOffs < hi && ((b = read0()) >= 0)) {
++        while (c < len && ((b = read0()) >= 0)) {
+             dest[destOffs++] = (byte) b;
+             count(1);
++            c++;
++        }
++        if (c == 0 && b < 0) {
++            c = -1;
+         }
+-
+-        int c = (destOffs == offs) ? -1 : (destOffs - offs);
+         return c;
+     }
+-
+     private void makeMaps() {
+         final boolean[] inUse = this.data.inUse;
+         final byte[] seqToUnseq = this.data.seqToUnseq;

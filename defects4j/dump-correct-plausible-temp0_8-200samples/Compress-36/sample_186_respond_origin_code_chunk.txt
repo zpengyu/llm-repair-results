@@ -1,0 +1,32 @@
+    private InputStream getCurrentStream() throws IOException {
+        if (deferredBlockStreams.isEmpty()) {
+            throw new IllegalStateException("No current 7z entry (call getNextEntry() first).");
+        }
+        
+        while (deferredBlockStreams.size() > 1) {
+            // In solid compression mode we need to decompress all leading folder'
+            // streams to get access to an entry. We defer this until really needed
+            // so that entire blocks can be skipped without wasting time for decompression.
+            final InputStream stream = deferredBlockStreams.remove(0);
+            skip(stream);
+            stream.close();
+        }
+
+        return deferredBlockStreams.get(0);
+    }
+
+    private long skip(final InputStream stream) throws IOException {
+        long totalSkipped = 0;
+
+        final byte[] buffer = new byte[SKIP_BUF_SIZE];
+        int toRead;
+        while (totalSkipped < maxSkipCount) {
+            toRead = (int) Math.min(maxSkipCount - totalSkipped, SKIP_BUF_SIZE);
+            final int read = stream.read(buffer, 0, toRead);
+            if (read == -1) {
+                return totalSkipped;
+            }
+            totalSkipped += read;
+        }
+        return totalSkipped;
+    }

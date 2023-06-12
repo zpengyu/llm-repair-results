@@ -1,0 +1,28 @@
+        public final Object deserializeKey(String key, DeserializationContext ctxt)
+            throws IOException
+        {
+            if (key == null) { // is this even legal call?
+                return null;
+            }
+            try {
+                // Ugh... should not have to give parser which may or may not be correct one...
+                Object result = _delegate.deserialize(ctxt.getParser(), ctxt);
+                if (result != null) {
+                    if (_keyClass.isInstance(result)) {
+                        return result;
+                    }
+                    return ctxt.handleWeirdKey(_keyClass, key, "not a valid representation");
+                }
+                // 04-Mar-2016, tatu: Null might be legal, depending on `Map` type;
+                //   only thing we can do is verify; if not ok, throw exception
+                if (!_keyClass.isPrimitive()) {
+                    return null;
+                }
+                // 19-Jan-2016, tatu: Alas, we MUST NOT use `getNullValue` as it may return
+                //  placeholder. Instead we need to try to re-constitute a real null value.
+                //  Should be safe to do so as we know `_keyClass` is primitive
+                return ctxt.findRootValueDeserializer(_keyClass).getNullValue(ctxt);
+            } catch (Exception re) {
+                return ctxt.handleWeirdKey(_keyClass, key, "not a valid representation: %s", re.getMessage());
+            }
+        }

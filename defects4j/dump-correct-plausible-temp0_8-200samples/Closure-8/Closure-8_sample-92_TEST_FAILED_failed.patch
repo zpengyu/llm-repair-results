@@ -1,0 +1,40 @@
+diff --git a/src/com/google/javascript/jscomp/CollapseVariableDeclarations.java b/src/com/google/javascript/jscomp/CollapseVariableDeclarations.java
+index 26ca29ca..699bc109 100644
+--- a/src/com/google/javascript/jscomp/CollapseVariableDeclarations.java
++++ b/src/com/google/javascript/jscomp/CollapseVariableDeclarations.java
+@@ -138,29 +125,21 @@ class CollapseVariableDeclarations implements CompilerPass {
+       if (n.isVar()) {
+         blacklistStubVars(t, n);
+       }
+-
+       // Only care about var nodes
+-      if (!n.isVar() && !canBeRedeclared(n, t.getScope())) return;
+-
++      if (!n.isVar() && !canBeRedeclared(n, t.getScope())) {
++        return;
++      }
+       // If we've already looked at this node, skip it
+-      if (nodesToCollapse.contains(n)) return;
+-
+-      // Adjacent VAR children of an IF node are the if and else parts and can't
+-      // be collapsed
+-      if (parent.isIf()) return;
+-
++      if (nodesToCollapse.contains(n)) {
++        return;
++      }
+       Node varNode = n;
+-
+       boolean hasVar = n.isVar();
+-
+       // Find variable declarations that follow this one (if any)
+       n = n.getNext();
+-
+       boolean hasNodesToCollapse = false;
+-
+       while (n != null &&
+           (n.isVar() || canBeRedeclared(n, t.getScope()))) {
+-
+         if (n.isVar()) {
+           blacklistStubVars(t, n);
+           hasVar = true;

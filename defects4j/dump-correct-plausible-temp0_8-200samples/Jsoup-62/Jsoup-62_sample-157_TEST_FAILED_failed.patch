@@ -1,0 +1,49 @@
+diff --git a/src/main/java/org/jsoup/parser/HtmlTreeBuilderState.java b/src/main/java/org/jsoup/parser/HtmlTreeBuilderState.java
+index 9bb0006..cb60848 100644
+--- a/src/main/java/org/jsoup/parser/HtmlTreeBuilderState.java
++++ b/src/main/java/org/jsoup/parser/HtmlTreeBuilderState.java
+@@ -760,27 +760,26 @@ enum HtmlTreeBuilderState {
+             return true;
+         }
+ 
+-        boolean anyOtherEndTag(Token t, HtmlTreeBuilder tb) {
+-            String name = t.asEndTag().normalName();
+-            ArrayList<Element> stack = tb.getStack();
+-            for (int pos = stack.size() -1; pos >= 0; pos--) {
+-                Element node = stack.get(pos);
+-                if (node.nodeName().equals(name)) {
+-                    tb.generateImpliedEndTags(name);
+-                    if (!name.equals(tb.currentElement().nodeName()))
+-                        tb.error(this);
+-                    tb.popStackToClose(name);
+-                    break;
+-                } else {
+-                    if (tb.isSpecial(node)) {
+-                        tb.error(this);
+-                        return false;
+-                    }
++    boolean anyOtherEndTag(Token t, HtmlTreeBuilder tb) {
++        String name = t.asEndTag().normalName();
++        ArrayList<Element> stack = tb.getStack();
++        for (int pos = stack.size() -1; pos >= 0; pos--) {
++            Element node = stack.get(pos);
++            if (node.nodeName().equals(name)) {
++                tb.generateImpliedEndTags(name);
++                if (!name.equals(tb.currentElement().nodeName()))
++                    tb.error(this);
++                tb.popStackToClose(name);
++                break;
++            } else {
++                if (tb.isSpecial(node) && !StringUtil.inSorted(node.nodeName(), Constants.InBodyStartToHead)) {
++                    tb.error(this);
++                    return false;
+                 }
+             }
+-            return true;
+         }
+-    },
++        return true;
++    }    },
+     Text {
+         // in script, style etc. normally treated as data tags
+         boolean process(Token t, HtmlTreeBuilder tb) {

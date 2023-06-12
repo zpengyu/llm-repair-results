@@ -1,0 +1,39 @@
+diff --git a/src/com/google/javascript/jscomp/UnreachableCodeElimination.java b/src/com/google/javascript/jscomp/UnreachableCodeElimination.java
+index 3b323395..97f0a592 100644
+--- a/src/com/google/javascript/jscomp/UnreachableCodeElimination.java
++++ b/src/com/google/javascript/jscomp/UnreachableCodeElimination.java
+@@ -136,18 +134,10 @@ class UnreachableCodeElimination implements CompilerPass {
+        * if-else conversion but it handles more complicated switch statements
+        * much more nicely.
+        */
+-
+       // If n is null the target is the end of the function, nothing to do.
+       if (n == null) {
+-         return;
+-      }
+-
+-      DiGraphNode<Node, Branch> gNode = cfg.getDirectedGraphNode(n);
+-
+-      if (gNode == null) {
+         return;
+       }
+-
+       switch (n.getType()) {
+         case Token.RETURN:
+           if (n.hasChildren()) {
+@@ -158,7 +148,7 @@ class UnreachableCodeElimination implements CompilerPass {
+           // We are looking for a control flow changing statement that always
+           // branches to the same node. If after removing it control still
+           // branches to the same node, it is safe to remove.
+-          List<DiGraphEdge<Node, Branch>> outEdges = gNode.getOutEdges();
++          List<DiGraphEdge<Node, Branch>> outEdges = cfg.getOutEdges(n);
+           if (outEdges.size() == 1 &&
+               // If there is a next node, this jump is not useless.
+               (n.getNext() == null || n.getNext().isFunction())) {
+@@ -246,5 +225,4 @@ class UnreachableCodeElimination implements CompilerPass {
+       }
+       NodeUtil.removeChild(n.getParent(), n);
+     }
+-  }
+-}
++  }}

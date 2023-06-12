@@ -1,0 +1,32 @@
+diff --git a/src/com/google/javascript/jscomp/TypeInference.java b/src/com/google/javascript/jscomp/TypeInference.java
+index 53e8cb48..04a963a7 100644
+--- a/src/com/google/javascript/jscomp/TypeInference.java
++++ b/src/com/google/javascript/jscomp/TypeInference.java
+@@ -583,7 +576,26 @@ class TypeInference
+         break;
+     }
+   }
+-
++  /**
++   * @param left A GETPROP/GETELEM.
++   * @param resultType
++   */
++  private void ensurePropertyDefined(Node left, JSType resultType) {
++    Preconditions.checkState(left.isGetProp() || left.isGetElem());
++    Node objectNode = left.getFirstChild();
++    JSType objectType =
++        objectNode.getJSType() == null ? unknownType : objectNode.getJSType();
++    String propertyName =
++        left.isGetProp() ? left.getLastChild().getString() : null;
++    if (objectType instanceof ObjectType &&
++        propertyName != null &&
++        !propertyName.equals("prototype") &&
++        objectType.isPropertyTypeDeclared(propertyName) &&
++        !objectType.isPropertyTypeInferred(propertyName) &&
++        !objectType.hasProperty(propertyName)) {
++      objectType.defineInferredProperty(propertyName, resultType, left);
++    }
++  }
+   /**
+    * Defines a property if the property has not been defined yet.
+    */

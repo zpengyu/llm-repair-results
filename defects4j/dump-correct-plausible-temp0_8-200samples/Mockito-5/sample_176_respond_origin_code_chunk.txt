@@ -1,0 +1,29 @@
+public void verify(VerificationData data) {
+	AssertionError error = null;
+
+	timer.start();
+	while (timer.isCounting()) {
+		try {
+			delegate.verify(data);
+
+			if (returnOnSuccess) {
+				return;
+			} else {
+				error = null;
+			}
+		} catch (MockitoAssertionError e) {
+			if (e.getCause() != null && e.getCause() instanceof AssertionError) {
+				error = (AssertionError) e.getCause();
+			} else {
+				error = handleVerifyException(e);
+			}
+		} catch (org.mockito.exceptions.verification.junit.ArgumentsAreDifferent e) {
+			error = handleVerifyException(e);
+		}
+	}
+
+	if (error != null) {
+		throw error;
+	}
+}
+

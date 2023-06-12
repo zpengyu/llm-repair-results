@@ -1,0 +1,68 @@
+    protected void burstToken(String token, boolean stopAtNonOption)
+    {
+        for (int i = 1; i < token.length(); i++)
+        {
+            String ch = String.valueOf(token.charAt(i));
+            if (options.hasOption(ch))
+            {
+                tokens.add("-" + ch);
+                currentOption = options.getOption(ch);
+                if (currentOption.hasArg() && (token.length() != (i + 1)))
+                {
+                    if (currentOption.isArgumentTakesMultipleValues())
+                    {
+                        String arg = token.substring(i + 1);
+                        if (arg.indexOf(',') == -1)
+                        {
+                            tokens.add(arg);
+                        }
+                        else
+                        {
+                            String[] values = arg.split(",");
+                            for (int j = 0; j < values.length; j++)
+                            {
+                                tokens.add(values[j]);
+                            }
+                        }
+                    }
+                    else
+                    {
+                        tokens.add(token.substring(i + 1));
+                    }
+                    break;
+                }
+                else if (currentOption.hasOptionalArg() && (token.length() != (i + 1)))
+                {
+                    if (currentOption.isArgumentTakesMultipleValues())
+                    {
+                        String arg = token.substring(i + 1);
+                        if (arg.indexOf(',') == -1)
+                        {
+                            tokens.add(arg);
+                        }
+                        else
+                        {
+                            String[] values = arg.split(",");
+                            for (int j = 0; j < values.length; j++)
+                            {
+                                tokens.add(values[j]);
+                            }
+                        }
+                    }
+                    else
+                    {
+                        tokens.add(token.substring(i + 1));
+                    }
+                }
+            }
+            else if (stopAtNonOption)
+            {
+                process(token.substring(i));
+            }
+            else
+            {
+                tokens.add(token);
+                break;
+            }
+        }
+    }

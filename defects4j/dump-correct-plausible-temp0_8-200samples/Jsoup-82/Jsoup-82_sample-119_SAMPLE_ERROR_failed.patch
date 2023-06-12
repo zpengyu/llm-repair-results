@@ -1,0 +1,25 @@
+diff --git a/src/main/java/org/jsoup/helper/DataUtil.java b/src/main/java/org/jsoup/helper/DataUtil.java
+index e4fa18c..cb01bc2 100644
+--- a/src/main/java/org/jsoup/helper/DataUtil.java
++++ b/src/main/java/org/jsoup/helper/DataUtil.java
+@@ -168,7 +162,19 @@ public final class DataUtil {
+             }
+             Charset charset = Charset.forName(charsetName);
+             doc.outputSettings().charset(charset);
+-                // some charsets can read but not encode; switch to an encodable charset and update the meta el
++            // some charsets can read but not encode; switch to an encodable charset and update the meta el
++            if (doc.select("meta[http-equiv=content-type]").size() > 0) {
++                Element meta = doc.select("meta[http-equiv=content-type]").first();
++                String content = meta.attr("content");
++                content = removeCharsetFromContentType(content);
++                meta.attr("content", content + "; charset=" + charset.displayName());
++            } else if (doc.select("meta[charset]").size() > 0) {
++                Element meta = doc.select("meta[charset]").first();
++                meta.attr("charset", charset.displayName());
++            } else if (doc.childNodes().size() > 0 && doc.childNode(0) instanceof XmlDeclaration) {
++                XmlDeclaration xmlDeclaration = (XmlDeclaration) doc.childNode(0);
++                xmlDeclaration.attr("encoding", charset.displayName());
++            }
+         }
+         input.close();
+         return doc;

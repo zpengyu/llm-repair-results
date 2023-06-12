@@ -1,0 +1,30 @@
+      private void getNumUseInUseCfgNode(final Node cfgNode) {
+      numUsesWithinCfgNode = 0;
+      AbstractCfgNodeTraversalCallback gatherCb =
+          new AbstractCfgNodeTraversalCallback() {
+        @Override
+        public void visit(NodeTraversal t, Node n, Node parent) {
+          if (n.isName() && n.getString().equals(varName) &&
+            // We make a special exception when the entire cfgNode is a chain
+            // of assignments, since in that case the assignment statements
+            // will happen after the inlining of the right hand side.
+            // TODO(blickly): Make the SIDE_EFFECT_PREDICATE check more exact
+            //   and remove this special case.
+              !(parent.isAssign() &&
+               (parent.getFirstChild() == n))) {
+              // Don't count lhs of top-level assignment chain
+              numUsesWithinCfgNode++;
+            }
+          if (NodeUtil.isForIn(n)) {
+            // Don't count variable declarations in a for-in. Otherwise,
+            // if (foo.bar) { for (var p in foo); } p = 0; would block
+            // inlining of p because there would be a variable use in the
+            // cfgNode that contains the for loop, which is not really a use.
+            // TODO(user): This is a temporary patch; we should really have
+            // a way of comparing cfgNodes and not re-counting them.
+            return;
+          }
+        }
+      };
+      NodeTraversal.traverse(compiler, cfgNode, gatherCb);
+    }

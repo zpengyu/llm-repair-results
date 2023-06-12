@@ -1,0 +1,23 @@
+private static final Predicate<Node> DO_NOT_DESTROY_CALL_PREDICATE = new Predicate<Node>() {
+  @Override
+  public boolean apply(Node n) {
+    if (!n.isGetProp()) {
+      return true;
+    }
+
+    Node propNode = n.getLastChild();
+    if (propNode.getString().equals("call")) {
+      Node obj = n.getFirstChild();
+      if (obj.isGetProp()) {
+        obj = obj.getFirstChild();
+      }
+
+      if (obj.isThis()) {
+        return false;
+      }
+    }
+
+    return true;
+  }
+};
+

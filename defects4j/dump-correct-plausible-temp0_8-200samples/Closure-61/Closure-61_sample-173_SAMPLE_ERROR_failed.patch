@@ -1,0 +1,26 @@
+diff --git a/src/com/google/javascript/jscomp/NodeUtil.java b/src/com/google/javascript/jscomp/NodeUtil.java
+index 53389622..9b62e96c 100644
+--- a/src/com/google/javascript/jscomp/NodeUtil.java
++++ b/src/com/google/javascript/jscomp/NodeUtil.java
+@@ -953,14 +949,17 @@ public final class NodeUtil {
+           && evaluatesToLocalValue(nameNode.getFirstChild())) {
+         return false;
+       }
+-
+       // Functions in the "Math" namespace have no side effects.
+-
++      Node nameObj = nameNode.getFirstChild();
++      if (nameObj.matchesQualifiedName("Math") ||
++          nameObj.matchesQualifiedName("goog.math")) {
++        return false;
++      }
+       if (compiler != null && !compiler.hasRegExpGlobalReferences()) {
+-        if (nameNode.getFirstChild().getType() == Token.REGEXP
++        if (nameObj.getType() == Token.REGEXP
+             && REGEXP_METHODS.contains(nameNode.getLastChild().getString())) {
+           return false;
+-        } else if (nameNode.getFirstChild().getType() == Token.STRING
++        } else if (nameObj.getType() == Token.STRING
+             && STRING_REGEXP_METHODS.contains(
+                 nameNode.getLastChild().getString())) {
+           Node param = nameNode.getNext();

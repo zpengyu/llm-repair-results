@@ -1,0 +1,104 @@
+###Provide a fix for the buggy function
+###Buggy Function
+class FibonacciExample {
+    public static void main(String args[]) {
+        int n1 = 0, n2 = 1, n3, i, count = 10;
+
+        System.out.print(n1 + " " + n2);
+
+        for (i = 2; i < count; ++i) {
+            n3 = n1 - n2;
+            System.out.print(" " + n3);
+            n1 = n2;
+            n2 = n3;
+        }
+    }
+}
+
+###Fixed Function
+class FibonacciExample {
+    public static void main(String args[]) {
+        int n1 = 0, n2 = 1, n3, i, count = 10;
+
+        System.out.print(n1 + " " + n2);
+
+        for (i = 2; i < count; ++i) {
+            n3 = n1 + n2;
+            System.out.print(" " + n3);
+            n1 = n2;
+            n2 = n3;
+        }
+    }
+}
+
+###Provide a fix for the buggy function
+###Buggy Function
+private static boolean isReduceableFunctionExpression(Node n) {
+  return NodeUtil.isFunctionExpression(n);
+}
+###Fixed Function
+private static boolean isReduceableFunctionExpression(Node n) {
+  return NodeUtil.isFunctionExpression(n)
+      && !NodeUtil.isGetOrSetKey(n.getParent());
+}
+###Provide a fix for the buggy function
+###Buggy Function
+  public void initOptions(CompilerOptions options) {
+    this.options = options;
+    if (errorManager == null) {
+      if (outStream == null) {
+        setErrorManager(
+            new LoggerErrorManager(createMessageFormatter(), logger));
+      } else {
+        PrintStreamErrorManager printer =
+            new PrintStreamErrorManager(createMessageFormatter(), outStream);
+        printer.setSummaryDetailLevel(options.summaryDetailLevel);
+        setErrorManager(printer);
+      }
+    }
+
+    // DiagnosticGroups override the plain checkTypes option.
+    if (options.enables(DiagnosticGroups.CHECK_TYPES)) {
+      options.checkTypes = true;
+    } else if (options.disables(DiagnosticGroups.CHECK_TYPES)) {
+      options.checkTypes = false;
+    } else if (!options.checkTypes) {
+      // If DiagnosticGroups did not override the plain checkTypes
+      // option, and checkTypes is enabled, then turn off the
+      // parser type warnings.
+      options.setWarningLevel(
+          DiagnosticGroup.forType(
+              RhinoErrorReporter.TYPE_PARSE_ERROR),
+          CheckLevel.OFF);
+    }
+
+    if (options.checkGlobalThisLevel.isOn()) {
+      options.setWarningLevel(
+          DiagnosticGroups.GLOBAL_THIS,
+          options.checkGlobalThisLevel);
+    }
+
+    // Initialize the warnings guard.
+    List<WarningsGuard> guards = Lists.newArrayList();
+    guards.add(
+        new SuppressDocWarningsGuard(
+            getDiagnosticGroups().getRegisteredGroups()));
+    guards.add(options.getWarningsGuard());
+
+
+    // All passes must run the variable check. This synthesizes
+    // variables later so that the compiler doesn't crash. It also
+    // checks the externs file for validity. If you don't want to warn
+    // about missing variable declarations, we shut that specific
+    // error off.
+    if (!options.checkSymbols &&
+        (warningsGuard == null || !warningsGuard.disables(
+            DiagnosticGroups.CHECK_VARIABLES))) {
+      guards.add(new DiagnosticGroupWarningsGuard(
+          DiagnosticGroups.CHECK_VARIABLES, CheckLevel.OFF));
+    }
+
+    this.warningsGuard = new ComposeWarningsGuard(guards);
+  }
+
+###Fixed Function

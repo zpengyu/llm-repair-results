@@ -1,0 +1,57 @@
+diff --git a/src/java/org/apache/commons/jxpath/ri/model/beans/NullPropertyPointer.java b/src/java/org/apache/commons/jxpath/ri/model/beans/NullPropertyPointer.java
+index 2d1a815..3707c55 100644
+--- a/src/java/org/apache/commons/jxpath/ri/model/beans/NullPropertyPointer.java
++++ b/src/java/org/apache/commons/jxpath/ri/model/beans/NullPropertyPointer.java
+@@ -39,26 +36,45 @@ public class NullPropertyPointer extends PropertyPointer {
+     public QName getName() {
+         return new QName(propertyName);
+     }
+-
+     public void setPropertyIndex(int index) {
+     }
+-
+     public int getLength() {
++        if (parent != null && parent.isContainer()) {
++            return 1;
++        }
+         return 0;
+     }
+-
+     public Object getBaseValue() {
++        if (parent != null && parent.isContainer()) {
++            Object result;
++            if (parent instanceof PropertyOwnerPointer &&
++                    ((PropertyOwnerPointer) parent).
++                        isDynamicPropertyDeclarationSupported()) {
++                result =
++                    ((PropertyOwnerPointer) parent).getPropertyPointer().
++                        getBaseValue();
++            }
++            else {
++                try {
++                    result = parent.getBaseValue();
++                }
++                catch (JXPathException ex) {
++                    result = null;
++                }
++            }
++            return result;
++        }
+         return null;
+     }
+-
+     public Object getImmediateNode() {
++        if (parent != null && parent.isContainer()) {
++            return this;
++        }
+         return null;
+     }
+-
+     public boolean isLeaf() {
+-        return true;
++        return false;
+     }    
+-
+     public NodePointer getValuePointer() {
+         return new NullPointer(this,  new QName(getPropertyName()));
+     }

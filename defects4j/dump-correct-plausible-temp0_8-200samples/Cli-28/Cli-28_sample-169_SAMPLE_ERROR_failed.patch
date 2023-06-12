@@ -1,0 +1,81 @@
+diff --git a/src/java/org/apache/commons/cli/Parser.java b/src/java/org/apache/commons/cli/Parser.java
+index 7bef0c6..6509dc6 100644
+--- a/src/java/org/apache/commons/cli/Parser.java
++++ b/src/java/org/apache/commons/cli/Parser.java
+@@ -249,52 +249,35 @@ public abstract class Parser implements CommandLineParser
+      *
+      * @param properties The value properties to be processed.
+      */
+-    protected void processProperties(Properties properties)
+-    {
+-        if (properties == null)
+-        {
+-            return;
+-        }
+-
+-        for (Enumeration e = properties.propertyNames(); e.hasMoreElements();)
+-        {
+-            String option = e.nextElement().toString();
+-
+-            if (!cmd.hasOption(option))
+-            {
+-                Option opt = getOptions().getOption(option);
+-
+-                // get the value from the properties instance
+-                String value = properties.getProperty(option);
+-
+-                if (opt.hasArg())
+-                {
+-                    if (opt.getValues() == null || opt.getValues().length == 0)
+-                    {
+-                        try
+-                        {
+-                            opt.addValueForProcessing(value);
+-                        }
+-                        catch (RuntimeException exp)
+-                        {
+-                            // if we cannot add the value don't worry about it
+-                        }
++protected void processProperties(Properties properties) {
++    if (properties == null) {
++        return;
++    }
++    Iterator iter = properties.entrySet().iterator();
++    while (iter.hasNext()) {
++        Map.Entry entry = (Map.Entry) iter.next();
++        String option = entry.getKey().toString();
++        if (!cmd.hasOption(option)) {
++            Option opt = getOptions().getOption(option);
++            // get the value from the properties instance
++            String value = entry.getValue().toString();
++            if (opt.hasArg()) {
++                if (opt.getValues() == null || opt.getValues().length == 0) {
++                    try {
++                        opt.addValueForProcessing(value);
++                    } catch (RuntimeException exp) {
++                        // if we cannot add the value don't worry about it
+                     }
+                 }
+-                else if (!("yes".equalsIgnoreCase(value)
+-                        || "true".equalsIgnoreCase(value)
+-                        || "1".equalsIgnoreCase(value)))
+-                {
+-                    // if the value is not yes, true or 1 then don't add the
+-                    // option to the CommandLine
+-                    break;
+-                }
+-
+-                cmd.addOption(opt);
++            } else if (!("yes".equalsIgnoreCase(value) || "true".equalsIgnoreCase(value) || "1".equalsIgnoreCase(value))) {
++                // if the value is not yes, true or 1 then don't add the
++                // option to the CommandLine
++                break;
+             }
++            cmd.addOption(opt);
+         }
+     }
+-
++}
+     /**
+      * Throws a {@link MissingOptionException} if all of the required options
+      * are not present.

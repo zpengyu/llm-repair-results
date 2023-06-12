@@ -1,0 +1,66 @@
+diff --git a/src/com/google/javascript/jscomp/TypedScopeCreator.java b/src/com/google/javascript/jscomp/TypedScopeCreator.java
+index 5e7bfa3f..786bd4aa 100644
+--- a/src/com/google/javascript/jscomp/TypedScopeCreator.java
++++ b/src/com/google/javascript/jscomp/TypedScopeCreator.java
+@@ -2004,39 +2002,32 @@ final class TypedScopeCreator implements ScopeCreator {
+         // no reason to do this extra computation for them.
+         return;
+       }
+-
+-      if (n.isName() && NodeUtil.isLValue(n) &&
+-          // Be careful of bleeding functions, which create variables
+-          // in the inner scope, not the scope where the name appears.
+-          !NodeUtil.isBleedingFunctionName(n)) {
+-        String name = n.getString();
+-        Scope scope = t.getScope();
+-        Var var = scope.getVar(name);
+-        if (var != null) {
+-          Scope ownerScope = var.getScope();
+-          if (ownerScope.isLocal()) {
+-            data.get(ownerScope.getRootNode()).recordAssignedName(name);
+-          }
+-
+-          if (scope != ownerScope && ownerScope.isLocal()) {
+-            data.get(ownerScope.getRootNode()).recordEscapedVarName(name);
++      if (NodeUtil.isAssignmentOp(n)) {
++        Node left = n.getFirstChild();
++        if (left.isName()) {
++          String name = left.getString();
++          Scope scope = t.getScope();
++          Var var = scope.getVar(name);
++          if (var != null) {
++            Scope ownerScope = var.getScope();
++            if (scope != ownerScope && ownerScope.isLocal()) {
++              data.get(ownerScope.getRootNode()).recordEscapedVarName(name);
++            }
+           }
+-        }
+-      } else if (n.isGetProp() && n.isUnscopedQualifiedName() &&
+-          NodeUtil.isLValue(n)) {
+-        String name = NodeUtil.getRootOfQualifiedName(n).getString();
+-        Scope scope = t.getScope();
+-        Var var = scope.getVar(name);
+-        if (var != null) {
+-          Scope ownerScope = var.getScope();
+-          if (scope != ownerScope && ownerScope.isLocal()) {
+-            data.get(ownerScope.getRootNode())
+-                .recordEscapedQualifiedName(n.getQualifiedName());
++        } else if (left.isGetProp() && left.isUnscopedQualifiedName()) {
++          String name = NodeUtil.getRootOfQualifiedName(left).getString();
++          Scope scope = t.getScope();
++          Var var = scope.getVar(name);
++          if (var != null) {
++            Scope ownerScope = var.getScope();
++            if (scope != ownerScope && ownerScope.isLocal()) {
++              data.get(ownerScope.getRootNode())
++                  .recordEscapedQualifiedName(left.getQualifiedName());
++            }
+           }
+         }
+       }
+-    }
+-  }
++    }  }
+ 
+   private AstFunctionContents getFunctionAnalysisResults(@Nullable Node n) {
+     if (n == null) {

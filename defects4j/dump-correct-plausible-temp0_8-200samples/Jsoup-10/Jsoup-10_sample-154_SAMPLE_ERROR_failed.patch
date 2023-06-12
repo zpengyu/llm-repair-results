@@ -1,0 +1,21 @@
+diff --git a/src/main/java/org/jsoup/nodes/Node.java b/src/main/java/org/jsoup/nodes/Node.java
+index 0d0f9d4..3dfbef4 100644
+--- a/src/main/java/org/jsoup/nodes/Node.java
++++ b/src/main/java/org/jsoup/nodes/Node.java
+@@ -173,7 +172,15 @@ public abstract class Node implements Cloneable {
+                 URL abs = new URL(base, relUrl);
+                 return abs.toExternalForm();
+             } catch (MalformedURLException e) {
+-                return "";
++                try {
++                    base = new URL(baseUri);
++                } catch (MalformedURLException e1) {
++                    // the base is unsuitable, but the attribute may be abs on its own, so try that
++                    URL abs = new URL(relUrl);
++                    return abs.toExternalForm();
++                }
++                URL abs = new URL(base, relUrl);
++                return abs.toExternalForm();
+             }
+         }
+     }

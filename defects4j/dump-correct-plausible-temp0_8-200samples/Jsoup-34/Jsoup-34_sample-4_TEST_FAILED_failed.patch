@@ -1,0 +1,20 @@
+diff --git a/src/main/java/org/jsoup/parser/CharacterReader.java b/src/main/java/org/jsoup/parser/CharacterReader.java
+index bcda218..8a51c94 100644
+--- a/src/main/java/org/jsoup/parser/CharacterReader.java
++++ b/src/main/java/org/jsoup/parser/CharacterReader.java
+@@ -89,7 +89,14 @@ class CharacterReader {
+             int i = offset + 1;
+             int last = i + seq.length()-1;
+             if (offset < length) {
+-                for (int j = 1; i < last && seq.charAt(j) == input[i]; i++, j++);
++                for (int j = 1; i < last && seq.charAt(j) == input[i]; i++, j++) {
++                    if (Character.isHighSurrogate(input[i-1]) && Character.isLowSurrogate(input[i])) {
++                        if (!Character.isSurrogatePair(input[i-1], input[i])) {
++                            throw new IllegalArgumentException("Surrogate pair expected at index " + i + " of " + length);
++                        }
++                        i++;
++                    }
++                }
+                 if (i == last) // found full sequence
+                     return offset - pos;
+             }

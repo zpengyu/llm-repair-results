@@ -1,0 +1,32 @@
+diff --git a/src/com/google/javascript/jscomp/DeadAssignmentsElimination.java b/src/com/google/javascript/jscomp/DeadAssignmentsElimination.java
+index 19b8b6bd..26f006ea 100644
+--- a/src/com/google/javascript/jscomp/DeadAssignmentsElimination.java
++++ b/src/com/google/javascript/jscomp/DeadAssignmentsElimination.java
+@@ -336,6 +335,9 @@ class DeadAssignmentsElimination extends AbstractPostOrderCallback implements
+     // Expressions are evaluated left-right, depth first.
+     for (Node child = n.getFirstChild();
+         child != null; child = child.getNext()) {
++      if (isIrrelevantCode(child)) {
++        continue;
++      }
+       if (!ControlFlowGraph.isEnteringNewCfgNode(child)) { // Not a FUNCTION
+         VariableLiveness state = isVariableReadBeforeKill(child, variable);
+         if (state != VariableLiveness.MAYBE_LIVE) {
+@@ -345,4 +347,16 @@ class DeadAssignmentsElimination extends AbstractPostOrderCallback implements
+     }
+     return VariableLiveness.MAYBE_LIVE;
+   }
+-}
++private static boolean isIrrelevantCode(Node n) {
++  switch (n.getType()) {
++    case Token.CASE:
++    case Token.DEFAULT_CASE:
++    case Token.FUNCTION:
++    case Token.BLOCK:
++    case Token.SCRIPT:
++    case Token.CATCH:
++      return true;
++    default:
++      return false;
++  }
++}}

@@ -1,0 +1,24 @@
+  public Date read(JsonReader in) throws IOException {
+    if (in.peek() != JsonToken.STRING) {
+      throw new JsonParseException("The date should be a string value");
+    }
+    String date = in.nextString();
+    try {
+      return deserializeToDate(date);
+    } catch (ParseException e) {
+      throw new JsonSyntaxException(date, e);
+    }
+  }
+  private synchronized Date deserializeToDate(String date) throws ParseException {
+    try {
+      return format.parse(date);
+    } catch (ParseException ignored) {
+    }
+    for (DateFormat format : enUsFormats) {
+      try {
+        return format.parse(date);
+      } catch (ParseException ignored) {
+      }
+    }
+    throw new ParseException("Unable to parse date: " + date, 0);
+  }

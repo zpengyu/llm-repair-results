@@ -1,0 +1,57 @@
+diff --git a/src/java/org/apache/commons/jxpath/ri/compiler/CoreOperationRelationalExpression.java b/src/java/org/apache/commons/jxpath/ri/compiler/CoreOperationRelationalExpression.java
+index cd4ceac..6215dd8 100644
+--- a/src/java/org/apache/commons/jxpath/ri/compiler/CoreOperationRelationalExpression.java
++++ b/src/java/org/apache/commons/jxpath/ri/compiler/CoreOperationRelationalExpression.java
+@@ -32,8 +32,26 @@ import org.apache.commons.jxpath.ri.axes.SelfContext;
+  * @author Matt Benson
+  * @version $Revision$ $Date$
+  */
++package com.xqbase.xpath.expr;
++import java.util.Collection;
++import java.util.HashSet;
++import java.util.Iterator;
++import com.xqbase.xpath.Context;
++import com.xqbase.xpath.ContextEnumerator;
++import com.xqbase.xpath.EvalContext;
++import com.xqbase.xpath.InitialContext;
++import com.xqbase.xpath.IteratorContext;
++import com.xqbase.xpath.NodeSet;
++import com.xqbase.xpath.SelfContext;
++import com.xqbase.xpath.util.InfoSetUtil;
++import com.xqbase.xpath.util.ValueUtils;
++/**
++ * Abstract base class for all relational operations.
++ *
++ * @author Tony Johnson (tonyj@slac.stanford.edu)
++ * @version $Revision: 1.11 $
++ */
+ public abstract class CoreOperationRelationalExpression extends CoreOperation {
+-
+     /**
+      * Create a new CoreOperationRelationalExpression.
+      * @param args arguments
+@@ -107,6 +118,9 @@ public abstract class CoreOperationRelationalExpression extends CoreOperation {
+         if (o instanceof SelfContext) {
+             o = ((EvalContext) o).getSingleNodePointer();
+         }
++        if (o instanceof NodeSet) {
++            o = ((NodeSet) o).iterator();
++        }
+         if (o instanceof Collection) {
+             o = ((Collection) o).iterator();
+         }
+@@ -128,14 +141,6 @@ public abstract class CoreOperationRelationalExpression extends CoreOperation {
+         }
+         return false;
+     }
+-
+-    /**
+-     * Learn whether any element returned from an Iterator matches a given value.
+-     * @param it Iterator
+-     * @param value to look for
+-     * @return whether a match was found
+-     */
+-
+     /**
+      * Learn whether there is an intersection between two Iterators.
+      * @param lit left Iterator

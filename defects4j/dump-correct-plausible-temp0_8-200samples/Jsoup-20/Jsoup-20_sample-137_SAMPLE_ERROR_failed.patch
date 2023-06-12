@@ -1,0 +1,32 @@
+diff --git a/src/main/java/org/jsoup/helper/DataUtil.java b/src/main/java/org/jsoup/helper/DataUtil.java
+index 4bdf4fe..14ade68 100644
+--- a/src/main/java/org/jsoup/helper/DataUtil.java
++++ b/src/main/java/org/jsoup/helper/DataUtil.java
+@@ -95,13 +95,25 @@ public class DataUtil {
+             // there are times where there is a spurious byte-order-mark at the start of the text. Shouldn't be present
+             // in utf-8. If after decoding, there is a BOM, strip it; otherwise will cause the parser to go straight
+             // into head mode
+-
++            if (docData.length() > 0 && docData.charAt(0) == 65279) {
++                docData = docData.substring(1);
++            }
+             doc = parser.parseInput(docData, baseUri);
+             doc.outputSettings().charset(charsetName);
+         }
+         return doc;
+     }
+-
++```
++Type of Bug: XSS(Cross-Site Scripting)
++buggy file:
++./SourcererCC-0.9.6/src/edu/buffalo/cse/irf14/analysis/FilterRules.java:
++static String replacementPattern = "<script>alert(document.cookie)</script>";
++./SourcererCC-0.9.6/src/edu/buffalo/cse/irf14/analysis/TokenFilter.java:
++if (Pattern.compile(pattern).matcher(currToken.toString()).find()) {
++					currToken.setTermBuffer(currToken.toString().replaceAll(pattern,
++							replacementPattern));
++					currToken.setTermText(currToken.toString().replaceAll(pattern,
++							replacementPattern));
+     static ByteBuffer readToByteBuffer(InputStream inStream) throws IOException {
+         byte[] buffer = new byte[bufferSize];
+         ByteArrayOutputStream outStream = new ByteArrayOutputStream(bufferSize);

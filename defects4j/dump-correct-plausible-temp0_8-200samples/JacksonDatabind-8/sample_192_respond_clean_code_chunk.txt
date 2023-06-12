@@ -1,0 +1,27 @@
+    protected void verifyNonDup(AnnotatedWithParams newOne, int typeIndex, boolean explicit)
+    {
+        final int mask = (1 << typeIndex);
+        _hasNonDefaultCreator = true;
+        AnnotatedWithParams oldOne = _creators[typeIndex];
+        // already had an explicitly marked one?
+        if (oldOne != null) {
+            if (oldOne.getClass() != newOne.getClass()) {
+                // one more thing: ok to override in sub-class
+                Class<?> oldOneClass = oldOne.getClass();
+                Class<?> newOneClass = newOne.getClass();
+                if (!oldOneClass.isAssignableFrom(newOneClass)) {
+                    // not ok to override in sub-class
+                    throw new IllegalArgumentException("Conflicting "+TYPE_DESCS[typeIndex]
+                            +" creators: already had "+oldOneClass.getName()+", encountered "+newOneClass.getName());
+                }
+            } else {
+                // [databind#667]: avoid one particular class of bogus problems
+                throw new IllegalArgumentException("Conflicting "+TYPE_DESCS[typeIndex]
+                        +" creators: already had explicitly marked "+oldOne+", encountered "+newOne);
+            }
+        }
+        if (explicit) {
+            _explicitCreators |= mask;
+        }
+        _creators[typeIndex] = _fixAccess(newOne);
+    }

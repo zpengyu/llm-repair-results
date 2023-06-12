@@ -1,0 +1,42 @@
+diff --git a/src/com/google/javascript/jscomp/CodeGenerator.java b/src/com/google/javascript/jscomp/CodeGenerator.java
+index a9d0a5b0..ec4b93f9 100644
+--- a/src/com/google/javascript/jscomp/CodeGenerator.java
++++ b/src/com/google/javascript/jscomp/CodeGenerator.java
+@@ -981,16 +981,14 @@ class CodeGenerator {
+         case '<':
+           // Break </script into <\/script
+           final String END_SCRIPT = "/script";
+-
+           // Break <!-- into <\!--
+           final String START_COMMENT = "!--";
+-
+           if (s.regionMatches(true, i + 1, END_SCRIPT, 0,
+                               END_SCRIPT.length())) {
+-            sb.append("<\\");
++            sb.append("\\/");
+           } else if (s.regionMatches(false, i + 1, START_COMMENT, 0,
+                                      START_COMMENT.length())) {
+-            sb.append("<\\");
++            sb.append("\\/");
+           } else {
+             sb.append(c);
+           }
+@@ -1023,7 +1021,17 @@ class CodeGenerator {
+     sb.append(quote);
+     return sb.toString();
+   }
+-
++  private static void appendHexJavaScriptRepresentation(
++      StringBuilder sb, char c) {
++    // Per ECMA-262, section 7.7, surround character with
++    // <\u....> to prevent it from being treated as a hex
++    // escape for the subsequent character.
++    sb.append("\\u");
++    sb.append(HEX_CHARS[(c & 0xf000) >> 12]);
++    sb.append(HEX_CHARS[(c & 0x0f00) >> 8]);
++    sb.append(HEX_CHARS[(c & 0x00f0) >> 4]);
++    sb.append(HEX_CHARS[c & 0x000f]);
++  }
+   static String identifierEscape(String s) {
+     // First check if escaping is needed at all -- in most cases it isn't.
+     if (NodeUtil.isLatin(s)) {

@@ -1,0 +1,21 @@
+        public final Object deserializeKey(String key, DeserializationContext ctxt)
+            throws IOException
+        {
+            if (key == null) { // is this even legal call?
+                return null;
+            }
+            // Ugh... should not have to give parser which may or may not be correct one...
+            if (_valueInstantiator != null && _valueInstantiator.canCreateFromString()) {
+                // [databind#1090]: can call factory method directly
+                return _valueInstantiator.createFromString(ctxt, key);
+            }
+            try {
+                Object result = _delegate.deserialize(ctxt.getParser(), ctxt);
+                if (result != null) {
+                    return result;
+                }
+                return ctxt.handleWeirdKey(_keyClass, key, "not a valid representation");
+            } catch (Exception re) {
+                return ctxt.handleWeirdKey(_keyClass, key, "not a valid representation: %s", re.getMessage());
+            }
+        }

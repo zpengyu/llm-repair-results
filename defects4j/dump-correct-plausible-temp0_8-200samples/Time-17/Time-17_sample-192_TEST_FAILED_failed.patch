@@ -1,0 +1,53 @@
+diff --git a/src/main/java/org/joda/time/DateTimeZone.java b/src/main/java/org/joda/time/DateTimeZone.java
+index 5c7a348c..80365a9f 100644
+--- a/src/main/java/org/joda/time/DateTimeZone.java
++++ b/src/main/java/org/joda/time/DateTimeZone.java
+@@ -1169,16 +1168,40 @@ public abstract class DateTimeZone implements Serializable {
+         if (instantBefore == instantAfter) {
+             return instant;  // not an overlap (less than is a gap, equal is normal case)
+         }
+-
+         // work out range of instants that have duplicate local times
+         long local = convertUTCToLocal(instant);
+-        return convertLocalToUTC(local, false, earlierOrLater ? instantAfter : instantBefore);
+-
+-        // calculate result
+-          // currently in later offset
+-          // currently in earlier offset
+-    }
+-//    System.out.println(new DateTime(transitionStart, DateTimeZone.UTC) + " " + new DateTime(transitionStart, this));
++        if (instantBefore < instantAfter) {
++            // earlier offset comes first
++            if (earlierOrLater) {
++                instant = local - 1;
++                while (convertUTCToLocal(instant) == local) {
++                    instant--;
++                }
++                return instant + 1;
++            } else {
++                instant = local + 1;
++                while (convertUTCToLocal(instant) == local) {
++                    instant++;
++                }
++                return instant - 1;
++            }
++        } else {
++            // later offset comes first
++            if (earlierOrLater) {
++                instant = local + 1;
++                while (convertUTCToLocal(instant) == local) {
++                    instant++;
++                }
++                return instant - 1;
++            } else {
++                instant = local - 1;
++                while (convertUTCToLocal(instant) == local) {
++                    instant--;
++                }
++                return instant + 1;
++            }
++        }
++    }//    System.out.println(new DateTime(transitionStart, DateTimeZone.UTC) + " " + new DateTime(transitionStart, this));
+ 
+     //-----------------------------------------------------------------------
+     /**

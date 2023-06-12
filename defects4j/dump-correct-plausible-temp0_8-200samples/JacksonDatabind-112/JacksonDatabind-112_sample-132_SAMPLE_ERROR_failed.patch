@@ -1,0 +1,48 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/deser/std/StringCollectionDeserializer.java b/src/main/java/com/fasterxml/jackson/databind/deser/std/StringCollectionDeserializer.java
+index 42c6f0491..0a3d517bc 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/deser/std/StringCollectionDeserializer.java
++++ b/src/main/java/com/fasterxml/jackson/databind/deser/std/StringCollectionDeserializer.java
+@@ -107,6 +107,13 @@ public final class StringCollectionDeserializer
+             AnnotatedWithParams delegateCreator = _valueInstantiator.getDelegateCreator();
+             if (delegateCreator != null) {
+                 JavaType delegateType = _valueInstantiator.getDelegateType(ctxt.getConfig());
++                if (delegateType == null) {
++                    throw new IllegalArgumentException("Invalid delegate-creator definition for "
++                            + _containerType
++                            + ": value instantiator ("
++                            + _valueInstantiator.getClass().getName()
++                            + ") returned true for 'canCreateUsingDelegate()', but null for 'getDelegateType()'");
++                }
+                 delegate = findDeserializer(ctxt, delegateType, property);
+             }
+         }
+@@ -130,9 +137,27 @@ public final class StringCollectionDeserializer
+         if (isDefaultDeserializer(valueDeser)) {
+             valueDeser = null;
+         }
+-        return withResolved(delegate, valueDeser, nuller, unwrapSingle);
++        JsonDeserializer<?> deser = withResolved(delegate, valueDeser, nuller, unwrapSingle);
++        // and finally, if directly assigned, may need to clean up assigned deserializer(s)
++        if (_valueInstantiator != null && _valueInstantiator.canCreateUsingDelegate()) {
++            JavaType delegateType = _valueInstantiator.getDelegateType(ctxt.getConfig());
++            if (delegateType == null) {
++                throw new IllegalArgumentException("Invalid delegate-creator definition for "
++                        + _containerType
++                        + ": value instantiator ("
++                        + _valueInstantiator.getClass().getName()
++                        + ") returned true for 'canCreateUsingDelegate()', but null for 'getDelegateType()'");
++            }
++            // may need to clean up after this, too
++            if (_delegateDeserializer != null) {
++                JsonDeserializer<?> dd = ctxt.handleSecondaryContextualization(_delegateDeserializer, property, delegateType);
++                if (dd != _delegateDeserializer) {
++                    deser = ((CollectionDeserializer) deser).withDelegate(dd, delegateType);
++                }
++            }
++        }
++        return deser;
+     }    
+-    
+     /*
+     /**********************************************************
+     /* ContainerDeserializerBase API

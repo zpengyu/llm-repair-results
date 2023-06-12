@@ -1,0 +1,26 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/jsontype/impl/SubTypeValidator.java b/src/main/java/com/fasterxml/jackson/databind/jsontype/impl/SubTypeValidator.java
+index fe9cba8d4..292276fa8 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/jsontype/impl/SubTypeValidator.java
++++ b/src/main/java/com/fasterxml/jackson/databind/jsontype/impl/SubTypeValidator.java
+@@ -76,7 +75,10 @@ public class SubTypeValidator
+             if (_cfgIllegalClassNames.contains(full)) {
+                 break;
+             }
+-
++            // [databind#1855]: Allow if `isEnabled`
++            if (!ctxt.isEnabled(DeserializationFeature.FAIL_ON_INVALID_SUBTYPE)) {
++                return;
++            }
+             // 18-Dec-2017, tatu: As per [databind#1855], need bit more sophisticated handling
+             //    for some Spring framework types
+             // 05-Jan-2017, tatu: ... also, only applies to classes, not interfaces
+@@ -93,8 +95,6 @@ public class SubTypeValidator
+             }
+             return;
+         } while (false);
+-
+         throw JsonMappingException.from(ctxt,
+                 String.format("Illegal type (%s) to deserialize: prevented for security reasons", full));
+-    }
+-}
++    }}

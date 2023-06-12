@@ -1,0 +1,18 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/type/TypeFactory.java b/src/main/java/com/fasterxml/jackson/databind/type/TypeFactory.java
+index 87b165830..adb1bfe79 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/type/TypeFactory.java
++++ b/src/main/java/com/fasterxml/jackson/databind/type/TypeFactory.java
+@@ -904,7 +904,12 @@ public final class TypeFactory
+                 return actualType;
+             }
+         }
+-
++        /* 22-Mar-2015, tatu: as per [databind#609], need to allow type-variables
++         *    (for which we have no binding) to be dropped through.
++         */
++        if (_cfgAcceptsUnresolvedTypeVariables) {
++            return _unknownType();
++        }
+         /* 29-Jan-2010, tatu: We used to throw exception here, if type was
+          *   bound: but the problem is that this can occur for generic "base"
+          *   method, overridden by sub-class. If so, we will want to ignore

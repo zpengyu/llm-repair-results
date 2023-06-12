@@ -1,0 +1,27 @@
+diff --git a/src/com/google/javascript/jscomp/LiveVariablesAnalysis.java b/src/com/google/javascript/jscomp/LiveVariablesAnalysis.java
+index 94e813d8..d305ab94 100644
+--- a/src/com/google/javascript/jscomp/LiveVariablesAnalysis.java
++++ b/src/com/google/javascript/jscomp/LiveVariablesAnalysis.java
+@@ -175,9 +175,6 @@ class LiveVariablesAnalysis extends
+    * @param conditional {@code true} if any assignments encountered are
+    *        conditionally executed. These assignments might not kill a variable.
+    */
+-  private void computeGenKill(Node n, BitSet gen, BitSet kill,
+-      boolean conditional) {
+-
+     switch (n.getType()) {
+       case Token.SCRIPT:
+       case Token.BLOCK:
+@@ -203,8 +198,12 @@ class LiveVariablesAnalysis extends
+             // for(var x in y) {...}
+             lhs = lhs.getLastChild();
+           }
++          if (NodeUtil.isName(lhs) &&
++              scope.isDeclared(lhs.getString(), true)) {
++            // Treat declarations in for-in as if they had conditional scope.
+             addToSetIfLocal(lhs, kill);
+             addToSetIfLocal(lhs, gen);
++          }
+           computeGenKill(rhs, gen, kill, conditional);
+         }
+         return;

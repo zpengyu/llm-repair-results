@@ -1,0 +1,18 @@
+    private boolean _hasCustomHandlers(JavaType t) {
+        // 15-Apr-2018, tatu: As per [dataformat-smile#191], need to handle as per
+        //    JSON (if it's not container type, assume value has handler if declared)
+        if (!t.isContainerType()) {
+            if (t.getValueHandler() != null) {
+                return true;
+            }
+        } else if (t.isMapLikeType()) { // but not array/Collection
+            JavaType kt = t.getKeyType();
+            // 15-Apr-2018, tatu: For [dataformat-smile#191] need to allow value handler
+            //   (whether or not there is key type handler)
+            if (kt != null && kt.getValueHandler() != null) {
+                return true;
+            }
+        }
+        return false;
+    }
+

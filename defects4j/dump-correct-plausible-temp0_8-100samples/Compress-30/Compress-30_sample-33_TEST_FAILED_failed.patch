@@ -1,0 +1,43 @@
+diff --git a/src/main/java/org/apache/commons/compress/compressors/bzip2/BZip2CompressorInputStream.java b/src/main/java/org/apache/commons/compress/compressors/bzip2/BZip2CompressorInputStream.java
+index d0c0d43c..40e52b4a 100644
+--- a/src/main/java/org/apache/commons/compress/compressors/bzip2/BZip2CompressorInputStream.java
++++ b/src/main/java/org/apache/commons/compress/compressors/bzip2/BZip2CompressorInputStream.java
+@@ -150,7 +150,7 @@ public class BZip2CompressorInputStream extends CompressorInputStream implements
+      * @see java.io.InputStream#read(byte[], int, int)
+      */
+     @Override
+-    public int read(final byte[] dest, final int offs, final int len)
++    public int read(final byte[] dest, int offs, int len)
+         throws IOException {
+         if (offs < 0) {
+             throw new IndexOutOfBoundsException("offs(" + offs + ") < 0.");
+@@ -165,19 +165,18 @@ public class BZip2CompressorInputStream extends CompressorInputStream implements
+         if (this.in == null) {
+             throw new IOException("stream closed");
+         }
+-
+-        final int hi = offs + len;
+-        int destOffs = offs;
+-        int b;
+-        while (destOffs < hi && ((b = read0()) >= 0)) {
+-            dest[destOffs++] = (byte) b;
+-            count(1);
++        int hi = offs + len;
++        while (offs < hi) {
++            int b = read0();
++            if (b >= 0) {
++                dest[offs++] = (byte) b;
++                count(1);
++            } else {
++                return (offs == offs) ? -1 : (offs - offs);
++            }
+         }
+-
+-        int c = (destOffs == offs) ? -1 : (destOffs - offs);
+-        return c;
++        return len;
+     }
+-
+     private void makeMaps() {
+         final boolean[] inUse = this.data.inUse;
+         final byte[] seqToUnseq = this.data.seqToUnseq;

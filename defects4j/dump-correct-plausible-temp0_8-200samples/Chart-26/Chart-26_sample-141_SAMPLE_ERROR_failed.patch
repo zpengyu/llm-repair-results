@@ -1,0 +1,38 @@
+diff --git a/source/org/jfree/chart/axis/Axis.java b/source/org/jfree/chart/axis/Axis.java
+index 78a6c66..d391828 100644
+--- a/source/org/jfree/chart/axis/Axis.java
++++ b/source/org/jfree/chart/axis/Axis.java
+@@ -1175,7 +1170,7 @@ public abstract class Axis implements Cloneable, Serializable {
+             float w = (float) labelBounds.getWidth();
+             float h = (float) labelBounds.getHeight();
+             float labelx = (float) (state.getCursor() 
+-                            + insets.getLeft() + w / 2.0);
++                    + insets.getLeft() + w / 2.0);
+             float labely = (float) (dataArea.getY() + dataArea.getHeight() 
+                     / 2.0);
+             TextUtilities.drawRotatedString(label, g2, labelx, labely, 
+@@ -1185,14 +1180,22 @@ public abstract class Axis implements Cloneable, Serializable {
+                     labely - h / 2.0f, w, h);
+             state.cursorRight(insets.getLeft() + labelBounds.getWidth() 
+                     + insets.getRight());
+-
+         }
+         if (plotState != null && hotspot != null) {
++            // a vertical axis used to overlay a horizontal axis
++            if (this.verticalTickLabels) {
++                if (edge == RectangleEdge.TOP) {
++                    edge = RectangleEdge.RIGHT;
++                }
++                else if (edge == RectangleEdge.BOTTOM) {
++                    edge = RectangleEdge.LEFT;
++                }
++            }
+             ChartRenderingInfo owner = plotState.getOwner();
+                 EntityCollection entities = owner.getEntityCollection();
+                 if (entities != null) {
+                     entities.add(new AxisLabelEntity(this, hotspot, 
+-                            this.labelToolTip, this.labelURL));
++                            this.labelToolTip, this.labelURL, edge));
+                 }
+         }
+         return state;

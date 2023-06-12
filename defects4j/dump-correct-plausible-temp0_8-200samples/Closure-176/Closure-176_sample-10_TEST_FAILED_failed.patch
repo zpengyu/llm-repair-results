@@ -1,0 +1,21 @@
+diff --git a/src/com/google/javascript/jscomp/TypeInference.java b/src/com/google/javascript/jscomp/TypeInference.java
+index 53e8cb48..43c563d5 100644
+--- a/src/com/google/javascript/jscomp/TypeInference.java
++++ b/src/com/google/javascript/jscomp/TypeInference.java
+@@ -563,11 +558,13 @@ class TypeInference
+         }
+         left.setJSType(isVarDeclaration || leftType == null ?
+             resultType : null);
+-
+         if (var != null && var.isTypeInferred()) {
+           JSType oldType = var.getType();
+-          var.setType(oldType == null ?
+-              resultType : oldType.getLeastSupertype(resultType));
++          JSType newType = oldType == null ?
++              resultType : oldType.getLeastSupertype(resultType);
++          var.setType(newType);
++          scope.inferQualifiedSlot(left, varName,
++              oldType, newType);
+         }
+         break;
+       case Token.GETPROP:

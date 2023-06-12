@@ -1,0 +1,30 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/jsontype/impl/TypeDeserializerBase.java b/src/main/java/com/fasterxml/jackson/databind/jsontype/impl/TypeDeserializerBase.java
+index 339362e1e..845d286ec 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/jsontype/impl/TypeDeserializerBase.java
++++ b/src/main/java/com/fasterxml/jackson/databind/jsontype/impl/TypeDeserializerBase.java
+@@ -154,7 +154,14 @@ public abstract class TypeDeserializerBase
+                 if (deser == null) {
+                     // 10-May-2016, tatu: We may get some help...
+                     JavaType actual = _handleUnknownTypeId(ctxt, typeId, _idResolver, _baseType);
+-                    if (actual == null) { // what should this be taken to mean?
++                    if (actual == null) {
++                        // 27-May-2016, tatu: Let's try to reduce noise; use default impl to handle
++                        //    unknown type, if possible, instead of throwing exception
++                        Class<?> defaultImpl = _idResolver.getDefaultImpl();
++                        if (defaultImpl != null) {
++                            return ctxt.findContextualValueDeserializer(ctxt.constructType(defaultImpl),
++                                    _property);
++                        }
+                         // TODO: try to figure out something better
+                         return null;
+                     }
+@@ -181,7 +188,9 @@ public abstract class TypeDeserializerBase
+                     //   generic type with custom type resolvers. If so, should try to retain them.
+                     //  Whether this is sufficient to avoid problems remains to be seen, but for
+                     //  now it should improve things.
++                    if (_baseType.hasRawClass(type.getRawClass())) {
+                         type = ctxt.getTypeFactory().constructSpecializedType(_baseType, type.getRawClass());
++                    }
+                 }
+                 deser = ctxt.findContextualValueDeserializer(type, _property);
+             }

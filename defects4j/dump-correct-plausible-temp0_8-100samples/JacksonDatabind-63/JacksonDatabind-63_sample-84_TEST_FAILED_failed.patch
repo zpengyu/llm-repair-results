@@ -1,0 +1,23 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/JsonMappingException.java b/src/main/java/com/fasterxml/jackson/databind/JsonMappingException.java
+index 693c1132e..37a64e98c 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/JsonMappingException.java
++++ b/src/main/java/com/fasterxml/jackson/databind/JsonMappingException.java
+@@ -128,11 +127,18 @@ public class JsonMappingException
+                     // butt-ugly for arrays.
+                     // 06-Oct-2016, tatu: as per [databind#1403], `getSimpleName()` not so good
+                     //   as it drops enclosing class. So let's try bit different approach
++                    //
++                    // 15-Oct-2016, tatu: [databind#1404] suggests issue is with
++                    //    lambdas and inner classes; this should fix that too
+                     String pkgName = ClassUtil.getPackageName(cls);
+                     if (pkgName != null) {
+                         sb.append(pkgName);
+                         sb.append('.');
+                     }
++                    if (cls.isMemberClass()) {
++                        sb.append(cls.getDeclaringClass().getSimpleName());
++                        sb.append('.');
++                    }
+                     sb.append(cls.getSimpleName());
+                 }
+                 sb.append('[');

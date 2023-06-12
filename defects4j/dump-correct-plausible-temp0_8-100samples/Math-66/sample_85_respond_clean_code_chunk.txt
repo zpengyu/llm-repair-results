@@ -1,0 +1,449 @@
+public class BrentOptimizer extends AbstractUnivariateRealOptimizer {
+    /**
+     * Golden section.
+     */
+    private static final double GOLDEN_SECTION = 0.5 * (3 - Math.sqrt(5));
+    /**
+     * Default relative accuracy.
+     */
+    private static final double DEFAULT_RELATIVE_ACCURACY = 1e-14;
+    /**
+     * Default absolute accuracy.
+     */
+    private static final double DEFAULT_ABSOLUTE_ACCURACY = 1e-10;
+    /**
+     * The default number of iterations.
+     */
+    private static final int DEFAULT_MAXIMAL_ITERATION_COUNT = Integer.MAX_VALUE;
+    /**
+     * Relative accuracy.
+     */
+    private final double relativeAccuracy;
+    /**
+     * Absolute accuracy.
+     */
+    private final double absoluteAccuracy;
+    /**
+     * The maximum number of iterations of the algorithm.
+     */
+    private final int maximalIterationCount;
+    /**
+     * Number of evaluations.
+     */
+    private int evaluations;
+    /**
+     * Lower bound.
+     */
+    private double searchMin;
+    /**
+     * Higher bound.
+     */
+    private double searchMax;
+    /**
+     * Start value.
+     */
+    private double searchStart;
+    /**
+     * Function value at minimum.
+     */
+    private double functionValue;
+    /**
+     * Construct a solver with default accuracy (1e-6) and
+     * max iterations (100).
+     */
+    public BrentOptimizer() {
+        this(DEFAULT_RELATIVE_ACCURACY, DEFAULT_ABSOLUTE_ACCURACY,
+             DEFAULT_MAXIMAL_ITERATION_COUNT);
+    }
+    /**
+     * Construct a solver.
+     *
+     * @param relativeAccuracy Relative accuracy.
+     * @param absoluteAccuracy Absolute accuracy.
+     * @param maximalIterationCount Maximum number of iterations.
+     */
+    public BrentOptimizer(final double relativeAccuracy,
+                          final double absoluteAccuracy,
+                          final int maximalIterationCount) {
+        this.relativeAccuracy = relativeAccuracy;
+        this.absoluteAccuracy = absoluteAccuracy;
+        this.maximalIterationCount = maximalIterationCount;
+    }
+    /** {@inheritDoc} */
+    @Override
+    protected double doOptimize()
+        throws FunctionEvaluationException, OptimizationException {
+        evaluations = 0;
+        searchMin = getMin();
+        searchMax = getMax();
+        searchStart = getStartValue();
+        final double x1 = searchMin;
+        final double x2 = searchStart;
+        final double x3 = searchMax;
+        if (x1 > x3) {
+            throw new NumberIsTooLargeException(x1, x3, false);
+        }
+        if ((x2 > x3) || (x2 < x1)) {
+            throw new OutOfRangeException(x2, x1, x3);
+        }
+        if (x1 == x3) {
+            throw new NumberIsTooSmallException(x3, x1, true);
+        }
+        final double f1 = computeObjectiveValue(x1);
+        final double f2 = computeObjectiveValue(x2);
+        final double f3 = computeObjectiveValue(x3);
+        return optimize(x1, f1, x2, f2, x3, f3);
+    }
+    /**
+     * Optimize an objective function in the given simplex (can be a line, a
+     * triangle or a tetrahedron, depending on the given start simplex).
+     *
+     * @param x1 First point abscissa.
+     * @param f1 First point ordinate.
+     * @param x2 Second point abscissa.
+     * @param f2 Second point ordinate.
+     * @param x3 Third point abscissa.
+     * @param f3 Third point ordinate.
+     * @return the point at the minimum value.
+     * @throws OptimizationException if the maximum iteration count is exceeded.
+     */
+    private double optimize(final double x1, final double f1,
+                            final double x2, final double f2,
+                            final double x3, final double f3)
+        throws OptimizationException {
+        while (true) {
+            if ((evaluations >= maximalIterationCount) ||
+                Precision.equals(x3 - x1, absoluteAccuracy)) {
+                final double fMin = Math.min(f1, Math.min(f2, f3));
+                if (fMin == f1) {
+                    return x1;
+                }
+                if (fMin == f2) {
+                    return x2;
+                }
+                return x3;
+            }
+            // Compute the centroid of the simplex through x1, x2 and x3
+            final double xc = (x1 + x2 + x3) / 3;
+            final double tol = FastMath.max(relativeAccuracy * FastMath.abs(xc), absoluteAccuracy);
+            if (Precision.equals(x2 - x1, tol) || Precision.equals(x3 - x2, tol)) {
+                // The simplex is degenerate (line segment or point).
+                // We deal with this by bisecting the segment, this being
+                // relatively cheap and also giving us a better chance of
+                // reducing function evaluations at the next iteration.
+                final double xMid = 0.5 * (x1 + x3);
+                final double fMid = computeObjectiveValue(xMid);
+                if (fMid <= f1) {
+                    return reflect(x1, f1, xMid, fMid, x2, f2, x3, f3);
+                } else {
+                    return reflect(xMid, fMid, x1, f1, x2, f2, x3, f3);
+                }
+            }
+            final double fc = computeObjectiveValue(xc);
+            if ((fc <= f1) && (fc >= f2) && (fc >= f3)) {
+                // Inverse parabolic interpolation through x1, x2, x3 and xc.
+                final double xStar = interpolate(x1, f1, x2, f2, x3, f3, xc, fc);
+                if (FastMath.abs(xStar - xc) > tol) {
+                    final double fStar = computeObjectiveValue(xStar);
+                    if (fStar <= fc) {
+                        return reflect(x1, f1, x2, f2, xStar, fStar, x3, f3);
+                    } else {
+                        return reflect(xStar, fStar, x1, f1, x2, f2, xc, fc);
+                    }
+                } else {
+                    return reflect(x1, f1, x2, f2, xc, fc, x3, f3);
+                }
+            }
+            if (fc <= f2) {
+                return reflect(x1, f1, x2, f2, xc, fc, x3, f3);
+            }
+            if (fc <= f3) {
+                return reflect(x2, f2, xc, fc, x3, f3, x1, f1);
+            }
+            return reflect(x3, f3, x1, f1, x2, f2, xc, fc);
+        }
+    }
+    /**
+     * Reflect point 3 through the centroid of points 1, 2 and 4.
+     *
+     * @param x1 First point abscissa.
+     * @param f1 First point ordinate.
+     * @param x2 Second point abscissa.
+     * @param f2 Second point ordinate.
+     * @param x3 Third point abscissa.
+     * @param f3 Third point ordinate.
+     * @param x4 Fourth point abscissa.
+     * @param f4 Fourth point ordinate.
+     * @return the reflected point.
+     * @throws OptimizationException if the maximum iteration count is exceeded.
+     */
+    private double reflect(final double x1, final double f1,
+                           final double x2, final double f2,
+                           final double x3, final double f3,
+                           final double x4, final double f4)
+        throws OptimizationException {
+        final double xr = x3 + (x3 - x2);
+        final double fr = computeObjectiveValue(xr);
+        if (fr <= f1) {
+            // Expansion.
+            final double xe = x3 + 2 * (x3 - x2);
+            final double fe = computeObjectiveValue(xe);
+            if (fe <= fr) {
+                return expand(x1, f1, x2, f2, xr, fr, xe, fe, x3, f3, x4, f4);
+            } else {
+                return reflect(x1, f1, x2, f2, xr, fr, x3, f3);
+            }
+        } else if (fr >= f4) {
+            if (fr <= f3) {
+                // Inner contraction.
+                final double xic = x3 + 0.5 * (x3 - x2);
+                final double fic = computeObjectiveValue(xic);
+                if (fic <= fr) {
+                    return contract(x1, f1, x2, f2, x3, f3, xic, fic, x4, f4);
+                } else {
+                    return reflect(x1, f1, x2, f2, x3, f3, x4, f4);
+                }
+            } else {
+                // Outer contraction.
+                final double xoc = x3 + 0.5 * (x4 - x3);
+                final double foc = computeObjectiveValue(xoc);
+                if (foc <= fr) {
+                    return contract(x1, f1, x2, f2, x3, f3, xoc, foc, x4, f4);
+                } else {
+                    return reflect(x1, f1, x2, f2, x3, f3, x4, f4);
+                }
+            }
+        } else {
+            // Reflection.
+            return reflect(x1, f1, x2, f2, x3, f3, x4, f4);
+        }
+    }
+    /**
+     * Expand point 4 through point 3.
+     *
+     * @param x1 First point abscissa.
+     * @param f1 First point ordinate.
+     * @param x2 Second point abscissa.
+     * @param f2 Second point ordinate.
+     * @param xr Reflected point abscissa.
+     * @param fr Reflected point ordinate.
+     * @param xe Expanded point abscissa.
+     * @param fe Expanded point ordinate.
+     * @param x3 Third point abscissa.
+     * @param f3 Third point ordinate.
+     * @param x4 Fourth point abscissa.
+     * @param f4 Fourth point ordinate.
+     * @return the expanded point.
+     * @throws OptimizationException if the maximum iteration count is exceeded.
+     */
+    private double expand(final double x1, final double f1,
+                          final double x2, final double f2,
+                          final double xr, final double fr,
+                          final double xe, final double fe,
+                          final double x3, final double f3,
+                          final double x4, final double f4)
+        throws OptimizationException {
+        if (fe <= f1) {
+            return xe;
+        } else {
+            return reflect(x1, f1, x2, f2, x3, f3, xr, fr);
+        }
+    }
+    /**
+     * Contract point 4 toward point 3.
+     *
+     * @param x1 First point abscissa.
+     * @param f1 First point ordinate.
+     * @param x2 Second point abscissa.
+     * @param f2 Second point ordinate.
+     * @param x3 Third point abscissa.
+     * @param f3 Third point ordinate.
+     * @param xc Contraction point abscissa.
+     * @param fc Contraction point ordinate.
+     * @param x4 Fourth point abscissa.
+     * @param f4 Fourth point ordinate.
+     * @return the contracted point.
+     * @throws OptimizationException if the maximum iteration count is exceeded.
+     */
+    private double contract(final double x1, final double f1,
+                            final double x2, final double f2,
+                            final double x3, final double f3,
+                            final double xc, final double fc,
+                            final double x4, final double f4)
+        throws OptimizationException {
+        if (fc <= f4) {
+            return xc;
+        } else {
+            return reflect(x1, f1, x2, f2, x3, f3, x4, f4);
+        }
+    }
+    /**
+     * Compute the objective function value.
+     *
+     * @param x Point at which the objective function must be evaluated.
+     * @return the objective function value at the specified point.
+     * @throws FunctionEvaluationException if the objective function throws
+     * one during the search.
+     */
+    private double computeObjectiveValue(final double x)
+        throws FunctionEvaluationException {
+        try {
+            evaluations++;
+            return computeObjectiveValue(getFunction(), x);
+        } catch (FunctionEvaluationException fee) {
+            throw new FunctionEvaluationException(fee.getMessage(), x, fee.getCause());
+        }
+    }
+    /**
+     * Get the number of iterations of the algorithm.
+     *
+     * @return the number of iterations of the algorithm.
+     */
+    public int getIterationCount() {
+        return evaluations;
+    }
+    /**
+     * Get the lower bound of the search interval.
+     *
+     * @return the lower bound of the search interval.
+     */
+    public double getMin() {
+        return searchMin;
+    }
+    /**
+     * Get the higher bound of the search interval.
+     *
+     * @return the higher bound of the search interval.
+     */
+    public double getMax() {
+        return searchMax;
+    }
+    /**
+     * Get the start value.
+     *
+     * @return the start value.
+     */
+    public double getStartValue() {
+        return searchStart;
+    }
+    /**
+     * Get the function value at the optimum.
+     *
+     * @return the function value at the optimum.
+     */
+    public double getFunctionValue() {
+        return functionValue;
+    }
+    /**
+     * Compute the objective function value.
+     *
+     * @param f Objective function.
+     * @param x Point at which the objective function must be evaluated.
+     * @return the objective function value at the specified point.
+     * @throws FunctionEvaluationException if the objective function throws
+     * one during the search.
+     */
+    public static double computeObjectiveValue(final UnivariateRealFunction f,
+                                               final double x)
+        throws FunctionEvaluationException {
+        return (getGoalType() == GoalType.MAXIMIZE) ?
+            -f.value(x) : f.value(x);
+    }
+    /**
+     * Find the minimum of the function within the interval {@code (lo, hi)}.
+     *
+     * If the function is defined on the interval {@code (lo, hi)}, then
+     * this method finds an approximation {@code x} to the point at which
+     * the function attains its minimum.<br/>
+     * {@code t} and {@code eps} define a tolerance {@code tol = eps |x| + t}
+     * and the function is never evaluated at two points closer together than
+     * {@code tol}. {@code eps} should be no smaller than <em>2 macheps</em> and
+     * preferable not much less than <em>sqrt(macheps)</em>, where
+     * <em>macheps</em> is the relative machine precision. {@code t} should be
+     * positive.
+     * @param f Objective function.
+     * @param goalType Type of optimization goal: either {@link GoalType#MINIMIZE}
+     * or {@link GoalType#MAXIMIZE}.
+     * @param min Lower bound for the interval.
+     * @param max Higher bound for the interval.
+     * @return the optimum point.
+     * @throws MaxIterationsExceededException if the maximum iteration count
+     * is exceeded.
+     * @throws FunctionEvaluationException if an error occurs evaluating
+     * the function.
+     * @throws IllegalArgumentException if the interval is invalid.
+     */
+    public static double optimize(final UnivariateRealFunction f,
+                                  final GoalType goalType,
+                                  final double min, final double max)
+        throws MaxIterationsExceededException, FunctionEvaluationException {
+        return optimize(f, goalType, min, max, min + GOLDEN_SECTION * (max - min));
+    }
+    /**
+     * Find the minimum of the function within the interval {@code (lo, hi)}.
+     *
+     * If the function is defined on the interval {@code (lo, hi)}, then
+     * this method finds an approximation {@code x} to the point at which
+     * the function attains its minimum.<br/>
+     * {@code t} and {@code eps} define a tolerance {@code tol = eps |x| + t}
+     * and the function is never evaluated at two points closer together than
+     * {@code tol}. {@code eps} should be no smaller than <em>2 macheps</em> and
+     * preferable not much less than <em>sqrt(macheps)</em>, where
+     * <em>macheps</em> is the relative machine precision. {@code t} should be
+     * positive.
+     * @param f Objective function.
+     * @param goalType Type of optimization goal: either {@link GoalType#MINIMIZE}
+     * or {@link GoalType#MAXIMIZE}.
+     * @param min Lower bound for the interval.
+     * @param max Higher bound for the interval.
+     * @param startValue Start value to use.
+     * @return the optimum point.
+     * @throws MaxIterationsExceededException if the maximum iteration count
+     * is exceeded.
+     * @throws FunctionEvaluationException if an error occurs evaluating
+     * the function.
+     * @throws IllegalArgumentException if the interval is invalid.
+     */
+    public static double optimize(final UnivariateRealFunction f,
+                                  final GoalType goalType,
+                                  final double min, final double max,
+                                  final double startValue)
+        throws MaxIterationsExceededException, FunctionEvaluationException {
+        final double ftol = getFunctionValueAccuracy();
+        final double atol = getAbsoluteAccuracy();
+        final int maxEval = getMaxEvaluations();
+        // Check for a null interval.
+        if (min >= max) {
+            throw new IllegalArgumentException("endpoints do not specify an interval: [" +
+                                               min + "," + max + "]");
+        }
+        // Check for no variation in the interval.
+        if (Precision.equals(min, max, 1)) {
+            throw new IllegalArgumentException("endpoints specify a degenerate interval: [" +
+                                               min + "," + max + "]");
+        }
+        // Check for incorrect start value.
+        if ((startValue < min) || (startValue > max)) {
+            throw new OutOfRangeException(startValue, min, max);
+        }
+        // Prepare the initial simplex.
+        final double[][] simplex = new double[4][];
+        simplex[0] = new double[] { startValue };
+        simplex[1] = new double[] { min };
+        simplex[2] = new double[] { max };
+        simplex[3] = new double[] { 0 };
+        final NelderMeadSimplex optima =
+            new NelderMeadSimplex(new double[][] { {0.0}, {0.5}, {-0.5} });
+        final RealPointValuePair start = new RealPointValuePair(simplex[0], 0);
+        for (int i = 0; i < maxEval; ++i) {
+            optima.evaluate(new SimplexOptimizer.Function(f), simplex);
+            if ((i > 2) && (optima.getStart().getValue() <= ftol)) {
+                return optima.getStart().getPoint()[0];
+            }
+            if (Precision.equals(optima.getStart().getPoint()[0], optima.getPoint(2)[0], atol)) {
+                return optima.getStart().getPoint()[0];
+            }
+        }
+        throw new MaxIterationsExceededException(maxEval);
+    }
+}

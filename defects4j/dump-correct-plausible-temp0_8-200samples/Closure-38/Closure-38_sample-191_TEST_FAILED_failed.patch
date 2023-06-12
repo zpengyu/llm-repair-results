@@ -1,0 +1,26 @@
+diff --git a/src/com/google/javascript/jscomp/CodeConsumer.java b/src/com/google/javascript/jscomp/CodeConsumer.java
+index 47ecfb1d..2b630071 100644
+--- a/src/com/google/javascript/jscomp/CodeConsumer.java
++++ b/src/com/google/javascript/jscomp/CodeConsumer.java
+@@ -262,10 +261,19 @@ abstract class CodeConsumer {
+         add(Long.toString(value));
+       }
+     } else {
+-      add(String.valueOf(x));
++      // Make sure that NaN is printed consistently across platforms.
++      if (x != x) {
++        add("NaN");
++      } else {
++        // Need to print -0.0, but -0 is treated as 0 by the JVM.
++        if (negativeZero) {
++          add("-0.0");
++        } else {
++          add(String.valueOf(x));
++        }
++      }
+     }
+   }
+-
+   static boolean isNegativeZero(double x) {
+     return x == 0.0 && Math.copySign(1, x) == -1.0;
+   }

@@ -1,0 +1,31 @@
+diff --git a/src/main/java/org/joda/time/chrono/BasicMonthOfYearDateTimeField.java b/src/main/java/org/joda/time/chrono/BasicMonthOfYearDateTimeField.java
+index 98e6912c..70db399b 100644
+--- a/src/main/java/org/joda/time/chrono/BasicMonthOfYearDateTimeField.java
++++ b/src/main/java/org/joda/time/chrono/BasicMonthOfYearDateTimeField.java
+@@ -206,7 +206,7 @@ class BasicMonthOfYearDateTimeField extends ImpreciseDateTimeField {
+         if (valueToAdd == 0) {
+             return values;
+         }
+-            // month is largest field and being added to, such as month-day
++        // month is largest field and being added to, such as month-day
+         if (DateTimeUtils.isContiguous(partial)) {
+             long instant = 0L;
+             for (int i = 0, isize = partial.size(); i < isize; i++) {
+@@ -214,11 +214,14 @@ class BasicMonthOfYearDateTimeField extends ImpreciseDateTimeField {
+             }
+             instant = add(instant, valueToAdd);
+             return iChronology.get(partial, instant);
+-        } else {
+-            return super.add(partial, fieldIndex, values, valueToAdd);
+         }
++        // day is largest field and being added to, such as month-day
++        if (partial.size() > 1 && partial.getFieldType(0).getDurationField().getType() == DurationFieldType.days()) {
++            int[] newValues = getAdded(partial, iChronology.set(0L, partial, values), valueToAdd);
++            return iChronology.get(partial, iChronology.get(partial, newValues));
++        }
++        return super.add(partial, fieldIndex, values, valueToAdd);
+     }
+-
+     //-----------------------------------------------------------------------
+     /**
+      * Add to the Month component of the specified time instant

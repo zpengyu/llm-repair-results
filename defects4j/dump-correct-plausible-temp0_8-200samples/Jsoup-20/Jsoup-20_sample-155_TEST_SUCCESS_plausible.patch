@@ -1,0 +1,18 @@
+diff --git a/src/main/java/org/jsoup/helper/DataUtil.java b/src/main/java/org/jsoup/helper/DataUtil.java
+index 4bdf4fe..01f041d 100644
+--- a/src/main/java/org/jsoup/helper/DataUtil.java
++++ b/src/main/java/org/jsoup/helper/DataUtil.java
+@@ -92,10 +92,9 @@ public class DataUtil {
+             docData = Charset.forName(charsetName).decode(byteData).toString();
+         }
+         if (doc == null) {
+-            // there are times where there is a spurious byte-order-mark at the start of the text. Shouldn't be present
+-            // in utf-8. If after decoding, there is a BOM, strip it; otherwise will cause the parser to go straight
+-            // into head mode
+-
++            if (docData.startsWith("\uFEFF")) {
++                docData = docData.substring(1);
++            }
+             doc = parser.parseInput(docData, baseUri);
+             doc.outputSettings().charset(charsetName);
+         }

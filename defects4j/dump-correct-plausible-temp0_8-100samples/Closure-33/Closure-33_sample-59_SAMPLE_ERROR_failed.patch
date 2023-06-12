@@ -1,0 +1,24 @@
+diff --git a/src/com/google/javascript/rhino/jstype/PrototypeObjectType.java b/src/com/google/javascript/rhino/jstype/PrototypeObjectType.java
+index 77c5441e..ddb42e35 100644
+--- a/src/com/google/javascript/rhino/jstype/PrototypeObjectType.java
++++ b/src/com/google/javascript/rhino/jstype/PrototypeObjectType.java
+@@ -577,5 +576,17 @@ class PrototypeObjectType extends ObjectType {
+         }
+       }
+     }
+-  }
+-}
++    else {
++      ConstraintData data = constraintObj.getConstraint();
++      if (!data.isAnonymous()) {
++        return;
++      }
++      ConstraintData superClassData = data.getSuperClassConstructor().getConstraint();
++      if (superClassData.getFunType().isConstructor()) {
++        matchConstraint(superClassData.getFunType().getInstanceType());
++      }
++      for (ObjectType interfaceType : data.getInterfaces()) {
++        matchConstraint(interfaceType);
++      }
++    }
++  }}

@@ -1,0 +1,38 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/deser/impl/CreatorCollector.java b/src/main/java/com/fasterxml/jackson/databind/deser/impl/CreatorCollector.java
+index fd590d628..fd1a849c6 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/deser/impl/CreatorCollector.java
++++ b/src/main/java/com/fasterxml/jackson/databind/deser/impl/CreatorCollector.java
+@@ -280,25 +280,15 @@ public class CreatorCollector
+         AnnotatedWithParams oldOne = _creators[typeIndex];
+         // already had an explicitly marked one?
+         if (oldOne != null) {
+-
+-            if ((_explicitCreators & mask) != 0) { // already had explicitly annotated, leave as-is
+-                // but skip, if new one not annotated
+-                if (!explicit) {
+-                    return;
++            // Skip if new one has no annotation and old was annotation-based
++            if (explicit) { // otherwise only verify if neither explicitly annotated.
++                if (oldOne.getClass() == newOne.getClass()) {
++                    // [databind#667]: avoid one particular class of bogus problems
++                    if (oldOne.getAnnotation(JsonCreator.class) != null) {
++                        throw new IllegalArgumentException("Conflicting " + TYPE_DESCS[typeIndex]
++                                + " creators: already had explicitly marked " + oldOne + ", encountered " + newOne);
++                    }
+                 }
+-                // both explicit: verify
+-                // otherwise only verify if neither explicitly annotated.
+-            }
+-
+-            // one more thing: ok to override in sub-class
+-            if (oldOne.getClass() == newOne.getClass()) {
+-                // [databind#667]: avoid one particular class of bogus problems
+-
+-                    throw new IllegalArgumentException("Conflicting "+TYPE_DESCS[typeIndex]
+-                            +" creators: already had explicitly marked "+oldOne+", encountered "+newOne);
+-                // otherwise, which one to choose?
+-                    // new type more generic, use old
+-                // new type more specific, use it
+             }
+         }
+         if (explicit) {

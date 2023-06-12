@@ -1,0 +1,35 @@
+diff --git a/src/com/google/javascript/jscomp/CheckAccessControls.java b/src/com/google/javascript/jscomp/CheckAccessControls.java
+index c4ecc477..d2bce339 100644
+--- a/src/com/google/javascript/jscomp/CheckAccessControls.java
++++ b/src/com/google/javascript/jscomp/CheckAccessControls.java
+@@ -416,13 +415,12 @@ class CheckAccessControls implements ScopedCallback, HotSwapCompilerPass {
+       boolean isOverride = t.inGlobalScope() &&
+           parent.getType() == Token.ASSIGN &&
+           parent.getFirstChild() == getprop;
+-
+       // Find the lowest property defined on a class with visibility
+       // information.
++      JSDocInfo docInfo = null;
+       if (isOverride) {
+         objectType = objectType.getImplicitPrototype();
+       }
+-      JSDocInfo docInfo = null;
+       for (; objectType != null;
+            objectType = objectType.getImplicitPrototype()) {
+         docInfo = objectType.getOwnPropertyJSDocInfo(propertyName);
+@@ -440,7 +436,6 @@ class CheckAccessControls implements ScopedCallback, HotSwapCompilerPass {
+       boolean sameInput =
+           t.getInput().getName().equals(docInfo.getSourceName());
+       Visibility visibility = docInfo.getVisibility();
+-      JSType ownerType = normalizeClassType(objectType);
+       if (isOverride) {
+         // Check an ASSIGN statement that's trying to override a property
+         // on a superclass.
+@@ -463,6 +457,7 @@ class CheckAccessControls implements ScopedCallback, HotSwapCompilerPass {
+                   overridingVisibility.name()));
+         }
+       } else {
++        JSType ownerType = normalizeClassType(objectType);
+         if (sameInput) {
+           // private access is always allowed in the same file.
+           return;

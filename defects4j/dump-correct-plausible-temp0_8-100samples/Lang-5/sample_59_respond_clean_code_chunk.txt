@@ -1,0 +1,68 @@
+public static Locale toLocale(final String str) {
+    if (str == null) {
+        return null;
+    }
+    if (str.isEmpty()) {
+        throw new IllegalArgumentException("Invalid locale format: " + str);
+    }
+    if (str.startsWith("_")) {
+        throw new IllegalArgumentException("Invalid locale format: " + str);
+    }
+    final char[]separators = { '_', '_', '_'};
+    final String[] args = splitOnCharacters(str, separators);
+    switch (args.length) {
+        case 1:
+            if (!Character.isUpperCase(args[0].charAt(0))) {
+                throw new IllegalArgumentException("Invalid locale format: " + str);
+            }
+            return new Locale(args[0]);
+        case 2:
+            if (!Character.isUpperCase(args[0].charAt(0)) || !Character.isUpperCase(args[1].charAt(0))) {
+                throw new IllegalArgumentException("Invalid locale format: " + str);
+            }
+            return new Locale(args[0], args[1]);
+        case 3:
+            if (!Character.isUpperCase(args[0].charAt(0)) || !Character.isUpperCase(args[1].charAt(0)) || !Character.isUpperCase(args[2].charAt(0))) {
+                throw new IllegalArgumentException("Invalid locale format: " + str);
+            }
+            return new Locale(args[0], args[1], args[2]);
+        default:
+            throw new IllegalArgumentException("Invalid locale format: " + str);
+    }
+}
+/**
+     * Performs the logic for {@link String#split(String, int)}.
+     *
+     * @param str the String to parse, may be {@code null}
+     * @param separatorChars the separate character
+     * @return an array of parsed Strings, {@code null} if null String was input
+     */
+    private static String[] splitOnCharacters(final String str, final char... separatorChars) {
+        // Performance tuned for 2.0 (JDK1.4)
+        if (str == null) {
+            return null;
+        }
+        final int len = str.length();
+        if (len == 0) {
+            return ArrayUtils.EMPTY_STRING_ARRAY;
+        }
+        final List<String> list = new ArrayList<String>();
+        int i = 0, start = 0;
+        boolean match = false;
+        while (i < len) {
+            if (ArrayUtils.contains(separatorChars, str.charAt(i))) {
+                if (match) {
+                    list.add(str.substring(start, i));
+                    match = false;
+                }
+                start = ++i;
+                continue;
+            }
+            match = true;
+            i++;
+        }
+        if (match) {
+            list.add(str.substring(start, i));
+        }
+        return list.toArray(new String[list.size()]);
+    }

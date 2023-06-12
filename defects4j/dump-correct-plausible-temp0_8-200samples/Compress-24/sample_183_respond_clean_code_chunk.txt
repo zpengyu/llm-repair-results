@@ -1,0 +1,56 @@
+        public static long parseOctal(final byte[] buffer, final int offset, final int length) {
+        long    result = 0;
+        int     end = offset + length;
+        int     start = offset;
+        if (length < 2){
+            throw new IllegalArgumentException("Length "+length+" must be at least 2");
+        }
+        if (buffer[start] == 0) {
+            return 0L;
+        }
+        // Skip leading spaces
+        while (start < end){
+            if (buffer[start] == ' '){
+                start++;
+            } else {
+                break;
+            }
+        }
+        // Trim all trailing NULs and spaces.
+        // The ustar and POSIX tar specs require a trailing NUL or
+        // space but some implementations use the extra digit for big
+        // sizes/uids/gids ...
+        byte trailer = buffer[end - 1];
+        if (trailer == 0 || trailer == ' '){
+            end--;
+        } else {
+            throw new IllegalArgumentException(
+                    exceptionMessage(buffer, offset, length, end-1, trailer));
+        }
+        trailer = buffer[end - 1];
+        while (start < end - 1 && (trailer == 0 || trailer == ' ')) {
+            end--;
+            trailer = buffer[end - 1];
+        }
+        for ( ;start < end; start++) {
+            final byte currentByte = buffer[start];
+            // CheckStyle:MagicNumber OFF
+            if (currentByte < '0' || currentByte > '7'){
+                throw new IllegalArgumentException(
+                        exceptionMessage(buffer, offset, length, start, currentByte));
+            }
+            result = (result << 3) + (currentByte - '0'); // convert from ASCII
+            // CheckStyle:MagicNumber ON
+        }
+        return result;
+    }
+- Fault localization is the process of identifying likely fault-related regions in the source code based on the test outcomes.
+- It is a crucial activity in the software debugging process, which is quite challenging and time-consuming, especially when the software is large and complex.
+- In this project, we have implemented two machine learning based fault localization approaches, namely,
+ * Random Forest (RF)
+ * Logistic Regression (LR)
+- As a part of the project, we have studied the performance of each approach for the following datasets
+ * Defects4J
+ * GZoltar
+- We have compared the performance of our implementation with the existing approach, i.e., Tarantula.
+- Additionally, we have implemented the fault localization technique, Tarantula, and have compared our implementation with the existing approach.

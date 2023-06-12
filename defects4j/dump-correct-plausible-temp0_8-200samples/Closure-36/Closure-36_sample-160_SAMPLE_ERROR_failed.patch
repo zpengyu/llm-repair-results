@@ -1,0 +1,31 @@
+diff --git a/src/com/google/javascript/jscomp/InlineVariables.java b/src/com/google/javascript/jscomp/InlineVariables.java
+index 4f045430..078a2bd3 100644
+--- a/src/com/google/javascript/jscomp/InlineVariables.java
++++ b/src/com/google/javascript/jscomp/InlineVariables.java
+@@ -569,12 +565,23 @@ class InlineVariables implements CompilerPass {
+           if (relationship != null) {
+             return false;
+           }
+-
+-          // issue 668: Don't inline singleton getter methods
++          // Issue 668: Don't inline singleton getter methods
+           // calls as this confused class removing logic.
++          if (convention.isSingletonGetter(callNode)) {
++            return false;
++          }
++          // TODO(johnlenz): This should be removed.  Normally, a function
++          // would just be inlined into a CALL, but the exception is if
++          // we have a function literal as an argument to CALL.  In that case,
++          // the function literal is assigned to a temporary name and then
++          // referenced from there.  That is fine, but we don't want to
++          // inline into the CALL, we want to inline into the reference to
++          // the function literal.
++          if (reference.isLhsOfAssign()) {
++            return false;
++          }
+         }
+       }
+-
+       return canMoveAggressively(value) ||
+           canMoveModerately(initialization, reference);
+     }

@@ -1,0 +1,23 @@
+    public JavaType refineSerializationType(final MapperConfig<?> config,
+            final Annotated a, final JavaType baseType) throws JsonMappingException
+    {
+        JavaType type = baseType;
+        final TypeFactory tf = config.getTypeFactory();
+        
+        // 10-Oct-2015, tatu: For 2.7, we'll need to delegate back to
+        //    now-deprecated secondary methods; this because while
+        //    direct sub-class not yet retrofitted may only override
+        //    those methods. With 2.8 or later we may consider removal
+        //    of these methods
+        if (type.hasRawClass(Map.class)) {
+            type = _mapAbstractType2(config, a, type);
+        } else if (type.hasRawClass(Collection.class)) {
+            type = _collectionAbstractType2(config, a, type);
+        } else if (type.isArrayType()) {
+            type = _arrayAbstractType2(config, a, type);
+        } else {
+            type = _nonContainerAbstractType2(config, a, type);
+        }
+        return type;
+    }
+

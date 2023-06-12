@@ -1,0 +1,24 @@
+private static Node processFunctionNode(FunctionNode functionNode) {
+      Name name = functionNode.getFunctionName();
+      // Only preserve the function name if it's not empty.
+      // TODO(johnlenz): preserve the empty name, but only if it is
+      // a anonymous function expression.  This requires some extra
+      // work as we need to decide if we are preserving a assignment
+      // or a named function expression.
+      if (name == null || name.isEmpty()) {
+        name = null;
+      } else {
+        name = transform(name);
+      }
+      Node node = newNode(Token.FUNCTION);
+      node.addChildToBack(name);
+      Node lp = newNode(Token.LP);
+      for (AstNode param : functionNode.getParams()) {
+        lp.addChildToBack(transform(param));
+      }
+      node.addChildToBack(lp);
+      Node bodyNode = transform(functionNode.getBody());
+      parseDirectives(bodyNode);
+      node.addChildToBack(bodyNode);
+      return node;
+    }

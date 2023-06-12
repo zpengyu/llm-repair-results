@@ -1,0 +1,53 @@
+diff --git a/src/main/java/org/apache/commons/compress/archivers/ar/ArArchiveInputStream.java b/src/main/java/org/apache/commons/compress/archivers/ar/ArArchiveInputStream.java
+index 9112fa85..18b4a825 100644
+--- a/src/main/java/org/apache/commons/compress/archivers/ar/ArArchiveInputStream.java
++++ b/src/main/java/org/apache/commons/compress/archivers/ar/ArArchiveInputStream.java
+@@ -73,13 +69,13 @@ public class ArArchiveInputStream extends ArchiveInputStream {
+                 }
+             }
+         }
+-
+                 // hit eof
+-
+-        if (input.available() == 0) {
++        final byte[] length = new byte[10];
++        read(length);
++        final long expectedLength = Long.parseLong(new String(length).trim());
++        if (input.available() < expectedLength) {
+             return null;
+         }
+-
+         if (offset % 2 != 0) {
+             read();
+         }
+@@ -88,15 +84,11 @@ public class ArArchiveInputStream extends ArchiveInputStream {
+         final byte[] userid = new byte[6];
+         final byte[] groupid = new byte[6];
+         final byte[] filemode = new byte[8];
+-        final byte[] length = new byte[10];
+-
+         read(name);
+         read(lastmodified);
+         read(userid);
+         read(groupid);
+         read(filemode);
+-        read(length);
+-
+         {
+             final byte[] expected = ArArchiveEntry.TRAILER.getBytes();
+             final byte[] realized = new byte[expected.length]; 
+@@ -110,13 +102,9 @@ public class ArArchiveInputStream extends ArchiveInputStream {
+                 }
+             }
+         }
+-
+         return new ArArchiveEntry(new String(name).trim(),
+-                                          Long.parseLong(new String(length)
+-                                                         .trim()));
++                                   expectedLength);
+     }
+-
+-
+     public ArchiveEntry getNextEntry() throws IOException {
+         return getNextArEntry();
+     }

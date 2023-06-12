@@ -1,0 +1,48 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/deser/std/FromStringDeserializer.java b/src/main/java/com/fasterxml/jackson/databind/deser/std/FromStringDeserializer.java
+index 01a819a9f..9b6229657 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/deser/std/FromStringDeserializer.java
++++ b/src/main/java/com/fasterxml/jackson/databind/deser/std/FromStringDeserializer.java
+@@ -178,10 +178,9 @@ public abstract class FromStringDeserializer<T> extends StdScalarDeserializer<T>
+      * 
+      * @since 2.4
+      */
+-    public static class Std extends FromStringDeserializer<Object>
++public static class Std extends FromStringDeserializer<Object>
+     {
+         private static final long serialVersionUID = 1;
+-
+         public final static int STD_FILE = 1;
+         public final static int STD_URL = 2;
+         public final static int STD_URI = 3;
+@@ -228,6 +224,9 @@ public abstract class FromStringDeserializer<T> extends StdScalarDeserializer<T>
+                 return Pattern.compile(value);
+             case STD_LOCALE:
+                 {
++                    if (value.length() == 0) {
++                        return Locale.ROOT;
++                    }
+                     int ix = value.indexOf('_');
+                     if (ix < 0) { // single argument
+                         return new Locale(value);
+@@ -274,20 +271,4 @@ public abstract class FromStringDeserializer<T> extends StdScalarDeserializer<T>
+             }
+             throw new IllegalArgumentException();
+         }
+-
+-        @Override
+-        protected Object _deserializeFromEmptyString() throws IOException {
+-            // As per [databind#398], URI requires special handling
+-            if (_kind == STD_URI) {
+-                return URI.create("");
+-            }
+-            // As per [databind#1123], Locale too
+-            if (_kind == STD_LOCALE) {
+-                return Locale.ROOT;
+-            }
+-            return super._deserializeFromEmptyString();
+-        }
+-
+-
+-    }
+-}
++    }}

@@ -1,0 +1,24 @@
+diff --git a/src/com/google/javascript/jscomp/GlobalNamespace.java b/src/com/google/javascript/jscomp/GlobalNamespace.java
+index a00893b3..5f8c52ce 100644
+--- a/src/com/google/javascript/jscomp/GlobalNamespace.java
++++ b/src/com/google/javascript/jscomp/GlobalNamespace.java
+@@ -305,7 +305,7 @@ class GlobalNamespace
+ 
+     public void collect(JSModule module, Scope scope, Node n) {
+       Node parent = n.getParent();
+-
++      Node parentParent = parent == null ? null : parent.getParent();
+       String name;
+       boolean isSet = false;
+       Name.Type type = Name.Type.OTHER;
+@@ -417,9 +415,8 @@ class GlobalNamespace
+       if (!isGlobalNameReference(name, scope)) {
+         return;
+       }
+-
+       if (isSet) {
+-        if (isGlobalScope(scope)) {
++        if (isGlobalScope(scope) || NodeUtil.isFunctionExpression(parentParent)) {
+           handleSetFromGlobal(module, scope, n, parent, name, isPropAssign, type);
+         } else {
+           handleSetFromLocal(module, scope, n, parent, name);

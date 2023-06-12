@@ -1,0 +1,27 @@
+    public int[] add(ReadablePartial partial, int fieldIndex, int[] values, int valueToAdd) {
+        if (valueToAdd == 0) {
+            return values;
+        }
+        if (DateTimeUtils.isContiguous(partial)) {
+            long instant = 0L;
+            for (int i = 0, isize = partial.size(); i < isize; i++) {
+                instant = partial.getFieldType(i).getField(getChronology()).set(instant, values[i]);
+            }
+            instant = add(instant, valueToAdd);
+            return getChronology().get(partial, instant);
+        }
+        int[] newValues = values;
+        int newFieldIndex = fieldIndex;
+        if (partial.getChronology() != getChronology()) {
+            Chronology c = partial.getChronology();
+            newValues = c.get(partial, getChronology().set(0L, partial, values));
+            newFieldIndex = 0;
+            for (int i = 0, isize = partial.size(); i < isize; i++) {
+                if (partial.getFieldType(i) == getType()) {
+                    break;
+                }
+                newFieldIndex++;
+            }
+        }
+        return super.add(partial, newFieldIndex, newValues, valueToAdd);
+    }

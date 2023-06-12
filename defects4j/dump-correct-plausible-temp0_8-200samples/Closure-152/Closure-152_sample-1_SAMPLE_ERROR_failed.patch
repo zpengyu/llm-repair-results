@@ -1,0 +1,19 @@
+diff --git a/src/com/google/javascript/rhino/jstype/FunctionType.java b/src/com/google/javascript/rhino/jstype/FunctionType.java
+index f68dfea6..82adee54 100644
+--- a/src/com/google/javascript/rhino/jstype/FunctionType.java
++++ b/src/com/google/javascript/rhino/jstype/FunctionType.java
+@@ -887,10 +883,12 @@ public class FunctionType extends PrototypeObjectType {
+         subTypes.set(i, (FunctionType) subTypes.get(i).resolve(t, scope));
+       }
+     }
+-
++    Set<String> keys = this.call.getPropertyType("bind").getPropertyType("prototype").getPropertyNames();
++    for(String k : keys) {
++      this.setProperty(k, this.call.getPropertyType("bind").getPropertyType("prototype").getPropertyType(k));
++    }
+     return super.resolveInternal(t, scope);
+   }
+-
+   @Override
+   public String toDebugHashCodeString() {
+     if (this == registry.getNativeType(JSTypeNative.FUNCTION_INSTANCE_TYPE)) {

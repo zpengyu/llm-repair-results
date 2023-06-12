@@ -1,0 +1,40 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/deser/BeanDeserializer.java b/src/main/java/com/fasterxml/jackson/databind/deser/BeanDeserializer.java
+index 3c89dc109..1018e0782 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/deser/BeanDeserializer.java
++++ b/src/main/java/com/fasterxml/jackson/databind/deser/BeanDeserializer.java
+@@ -805,25 +802,25 @@ public class BeanDeserializer
+             //    both to any setter AND buffer... but, for now, the only thing
+             //    we can do.
+             // how about any setter? We'll get copies but...
+-            if (_anySetter == null) {
+-                // but... others should be passed to unwrapped property deserializers
+-                tokens.writeFieldName(propName);
+-                tokens.copyCurrentStructure(p);
+-            } else {
++            if (_anySetter != null) {
++                buffer.bufferAnyProperty(_anySetter, propName, _anySetter.deserialize(p, ctxt));
+                 // Need to copy to a separate buffer first
+-                TokenBuffer b2 = TokenBuffer.asCopyOfValue(p);
++                //TokenBuffer b2 = TokenBuffer.asCopyOfValue(p);
+                 tokens.writeFieldName(propName);
+-                tokens.append(b2);
++                //tokens.append(b2);
++                tokens.copyCurrentStructure(p);
+                 try {
+-                    buffer.bufferAnyProperty(_anySetter, propName,
+-                            _anySetter.deserialize(b2.asParserOnFirstToken(), ctxt));
++                    //buffer.bufferAnyProperty(_anySetter, propName,
++                    //        _anySetter.deserialize(b2.asParserOnFirstToken(), ctxt));
+                 } catch (Exception e) {
+                     wrapAndThrow(e, _beanType.getRawClass(), propName, ctxt);
+                 }
+                 continue;
+             }
++            // but... others should be passed to unwrapped property deserializers
++            tokens.writeFieldName(propName);
++            tokens.copyCurrentStructure(p);
+         }
+-
+         // We hit END_OBJECT, so:
+         Object bean;
+         try {

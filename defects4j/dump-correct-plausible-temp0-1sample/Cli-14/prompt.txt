@@ -1,0 +1,94 @@
+###Provide a fix for the buggy function
+###Buggy Function
+class FibonacciExample {
+    public static void main(String args[]) {
+        int n1 = 0, n2 = 1, n3, i, count = 10;
+
+        System.out.print(n1 + " " + n2);
+
+        for (i = 2; i < count; ++i) {
+            n3 = n1 - n2;
+            System.out.print(" " + n3);
+            n1 = n2;
+            n2 = n3;
+        }
+    }
+}
+
+###Fixed Function
+class FibonacciExample {
+    public static void main(String args[]) {
+        int n1 = 0, n2 = 1, n3, i, count = 10;
+
+        System.out.print(n1 + " " + n2);
+
+        for (i = 2; i < count; ++i) {
+            n3 = n1 + n2;
+            System.out.print(" " + n3);
+            n1 = n2;
+            n2 = n3;
+        }
+    }
+}
+
+###Provide a fix for the buggy function
+###Buggy Function
+protected void setOptions(final Options options) {
+    this.options = options;
+    this.requiredOptions = options.getRequiredOptions();
+}
+###Fixed Function
+protected void setOptions(final Options options) {
+    this.options = options;
+    this.requiredOptions = new ArrayList(options.getRequiredOptions());
+}
+###Provide a fix for the buggy function
+###Buggy Function
+    public void validate(final WriteableCommandLine commandLine)
+        throws OptionException {
+        // number of options found
+        int present = 0;
+
+        // reference to first unexpected option
+        Option unexpected = null;
+
+        for (final Iterator i = options.iterator(); i.hasNext();) {
+            final Option option = (Option) i.next();
+
+            // needs validation?
+            boolean validate = option.isRequired() || option instanceof Group;
+            if (validate) {
+                option.validate(commandLine);
+            }
+
+            // if the child option is present then validate it
+            if (commandLine.hasOption(option)) {
+                if (++present > maximum) {
+                    unexpected = option;
+
+                    break;
+                }
+
+                option.validate(commandLine);
+            }
+        }
+
+        // too many options
+        if (unexpected != null) {
+            throw new OptionException(this, ResourceConstants.UNEXPECTED_TOKEN,
+                                      unexpected.getPreferredName());
+        }
+
+        // too few option
+        if (present < minimum) {
+            throw new OptionException(this, ResourceConstants.MISSING_OPTION);
+        }
+
+        // validate each anonymous argument
+        for (final Iterator i = anonymous.iterator(); i.hasNext();) {
+            final Option option = (Option) i.next();
+            option.validate(commandLine);
+        }
+    }
+
+###Fixed Function

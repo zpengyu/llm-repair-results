@@ -1,0 +1,23 @@
+diff --git a/src/com/google/javascript/jscomp/InlineVariables.java b/src/com/google/javascript/jscomp/InlineVariables.java
+index 03f4fcf3..617b1a63 100644
+--- a/src/com/google/javascript/jscomp/InlineVariables.java
++++ b/src/com/google/javascript/jscomp/InlineVariables.java
+@@ -302,16 +300,14 @@ class InlineVariables implements CompilerPass {
+           !staleVars.contains(v) &&
+           referenceInfo.isWellDefined() &&
+           referenceInfo.isAssignedOnceInLifetime()) {
+-          // Inlining the variable based solely on well-defined and assigned
+-          // once is *NOT* correct. We relax the correctness requirement if
+-          // the variable is declared constant.
+         List<Reference> refs = referenceInfo.references;
+         for (int i = 1 /* start from a read */; i < refs.size(); i++) {
+           Node nameNode = refs.get(i).getNode();
+           if (aliasCandidates.containsKey(nameNode)) {
+             AliasCandidate candidate = aliasCandidates.get(nameNode);
+             if (!staleVars.contains(candidate.alias) &&
+-                !isVarInlineForbidden(candidate.alias)) {
++                !isVarInlineForbidden(candidate.alias) &&
++                candidate.refInfo.isAssignedOnceInLifetime()) {
+               Reference aliasInit;
+               aliasInit = candidate.refInfo.getInitializingReference();
+               Node value = aliasInit.getAssignedValue();

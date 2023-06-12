@@ -1,0 +1,36 @@
+diff --git a/src/main/java/org/jsoup/helper/W3CDom.java b/src/main/java/org/jsoup/helper/W3CDom.java
+index f866f43..b4200de 100644
+--- a/src/main/java/org/jsoup/helper/W3CDom.java
++++ b/src/main/java/org/jsoup/helper/W3CDom.java
+@@ -87,16 +86,17 @@ public class W3CDom {
+                 String prefix = updateNamespaces(sourceEl);
+                 String namespace = namespacesStack.peek().get(prefix);
+                 String tagName = sourceEl.tagName();
+-
+-                Element el =
+-                    doc.createElementNS(namespace, tagName);
+-                copyAttributes(sourceEl, el);
+                 if (dest == null) { // sets up the root
++                    Element el = doc.createElementNS(namespace, tagName);
++                    copyAttributes(sourceEl, el);
+                     doc.appendChild(el);
++                    dest = el;
+                 } else {
++                    Element el = doc.createElementNS(namespace, tagName);
++                    copyAttributes(sourceEl, el);
+                     dest.appendChild(el);
++                    dest = el;
+                 }
+-                dest = el; // descend
+             } else if (source instanceof org.jsoup.nodes.TextNode) {
+                 org.jsoup.nodes.TextNode sourceText = (org.jsoup.nodes.TextNode) source;
+                 Text text = doc.createTextNode(sourceText.getWholeText());
+@@ -113,7 +113,7 @@ public class W3CDom {
+                 // unhandled
+             }
+         }
+-
++    }
+         public void tail(org.jsoup.nodes.Node source, int depth) {
+             if (source instanceof org.jsoup.nodes.Element && dest.getParentNode() instanceof Element) {
+                 dest = (Element) dest.getParentNode(); // undescend. cromulent.

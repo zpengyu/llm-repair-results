@@ -1,0 +1,27 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/jsontype/impl/TypeDeserializerBase.java b/src/main/java/com/fasterxml/jackson/databind/jsontype/impl/TypeDeserializerBase.java
+index 339362e1e..1496049d4 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/jsontype/impl/TypeDeserializerBase.java
++++ b/src/main/java/com/fasterxml/jackson/databind/jsontype/impl/TypeDeserializerBase.java
+@@ -155,7 +155,9 @@ public abstract class TypeDeserializerBase
+                     // 10-May-2016, tatu: We may get some help...
+                     JavaType actual = _handleUnknownTypeId(ctxt, typeId, _idResolver, _baseType);
+                     if (actual == null) { // what should this be taken to mean?
+-                        // TODO: try to figure out something better
++                        ctxt.reportInputMismatch(this,
++                                "Could not resolve type id '%s' into a subtype of %s",
++                                typeId, _baseType);
+                         return null;
+                     }
+                     // ... would this actually work?
+@@ -181,7 +183,11 @@ public abstract class TypeDeserializerBase
+                     //   generic type with custom type resolvers. If so, should try to retain them.
+                     //  Whether this is sufficient to avoid problems remains to be seen, but for
+                     //  now it should improve things.
++                    if (type.isContainerType()) {
+                         type = ctxt.getTypeFactory().constructSpecializedType(_baseType, type.getRawClass());
++                    } else {
++                        type = ctxt.getTypeFactory().constructGeneralizedType(_baseType, type);
++                    }
+                 }
+                 deser = ctxt.findContextualValueDeserializer(type, _property);
+             }

@@ -1,0 +1,101 @@
+// Name changed to _javaLangObjectClass to match its type
+// static final JsonDeserializer<?> JSON_KEY_DESERIALIZER;
+// static {
+//     try {
+//         // NOTE: do NOT use `"java.lang.Object"` as this might not be available
+//         JSON_KEY_DESERIALIZER = getDeserializer(ClassUtil.findClass(JSON_KEY_TYPE_DEF.getType()));
+//     } catch (Exception e) {
+//         throw new IllegalArgumentException("Failed to locate value deserializer for JSON key type "+JSON_KEY_TYPE_DEF, e);
+//     }
+// }
+// Remove the getDeserializer method
+// private static JsonDeserializer<?> getDeserializer(Class<?> cls)
+// {
+//     // note: do NOT call 'createBeanDeserializer', can not use that for base types
+//     JavaType t = _typeFactory.constructType(cls);
+//     return _deserializationContext.findRootValueDeserializer(t);
+// }
+private static JsonDeserializer<?> getDeserializer(Class<?> cls)
+{
+    if (cls == String.class) {
+        return StringDeserializer.instance;
+    }
+    if (cls == Integer.class) {
+        return IntegerDeserializer.primitiveInstance;
+    }
+    if (cls == Boolean.class) {
+        return BooleanDeserializer.primitiveInstance;
+    }
+    if (cls == Long.class) {
+        return LongDeserializer.primitiveInstance;
+    }
+    if (cls == Double.class) {
+        return DoubleDeserializer.primitiveInstance;
+    }
+    if (cls == Character.class) {
+        return CharacterDeserializer.instance;
+    }
+    if (cls == Byte.class) {
+        return ByteDeserializer.primitiveInstance;
+    }
+    if (cls == Short.class) {
+        return ShortDeserializer.primitiveInstance;
+    }
+    if (cls == Float.class) {
+        return FloatDeserializer.primitiveInstance;
+    }
+    if (cls == AtomicBoolean.class) {
+        return AtomicBooleanDeserializer.instance;
+    }
+    if (cls == AtomicInteger.class) {
+        return AtomicIntegerDeserializer.instance;
+    }
+    if (cls == AtomicLong.class) {
+        return AtomicLongDeserializer.instance;
+    }
+    if (cls == BigDecimal.class) {
+        return BigDecimalDeserializer.instance;
+    }
+    if (cls == BigInteger.class) {
+        return BigIntegerDeserializer.instance;
+    }
+    if (cls.isPrimitive()) {
+        // 26-Oct-2016, tatu: Trivial indeed, but it is nice to avoid reflection in this
+        //   case as well...
+        if (cls == Integer.TYPE) {
+            return IntegerDeserializer.primitiveInstance;
+        }
+        if (cls == Long.TYPE) {
+            return LongDeserializer.primitiveInstance;
+        }
+        if (cls == Boolean.TYPE) {
+            return BooleanDeserializer.primitiveInstance;
+        }
+        if (cls == Double.TYPE) {
+            return DoubleDeserializer.primitiveInstance;
+        }
+        if (cls == Character.TYPE) {
+            return CharacterDeserializer.instance;
+        }
+        if (cls == Byte.TYPE) {
+            return ByteDeserializer.primitiveInstance;
+        }
+        if (cls == Short.TYPE) {
+            return ShortDeserializer.primitiveInstance;
+        }
+        if (cls == Float.TYPE) {
+            return FloatDeserializer.primitiveInstance;
+        }
+    }
+    // [databind#1855]: Spring Framework "AbstractTypeHierarchicalBeanFactory"
+    if (cls.isArray()) {
+        return new ObjectArrayDeserializer(Array.newInstance(cls.getComponentType(), 0).getClass(),
+                null, null);
+    }
+    // [databind#1855]: Spring Framework "AbstractTypeHierarchicalBeanFactory"
+    if (cls == Object.class) {
+        return UntypedObjectDeserializer.instance;
+    }
+    // NOTE: should not happen... (due to way `JSON_KEY_TYPE_DEF` is constructed)
+    throw new IllegalArgumentException("Internal error: can not find deserializer for "+cls.getName());
+}

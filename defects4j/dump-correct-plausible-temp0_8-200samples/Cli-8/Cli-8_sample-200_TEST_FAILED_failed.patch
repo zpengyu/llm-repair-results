@@ -1,0 +1,65 @@
+diff --git a/src/java/org/apache/commons/cli/HelpFormatter.java b/src/java/org/apache/commons/cli/HelpFormatter.java
+index 0c5dc6b..0b2ab5a 100644
+--- a/src/java/org/apache/commons/cli/HelpFormatter.java
++++ b/src/java/org/apache/commons/cli/HelpFormatter.java
+@@ -797,31 +796,42 @@ public class HelpFormatter {
+         if (pos == -1)
+         {
+             sb.append(rtrim(text));
+-
+             return sb;
+         }
+-        sb.append(rtrim(text.substring(0, pos))).append(defaultNewLine);
+-
+-        // all following lines must be padded with nextLineTabStop space 
+-        // characters
+-        final String padding = createPadding(nextLineTabStop);
+-
+-        while (true)
+-        {
+-            text = padding + text.substring(pos).trim();
+-            pos = findWrapPos(text, width, nextLineTabStop);
+-
+-            if (pos == -1)
++        if (nextLineTabStop >= pos) {
++            sb.append(rtrim(text.substring(0, pos))).append(defaultNewLine);
++            // all following lines must be padded with nextLineTabStop space 
++            // characters
++            final String padding = createPadding(nextLineTabStop);
++            while (true)
+             {
+-                sb.append(text);
+-
+-                return sb;
++                text = padding + text.substring(pos).trim();
++                pos = findWrapPos(text, width, nextLineTabStop);
++                if (pos == -1)
++                {
++                    sb.append(text);
++                    return sb;
++                }
++                sb.append(rtrim(text.substring(0, pos))).append(defaultNewLine);
+             }
+-
++        } else {
+             sb.append(rtrim(text.substring(0, pos))).append(defaultNewLine);
++            // all following lines must be padded with nextLineTabStop space 
++            // characters
++            final String padding = createPadding(nextLineTabStop);
++            while (true)
++            {
++                text = padding + text.substring(pos).trim();
++                pos = findWrapPos(text, width, nextLineTabStop);
++                if (pos == -1)
++                {
++                    sb.append(text);
++                    return sb;
++                }
++                sb.append(rtrim(text.substring(0, pos))).append(defaultNewLine);
++            }
+         }
+     }
+-
+     /**
+      * Finds the next text wrap position after <code>startPos</code> for the 
+      * text in <code>text</code> with the column width <code>width</code>.

@@ -1,0 +1,41 @@
+diff --git a/src/main/java/org/apache/commons/compress/archivers/ArchiveStreamFactory.java b/src/main/java/org/apache/commons/compress/archivers/ArchiveStreamFactory.java
+index e2847a61..5dc4132d 100644
+--- a/src/main/java/org/apache/commons/compress/archivers/ArchiveStreamFactory.java
++++ b/src/main/java/org/apache/commons/compress/archivers/ArchiveStreamFactory.java
+@@ -199,7 +199,15 @@ public class ArchiveStreamFactory {
+         if (in == null) {
+             throw new IllegalArgumentException("Stream must not be null.");
+         }
+-
++        final ArchiveStreamFactory factory = new ArchiveStreamFactory();
++        try {
++            return factory.createArchiveInputStream(in);
++        } catch (StreamingNotSupportedException e) {
++            return handleNotSupported(in, e);
++        }
++    }
++    private ArchiveInputStream handleNotSupported(final InputStream in,
++            final StreamingNotSupportedException e) throws ArchiveException {
+         if (!in.markSupported()) {
+             throw new IllegalArgumentException("Mark is not supported.");
+         }
+@@ -241,15 +246,13 @@ public class ArchiveStreamFactory {
+                 TarArchiveInputStream tais = new TarArchiveInputStream(new ByteArrayInputStream(tarheader));
+                 tais.getNextEntry();
+                 return new TarArchiveInputStream(in);
+-            } catch (Exception e) { // NOPMD
++            } catch (Exception e2) { // NOPMD
+                 // can generate IllegalArgumentException as well as IOException
+                 // autodetection, simply not a TAR
+                 // ignored
+             }
+-        } catch (IOException e) {
+-            throw new ArchiveException("Could not use reset and mark operations.", e);
++        } catch (IOException e2) {
++            throw new ArchiveException("Could not use reset and mark operations.", e2);
+         }
+-
+         throw new ArchiveException("No Archiver found for the stream signature");
+-    }
+-}
++    }}

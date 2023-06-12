@@ -1,0 +1,25 @@
+diff --git a/src/org/mockito/internal/stubbing/answers/AnswersValidator.java b/src/org/mockito/internal/stubbing/answers/AnswersValidator.java
+index 5d8057846..edb33b7b8 100644
+--- a/src/org/mockito/internal/stubbing/answers/AnswersValidator.java
++++ b/src/org/mockito/internal/stubbing/answers/AnswersValidator.java
+@@ -24,11 +20,16 @@ public class AnswersValidator {
+         if (answer instanceof DoesNothing) {
+             validateDoNothing((DoesNothing) answer, invocation);
+         }
+-        
++        if (answer instanceof ReturnsSuper) {
++        		validateReturnType((ReturnsSuper) answer, invocation);
++        }
+     }
+-
+-
+-    private void validateDoNothing(DoesNothing answer, Invocation invocation) {
++    private void validateReturnType(ReturnsSuper answer, Invocation invocation) {
++    		if (!invocation.isValidReturnType(answer.getReturnType())) {
++            reporter.wrongTypeOfReturnValue(invocation.printMethodReturnType(), answer.printReturnType(), invocation.getMethodName());
++        }
++	}
++	private void validateDoNothing(DoesNothing answer, Invocation invocation) {
+         if (!invocation.isVoid()) {
+             reporter.onlyVoidMethodsCanBeSetToDoNothing();
+         }

@@ -1,0 +1,34 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/jsontype/impl/TypeDeserializerBase.java b/src/main/java/com/fasterxml/jackson/databind/jsontype/impl/TypeDeserializerBase.java
+index e8942ba4b..a7097e4f0 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/jsontype/impl/TypeDeserializerBase.java
++++ b/src/main/java/com/fasterxml/jackson/databind/jsontype/impl/TypeDeserializerBase.java
+@@ -161,10 +161,8 @@ public abstract class TypeDeserializerBase
+                     // 10-May-2016, tatu: We may get some help...
+                     JavaType actual = _handleUnknownTypeId(ctxt, typeId);
+                     if (actual == null) { // what should this be taken to mean?
+-                        // 17-Jan-2019, tatu: As per [databind#2221], better NOT return `null` but...
+-                        return null;
++                        return _provideDeserializer(ctxt, typeId);
+                     }
+-                    // ... would this actually work?
+                     deser = ctxt.findContextualValueDeserializer(actual, _property);
+                 }
+             } else {
+@@ -197,7 +195,16 @@ public abstract class TypeDeserializerBase
+         }
+         return deser;
+     }
+-
++    protected JsonDeserializer<Object> _provideDeserializer(DeserializationContext ctxt,
++            String typeId) throws IOException
++    {
++        /* 17-Jan-2019, tatu: As per [databind#2221] we must not return `null` here; instead we need
++         *    to throw an exception to indicate we cannot deserialize.
++         */
++        ctxt.reportMappingException("Could not resolve type id '%s' into a subtype of %s",
++                typeId, _baseType);
++        return null;
++    }
+     protected final JsonDeserializer<Object> _findDefaultImplDeserializer(DeserializationContext ctxt) throws IOException
+     {
+         /* 06-Feb-2013, tatu: As per [databind#148], consider default implementation value of

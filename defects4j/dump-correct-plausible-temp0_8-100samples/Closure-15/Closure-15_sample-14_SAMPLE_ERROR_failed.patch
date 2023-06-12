@@ -1,0 +1,37 @@
+diff --git a/src/com/google/javascript/jscomp/FlowSensitiveInlineVariables.java b/src/com/google/javascript/jscomp/FlowSensitiveInlineVariables.java
+index 0a7f29c3..2d336d12 100644
+--- a/src/com/google/javascript/jscomp/FlowSensitiveInlineVariables.java
++++ b/src/com/google/javascript/jscomp/FlowSensitiveInlineVariables.java
+@@ -98,16 +96,28 @@ class FlowSensitiveInlineVariables extends AbstractPostOrderCallback
+         if (n.isNew() && NodeUtil.constructorCallHasSideEffects(n)) {
+           return true;
+         }
+-
+-
++        // handle variable declaration
++        if (n.isVar()) {
++          String varName = n.getFirstChild().getString();
++          // the variable is in a function
++          if (currentScope.isDefinedLocally(varName)) {
++            // remove it from the set of local variables that
++            // are are not known to be modifiable
++            currentScope.setVarModifiable(varName);
++          } else if (
++              currentScope.isDefinedLocally(varName) &&
++              !globalVars.contains(varName)) {
++            // the variable is global and not known to be modifiable
++            globalVars.add(varName);
++          }
++        }
+         for (Node c = n.getFirstChild(); c != null; c = c.getNext()) {
+           if (!ControlFlowGraph.isEnteringNewCfgNode(c) && apply(c)) {
+             return true;
+           }
+         }
+         return false;
+-      }
+-  };
++      }  };
+ 
+   public FlowSensitiveInlineVariables(AbstractCompiler compiler) {
+     this.compiler = compiler;

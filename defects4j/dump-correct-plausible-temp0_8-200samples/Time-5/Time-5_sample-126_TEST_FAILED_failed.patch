@@ -1,0 +1,34 @@
+diff --git a/src/main/java/org/joda/time/Period.java b/src/main/java/org/joda/time/Period.java
+index 8fce39c6..768429ac 100644
+--- a/src/main/java/org/joda/time/Period.java
++++ b/src/main/java/org/joda/time/Period.java
+@@ -1613,14 +1613,22 @@ public final class Period
+      *  years or months but the specified period type does not support them
+      * @since 1.5
+      */
+-    public Period normalizedStandard(PeriodType type) {
++public Period normalizedStandard(PeriodType type) {
+         type = DateTimeUtils.getPeriodType(type);
+-        long millis = getMillis();  // no overflow can happen, even with Integer.MAX_VALUEs
+-        millis += (((long) getSeconds()) * ((long) DateTimeConstants.MILLIS_PER_SECOND));
+-        millis += (((long) getMinutes()) * ((long) DateTimeConstants.MILLIS_PER_MINUTE));
+-        millis += (((long) getHours()) * ((long) DateTimeConstants.MILLIS_PER_HOUR));
+-        millis += (((long) getDays()) * ((long) DateTimeConstants.MILLIS_PER_DAY));
+-        millis += (((long) getWeeks()) * ((long) DateTimeConstants.MILLIS_PER_WEEK));
++        long millis = getMillis();
++        if (millis >= 0) {
++            millis += (((long) getSeconds()) * ((long) DateTimeConstants.MILLIS_PER_SECOND));
++            millis += (((long) getMinutes()) * ((long) DateTimeConstants.MILLIS_PER_MINUTE));
++            millis += (((long) getHours()) * ((long) DateTimeConstants.MILLIS_PER_HOUR));
++            millis += (((long) getDays()) * ((long) DateTimeConstants.MILLIS_PER_DAY));
++            millis += (((long) getWeeks()) * ((long) DateTimeConstants.MILLIS_PER_WEEK));
++        } else {
++            millis -= (((long) getSeconds()) * ((long) DateTimeConstants.MILLIS_PER_SECOND));
++            millis -= (((long) getMinutes()) * ((long) DateTimeConstants.MILLIS_PER_MINUTE));
++            millis -= (((long) getHours()) * ((long) DateTimeConstants.MILLIS_PER_HOUR));
++            millis -= (((long) getDays()) * ((long) DateTimeConstants.MILLIS_PER_DAY));
++            millis -= (((long) getWeeks()) * ((long) DateTimeConstants.MILLIS_PER_WEEK));
++        }
+         Period result = new Period(millis, type, ISOChronology.getInstanceUTC());
+         int years = getYears();
+         int months = getMonths();

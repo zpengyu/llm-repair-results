@@ -1,0 +1,65 @@
+diff --git a/src/com/google/javascript/jscomp/ProcessClosurePrimitives.java b/src/com/google/javascript/jscomp/ProcessClosurePrimitives.java
+index d1d12a3c..9278958e 100644
+--- a/src/com/google/javascript/jscomp/ProcessClosurePrimitives.java
++++ b/src/com/google/javascript/jscomp/ProcessClosurePrimitives.java
+@@ -754,28 +753,38 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback
+       // Handle the case where there is a duplicate definition for an explicitly
+       // provided symbol.
+       if (candidateDefinition != null && explicitNode != null) {
+-        explicitNode.detachFromParent();
+-        compiler.reportCodeChange();
+-
+-        // Does this need a VAR keyword?
+-        replacementNode = candidateDefinition;
+-        if (NodeUtil.isExpressionNode(candidateDefinition)) {
+-          candidateDefinition.putBooleanProp(Node.IS_NAMESPACE, true);
+-          Node assignNode = candidateDefinition.getFirstChild();
+-          Node nameNode = assignNode.getFirstChild();
+-          if (nameNode.getType() == Token.NAME) {
+-            // Need to convert this assign to a var declaration.
+-            Node valueNode = nameNode.getNext();
+-            assignNode.removeChild(nameNode);
+-            assignNode.removeChild(valueNode);
+-            nameNode.addChildToFront(valueNode);
+-            Node varNode = new Node(Token.VAR, nameNode);
+-            varNode.copyInformationFrom(candidateDefinition);
+-            candidateDefinition.getParent().replaceChild(
+-                candidateDefinition, varNode);
+-            nameNode.setJSDocInfo(assignNode.getJSDocInfo());
+-            compiler.reportCodeChange();
+-            replacementNode = varNode;
++        Node parent = explicitNode.getParent();
++        if (parent.getType() == Token.VAR) {
++          // This is var a = goog.require('b.c');
++          Node replacementVar = createDeclarationNode();
++          parent.getParent().addChildBefore(replacementVar, parent);
++          replacementNode = replacementVar;
++          explicitNode.detachFromParent();
++          compiler.reportCodeChange();
++        } else {
++          // This is a = goog.require('b.c');
++          explicitNode.detachFromParent();
++          replacementNode = candidateDefinition;
++          compiler.reportCodeChange();
++          // Does this need a VAR keyword?
++          if (NodeUtil.isExpressionNode(candidateDefinition)) {
++            candidateDefinition.putBooleanProp(Node.IS_NAMESPACE, true);
++            Node assignNode = candidateDefinition.getFirstChild();
++            Node nameNode = assignNode.getFirstChild();
++            if (nameNode.getType() == Token.NAME) {
++              // Need to convert this assign to a var declaration.
++              Node valueNode = nameNode.getNext();
++              assignNode.removeChild(nameNode);
++              assignNode.removeChild(valueNode);
++              nameNode.addChildToFront(valueNode);
++              Node varNode = new Node(Token.VAR, nameNode);
++              varNode.copyInformationFrom(candidateDefinition);
++              candidateDefinition.getParent().replaceChild(
++                  candidateDefinition, varNode);
++              nameNode.setJSDocInfo(assignNode.getJSDocInfo());
++              compiler.reportCodeChange();
++              replacementNode = varNode;
++            }
+           }
+         }
+       } else {

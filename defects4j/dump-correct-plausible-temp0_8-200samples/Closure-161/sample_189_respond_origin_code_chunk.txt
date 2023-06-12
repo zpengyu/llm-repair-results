@@ -1,0 +1,37 @@
+Node tryFoldArrayAccess(Node n, Node left, Node right) {
+    Node parent = n.getParent();
+    // If GETPROP/GETELEM is used as assignment target the array literal is
+    // acting as a temporary we can't fold it here:
+    //    "[][0] += 1"
+
+    // If the index is not an integer or is negative, then don't attempt to
+    // fold.
+    if (!right.isNumber()
+        || (right.isNumber() && !right.getDouble() == Math.floor(right.getDouble()))
+        || (right.isNumber() && right.getDouble() < 0)) {
+      return n;
+    }
+
+    Node elem = left.getFirstChild();
+    // Get the nth element.
+    for (int i = 0; elem != null && i < right.getDouble(); i++) {
+      elem = elem.getNext();
+    }
+
+    if (elem == null) {
+      error(INDEX_OUT_OF_BOUNDS_ERROR, right);
+      return n;
+    }
+
+    if (elem.getType() == Token.EMPTY) {
+      elem = NodeUtil.newUndefinedNode(elem);
+    } else {
+      left.removeChild(elem);
+    }
+
+    // Replace the entire GETELEM with the value
+    n.getParent().replaceChild(n, elem);
+    reportCodeChange();
+    return elem;
+  }
+

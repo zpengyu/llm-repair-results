@@ -1,0 +1,26 @@
+diff --git a/gson/src/main/java/com/google/gson/internal/bind/ReflectiveTypeAdapterFactory.java b/gson/src/main/java/com/google/gson/internal/bind/ReflectiveTypeAdapterFactory.java
+index 2e7f4b74..291ef6be 100644
+--- a/gson/src/main/java/com/google/gson/internal/bind/ReflectiveTypeAdapterFactory.java
++++ b/gson/src/main/java/com/google/gson/internal/bind/ReflectiveTypeAdapterFactory.java
+@@ -116,14 +116,13 @@ public final class ReflectiveTypeAdapterFactory implements TypeAdapterFactory {
+     final TypeAdapter<?> typeAdapter = mapped;
+     return new ReflectiveTypeAdapterFactory.BoundField(name, serialize, deserialize) {
+       @SuppressWarnings({"unchecked", "rawtypes"}) // the type adapter and field type always agree
+-      @Override void write(JsonWriter writer, Object value)
+-          throws IOException, IllegalAccessException {
+-        Object fieldValue = field.get(value);
+-        TypeAdapter t =
+-          new TypeAdapterRuntimeTypeWrapper(context, typeAdapter, fieldType.getType());
+-        t.write(writer, fieldValue);
+-      }
+-      @Override void read(JsonReader reader, Object value)
++    @Override void write(JsonWriter writer, Object value)
++        throws IOException, IllegalAccessException {
++      Object fieldValue = field.get(value);
++      TypeAdapter t =
++        new TypeAdapterRuntimeTypeWrapper(context, typeAdapter, fieldType);
++      t.write(writer, fieldValue);
++    }      @Override void read(JsonReader reader, Object value)
+           throws IOException, IllegalAccessException {
+         Object fieldValue = typeAdapter.read(reader);
+         if (fieldValue != null || !isPrimitive) {

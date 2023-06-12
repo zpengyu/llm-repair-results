@@ -1,0 +1,46 @@
+    public JavaType refineSerializationType(final MapperConfig<?> config,
+            final Annotated a, final JavaType baseType) throws JsonMappingException
+    {
+        JavaType type = baseType;
+        final TypeFactory tf = config.getTypeFactory();
+        
+        // 10-Oct-2015, tatu: For 2.7, we'll need to delegate back to
+        //    now-deprecated secondary methods; this because while
+        //    direct sub-class not yet retrofitted may only override
+        //    those methods. With 2.8 or later we may consider removal
+        //    of these methods
+        if (type.isContainerType()) {
+            Class<?> serClass = findSerializationType(a);
+            Class<?> keyClass = findSerializationKeyType(a, type.getKeyType());
+            Class<?> contentClass = findSerializationContentType(a, type.getContentType());
+            if ((serClass != null) || (keyClass != null) || (contentClass != null)) {
+                try {
+                    type = tf.constructSpecializedType(type, serClass, keyClass, contentClass);
+                } catch (IllegalArgumentException iae) {
+                    throw new JsonMappingException(null,
+                            String.format("Failed to narrow type %s with annotation (value %s, key type %s, content type %s): %s",
+                                    type, serClass, keyClass, contentClass, iae.getMessage()),
+                                    iae);
+                }
+            }
+        } else {
+            Class<?> serClass = findSerializationType(a);
+            if (serClass != null) {
+                try {
+                    type = tf.constructSpecializedType(type, serClass);
+                } catch (IllegalArgumentException iae) {
+                    throw new JsonMappingException(null,
+                            String.format("Failed to narrow type %s with concrete-type annotation (value %s): %s",
+                                    type, serClass.getName(), iae.getMessage()),
+                                    iae);
+                }
+            }
+        }
+        // [databind#827]: need to check for annotations that indicate static typing as well
+        Boolean B = findSerializationTyping(config, a);
+        if (B != null) {
+            type = type.withStaticTyping();
+        }
+        return type;
+    }
+

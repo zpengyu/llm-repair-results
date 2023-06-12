@@ -1,0 +1,96 @@
+diff --git a/src/java/org/apache/commons/jxpath/ri/compiler/CoreOperationRelationalExpression.java b/src/java/org/apache/commons/jxpath/ri/compiler/CoreOperationRelationalExpression.java
+index cd4ceac..33a0560 100644
+--- a/src/java/org/apache/commons/jxpath/ri/compiler/CoreOperationRelationalExpression.java
++++ b/src/java/org/apache/commons/jxpath/ri/compiler/CoreOperationRelationalExpression.java
+@@ -41,63 +40,56 @@ public abstract class CoreOperationRelationalExpression extends CoreOperation {
+     protected CoreOperationRelationalExpression(Expression[] args) {
+         super(args);
+     }
+-
+     public final Object computeValue(EvalContext context) {
+-        return compute(args[0].compute(context), args[1].compute(context))
+-                ? Boolean.TRUE : Boolean.FALSE;
+-    }
+-
+-    protected final int getPrecedence() {
+-        return RELATIONAL_EXPR_PRECEDENCE;
+-    }
+-
+-    protected final boolean isSymmetric() {
+-        return false;
+-    }
+-
+-    /**
+-     * Template method for subclasses to evaluate the result of a comparison.
+-     * @param compare result of comparison to evaluate
+-     * @return ultimate operation success/failure
+-     */
+-    protected abstract boolean evaluateCompare(int compare);
+-
+-    /**
+-     * Compare left to right.
+-     * @param left left operand
+-     * @param right right operand
+-     * @return operation success/failure
+-     */
+-    private boolean compute(Object left, Object right) {
++        Object left = args[0].compute(context);
++        Object right = args[1].compute(context);
+         left = reduce(left);
+         right = reduce(right);
+-
+         if (left instanceof InitialContext) {
+             ((InitialContext) left).reset();
+         }
+         if (right instanceof InitialContext) {
+             ((InitialContext) right).reset();
+         }
++        if (left instanceof Collection && right instanceof Collection) {
++            left = ((Collection) left).iterator();
++            right = ((Collection) right).iterator();
++        }
+         if (left instanceof Iterator && right instanceof Iterator) {
+-            return findMatch((Iterator) left, (Iterator) right);
++            return findMatch((Iterator) left, (Iterator) right)
++                    ? Boolean.TRUE : Boolean.FALSE;
+         }
+         if (left instanceof Iterator) {
+-            return containsMatch((Iterator) left, right);
++            return containsMatch((Iterator) left, right)
++                    ? Boolean.TRUE : Boolean.FALSE;
+         }
+         if (right instanceof Iterator) {
+-            return containsMatch((Iterator) right, left);
++            return containsMatch((Iterator) right, left)
++                    ? Boolean.TRUE : Boolean.FALSE;
+         }
+         double ld = InfoSetUtil.doubleValue(left);
+         if (Double.isNaN(ld)) {
+-            return false;
++            return Boolean.FALSE;
+         }
+         double rd = InfoSetUtil.doubleValue(right);
+         if (Double.isNaN(rd)) {
+-            return false;
++            return Boolean.FALSE;
+         }
+-        return evaluateCompare(ld == rd ? 0 : ld < rd ? -1 : 1);
++        return evaluateCompare(ld == rd ? 0 : ld < rd ? -1 : 1)
++                ? Boolean.TRUE : Boolean.FALSE;
++    }
++    protected final int getPrecedence() {
++        return RELATIONAL_EXPR_PRECEDENCE;
++    }
++    protected final boolean isSymmetric() {
++        return false;
+     }
+-
++    /**
++     * Template method for subclasses to evaluate the result of a comparison.
++     * @param compare result of comparison to evaluate
++     * @return ultimate operation success/failure
++     */
++    protected abstract boolean evaluateCompare(int compare);
+     /**
+      * Reduce an operand for comparison.
+      * @param o Object to reduce

@@ -1,0 +1,21 @@
+diff --git a/src/com/google/javascript/jscomp/PeepholeReplaceKnownMethods.java b/src/com/google/javascript/jscomp/PeepholeReplaceKnownMethods.java
+index c64b2ffd..62986eb9 100644
+--- a/src/com/google/javascript/jscomp/PeepholeReplaceKnownMethods.java
++++ b/src/com/google/javascript/jscomp/PeepholeReplaceKnownMethods.java
+@@ -385,10 +381,13 @@ class PeepholeReplaceKnownMethods extends AbstractPeepholeOptimization{
+         !functionName.getString().equals("join")) {
+       return n;
+     }
+-
+-      // "," is the default, it doesn't need to be explicit
+-
++    // "," is the default, it doesn't need to be explicit
+     String joinString = (right == null) ? "," : NodeUtil.getStringValue(right);
++    // if the array has more than MAX_FOLD_SIZE elements, it's not worth
++    // folding
++    if (arrayNode.getChildCount() > MAX_FOLD_SIZE) {
++      return n;
++    }
+     List<Node> arrayFoldedChildren = Lists.newLinkedList();
+     StringBuilder sb = null;
+     int foldedSize = 0;

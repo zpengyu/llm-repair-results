@@ -1,0 +1,28 @@
+diff --git a/src/main/java/org/jsoup/helper/DataUtil.java b/src/main/java/org/jsoup/helper/DataUtil.java
+index e4fa18c..302f969 100644
+--- a/src/main/java/org/jsoup/helper/DataUtil.java
++++ b/src/main/java/org/jsoup/helper/DataUtil.java
+@@ -92,7 +92,7 @@ public final class DataUtil {
+         }
+     }
+ 
+-    static Document parseInputStream(InputStream input, String charsetName, String baseUri, Parser parser) throws IOException  {
++    static Document parseInputStream(InputStream input, String charsetName, String baseUri, Parser parser) throws IOException {
+         if (input == null) // empty body
+             return new Document(baseUri);
+         input = ConstrainableInputStream.wrap(input, bufferSize, 0);
+@@ -168,7 +162,13 @@ public final class DataUtil {
+             }
+             Charset charset = Charset.forName(charsetName);
+             doc.outputSettings().charset(charset);
+-                // some charsets can read but not encode; switch to an encodable charset and update the meta el
++            // some charsets can read but not encode; switch to an encodable charset and update the meta el
++            String charsetMeta = getCharsetFromContentType(charsetName);
++            if (charsetMeta != null) {
++                doc.select("meta[http-equiv=content-type]").attr("content", "text/html;charset=" + charsetMeta);
++                doc.select("meta[charset]").attr("charset", charsetMeta);
++                doc.outputSettings().charset(charset);
++            }
+         }
+         input.close();
+         return doc;

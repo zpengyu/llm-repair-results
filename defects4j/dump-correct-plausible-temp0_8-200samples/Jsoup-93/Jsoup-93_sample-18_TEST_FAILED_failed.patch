@@ -1,0 +1,31 @@
+diff --git a/src/main/java/org/jsoup/nodes/FormElement.java b/src/main/java/org/jsoup/nodes/FormElement.java
+index 3949f22..4efeddf 100644
+--- a/src/main/java/org/jsoup/nodes/FormElement.java
++++ b/src/main/java/org/jsoup/nodes/FormElement.java
+@@ -95,14 +92,15 @@ public class FormElement extends Element {
+                     set = true;
+                 }
+                 if (!set) {
+-                    Element option = el.select("option").first();
+-                    if (option != null)
+-                        data.add(HttpConnection.KeyVal.create(name, option.val()));
++                    Elements options2 = el.select("option");
++                    if (!options2.isEmpty()) {
++                        data.add(HttpConnection.KeyVal.create(name, options2.first().val()));
++                    }
+                 }
+             } else if ("checkbox".equalsIgnoreCase(type) || "radio".equalsIgnoreCase(type)) {
+                 // only add checkbox or radio if they have the checked attribute
+                 if (el.hasAttr("checked")) {
+-                    final String val = el.val().length() >  0 ? el.val() : "on";
++                    final String val = el.hasAttr("value") ? el.attr("value") : "on";
+                     data.add(HttpConnection.KeyVal.create(name, val));
+                 }
+             } else {
+@@ -110,5 +108,4 @@ public class FormElement extends Element {
+             }
+         }
+         return data;
+-    }
+-}
++    }}

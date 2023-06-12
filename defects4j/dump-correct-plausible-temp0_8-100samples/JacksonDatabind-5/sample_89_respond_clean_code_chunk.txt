@@ -1,0 +1,32 @@
+    protected void _addMethodMixIns(Class<?> targetClass, AnnotatedMethodMap methods,
+            Class<?> mixInCls, AnnotatedMethodMap mixIns)
+    {
+        List<Class<?>> parents = new ArrayList<Class<?>>();
+        parents.add(mixInCls);
+        ClassUtil.findSuperTypes(mixInCls, targetClass, parents);
+        for (Class<?> mixin : parents) {
+            for (Method m : mixin.getDeclaredMethods()) {
+                if (!_isIncludableMemberMethod(m)) {
+                    continue;
+                }
+                AnnotatedMethod old = methods.find(m);
+                if (old == null) {
+                    try {
+                        Method real = targetClass.getDeclaredMethod(m.getName(), m.getParameterTypes());
+                        old = methods.find(real);
+                    } catch (Exception e) {
+                        continue;
+                    }
+                }
+                if (old == null) {
+                    continue;
+                }
+                AnnotatedMethod base = _constructMethod(m);
+                if (old.getAnnotated() == base.getAnnotated()) {
+                    old.addMixIns(base);
+                } else {
+                    mixIns.add(base);
+                }
+            }
+        }
+    }

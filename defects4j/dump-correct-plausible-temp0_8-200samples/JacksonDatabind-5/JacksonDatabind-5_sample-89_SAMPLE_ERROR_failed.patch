@@ -1,0 +1,41 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/introspect/AnnotatedClass.java b/src/main/java/com/fasterxml/jackson/databind/introspect/AnnotatedClass.java
+index 929076729..72cf74222 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/introspect/AnnotatedClass.java
++++ b/src/main/java/com/fasterxml/jackson/databind/introspect/AnnotatedClass.java
+@@ -642,20 +642,23 @@ public final class AnnotatedClass
+                 if (!_isIncludableMemberMethod(m)) {
+                     continue;
+                 }
+-                AnnotatedMethod am = methods.find(m);
+-                /* Do we already have a method to augment (from sub-class
+-                 * that will mask this mixIn)? If so, add if visible
+-                 * without masking (no such annotation)
+-                 */
+-                if (am != null) {
+-                    _addMixUnders(m, am);
+-                    /* Otherwise will have precedence, but must wait
+-                     * until we find the real method (mixIn methods are
+-                     * just placeholder, can't be called)
+-                     */
++                AnnotatedMethod old = methods.find(m);
++                if (old == null) {
++                    try {
++                        Method real = targetClass.getDeclaredMethod(m.getName(), m.getParameterTypes());
++                        old = methods.find(real);
++                    } catch (Exception e) {
++                        continue;
++                    }
++                }
++                if (old == null) {
++                    continue;
++                }
++                AnnotatedMethod base = _constructMethod(m);
++                if (old.getAnnotated() == base.getAnnotated()) {
++                    old.addMixIns(base);
+                 } else {
+-                    // Well, or, as per [Issue#515], multi-level merge within mixins...
+-                        mixIns.add(_constructMethod(m));
++                    mixIns.add(base);
+                 }
+             }
+         }

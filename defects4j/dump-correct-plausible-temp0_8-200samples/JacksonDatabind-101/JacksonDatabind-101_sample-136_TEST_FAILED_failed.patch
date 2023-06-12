@@ -1,0 +1,55 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/deser/BeanDeserializer.java b/src/main/java/com/fasterxml/jackson/databind/deser/BeanDeserializer.java
+index 3c89dc109..d35c95640 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/deser/BeanDeserializer.java
++++ b/src/main/java/com/fasterxml/jackson/databind/deser/BeanDeserializer.java
+@@ -733,7 +733,7 @@ public class BeanDeserializer
+     }
+ 
+     @SuppressWarnings("resource")
+-    protected Object deserializeUsingPropertyBasedWithUnwrapped(JsonParser p, DeserializationContext ctxt)
++protected Object deserializeUsingPropertyBasedWithUnwrapped(JsonParser p, DeserializationContext ctxt)
+         throws IOException
+     {
+         // 01-Dec-2016, tatu: Note: This IS legal to call, but only when unwrapped
+@@ -806,24 +803,26 @@ public class BeanDeserializer
+             //    we can do.
+             // how about any setter? We'll get copies but...
+             if (_anySetter == null) {
+-                // but... others should be passed to unwrapped property deserializers
+-                tokens.writeFieldName(propName);
+-                tokens.copyCurrentStructure(p);
+-            } else {
+-                // Need to copy to a separate buffer first
+-                TokenBuffer b2 = TokenBuffer.asCopyOfValue(p);
+-                tokens.writeFieldName(propName);
+-                tokens.append(b2);
+-                try {
+-                    buffer.bufferAnyProperty(_anySetter, propName,
+-                            _anySetter.deserialize(b2.asParserOnFirstToken(), ctxt));
+-                } catch (Exception e) {
+-                    wrapAndThrow(e, _beanType.getRawClass(), propName, ctxt);
+-                }
++                // !!! 08-Jul-2011, tatu: Could probably support; but for now
++                //   it's too complicated, so bail out
++                ctxt.reportInputMismatch(
++                        handledType(),
++                        "Cannot handle managed/back reference '%s': no back reference property found from type %s",
++                        propName, handledType().getName());
+                 continue;
+             }
++            // Need to copy to a separate buffer first
++            TokenBuffer b2 = TokenBuffer.asCopyOfValue(p);
++            tokens.writeFieldName(propName);
++            tokens.append(b2);
++            try {
++                buffer.bufferAnyProperty(_anySetter, propName,
++                        _anySetter.deserialize(b2.asParserOnFirstToken(), ctxt));
++            } catch (Exception e) {
++                wrapAndThrow(e, _beanType.getRawClass(), propName, ctxt);
++            }
++            continue;
+         }
+-
+         // We hit END_OBJECT, so:
+         Object bean;
+         try {

@@ -1,0 +1,27 @@
+diff --git a/src/main/java/org/joda/time/DateTimeZone.java b/src/main/java/org/joda/time/DateTimeZone.java
+index 6c2eec91..470f4947 100644
+--- a/src/main/java/org/joda/time/DateTimeZone.java
++++ b/src/main/java/org/joda/time/DateTimeZone.java
+@@ -279,21 +279,9 @@ public abstract class DateTimeZone implements Serializable {
+         if (minutesOffset < 0 || minutesOffset > 59) {
+             throw new IllegalArgumentException("Minutes out of range: " + minutesOffset);
+         }
+-        int offset = 0;
+-        try {
+-            int hoursInMinutes = hoursOffset * 60;
+-            if (hoursInMinutes < 0) {
+-                minutesOffset = hoursInMinutes - minutesOffset;
+-            } else {
+-                minutesOffset = hoursInMinutes + minutesOffset;
+-            }
+-            offset = FieldUtils.safeMultiply(minutesOffset, DateTimeConstants.MILLIS_PER_MINUTE);
+-        } catch (ArithmeticException ex) {
+-            throw new IllegalArgumentException("Offset is too large");
+-        }
++        int offset = FieldUtils.safeMultiply(hoursOffset, DateTimeConstants.MILLIS_PER_HOUR) + FieldUtils.safeMultiply(minutesOffset, DateTimeConstants.MILLIS_PER_MINUTE);
+         return forOffsetMillis(offset);
+     }
+-
+     /**
+      * Gets a time zone instance for the specified offset to UTC in milliseconds.
+      *

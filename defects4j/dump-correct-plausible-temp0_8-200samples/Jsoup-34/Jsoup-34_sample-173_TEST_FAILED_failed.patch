@@ -1,0 +1,28 @@
+diff --git a/src/main/java/org/jsoup/parser/CharacterReader.java b/src/main/java/org/jsoup/parser/CharacterReader.java
+index bcda218..9e5e64a 100644
+--- a/src/main/java/org/jsoup/parser/CharacterReader.java
++++ b/src/main/java/org/jsoup/parser/CharacterReader.java
+@@ -80,7 +80,7 @@ class CharacterReader {
+      * @return offset between current position and next instance of target. -1 if not found.
+      */
+     int nextIndexOf(CharSequence seq) {
+-        // doesn't handle scanning for surrogates
++        // handles scanning for surrogates
+         char startChar = seq.charAt(0);
+         for (int offset = pos; offset < length; offset++) {
+             // scan to first instance of startchar:
+@@ -89,7 +89,13 @@ class CharacterReader {
+             int i = offset + 1;
+             int last = i + seq.length()-1;
+             if (offset < length) {
+-                for (int j = 1; i < last && seq.charAt(j) == input[i]; i++, j++);
++                for (int j = 1; i < last && seq.charAt(j) == input[i]; i++, j++) {
++                    // advance with surrogates
++                    if (Character.isHighSurrogate(input[i-1])) {
++                        i++;
++                        j++;
++                    }
++                }
+                 if (i == last) // found full sequence
+                     return offset - pos;
+             }

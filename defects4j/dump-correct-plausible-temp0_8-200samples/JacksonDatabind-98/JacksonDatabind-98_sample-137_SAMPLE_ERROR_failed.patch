@@ -1,0 +1,42 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/deser/impl/ExternalTypeHandler.java b/src/main/java/com/fasterxml/jackson/databind/deser/impl/ExternalTypeHandler.java
+index b0797059f..f7ef4bf69 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/deser/impl/ExternalTypeHandler.java
++++ b/src/main/java/com/fasterxml/jackson/databind/deser/impl/ExternalTypeHandler.java
+@@ -265,6 +265,14 @@ public class ExternalTypeHandler
+             if (typeId == null) {
+                 // let's allow missing both type and property (may already have been set, too)
+                 if (_tokens[i] == null) {
++                    // not set either way? is this optional?
++                    // 09-Aug-2012, tatu: One additional twist; maybe it's "always as array"?
++                    if (extProp.isRequired()) {
++                        ctxt.reportInputMismatch(_beanType,
++                                "Missing external type id property '%s'",
++                                extProp.getTypePropertyName());
++                    }
++                    // otherwise just skip
+                     continue;
+                 }
+                 // but not just one
+@@ -277,13 +285,18 @@ public class ExternalTypeHandler
+                     typeId = extProp.getDefaultTypeId();
+                 }
+             } else if (_tokens[i] == null) {
++                // 19-Aug-2012, tatu: Now, we may have accidentally marked it as "always-as-array"
++                //    but this is not always the case; so:
+                 SettableBeanProperty prop = extProp.getProperty();
+-                ctxt.reportInputMismatch(_beanType,
+-                        "Missing property '%s' for external type id '%s'",
+-                        prop.getName(), _properties[i].getTypePropertyName());
++                if (prop.isRequired()) {
++                    ctxt.reportInputMismatch(_beanType,
++                            "Missing property '%s' for external type id '%s'",
++                            prop.getName(), _properties[i].getTypePropertyName());
++                }
++                // otherwise just skip
++                continue;
+             }
+             values[i] = _deserialize(p, ctxt, i, typeId);
+-
+             final SettableBeanProperty prop = extProp.getProperty();
+             // also: if it's creator prop, fill in
+             if (prop.getCreatorIndex() >= 0) {

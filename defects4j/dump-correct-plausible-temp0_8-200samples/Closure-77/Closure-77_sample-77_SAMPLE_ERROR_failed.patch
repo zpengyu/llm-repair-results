@@ -1,0 +1,30 @@
+diff --git a/src/com/google/javascript/jscomp/CodeGenerator.java b/src/com/google/javascript/jscomp/CodeGenerator.java
+index a9d0a5b0..89517f01 100644
+--- a/src/com/google/javascript/jscomp/CodeGenerator.java
++++ b/src/com/google/javascript/jscomp/CodeGenerator.java
+@@ -1023,7 +1021,24 @@ class CodeGenerator {
+     sb.append(quote);
+     return sb.toString();
+   }
+-
++  private static void appendHexJavaScriptRepresentation(
++      StringBuilder sb, char c) {
++    sb.append("\\u");
++    String hexString = Integer.toHexString(c);
++    for (int j = hexString.length(); j < 4; ++j) {
++      sb.append('0');
++    }
++    sb.append(hexString);
++  }
++  /**
++   * Returns a javascript string that, if evaluated as javascript source,
++   * produces a string with the same value as the given string, including
++   * javascript escape sequences for special characters.
++   * The result is double-quoted.
++   */
++  public static String javaScriptString(String s) {
++    return strEscape(s, '\"', "\\\"", "\\'", "\\\\", null);
++  }
+   static String identifierEscape(String s) {
+     // First check if escaping is needed at all -- in most cases it isn't.
+     if (NodeUtil.isLatin(s)) {

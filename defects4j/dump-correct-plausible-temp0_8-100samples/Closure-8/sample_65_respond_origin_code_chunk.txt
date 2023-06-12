@@ -1,0 +1,108 @@
+CollapseVariableDeclarations(AbstractCompiler compiler) {
+  Preconditions.checkState(!compiler.getLifeCycleStage().isNormalized());
+  this.compiler = compiler;
+}
+
+
+@Override
+public void process(Node externs, Node root) {
+  collapses.clear();
+  nodesToCollapse.clear();
+
+  NodeTraversal.traverse(compiler, root, new GatherCollapses());
+
+  if (!collapses.isEmpty()) {
+    applyCollapses();
+    compiler.reportCodeChange();
+  }
+}
+
+private class GatherCollapses extends AbstractPostOrderCallback {
+
+  // If a VAR is declared like
+  // var x;
+  // then we should not create new VAR nodes for it later in the tree.
+  // This is a workaround for a bug in Firefox.
+  private final Set<Var> blacklistedVars = Sets.newHashSet();
+
+  @Override
+  public void visit(NodeTraversal t, Node n, Node parent) {
+    if (n.isVar()) {
+      blacklistStubVars(t, n);
+    }
+
+    // Only care about var nodes
+    if (!n.isVar() && !canBeRedeclared(n, t.getScope())) return;
+
+    // If we've already looked at this node, skip it
+    if (nodesToCollapse.contains(n)) return;
+
+    Node varNode = n;
+
+    boolean hasVar = n.isVar();
+
+    // Find variable declarations that follow this one (if any)
+    n = n.getNext();
+
+    boolean hasNodesToCollapse = false;
+
+    while (n != null &&
+        (n.isVar() || canBeRedeclared(n, t.getScope()))) {
+
+      if (n.isVar()) {
+        blacklistStubVars(t, n);
+        hasVar = true;
+      }
+
+      nodesToCollapse.add(n);
+      hasNodesToCollapse = true;
+
+      n = n.getNext();
+    }
+
+    if (hasNodesToCollapse && hasVar) {
+      nodesToCollapse.add(varNode);
+      collapses.add(new Collapse(varNode, n, parent));
+    }
+  }
+
+  private void blacklistStubVars(NodeTraversal t, Node varNode) {
+    for (Node child = varNode.getFirstChild();
+         child != null; child = child.getNext()) {
+      if (child.getFirstChild() == null) {
+        blacklistedVars.add(t.getScope().getVar(child.getString()));
+      }
+    }
+  }
+
+  private boolean canBeRedeclared(Node n, Scope s) {
+    if (!NodeUtil.isExprAssign(n)) {
+      return false;
+    }
+    Node assign = n.getFirstChild();
+    Node lhs = assign.getFirstChild();
+
+    if (!lhs.isName()) {
+      return false;
+    }
+
+    Var var = s.getVar(lhs.getString());
+    return var != null
+        && var.getScope() == s
+        && !blacklistedVars.contains(var);
+  }
+}
+
+@Override
+public void process(Node externs, Node root) {
+  collapses.clear();
+  nodesToCollapse.clear();
+
+  NodeTraversal.traverse(compiler, root, new GatherCollapses());
+
+  if (!collapses.isEmpty()) {
+    applyCollapses();
+    compiler.reportCodeChange();
+  }
+}
+

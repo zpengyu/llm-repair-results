@@ -1,0 +1,18 @@
+diff --git a/src/com/google/javascript/jscomp/parsing/IRFactory.java b/src/com/google/javascript/jscomp/parsing/IRFactory.java
+index 32a15610..0491e892 100644
+--- a/src/com/google/javascript/jscomp/parsing/IRFactory.java
++++ b/src/com/google/javascript/jscomp/parsing/IRFactory.java
+@@ -554,8 +552,12 @@ public class IRFactory {
+         lp.addChildToBack(transform(param));
+       }
+       node.addChildToBack(lp);
+-
++      // Correctly set line number of body.
+       Node bodyNode = transform(functionNode.getBody());
++      bodyNode.setLineno(functionNode.getLineno());
++      int lBraceCharno = functionNode.getLbracePosition() +
++          functionNode.getAbsolutePosition();
++      bodyNode.setCharno(position2charno(lBraceCharno));
+       parseDirectives(bodyNode);
+       node.addChildToBack(bodyNode);
+      return node;

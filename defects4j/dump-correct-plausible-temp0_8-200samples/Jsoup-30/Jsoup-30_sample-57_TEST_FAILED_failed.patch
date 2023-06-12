@@ -1,0 +1,16 @@
+diff --git a/src/main/java/org/jsoup/safety/Cleaner.java b/src/main/java/org/jsoup/safety/Cleaner.java
+index c6879b1..cfadc17 100644
+--- a/src/main/java/org/jsoup/safety/Cleaner.java
++++ b/src/main/java/org/jsoup/safety/Cleaner.java
+@@ -79,9 +70,10 @@ public class Cleaner {
+                     ElementMeta meta = createSafeElement(sourceEl);
+                     Element destChild = meta.el;
+                     destination.appendChild(destChild);
+-
+                     numDiscarded += meta.numAttribsDiscarded;
+                     numDiscarded += copySafeNodes(sourceEl, destChild);
++                } else if (sourceEl.tag().isData()) { // handle <!CDATA and <% text nodes
++                    destination.appendChild(new DataNode(sourceEl.data(), sourceEl.baseUri()));
+                 } else {
+                     numDiscarded++;
+                     numDiscarded += copySafeNodes(sourceEl, destination);

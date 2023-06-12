@@ -1,0 +1,35 @@
+diff --git a/src/main/java/org/apache/commons/math/analysis/solvers/BrentSolver.java b/src/main/java/org/apache/commons/math/analysis/solvers/BrentSolver.java
+index 747f80ac0..95161277f 100644
+--- a/src/main/java/org/apache/commons/math/analysis/solvers/BrentSolver.java
++++ b/src/main/java/org/apache/commons/math/analysis/solvers/BrentSolver.java
+@@ -98,10 +98,9 @@ public class BrentSolver extends UnivariateRealSolverImpl {
+     public double solve(final UnivariateRealFunction f,
+                         final double min, final double max, final double initial)
+         throws MaxIterationsExceededException, FunctionEvaluationException {
+-
+         clearResult();
++        verifyInterval(min, max);
+         verifySequence(min, initial, max);
+-
+         // return the initial guess if it is good enough
+         double yInitial = f.value(initial);
+         if (Math.abs(yInitial) <= functionValueAccuracy) {
+@@ -132,17 +127,9 @@ public class BrentSolver extends UnivariateRealSolverImpl {
+         if (yInitial * yMax < 0) {
+             return solve(f, initial, yInitial, max, yMax, initial, yInitial);
+         }
+-
+-        if (yMin * yMax > 0) {
+-            throw MathRuntimeException.createIllegalArgumentException(
++        throw MathRuntimeException.createIllegalArgumentException(
+                   NON_BRACKETING_MESSAGE, min, max, yMin, yMax);
+-        }
+-
+-        // full Brent algorithm starting with provided initial guess
+-        return solve(f, min, yMin, max, yMax, initial, yInitial);
+-
+     }
+-
+     /**
+      * Find a zero in the given interval.
+      * <p>

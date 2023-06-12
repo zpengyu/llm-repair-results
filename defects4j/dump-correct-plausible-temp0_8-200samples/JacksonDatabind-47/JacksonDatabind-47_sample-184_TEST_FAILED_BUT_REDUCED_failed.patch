@@ -1,0 +1,20 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/AnnotationIntrospector.java b/src/main/java/com/fasterxml/jackson/databind/AnnotationIntrospector.java
+index 624a1fd7e..74de965d5 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/AnnotationIntrospector.java
++++ b/src/main/java/com/fasterxml/jackson/databind/AnnotationIntrospector.java
+@@ -816,7 +813,15 @@ public abstract class AnnotationIntrospector
+                 try {
+                     // 11-Oct-2015, tatu: For deser, we call `TypeFactory.constructSpecializedType()`,
+                     //   may be needed here too in future?
++                    if (serClass.isAssignableFrom(type.getRawClass())) {
+                         type = tf.constructGeneralizedType(type, serClass);
++                    } else if (type.getRawClass().isAssignableFrom(serClass)) {
++                        type = tf.constructSpecializedType(type, serClass);
++                    } else {
++                        throw new JsonMappingException(null,
++                            String.format("Failed to widen type %s with annotation (value %s), from '%s': Class %s not assignable to %s",
++                                type, serClass.getName(), a.getName(), serClass.getName(), type));
++                    }
+                 } catch (IllegalArgumentException iae) {
+                     throw new JsonMappingException(null,
+                             String.format("Failed to widen type %s with annotation (value %s), from '%s': %s",

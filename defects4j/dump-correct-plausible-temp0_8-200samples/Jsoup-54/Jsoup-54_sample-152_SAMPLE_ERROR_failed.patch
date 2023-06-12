@@ -1,0 +1,24 @@
+diff --git a/src/main/java/org/jsoup/helper/W3CDom.java b/src/main/java/org/jsoup/helper/W3CDom.java
+index 3fc697c..2b9d564 100644
+--- a/src/main/java/org/jsoup/helper/W3CDom.java
++++ b/src/main/java/org/jsoup/helper/W3CDom.java
+@@ -121,12 +121,15 @@ public class W3CDom {
+ 
+         private void copyAttributes(org.jsoup.nodes.Node source, Element el) {
+             for (Attribute attribute : source.attributes()) {
+-                // valid xml attribute names are: ^[a-zA-Z_:][-a-zA-Z0-9_:.]
+-                String key = attribute.getKey().replaceAll("[^-a-zA-Z0-9_:.]", "");
+-                    el.setAttribute(key, attribute.getValue());
++                String key = attribute.getKey();
++                String value = attribute.getValue();
++                if (!key.matches("[a-zA-Z_:][-a-zA-Z0-9_:.]*"))
++                    continue;
++                if (el.hasAttr(key))
++                    continue;
++                el.setAttribute(key, value);
+             }
+         }
+-
+         /**
+          * Finds any namespaces defined in this element. Returns any tag prefix.
+          */

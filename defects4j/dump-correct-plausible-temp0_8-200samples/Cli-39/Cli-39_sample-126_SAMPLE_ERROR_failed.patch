@@ -1,0 +1,68 @@
+diff --git a/src/main/java/org/apache/commons/cli/TypeHandler.java b/src/main/java/org/apache/commons/cli/TypeHandler.java
+index 775e0f2..d1299de 100644
+--- a/src/main/java/org/apache/commons/cli/TypeHandler.java
++++ b/src/main/java/org/apache/commons/cli/TypeHandler.java
+@@ -99,6 +98,12 @@ public class TypeHandler
+         {
+             return createURL(str);
+         }
++        else if (PatternOptionBuilder.METHOD_VALUE == clazz) {
++        	return createMethod(str);
++        }
++        else if (PatternOptionBuilder.PACKAGE_VALUE == clazz) {
++        	return createPackage(str);
++        }
+         else
+         {
+             return null;
+@@ -248,4 +243,49 @@ public class TypeHandler
+         //        return FileW.findFiles(str);
+         throw new UnsupportedOperationException("Not yet implemented");
+     }
++    /**
++     * Returns the Method represented by <code>str</code>.
++     *
++     * @param str the Method name
++     * @return The method represented by <code>str</code>.
++     * @throws ParseException if the method could not be found
++     */
++    public static Method createMethod(final String str) throws ParseException
++    {
++    	try
++    	{
++    		final Class<?> classObj = Class.forName(str.substring(0, str.lastIndexOf('.')));
++    		final Method[] methods = classObj.getDeclaredMethods();
++    		for (int i = 0; i < methods.length; i++)
++    		{
++    			if (methods[i].getName().equals(str.substring(str.lastIndexOf('.') + 1)))
++    			{
++    				return methods[i];
++    			}
++    		}
++    		throw new ParseException("Unable to find the method: " + str);
++    	}
++    	catch (final ClassNotFoundException e)
++    	{
++    		throw new ParseException("Unable to find the class: " + str.substring(0, str.lastIndexOf('.')));
++    	}
++    }
++    /**
++     * Returns the Package represented by <code>str</code>.
++     *
++     * @param str the Package name
++     * @return The package represented by <code>str</code>.
++     * @throws ParseException if the package could not be found
++     */
++    public static Package createPackage(final String str) throws ParseException
++    {
++    	try
++    	{
++    		return Package.getPackage(str);
++    	}
++    	catch (final IllegalArgumentException e)
++    	{
++    		throw new ParseException("Unable to find the package: " + str);
++    	}
++    }
+ }
+\ No newline at end of file

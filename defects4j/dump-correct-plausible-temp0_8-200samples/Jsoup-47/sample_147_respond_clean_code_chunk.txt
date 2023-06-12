@@ -1,0 +1,49 @@
+    static void escape(StringBuilder accum, String string, Document.OutputSettings out,
+                       boolean inAttribute, boolean normaliseWhite, boolean stripLeadingWhite) {
+        final EscapeMode escapeMode = out.escapeMode();
+        if (escapeMode == EscapeMode.none) { // no need for escaping at all
+            accum.append(string);
+            return;
+        }
+        if (escapeMode != EscapeMode.extended) { // no need for specific extended escaping, use standard escaping
+            escape(accum, string, out, inAttribute);
+            return;
+        }
+        boolean lastWasWhite = false;
+        boolean reachedNonWhite = false;
+        int codePoint;
+        final int length = string.length();
+        for (int offset = 0; offset < length; offset += Character.charCount(codePoint)) {
+            codePoint = string.codePointAt(offset);
+            if (normaliseWhite) {
+                if (StringUtil.isWhitespace(codePoint)) {
+                    if ((stripLeadingWhite && !reachedNonWhite) || lastWasWhite)
+                        continue;
+                    accum.append(' ');
+                    lastWasWhite = true;
+                    continue;
+                } else {
+                    lastWasWhite = false;
+                    reachedNonWhite = true;
+                }
+            }
+            if (escapeMode == EscapeMode.base) {
+                final char c = (char) codePoint;
+                if (c == '&' || c == '"' || c == '<' || c == '>' || c == '\'') {
+                    accum.append(Entities.escape(c));
+                    continue;
+                }
+            }
+            if (escapeMode == EscapeMode.extended) {
+                if (codePoint >= 0x7F && (codePoint < 0xA0 || codePoint >= 0x200C && codePoint <= 0x200F || codePoint >= 0x202A && codePoint <= 0x202E || codePoint >= 0x206A && codePoint <= 0x206F || codePoint >= 0xFE00 && codePoint <= 0xFE0F || codePoint >= 0xFEFF && codePoint <= 0xFFFF)) {
+                    accum.append("&#x").append(Integer.toHexString(codePoint)).append(';');
+                    continue;
+                }
+            }
+            if (codePoint < Character.MIN_SUPPLEMENTARY_CODE_POINT) {
+                accum.append((char)codePoint);
+            } else {
+                accum.append(Character.toChars(codePoint));
+            }
+        }
+    }

@@ -1,0 +1,51 @@
+diff --git a/src/main/java/org/jsoup/helper/W3CDom.java b/src/main/java/org/jsoup/helper/W3CDom.java
+index fb864f5..147d3e7 100644
+--- a/src/main/java/org/jsoup/helper/W3CDom.java
++++ b/src/main/java/org/jsoup/helper/W3CDom.java
+@@ -114,25 +108,10 @@ public class W3CDom {
+                 dest = (Element) dest.getParentNode(); // undescend. cromulent.
+             }
+         }
+-
+         private void copyAttributes(org.jsoup.nodes.Node source, Element el) {
+             for (Attribute attribute : source.attributes()) {
+-                // valid xml attribute names are: ^[a-zA-Z_:][-a-zA-Z0-9_:.]
+-                String key = attribute.getKey().replaceAll("[^-a-zA-Z0-9_:.]", "");
+-                if (key.matches("[a-zA-Z_:][-a-zA-Z0-9_:.]*"))
+-                    el.setAttribute(key, attribute.getValue());
+-            }
+-        }
+-
+-        /**
+-         * Finds any namespaces defined in this element. Returns any tag prefix.
+-         */
+-        private String updateNamespaces(org.jsoup.nodes.Element el) {
+-            // scan the element for namespace declarations
+-            // like: xmlns="blah" or xmlns:prefix="blah"
+-            Attributes attributes = el.attributes();
+-            for (Attribute attr : attributes) {
+-                String key = attr.getKey();
++                String key = attribute.getKey();
++                String value = attribute.getValue();
+                 String prefix;
+                 if (key.equals(xmlnsKey)) {
+                     prefix = "";
+@@ -141,9 +120,16 @@ public class W3CDom {
+                 } else {
+                     continue;
+                 }
+-                namespaces.put(prefix, attr.getValue());
++                if (!namespaces.containsKey(prefix) || !namespaces.get(prefix).equals(value)) {
++                    namespaces.put(prefix, value);
++                    el.setAttribute(key, value);
++                }
+             }
+-
++        }
++        /**
++         * Finds any namespaces defined in this element. Returns any tag prefix.
++         */
++        private String updateNamespaces(org.jsoup.nodes.Element el) {
+             // get the element prefix if any
+             int pos = el.tagName().indexOf(":");
+             return pos > 0 ? el.tagName().substring(0, pos) : "";

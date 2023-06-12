@@ -1,0 +1,21 @@
+diff --git a/src/main/java/org/jsoup/nodes/Node.java b/src/main/java/org/jsoup/nodes/Node.java
+index 0d0f9d4..0992dac 100644
+--- a/src/main/java/org/jsoup/nodes/Node.java
++++ b/src/main/java/org/jsoup/nodes/Node.java
+@@ -171,7 +170,15 @@ public abstract class Node implements Cloneable {
+                 }
+                 // workaround: java resolves '//path/file + ?foo' to '//path/?foo', not '//path/file?foo' as desired
+                 URL abs = new URL(base, relUrl);
+-                return abs.toExternalForm();
++                if (!abs.toExternalForm().equals(relUrl)) {
++                    return abs.toExternalForm();
++                }
++                // if the URL is already absolute, we continue to resolve it as usual. This is because there are cases
++                // where the base is unsuitable (i.e not actually base URI (for example a data: URI)), but the URL
++                // is absolute, so we need to re-resolve.
++                else {
++                    return abs.toExternalForm();
++                }
+             } catch (MalformedURLException e) {
+                 return "";
+             }

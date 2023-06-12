@@ -1,0 +1,25 @@
+diff --git a/src/main/java/org/apache/commons/compress/archivers/ArchiveStreamFactory.java b/src/main/java/org/apache/commons/compress/archivers/ArchiveStreamFactory.java
+index e2847a61..28448cc4 100644
+--- a/src/main/java/org/apache/commons/compress/archivers/ArchiveStreamFactory.java
++++ b/src/main/java/org/apache/commons/compress/archivers/ArchiveStreamFactory.java
+@@ -246,10 +242,17 @@ public class ArchiveStreamFactory {
+                 // autodetection, simply not a TAR
+                 // ignored
+             }
++            // Try UNIX compress
++            try {
++                in.reset();
++                if (CompressorStreamFactory.isCompressedFilename(CompressorStreamFactory.UNCOMPRESS_CONSTANT)) {
++                    return new UnixCompressArchiveInputStream(in);
++                }
++            } catch (Exception e) { // NOPMD
++                // ignored
++            }
+         } catch (IOException e) {
+             throw new ArchiveException("Could not use reset and mark operations.", e);
+         }
+-
+         throw new ArchiveException("No Archiver found for the stream signature");
+-    }
+-}
++    }}

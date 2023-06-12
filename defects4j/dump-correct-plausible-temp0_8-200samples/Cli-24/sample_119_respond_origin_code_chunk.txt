@@ -1,0 +1,51 @@
+    protected StringBuffer renderWrappedText(StringBuffer sb, int width, 
+                                             int nextLineTabStop, String text)
+    {
+        int pos = findWrapPos(text, width, 0);
+        String leftText = text;
+        String subText = "";
+        String rightText = "";
+
+        if (pos == -1)
+        {
+            sb.append(rtrim(text));
+
+            return sb;
+        }
+        subText = leftText.substring(0, pos);
+        rightText = leftText.substring(pos);
+        sb.append(rtrim(subText)).append(defaultNewLine);
+
+        if (nextLineTabStop >= width)
+        {
+            // stops infinite loop happening
+            throw new IllegalStateException("Total width is less than the width of the argument and indent " +
+                                            "- no room for the description");
+        }
+
+        // all following lines must be padded with nextLineTabStop space 
+        // characters
+        final String padding = createPadding(nextLineTabStop);
+
+        while (true)
+        {
+            text = padding + rightText.trim();
+            pos = findWrapPos(text, width, 0);
+
+            if (pos == -1)
+            {
+                sb.append(text);
+
+                return sb;
+            }
+            
+            if ( (text.length() > width) && (pos == nextLineTabStop - 1) ) 
+            {
+                pos = width;
+            }
+
+            leftText = text.substring(0, pos);
+            rightText = text.substring(pos);
+            sb.append(rtrim(leftText)).append(defaultNewLine);
+        }
+    }

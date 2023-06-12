@@ -1,0 +1,19 @@
+diff --git a/src/main/java/org/jsoup/nodes/Entities.java b/src/main/java/org/jsoup/nodes/Entities.java
+index 32cc3af..82f5c22 100644
+--- a/src/main/java/org/jsoup/nodes/Entities.java
++++ b/src/main/java/org/jsoup/nodes/Entities.java
+@@ -138,10 +135,12 @@ public class Entities {
+                     default:
+                         if (canEncode(coreCharset, c, encoder))
+                             accum.append(c);
+-                        else if (map.containsKey(c))
++                        else if (escapeMode == EscapeMode.base && map.containsKey(c))
+                             accum.append('&').append(map.get(c)).append(';');
+-                        else
++                        else if (escapeMode != EscapeMode.extended || !map.containsKey(c))
+                             accum.append("&#x").append(Integer.toHexString(codePoint)).append(';');
++                        else
++                            accum.append('&').append(map.get(c)).append(';');
+                 }
+             } else {
+                 final String c = new String(Character.toChars(codePoint));

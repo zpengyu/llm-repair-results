@@ -1,0 +1,44 @@
+diff --git a/src/com/google/javascript/jscomp/NameAnalyzer.java b/src/com/google/javascript/jscomp/NameAnalyzer.java
+index 9542fbff..c6baed40 100644
+--- a/src/com/google/javascript/jscomp/NameAnalyzer.java
++++ b/src/com/google/javascript/jscomp/NameAnalyzer.java
+@@ -575,7 +575,7 @@ final class NameAnalyzer implements CompilerPass {
+           } else {
+             recordDepScope(nameNode, ns);
+           }
+-        } else {
++        } else if (isCaller(n)) {
+           // The rhs of the assignment is the caller, so it's used by the
+           // context. Don't associate it w/ the lhs.
+           // FYI: this fixes only the specific case where the assignment is the
+@@ -586,7 +586,29 @@ final class NameAnalyzer implements CompilerPass {
+         }
+       }
+     }
+-
++    /**
++     * Check if this is a "caller" expression.
++     * @param expr The expression to check.
++     * @return Whether the node is a caller expression.
++     */
++    private static boolean isCaller(Node expr) {
++      if (expr == null) {
++        return false;
++      }
++      if (expr.isCall()) {
++        // foo()
++        return true;
++      } else if (expr.isGetProp()) {
++        // "foo".call()
++        return expr.getLastChild().getString().equals("call");
++      } else if (expr.isGetElem()) {
++        // foo["call"]()
++        if (expr.getLastChild().isString()) {
++          return expr.getLastChild().getString().equals("call");
++        }
++      }
++      return false;
++    }
+     /**
+      * Defines a dependency scope.
+      */

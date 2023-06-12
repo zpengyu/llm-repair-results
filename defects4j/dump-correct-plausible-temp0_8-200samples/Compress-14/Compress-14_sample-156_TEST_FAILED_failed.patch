@@ -1,0 +1,18 @@
+diff --git a/src/main/java/org/apache/commons/compress/archivers/tar/TarUtils.java b/src/main/java/org/apache/commons/compress/archivers/tar/TarUtils.java
+index 121012d0..c8e40216 100644
+--- a/src/main/java/org/apache/commons/compress/archivers/tar/TarUtils.java
++++ b/src/main/java/org/apache/commons/compress/archivers/tar/TarUtils.java
+@@ -104,6 +99,13 @@ public class TarUtils {
+                 throw new IllegalArgumentException(
+                         exceptionMessage(buffer, offset, length, start, currentByte));
+             }
++            if (result >= 0x2000000000000L) { // 2^53
++                // we have already accumulated a large enough number that
++                // even one more digit will push us over the limit; report
++                // an error
++                throw new IllegalArgumentException(
++                        exceptionMessage(buffer, offset, length, start, currentByte));
++            }
+             result = (result << 3) + (currentByte - '0'); // convert from ASCII
+             // CheckStyle:MagicNumber ON
+         }

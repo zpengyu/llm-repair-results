@@ -1,0 +1,28 @@
+diff --git a/src/main/java/org/jsoup/parser/TreeBuilder.java b/src/main/java/org/jsoup/parser/TreeBuilder.java
+index f4faad4..103024b 100644
+--- a/src/main/java/org/jsoup/parser/TreeBuilder.java
++++ b/src/main/java/org/jsoup/parser/TreeBuilder.java
+@@ -76,4 +63,22 @@ abstract class TreeBuilder {
+         int size = stack.size();
+         return size > 0 ? stack.get(size-1) : null;
+     }
++    // Safer parse methods:
++    protected void runParser() {
++        try {
++            runParserImpl();
++        } catch (AbortException e) {
++        } catch (Exception e) {
++            if (errors != null) errors.add(e);
++        }
++    }
++    private void runParserImpl() {
++        while (true) {
++            Token token = tokeniser.read();
++            process(token);
++            token.reset();
++            if (token.type == Token.TokenType.EOF)
++                break;
++        }
++    }
+ }
+\ No newline at end of file

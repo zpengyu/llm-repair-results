@@ -1,0 +1,25 @@
+diff --git a/src/com/google/javascript/jscomp/InlineCostEstimator.java b/src/com/google/javascript/jscomp/InlineCostEstimator.java
+index 17dc677f..741dfe90 100644
+--- a/src/com/google/javascript/jscomp/InlineCostEstimator.java
++++ b/src/com/google/javascript/jscomp/InlineCostEstimator.java
+@@ -99,5 +91,18 @@ class InlineCostEstimator {
+      * Constants (true, false, null) are considered basically free,
+      * because it's likely that they will get folded when we're done.
+      */
+-  }
+-}
++    @Override
++    void addConstant(Node n) {
++      if (n.isNull() || n.isTrue() || n.isFalse()) {
++        cost += ESTIMATED_LOCAL_CONSTANT;
++      } else {
++        add(ESTIMATED_LOCAL_CONSTANT);
++      }
++    }
++    private void add(int estimate) {
++      cost += estimate;
++      if (maxCost <= cost) {
++        continueProcessing = false;
++      }
++    }
++  }}

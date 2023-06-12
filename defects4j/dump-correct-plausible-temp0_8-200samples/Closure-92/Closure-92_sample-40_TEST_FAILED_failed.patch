@@ -1,0 +1,20 @@
+diff --git a/src/com/google/javascript/jscomp/ProcessClosurePrimitives.java b/src/com/google/javascript/jscomp/ProcessClosurePrimitives.java
+index d1d12a3c..08c29080 100644
+--- a/src/com/google/javascript/jscomp/ProcessClosurePrimitives.java
++++ b/src/com/google/javascript/jscomp/ProcessClosurePrimitives.java
+@@ -796,9 +794,12 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback
+             ProvidedName parentName =
+                 providedNames.get(namespace.substring(0, indexOfDot));
+             Preconditions.checkNotNull(parentName);
+-            Preconditions.checkNotNull(parentName.replacementNode);
+-            parentName.replacementNode.getParent().addChildAfter(
+-                replacementNode, parentName.replacementNode);
++            if (parentName.replacementNode != null) {
++              parentName.replacementNode.getParent().addChildAfter(
++                  replacementNode, parentName.replacementNode);
++            } else {
++              firstNode.getParent().addChildBefore(replacementNode, firstNode);
++            }
+           }
+         }
+         if (explicitNode != null) {

@@ -1,0 +1,25 @@
+diff --git a/src/com/google/javascript/rhino/jstype/ArrowType.java b/src/com/google/javascript/rhino/jstype/ArrowType.java
+index 0c0ef637..8b5b23ee 100644
+--- a/src/com/google/javascript/rhino/jstype/ArrowType.java
++++ b/src/com/google/javascript/rhino/jstype/ArrowType.java
+@@ -132,15 +126,14 @@ final class ArrowType extends JSType {
+         // checked. Strictly speaking, this is not a correct formulation,
+         // because now a sub-function can required arguments that are var_args
+         // in the super-function. So we special-case this.
+-
+-      // don't advance if we have variable arguments
+-      if (!thisIsVarArgs) {
++      if (!thisIsVarArgs && thatIsVarArgs) {
+         thisParam = thisParam.getNext();
+-      }
+-      if (!thatIsVarArgs) {
++      } else if (thisIsVarArgs && !thatIsVarArgs) {
+         thatParam = thatParam.getNext();
++      } else if (thisIsVarArgs && thatIsVarArgs) {
++        thisParam = null;
++        thatParam = null;
+       }
+-
+       // both var_args indicates the end
+       if (thisIsVarArgs && thatIsVarArgs) {
+         thisParam = null;

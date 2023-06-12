@@ -1,0 +1,49 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/jsontype/impl/ClassNameIdResolver.java b/src/main/java/com/fasterxml/jackson/databind/jsontype/impl/ClassNameIdResolver.java
+index 112c00b5c..e6611b63f 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/jsontype/impl/ClassNameIdResolver.java
++++ b/src/main/java/com/fasterxml/jackson/databind/jsontype/impl/ClassNameIdResolver.java
+@@ -56,7 +56,7 @@ public class ClassNameIdResolver
+             //    security issues.
+             JavaType t = tf.constructFromCanonical(id);
+                 // Probably cleaner to have a method in `TypeFactory` but can't add in patch
+-            return t;
++            return _findSuperTypeChain(_baseType, t);
+         }
+         Class<?> cls;
+         try {
+@@ -76,7 +76,34 @@ public class ClassNameIdResolver
+         }
+         return tf.constructSpecializedType(_baseType, cls);
+     }
+-    
++    private JavaType _findSuperTypeChain(JavaType type, JavaType refType) {
++        if (type.isContainerType()) {
++            return _findSuperTypeChain(type.getKeyType(), refType);
++        }
++        if (type.isReferenceType()) {
++            return _findSuperTypeChain(type.getReferencedType(), refType);
++        }
++        if (type == refType) {
++            return type;
++        }
++        if (type.hasRawClass(refType.getRawClass())) {
++            return type;
++        }
++        if (type.isAssignableFrom(refType)) {
++            return type;
++        }
++        Class<?> subclass = refType.getRawClass();
++        if (!type.getRawClass().isAssignableFrom(subclass)) {
++            return null;
++        }
++        for (; subclass != null; subclass = subclass.getSuperclass()) {
++            if (type.getRawClass().isAssignableFrom(subclass)) {
++                JavaType subtype = ctxt.getTypeFactory().constructSpecializedType(type, subclass);
++                return _findSuperTypeChain(type, subtype);
++            }
++        }
++        return null;
++    }    
+     /*
+     /**********************************************************
+     /* Internal methods

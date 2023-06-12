@@ -1,0 +1,22 @@
+diff --git a/src/main/java/org/apache/commons/compress/archivers/zip/ZipArchiveInputStream.java b/src/main/java/org/apache/commons/compress/archivers/zip/ZipArchiveInputStream.java
+index fc7b80d5..b0751679 100644
+--- a/src/main/java/org/apache/commons/compress/archivers/zip/ZipArchiveInputStream.java
++++ b/src/main/java/org/apache/commons/compress/archivers/zip/ZipArchiveInputStream.java
+@@ -237,9 +236,15 @@ public class ZipArchiveInputStream extends ArchiveInputStream {
+                 throw new ZipException(e.getMessage());
+             }
+             if (read == 0 && inf.finished()) {
+-                return -1;
++                if (inf.getRemaining() > 0) {
++                    // stream was finished before end of file was reached
++                    throw new IOException("Zip archive ends early.");
++                }
++                // ignore trailing empty data
++                read = -1;
++            } else {
++                crc.update(buffer, start, read);
+             }
+-            crc.update(buffer, start, read);
+             return read;
+         }
+         throw new ArrayIndexOutOfBoundsException();

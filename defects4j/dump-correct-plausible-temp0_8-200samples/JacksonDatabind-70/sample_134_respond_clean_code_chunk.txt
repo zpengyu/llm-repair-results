@@ -1,0 +1,23 @@
+    public void remove(SettableBeanProperty propToRm)
+    {
+        int slotPos = _findFromOrdered(propToRm);
+        if (slotPos < 0) {
+            throw new NoSuchElementException("No entry '"+propToRm.getName()+"' found, can't remove");
+        }
+        int hashPos = _hashCode(slotPos);
+        String key = getPropertyName(propToRm);
+        boolean found = false;
+        for (int i = 1, end = _hashArea.length; i < end; i += 2) {
+            if (key.equals(_hashArea[i])) {
+                if (!found) {
+                    found = true;
+                    _hashArea[i] = null;
+                    _hashArea[i + 1] = null;
+                    _propsInOrder[slotPos] = null;
+                }
+            }
+        }
+        if (!found) {
+            throw new NoSuchElementException("No entry '"+propToRm.getName()+"' found, can't remove");
+        }
+    }

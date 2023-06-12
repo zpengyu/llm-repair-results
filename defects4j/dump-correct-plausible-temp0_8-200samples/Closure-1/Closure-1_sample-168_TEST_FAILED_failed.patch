@@ -1,0 +1,24 @@
+diff --git a/src/com/google/javascript/jscomp/RemoveUnusedVars.java b/src/com/google/javascript/jscomp/RemoveUnusedVars.java
+index 41175cf3..a341449d 100644
+--- a/src/com/google/javascript/jscomp/RemoveUnusedVars.java
++++ b/src/com/google/javascript/jscomp/RemoveUnusedVars.java
+@@ -403,9 +400,18 @@ class RemoveUnusedVars
+     } else {
+       callSiteOptimizer.optimize(fnScope, referenced);
+     }
++    Node lastArg;
++    while ((lastArg = argList.getLastChild()) != null) {
++      Var var = fnScope.getVar(lastArg.getString());
++      if (!referenced.contains(var)) {
++        argList.removeChild(lastArg);
++        compiler.reportCodeChange();
++      } else {
++        break;
++      }
++    }
+   }
+ 
+-
+   /**
+    * @return the LP node containing the function parameters.
+    */

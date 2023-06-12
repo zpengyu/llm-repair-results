@@ -1,0 +1,27 @@
+diff --git a/src/com/google/javascript/jscomp/PeepholeSubstituteAlternateSyntax.java b/src/com/google/javascript/jscomp/PeepholeSubstituteAlternateSyntax.java
+index dee765a1..4a5b69e4 100644
+--- a/src/com/google/javascript/jscomp/PeepholeSubstituteAlternateSyntax.java
++++ b/src/com/google/javascript/jscomp/PeepholeSubstituteAlternateSyntax.java
+@@ -226,9 +226,21 @@ class PeepholeSubstituteAlternateSyntax
+         return addition;
+       }
+     }
++    else if (callTarget != null && callTarget.isName() &&
++          callTarget.getString().equals("Number")) {
++      // Fold Number(a) to +(a)
++      Node value = callTarget.getNext();
++      if (value != null) {
++        Node addition = IR.add(
++            IR.string("").srcref(callTarget),
++            value.detachFromParent());
++        n.getParent().replaceChild(n, addition);
++        reportCodeChange();
++        return addition;
++      }
++    }
+     return n;
+   }
+-
+   private Node tryFoldImmediateCallToBoundFunction(Node n) {
+     // Rewriting "(fn.bind(a,b))()" to "fn.call(a,b)" makes it inlinable
+     Preconditions.checkState(n.isCall());

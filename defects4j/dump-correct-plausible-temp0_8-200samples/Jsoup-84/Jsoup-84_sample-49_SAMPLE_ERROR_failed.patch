@@ -1,0 +1,44 @@
+diff --git a/src/main/java/org/jsoup/helper/W3CDom.java b/src/main/java/org/jsoup/helper/W3CDom.java
+index f866f43..332f5d4 100644
+--- a/src/main/java/org/jsoup/helper/W3CDom.java
++++ b/src/main/java/org/jsoup/helper/W3CDom.java
+@@ -79,24 +79,24 @@ public class W3CDom {
+             this.namespacesStack.push(new HashMap<String, String>());
+         }
+ 
+-        public void head(org.jsoup.nodes.Node source, int depth) {
+-            namespacesStack.push(new HashMap<>(namespacesStack.peek())); // inherit from above on the stack
++         public void head(org.jsoup.nodes.Node source, int depth) {
+             if (source instanceof org.jsoup.nodes.Element) {
++                namespacesStack.push(new HashMap<>(namespacesStack.peek())); // inherit from above on the stack
+                 org.jsoup.nodes.Element sourceEl = (org.jsoup.nodes.Element) source;
+-
+-                String prefix = updateNamespaces(sourceEl);
+-                String namespace = namespacesStack.peek().get(prefix);
+-                String tagName = sourceEl.tagName();
+-
+-                Element el =
+-                    doc.createElementNS(namespace, tagName);
+-                copyAttributes(sourceEl, el);
+-                if (dest == null) { // sets up the root
+-                    doc.appendChild(el);
+-                } else {
+-                    dest.appendChild(el);
++                if (!isNamespaceDeclaration(sourceEl)) {
++                    String prefix = updateNamespaces(sourceEl);
++                    String namespace = namespacesStack.peek().get(prefix);
++                    String tagName = sourceEl.tagName();
++                    Element el =
++                        doc.createElementNS(namespace, tagName);
++                    copyAttributes(sourceEl, el);
++                    if (dest == null) { // sets up the root
++                        doc.appendChild(el);
++                    } else {
++                        dest.appendChild(el);
++                    }
++                    dest = el; // descend
+                 }
+-                dest = el; // descend
+             } else if (source instanceof org.jsoup.nodes.TextNode) {
+                 org.jsoup.nodes.TextNode sourceText = (org.jsoup.nodes.TextNode) source;
+                 Text text = doc.createTextNode(sourceText.getWholeText());

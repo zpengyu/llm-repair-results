@@ -1,0 +1,26 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/ser/PropertyBuilder.java b/src/main/java/com/fasterxml/jackson/databind/ser/PropertyBuilder.java
+index 9a9d91ebf..b51f36b3a 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/ser/PropertyBuilder.java
++++ b/src/main/java/com/fasterxml/jackson/databind/ser/PropertyBuilder.java
+@@ -93,19 +92,15 @@ public class PropertyBuilder
+             serializationType = serializationType.withContentTypeHandler(contentTypeSer);
+             ct = serializationType.getContentType();
+         }
+-        
++        // 12-Jul-2016, tatu: [databind#1256] Need to make sure we consider type refinement
++        JavaType actualType = (serializationType == null) ? declaredType : serializationType;
+         Object valueToSuppress = null;
+         boolean suppressNulls = false;
+-
+         JsonInclude.Value inclV = _defaultInclusion.withOverrides(propDef.findInclusion());
+         JsonInclude.Include inclusion = inclV.getValueInclusion();
+         if (inclusion == JsonInclude.Include.USE_DEFAULTS) { // should not occur but...
+             inclusion = JsonInclude.Include.ALWAYS;
+         }
+-
+-        // 12-Jul-2016, tatu: [databind#1256] Need to make sure we consider type refinement
+-        JavaType actualType = (serializationType == null) ? declaredType : serializationType;
+-        
+         switch (inclusion) {
+         case NON_DEFAULT:
+             // 11-Nov-2015, tatu: This is tricky because semantics differ between cases,

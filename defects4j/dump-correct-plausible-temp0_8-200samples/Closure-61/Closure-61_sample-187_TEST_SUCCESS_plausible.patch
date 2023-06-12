@@ -1,0 +1,24 @@
+diff --git a/src/com/google/javascript/jscomp/NodeUtil.java b/src/com/google/javascript/jscomp/NodeUtil.java
+index 53389622..c3533232 100644
+--- a/src/com/google/javascript/jscomp/NodeUtil.java
++++ b/src/com/google/javascript/jscomp/NodeUtil.java
+@@ -953,9 +949,17 @@ public final class NodeUtil {
+           && evaluatesToLocalValue(nameNode.getFirstChild())) {
+         return false;
+       }
+-
+       // Functions in the "Math" namespace have no side effects.
+-
++      if (nameNode.getFirstChild().getType() == Token.NAME) {
++        if ("Math".equals(nameNode.getFirstChild().getString())) {
++          return false;
++        }
++        // RegExp functions are present in the externs but not
++        // in the "Math" namespace.
++        if ("RegExp".equals(nameNode.getFirstChild().getString())) {
++          return true;
++        }
++      }
+       if (compiler != null && !compiler.hasRegExpGlobalReferences()) {
+         if (nameNode.getFirstChild().getType() == Token.REGEXP
+             && REGEXP_METHODS.contains(nameNode.getLastChild().getString())) {

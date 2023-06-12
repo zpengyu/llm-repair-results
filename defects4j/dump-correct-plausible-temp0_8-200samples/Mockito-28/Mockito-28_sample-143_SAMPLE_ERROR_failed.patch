@@ -1,0 +1,18 @@
+diff --git a/src/org/mockito/internal/configuration/DefaultInjectionEngine.java b/src/org/mockito/internal/configuration/DefaultInjectionEngine.java
+index 213ebf351..abe66b21a 100644
+--- a/src/org/mockito/internal/configuration/DefaultInjectionEngine.java
++++ b/src/org/mockito/internal/configuration/DefaultInjectionEngine.java
+@@ -90,10 +90,11 @@ public class DefaultInjectionEngine {
+ 
+     private void injectMockCandidate(Class<?> awaitingInjectionClazz, Set<Object> mocks, Object fieldInstance) {
+         for(Field field : orderedInstanceFieldsFrom(awaitingInjectionClazz)) {
+-            mockCandidateFilter.filterCandidate(mocks, field, fieldInstance).thenInject();
++        	if(!Modifier.isStatic(field.getModifiers())){
++        		mockCandidateFilter.filterCandidate(mocks, field, fieldInstance).thenInject();
++        	}
+         }
+     }
+-
+     private Field[] orderedInstanceFieldsFrom(Class<?> awaitingInjectionClazz) {
+         Field[] declaredFields = awaitingInjectionClazz.getDeclaredFields();
+         Arrays.sort(declaredFields, supertypesLast);

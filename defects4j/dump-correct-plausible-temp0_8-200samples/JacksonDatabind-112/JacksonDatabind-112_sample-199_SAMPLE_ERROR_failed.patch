@@ -1,0 +1,18 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/deser/std/StringCollectionDeserializer.java b/src/main/java/com/fasterxml/jackson/databind/deser/std/StringCollectionDeserializer.java
+index 42c6f0491..64ab4f127 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/deser/std/StringCollectionDeserializer.java
++++ b/src/main/java/com/fasterxml/jackson/databind/deser/std/StringCollectionDeserializer.java
+@@ -117,7 +117,12 @@ public final class StringCollectionDeserializer
+             valueDeser = findConvertingContentDeserializer(ctxt, property, valueDeser);
+             if (valueDeser == null) {
+             // And we may also need to get deserializer for String
+-                valueDeser = ctxt.findContextualValueDeserializer(valueType, property);
++                if (valueType.isPrimitive()) {
++                    // primitives are never null
++                    valueDeser = PrimitiveTypeDeserializer.forType(valueType);
++                } else {
++                    valueDeser = ctxt.findContextualValueDeserializer(valueType, property);
++                }
+             }
+         } else { // if directly assigned, probably not yet contextual, so:
+             valueDeser = ctxt.handleSecondaryContextualization(valueDeser, property, valueType);

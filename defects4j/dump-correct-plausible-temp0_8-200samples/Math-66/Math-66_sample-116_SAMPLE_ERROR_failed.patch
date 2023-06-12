@@ -1,0 +1,131 @@
+diff --git a/src/main/java/org/apache/commons/math/optimization/univariate/BrentOptimizer.java b/src/main/java/org/apache/commons/math/optimization/univariate/BrentOptimizer.java
+index f07c1b0c3..bff54b7e9 100644
+--- a/src/main/java/org/apache/commons/math/optimization/univariate/BrentOptimizer.java
++++ b/src/main/java/org/apache/commons/math/optimization/univariate/BrentOptimizer.java
+@@ -36,7 +36,7 @@ public class BrentOptimizer extends AbstractUnivariateRealOptimizer {
+      * Golden section.
+      */
+     private static final double GOLDEN_SECTION = 0.5 * (3 - Math.sqrt(5));
+-
++    private static final double MIN_RELATIVE_TOLERANCE = 2 * FastMath.ulp(1d);
+     /**
+      * Construct a solver.
+      */
+@@ -45,27 +45,8 @@ public class BrentOptimizer extends AbstractUnivariateRealOptimizer {
+         setMaximalIterationCount(100);
+         setAbsoluteAccuracy(1E-10);
+         setRelativeAccuracy(1.0e-14);
++        setFunctionValueAccuracy(1.0e-15);
+     }
+-
+-    /**
+-     * Perform the optimization.
+-     *
+-     * @return the optimum.
+-     */
+-    protected double doOptimize()
+-        throws MaxIterationsExceededException, FunctionEvaluationException {
+-        throw new UnsupportedOperationException();
+-    }
+-    public double optimize(final UnivariateRealFunction f, final GoalType goalType, final double min, final double max, final double startValue) throws MaxIterationsExceededException, FunctionEvaluationException {
+-        clearResult();
+-        return localMin(getGoalType() == GoalType.MINIMIZE,
+-                        f, goalType, min, startValue, max,
+-                        getRelativeAccuracy(), getAbsoluteAccuracy());
+-    }
+-    public double optimize(final UnivariateRealFunction f, final GoalType goalType, final double min, final double max) throws MaxIterationsExceededException, FunctionEvaluationException {
+-        return optimize(f, goalType, min, max, min + GOLDEN_SECTION * (max - min));
+-    }
+-
+     /**
+      * Find the minimum of the function within the interval {@code (lo, hi)}.
+      *
+@@ -235,11 +205,85 @@ public class BrentOptimizer extends AbstractUnivariateRealOptimizer {
+                     }
+                 }
+             } else { // termination
+-                setResult(x, (goalType == GoalType.MAXIMIZE) ? -fx : fx, count);
+-                return x;
++                final double absX = Math.abs(x);
++                final double maxXA = Math.max(absX, Math.abs(a));
++                final double maxXB = Math.max(absX, Math.abs(b));
++                final double minAB = Math.min(Math.abs(a), Math.abs(b));
++                if ((t <= absX) && (t <= minAB) && (minAB <= maxXA) && (minAB <= maxXB)) {
++                    // t is too small, and it is not an interval endpoint
++                    setResult(x, (goalType == GoalType.MAXIMIZE) ? -fx : fx, count);
++                    return x;
++                } else {
++                    if (goalType == GoalType.MAXIMIZE) {
++                        if (fw < fx) {
++                            setResult(w, -fw, count);
++                        } else {
++                            setResult(x, -fx, count);
++                        }
++                    } else {
++                        if (fw < fx) {
++                            setResult(w, fw, count);
++                        } else {
++                            setResult(x, fx, count);
++                        }
++                    }
++                    return result;
++                }
+             }
+             ++count;
+         }
+         throw new MaxIterationsExceededException(maximalIterationCount);
+     }
++    /**
++     * {@inheritDoc}
++     */
++    @Override
++    protected double doOptimize()
++        throws FunctionEvaluationException, OptimizationException, IllegalArgumentException {
++        final double startValue = getStartValue();
++        final double absoluteAccuracy = getAbsoluteAccuracy();
++        final double relativeAccuracy = getRelativeAccuracy();
++        final double functionValueAccuracy = getFunctionValueAccuracy();
++        verifySequence(getMin(), startValue, getMax());
++        if (absoluteAccuracy < 0) {
++            throw new NotStrictlyPositiveException(absoluteAccuracy);
++        }
++        if (relativeAccuracy < MIN_RELATIVE_TOLERANCE) {
++            throw new NumberIsTooSmallException(relativeAccuracy, MIN_RELATIVE_TOLERANCE, false);
++        }
++        if (functionValueAccuracy < 0) {
++            throw new NotStrictlyPositiveException(functionValueAccuracy);
++        }
++        final double xA = getMin();
++        final double xB = getMax();
++        double fxA = computeObjectiveValue(xA);
++        if (getGoalType() == GoalType.MINIMIZE) {
++            fxA = -fxA;
++        }
++        double fxB = computeObjectiveValue(xB);
++        if (getGoalType() == GoalType.MINIMIZE) {
++            fxB = -fxB;
++        }
++        // Check for zeros before verifying bracketing
++        if (Precision.equals(fxA, 0.0, 1)) {
++            setResult(xA, 0.0, 0);
++            return xA;
++        }
++        if (Precision.equals(fxB, 0.0, 1)) {
++            setResult(xB, 0.0, 0);
++            return xB;
++        }
++        // Check for bracketing
++        if (!isBracketing(fxA, fxB)) {
++            final double[] bracket = new BracketFinder(this.f, xA, xB, fxA, fxB, getGoalType()).search();
++            fxA = bracket[1];
++            fxB = bracket[3];
++            setMin(bracket[0]);
++            setMax(bracket[2]);
++        }
++        return localMin(getGoalType() == GoalType.MINIMIZE,
++                        f, getGoalType(),
++                        xA, startValue, xB,
++                        relativeAccuracy, absoluteAccuracy);
++    }
+ }
+\ No newline at end of file

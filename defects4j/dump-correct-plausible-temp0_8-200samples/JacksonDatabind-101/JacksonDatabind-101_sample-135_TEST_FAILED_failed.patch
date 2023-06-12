@@ -1,0 +1,21 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/deser/BeanDeserializer.java b/src/main/java/com/fasterxml/jackson/databind/deser/BeanDeserializer.java
+index 3c89dc109..a81cf62b5 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/deser/BeanDeserializer.java
++++ b/src/main/java/com/fasterxml/jackson/databind/deser/BeanDeserializer.java
+@@ -823,13 +820,13 @@ public class BeanDeserializer
+                 continue;
+             }
+         }
+-
+-        // We hit END_OBJECT, so:
++        // Closing END_OBJECT, need to ensure all buffered properties get assigned
++        tokens.writeEndObject();
+         Object bean;
+         try {
+             bean = creator.build(ctxt, buffer);
+         } catch (Exception e) {
+-            wrapInstantiationProblem(e, ctxt);
++            wrapAndThrow(e, _beanType.getRawClass(), null, ctxt);
+             return null; // never gets here
+         }
+         return _unwrappedPropertyHandler.processUnwrapped(p, ctxt, bean, tokens);

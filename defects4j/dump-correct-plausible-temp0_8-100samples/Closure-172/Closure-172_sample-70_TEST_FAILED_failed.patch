@@ -1,0 +1,34 @@
+diff --git a/src/com/google/javascript/jscomp/TypedScopeCreator.java b/src/com/google/javascript/jscomp/TypedScopeCreator.java
+index 0185298f..c0b4ba36 100644
+--- a/src/com/google/javascript/jscomp/TypedScopeCreator.java
++++ b/src/com/google/javascript/jscomp/TypedScopeCreator.java
+@@ -1682,19 +1679,18 @@ final class TypedScopeCreator implements ScopeCreator {
+       if (inferred && rhsValue != null && rhsValue.isFunction()) {
+         if (info != null) {
+           return false;
+-        } else if (!scope.isDeclared(qName, false) &&
+-            n.isUnscopedQualifiedName()) {
+-
+-          // Check if this is in a conditional block.
+-          // Functions assigned in conditional blocks are inferred.
+-          for (Node current = n.getParent();
+-               !(current.isScript() || current.isFunction());
+-               current = current.getParent()) {
+-            if (NodeUtil.isControlStructure(current)) {
+-              return true;
++        } else if (n.isUnscopedQualifiedName()) {
++          if (!scope.isDeclared(qName, false)) {
++            // Check if this is in a conditional block.
++            // Functions assigned in conditional blocks are inferred.
++            for (Node current = n.getParent();
++                 !(current.isScript() || current.isFunction());
++                 current = current.getParent()) {
++              if (NodeUtil.isControlStructure(current)) {
++                return true;
++              }
+             }
+           }
+-
+           // Check if this is assigned in an inner scope.
+           // Functions assigned in inner scopes are inferred.
+           AstFunctionContents contents =

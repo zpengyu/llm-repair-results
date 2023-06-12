@@ -1,0 +1,22 @@
+        public final Object deserializeKey(String key, DeserializationContext ctxt)
+            throws IOException
+        {
+            if (key == null) { // is this even legal call?
+                return null;
+            }
+            try {
+                if (_objectIdReader != null) {
+                    // 23-Mar-2018, tatu: [databind#2076] If `ObjectIdResolver` can convert from `String`,
+                    //   we need to call it to do so.
+                    return _objectIdReader.deserializer.deserialize(ctxt, key);
+                }
+                // Ugh... should not have to give parser which may or may not be correct one...
+                Object result = _delegate.deserialize(ctxt.getParser(), ctxt);
+                if (result != null) {
+                    return result;
+                }
+                return ctxt.handleWeirdKey(_keyClass, key, "not a valid representation");
+            } catch (Exception re) {
+                return ctxt.handleWeirdKey(_keyClass, key, "not a valid representation: %s", re.getMessage());
+            }
+        }

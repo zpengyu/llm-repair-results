@@ -1,0 +1,25 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/ser/std/DateTimeSerializerBase.java b/src/main/java/com/fasterxml/jackson/databind/ser/std/DateTimeSerializerBase.java
+index ae5fd6538..1a4ea0c2e 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/ser/std/DateTimeSerializerBase.java
++++ b/src/main/java/com/fasterxml/jackson/databind/ser/std/DateTimeSerializerBase.java
+@@ -80,12 +79,16 @@ public abstract class DateTimeSerializerBase<T>
+             df.setTimeZone(tz);
+             return withFormat(Boolean.FALSE, df);
+         }
+-
+         // Otherwise, need one of these changes:
+-
+-
++            if (shape.isString()) {
++            // could/should also force timezone to be that of serializer? (not clear)
++            return this;
++        }
+         // Jackson's own `StdDateFormat` is quite easy to deal with...
+-
++        if (this._delegate instanceof StdDateFormat) {
++            StdDateFormat df = ((StdDateFormat) this._delegate).withShape(shape);
++            return withFormat(Boolean.FALSE, df);
++        }
+         // 08-Jun-2017, tatu: Unfortunately there's no generally usable
+         //    mechanism for changing `DateFormat` instances (or even clone()ing)
+         //    So: require it be `SimpleDateFormat`; can't config other types

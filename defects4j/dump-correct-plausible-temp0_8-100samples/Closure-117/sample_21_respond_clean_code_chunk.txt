@@ -1,0 +1,44 @@
+  String getReadableJSTypeName(Node n, boolean dereference) {
+    // The best type name is the actual type name.
+    String typeName = getJSType(n).toString();
+    // If we're analyzing a GETPROP, the property may be inherited by the
+    // prototype chain. So climb the prototype chain and find out where
+    // the property was originally defined.
+    if (n.isGetProp()) {
+      // Find the type of the object being accessed.
+      // Don't use n.getFirstChild() because it may be qualified.
+      String objName = n.getFirstChild().getQualifiedName();
+      if (objName != null) {
+        JSType objType = getTypeRegistry().getType(objName);
+        if (objType != null && objType.isConstructor()) {
+          ObjectType objObjectType = objType.toMaybeObjectType();
+          if (objObjectType != null) {
+            // Find the class the property was defined in.
+            String propName = n.getLastChild().getString();
+            ObjectType declType = objObjectType.findPropertyType(propName);
+            if (declType != null) {
+              // Report the type as the type of the property on the class
+              // itself, as opposed to on the prototype.
+              if (dereference) {
+                declType = declType.dereference();
+              }
+              if (declType != null) {
+                return declType.toString();
+              }
+            }
+          }
+        }
+      }
+    }
+    // Don't show complex function names or anonymous types.
+    if (typeName.contains("(") || typeName.contains("?")) {
+      // Try to get a human-readable name.
+      String name = n.getQualifiedName();
+      if (name != null) {
+        return name;
+      } else if (getJSType(n).isFunctionType()) {
+        return "function";
+      }
+    }
+    return typeName;
+  }

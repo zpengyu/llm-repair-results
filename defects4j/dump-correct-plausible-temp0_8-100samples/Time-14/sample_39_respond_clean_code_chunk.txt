@@ -1,0 +1,31 @@
+    public int[] add(ReadablePartial partial, int fieldIndex, int[] values, int valueToAdd) {
+        // overridden as superclass algorithm can't handle
+        // 2004-02-29 + 48 months -> 2008-02-29 type dates
+        if (valueToAdd == 0) {
+            return values;
+        }
+        if (DateTimeUtils.isContiguous(partial)) {
+            long instant = 0L;
+            for (int i = 0, isize = partial.size(); i < isize; i++) {
+                instant = partial.getFieldType(i).getField(iChronology).set(instant, values[i]);
+            }
+            instant = add(instant, valueToAdd);
+            return iChronology.get(partial, instant);
+        } else {
+            int[] values2 = values;
+            int[] tmp = new int[iValues.length];
+            // copy specified field and following fields
+            System.arraycopy(iValues, fieldIndex, tmp, fieldIndex, (iValues.length - fieldIndex));
+            // copy original fields prior to specified field
+            System.arraycopy(values, 0, tmp, 0, fieldIndex);
+            // set the specified field
+            tmp[fieldIndex] = FieldUtils.safeAdd(tmp[fieldIndex], valueToAdd);
+            // set the value in the chronology
+            long instant = iChronology.set(this, tmp, partial, 0);
+            // convert back to an array of values
+            iValues = iChronology.get(this, instant);
+            // copy specified field and following fields
+            System.arraycopy(iValues, fieldIndex, values2, fieldIndex, (iValues.length - fieldIndex));
+            return values2;
+        }
+    }

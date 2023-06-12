@@ -1,0 +1,21 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/deser/std/CollectionDeserializer.java b/src/main/java/com/fasterxml/jackson/databind/deser/std/CollectionDeserializer.java
+index af4270610..cbbcbbd60 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/deser/std/CollectionDeserializer.java
++++ b/src/main/java/com/fasterxml/jackson/databind/deser/std/CollectionDeserializer.java
+@@ -190,14 +190,12 @@ public class CollectionDeserializer
+                 JsonFormat.Feature.ACCEPT_SINGLE_VALUE_AS_ARRAY);
+         // also, often value deserializer is resolved here:
+         JsonDeserializer<?> valueDeser = _valueDeserializer;
+-        
+         // May have a content converter
+         valueDeser = findConvertingContentDeserializer(ctxt, property, valueDeser);
+-        final JavaType vt = _collectionType.getContentType();
+         if (valueDeser == null) {
+-            valueDeser = ctxt.findContextualValueDeserializer(vt, property);
++            valueDeser = ctxt.findContextualValueDeserializer(_collectionType.getContentType(), property);
+         } else { // if directly assigned, probably not yet contextual, so:
+-            valueDeser = ctxt.handleSecondaryContextualization(valueDeser, property, vt);
++            valueDeser = ctxt.handleSecondaryContextualization(valueDeser, property, _valueTypeDeserializer);
+         }
+         // and finally, type deserializer needs context as well
+         TypeDeserializer valueTypeDeser = _valueTypeDeserializer;

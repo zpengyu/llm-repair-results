@@ -1,0 +1,61 @@
+diff --git a/src/com/google/javascript/jscomp/NameAnalyzer.java b/src/com/google/javascript/jscomp/NameAnalyzer.java
+index 25e2b5d4..01d52039 100644
+--- a/src/com/google/javascript/jscomp/NameAnalyzer.java
++++ b/src/com/google/javascript/jscomp/NameAnalyzer.java
+@@ -869,17 +863,7 @@ final class NameAnalyzer implements CompilerPass {
+                       ? referring.prototypeClass
+                       : referring.name;
+       }
+-
+       String name = nameInfo.name;
+-
+-      // A value whose result is the return value of a function call
+-      // can be an alias to global object.
+-      // Here we add a alias to the general "global" object
+-      // to act as a placeholder for the actual (unnamed) value.
+-      if (maybeHiddenAlias(name, n)) {
+-        recordAlias(name, WINDOW);
+-      }
+-
+       // An externally referenceable name must always be defined, so we add a
+       // reference to it from the global scope (a.k.a. window).
+       if (nameInfo.isExternallyReferenceable) {
+@@ -924,7 +906,37 @@ final class NameAnalyzer implements CompilerPass {
+         }
+       }
+     }
+-
++    /**
++     * For a qualified name like "a.b.c", this method determines
++     * whether "c" could be an alias for a named value.
++     * If it is, it adds "a.b.c" as a potential alias of the unnamed value.
++     *
++     * @param name the name to check
++     * @param n the node where the name was found
++     * @return true if an alias was found, false otherwise
++     */
++    private boolean maybeHiddenAlias(String name, Node n) {
++      // A qualified name can't be a hidden alias.
++      if (n.isQualifiedName()) {
++        return false;
++      }
++      // TODO(user): Also support unnamed values that are the result of
++      // function calls like "foo(x)".
++      Node parent = n.getParent();
++      if (!parent.isCall()) {
++        return false;
++      }
++      Node fn = parent.getFirstChild();
++      if (!fn.isQualifiedName()) {
++        return false;
++      }
++      String fnName = fn.getQualifiedName();
++      if (!UNALIASABLE_NAMES.contains(fnName)) {
++        return false;
++      }
++      recordAlias(name, fnName);
++      return true;
++    }
+     /**
+      * A value whose result is the return value of a function call
+      * can be an alias to global object. The dependency on the call target will

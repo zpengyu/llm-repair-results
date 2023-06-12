@@ -1,0 +1,27 @@
+diff --git a/gson/src/main/java/com/google/gson/TypeInfoFactory.java b/gson/src/main/java/com/google/gson/TypeInfoFactory.java
+index 0aa1455a..0e4909bc 100644
+--- a/gson/src/main/java/com/google/gson/TypeInfoFactory.java
++++ b/gson/src/main/java/com/google/gson/TypeInfoFactory.java
+@@ -90,10 +86,19 @@ final class TypeInfoFactory {
+         int indexOfActualTypeArgument = getIndex(classTypeVariables, fieldTypeVariable);
+         Type[] actualTypeArguments = objParameterizedType.getActualTypeArguments();
+         return actualTypeArguments[indexOfActualTypeArgument];
+-
+-
++      } else if (rawParentClass != null) {
++        // evaluate the type variable on the raw class or its superclass
++        // For example, class Foo<T extends Exception, U> { T t; }
++        // class Bar extends Foo<IOException, String> {}
++        // To find the actual type of T on Bar, we need to evaluate the
++        // type variable on Foo<IOException, String>. Since Foo is a raw
++        // class, we can just evaluate T on the raw class and the superclass.
++        int indexOfActualTypeArgument = getIndex(rawParentClass.getTypeParameters(),
++            (TypeVariable<?>) typeToEvaluate);
++        ParameterizedType genericSuperType =
++            (ParameterizedType) TypeUtils.toRawClass(parentType).getGenericSuperclass();
++        return genericSuperType.getActualTypeArguments()[indexOfActualTypeArgument];
+       }
+-
+       throw new UnsupportedOperationException("Expecting parameterized type, got " + parentType
+           + ".\n Are you missing the use of TypeToken idiom?\n See "
+           + "http://sites.google.com/site/gson/gson-user-guide#TOC-Serializing-and-Deserializing-Gener");

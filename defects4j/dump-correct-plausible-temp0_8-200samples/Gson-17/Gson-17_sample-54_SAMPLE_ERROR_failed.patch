@@ -1,0 +1,46 @@
+diff --git a/gson/src/main/java/com/google/gson/DefaultDateTypeAdapter.java b/gson/src/main/java/com/google/gson/DefaultDateTypeAdapter.java
+index 70c30e14..7a0793a5 100644
+--- a/gson/src/main/java/com/google/gson/DefaultDateTypeAdapter.java
++++ b/gson/src/main/java/com/google/gson/DefaultDateTypeAdapter.java
+@@ -96,22 +96,28 @@ final class DefaultDateTypeAdapter extends TypeAdapter<Date> {
+ 
+   @Override
+   public Date read(JsonReader in) throws IOException {
+-    if (in.peek() != JsonToken.STRING) {
+-      throw new JsonParseException("The date should be a string value");
+-    }
+-    Date date = deserializeToDate(in.nextString());
+-    if (dateType == Date.class) {
+-      return date;
+-    } else if (dateType == Timestamp.class) {
+-      return new Timestamp(date.getTime());
+-    } else if (dateType == java.sql.Date.class) {
+-      return new java.sql.Date(date.getTime());
++    if (in.peek() == JsonToken.NUMBER) {
++      long timestamp = in.nextLong();
++      if (dateType == Date.class) {
++        return new Date(timestamp);
++      } else if (dateType == Timestamp.class) {
++        return new Timestamp(timestamp);
++      } else if (dateType == java.sql.Date.class) {
++        return new java.sql.Date(timestamp);
++      } else {
++        throw new JsonParseException("Unknown date type: " + dateType);
++      }
++    } else if (in.peek() == JsonToken.STRING) {
++      String json = in.nextString();
++      try {
++        return deserializeToDate(json);
++      } catch (ParseException e) {
++        throw new JsonSyntaxException(json, e);
++      }
+     } else {
+-      // This must never happen: dateType is guarded in the primary constructor
+-      throw new AssertionError();
++      throw new JsonParseException("The date should be a string value");
+     }
+   }
+-
+   private Date deserializeToDate(String s) {
+     synchronized (localFormat) {
+       try {

@@ -1,0 +1,102 @@
+diff --git a/src/java/org/apache/commons/codec/binary/Base64.java b/src/java/org/apache/commons/codec/binary/Base64.java
+index b5895635..10ca6026 100644
+--- a/src/java/org/apache/commons/codec/binary/Base64.java
++++ b/src/java/org/apache/commons/codec/binary/Base64.java
+@@ -547,57 +547,54 @@ public class Base64 implements BinaryEncoder, BinaryDecoder {
+      * @param inAvail
+      *            Amount of bytes available from input for encoding.
+      */
+-    void decode(byte[] in, int inPos, int inAvail) {
+-        if (eof) {
+-            return;
++void decode(byte[] in, int inPos, int inAvail) {
++    if (eof) {
++        return;
++    }
++    if (inAvail < 0) {
++        eof = true;
++    }
++    for (int i = 0; i < inAvail; i++) {
++        if (buffer == null || buffer.length - pos < decodeSize) {
++            resizeBuffer();
+         }
+-        if (inAvail < 0) {
++        byte b = in[inPos++];
++        if (b == PAD) {
++            // We're done.
+             eof = true;
+-        }
+-        for (int i = 0; i < inAvail; i++) {
+-            if (buffer == null || buffer.length - pos < decodeSize) {
+-                resizeBuffer();
+-            }
+-            byte b = in[inPos++];
+-            if (b == PAD) {
+-                // We're done.
+-                eof = true;
+-                break;
+-            } else {
+-                if (b >= 0 && b < DECODE_TABLE.length) {
+-                    int result = DECODE_TABLE[b];
+-                    if (result >= 0) {
+-                        modulus = (++modulus) % 4;
+-                        x = (x << 6) + result;
+-                        if (modulus == 0) {
+-                            buffer[pos++] = (byte) ((x >> 16) & MASK_8BITS);
+-                            buffer[pos++] = (byte) ((x >> 8) & MASK_8BITS);
+-                            buffer[pos++] = (byte) (x & MASK_8BITS);
+-                        }
++            break;
++        } else {
++            if (b >= 0 && b < DECODE_TABLE.length) {
++                int result = DECODE_TABLE[b];
++                if (result >= 0) {
++                    modulus = (++modulus) % 4;
++                    x = (x << 6) + result;
++                    if (modulus == 0) {
++                        buffer[pos++] = (byte) ((x >> 16) & MASK_8BITS);
++                        buffer[pos++] = (byte) ((x >> 8) & MASK_8BITS);
++                        buffer[pos++] = (byte) (x & MASK_8BITS);
+                     }
+                 }
+             }
+         }
+-
+-        // Two forms of EOF as far as base64 decoder is concerned: actual
+-        // EOF (-1) and first time '=' character is encountered in stream.
+-        // This approach makes the '=' padding characters completely optional.
+-        if (eof && modulus != 0) {
+-
+-            x = x << 6;
+-            switch (modulus) {
+-                case 2 :
+-                    x = x << 6;
+-                    buffer[pos++] = (byte) ((x >> 16) & MASK_8BITS);
+-                    break;
+-                case 3 :
+-                    buffer[pos++] = (byte) ((x >> 16) & MASK_8BITS);
+-                    buffer[pos++] = (byte) ((x >> 8) & MASK_8BITS);
+-                    break;
+-            }
++    }
++    // Two forms of EOF as far as base64 decoder is concerned: actual
++    // EOF (-1) and first time '=' character is encountered in stream.
++    // This approach makes the '=' padding characters completely optional.
++    if (eof && modulus != 0) {
++        x = x << 6;
++        switch (modulus) {
++            case 2 :
++                x = x << 6;
++                buffer[pos++] = (byte) ((x >> 16) & MASK_8BITS);
++                break;
++            case 3 :
++                buffer[pos++] = (byte) ((x >> 16) & MASK_8BITS);
++                buffer[pos++] = (byte) ((x >> 8) & MASK_8BITS);
++                break;
+         }
+     }
+-
++}
+     /**
+      * Returns whether or not the <code>octet</code> is in the base 64 alphabet.
+      * 

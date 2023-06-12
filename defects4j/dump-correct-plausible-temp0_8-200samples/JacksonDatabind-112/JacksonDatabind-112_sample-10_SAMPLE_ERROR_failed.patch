@@ -1,0 +1,21 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/deser/std/StringCollectionDeserializer.java b/src/main/java/com/fasterxml/jackson/databind/deser/std/StringCollectionDeserializer.java
+index 42c6f0491..0ce0cc874 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/deser/std/StringCollectionDeserializer.java
++++ b/src/main/java/com/fasterxml/jackson/databind/deser/std/StringCollectionDeserializer.java
+@@ -126,6 +126,16 @@ public final class StringCollectionDeserializer
+         //   comes down to "List vs Collection" I suppose... for now, pass Collection
+         Boolean unwrapSingle = findFormatFeature(ctxt, property, Collection.class,
+                 JsonFormat.Feature.ACCEPT_SINGLE_VALUE_AS_ARRAY);
++        // [databind#1754]: also: unwrap can be forced by a setting
++        if (unwrapSingle == null) {
++            unwrapSingle = ctxt.isEnabled(DeserializationFeature.ACCEPT_EMPTY_ARRAY_AS_NULL_OBJECT);
++        }
++        if (unwrapSingle == Boolean.TRUE) {
++            JsonDeserializer<?> deser = ctxt.handleSecondaryContextualization(valueDeser, property, valueType);
++            NullValueProvider nuller = findContentNullProvider(ctxt, property, valueDeser);
++            return new CollectionDeserializer.NullAndEmptyAware(this, nuller,
++                    property, deser);
++        }
+         NullValueProvider nuller = findContentNullProvider(ctxt, property, valueDeser);
+         if (isDefaultDeserializer(valueDeser)) {
+             valueDeser = null;

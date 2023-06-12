@@ -1,0 +1,32 @@
+diff --git a/src/main/java/org/jsoup/nodes/FormElement.java b/src/main/java/org/jsoup/nodes/FormElement.java
+index baffcf1..62b9bfe 100644
+--- a/src/main/java/org/jsoup/nodes/FormElement.java
++++ b/src/main/java/org/jsoup/nodes/FormElement.java
+@@ -14,9 +14,9 @@ import java.util.List;
+  * A HTML Form Element provides ready access to the form fields/controls that are associated with it. It also allows a
+  * form to easily be submitted.
+  */
++import org.jsoup.helper.Validate;
+ public class FormElement extends Element {
+     private final Elements elements = new Elements();
+-
+     /**
+      * Create a new, standalone form element.
+      *
+@@ -99,6 +91,16 @@ public class FormElement extends Element {
+                     final String val = el.val().length() >  0 ? el.val() : "on";
+                     data.add(HttpConnection.KeyVal.create(name, val));
+                 }
++            } else if ("image".equalsIgnoreCase(type)) {
++                String prefix = el.attr("src");
++                if (!prefix.startsWith(baseUri)) {
++                    prefix = UrlUtil.resolve(baseUri, prefix);
++                }
++                // correct the src attribute to the absolute value
++                el.attr("src", prefix);
++                // append the coords as a special param name
++                String coords = String.format(".x=%s&.y=%s", el.attr("x"), el.attr("y"));
++                data.add(HttpConnection.KeyVal.create(name + coords, ""));
+             } else {
+                 data.add(HttpConnection.KeyVal.create(name, el.val()));
+             }

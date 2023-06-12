@@ -1,0 +1,36 @@
+diff --git a/src/com/google/javascript/jscomp/TypeValidator.java b/src/com/google/javascript/jscomp/TypeValidator.java
+index c6d25483..26de1d3f 100644
+--- a/src/com/google/javascript/jscomp/TypeValidator.java
++++ b/src/com/google/javascript/jscomp/TypeValidator.java
+@@ -722,9 +722,14 @@ class TypeValidator {
+    *     to an Object type, if possible.
+    */
+   String getReadableJSTypeName(Node n, boolean dereference) {
+-
+     // The best type name is the actual type name.
+-
++    JSType type = getJSType(n);
++    if (dereference) {
++      ObjectType dereferenced = type.dereference();
++      if (dereferenced != null) {
++        type = dereferenced;
++      }
++    }
+     // If we're analyzing a GETPROP, the property may be inherited by the
+     // prototype chain. So climb the prototype chain and find out where
+     // the property was originally defined.
+@@ -752,14 +756,6 @@ class TypeValidator {
+         }
+       }
+     }
+-
+-    JSType type = getJSType(n);
+-    if (dereference) {
+-      ObjectType dereferenced = type.dereference();
+-      if (dereferenced != null) {
+-        type = dereferenced;
+-      }
+-    }
+     if (type.isFunctionPrototypeType() ||
+         (type.toObjectType() != null &&
+          type.toObjectType().getConstructor() != null)) {

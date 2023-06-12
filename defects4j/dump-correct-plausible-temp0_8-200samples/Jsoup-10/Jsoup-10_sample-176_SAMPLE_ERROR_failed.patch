@@ -1,0 +1,54 @@
+diff --git a/src/main/java/org/jsoup/nodes/Node.java b/src/main/java/org/jsoup/nodes/Node.java
+index 0d0f9d4..c2301a5 100644
+--- a/src/main/java/org/jsoup/nodes/Node.java
++++ b/src/main/java/org/jsoup/nodes/Node.java
+@@ -153,31 +153,37 @@ public abstract class Node implements Cloneable {
+      * @see #attr
+      * @see java.net.URL#URL(java.net.URL, String)
+      */
+-    public String absUrl(String attributeKey) {
++public String absUrl(String attributeKey) {
+         Validate.notEmpty(attributeKey);
+-
+-        String relUrl = attr(attributeKey);
+         if (!hasAttr(attributeKey)) {
+             return ""; // nothing to make absolute with
+         } else {
++            boolean tryAbs = true;
++            if (baseUri.equals("")) { // just update it, no base to resolve against
++                tryAbs = false;
++            }
+             URL base;
+             try {
+-                try {
++                if (tryAbs) { // why waste the time? only need it if we may not have it.
+                     base = new URL(baseUri);
+-                } catch (MalformedURLException e) {
+-                    // the base is unsuitable, but the attribute may be abs on its own, so try that
+-                    URL abs = new URL(relUrl);
+-                    return abs.toExternalForm();
+                 }
+-                // workaround: java resolves '//path/file + ?foo' to '//path/?foo', not '//path/file?foo' as desired
+-                URL abs = new URL(base, relUrl);
+-                return abs.toExternalForm();
++            } catch (MalformedURLException e) {
++                tryAbs = false;
++            }
++            String relUrl = attr(attributeKey).trim();
++            URL abs;
++            try {
++                if (tryAbs) {
++                    abs = new URL(base, relUrl);
++                } else {
++                    abs = new URL(relUrl);
++                }
+             } catch (MalformedURLException e) {
+                 return "";
+             }
++            return abs.toExternalForm();
+         }
+     }
+-
+     /**
+      Get a child node by index
+      @param index index of child node

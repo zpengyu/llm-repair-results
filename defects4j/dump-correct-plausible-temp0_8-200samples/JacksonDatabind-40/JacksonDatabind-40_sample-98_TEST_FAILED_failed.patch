@@ -1,0 +1,39 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/deser/std/NumberDeserializers.java b/src/main/java/com/fasterxml/jackson/databind/deser/std/NumberDeserializers.java
+index a76403c86..0054249c2 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/deser/std/NumberDeserializers.java
++++ b/src/main/java/com/fasterxml/jackson/databind/deser/std/NumberDeserializers.java
+@@ -118,16 +118,15 @@ public class NumberDeserializers
+         extends StdScalarDeserializer<T>
+     {
+         private static final long serialVersionUID = 1L;
+-
+         protected final T _nullValue;
+         protected final boolean _primitive;
+-
++        protected final boolean _nullFromEmpty;
+         protected PrimitiveOrWrapperDeserializer(Class<T> vc, T nvl) {
+             super(vc);
+             _nullValue = nvl;
+             _primitive = vc.isPrimitive();
++            _nullFromEmpty = (nvl == null) && (_primitive && !vc.isPrimitive());
+         }
+-
+         @Override
+         public final T getNullValue(DeserializationContext ctxt) throws JsonMappingException
+         {
+@@ -144,11 +142,13 @@ public class NumberDeserializers
+         public final T getNullValue() {
+             return _nullValue;
+         }
+-
+             // [databind#1095]: Should not allow coercion from into null from Empty String
+             // either, if `null` not allowed
++        @Override
++        public boolean isCachable() {
++            return (_nullFromEmpty == false);
++        }
+     }
+-
+     /*
+     /**********************************************************
+     /* Then primitive/wrapper types

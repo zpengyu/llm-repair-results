@@ -1,0 +1,50 @@
+diff --git a/src/main/java/org/apache/commons/math/optimization/direct/MultiDirectional.java b/src/main/java/org/apache/commons/math/optimization/direct/MultiDirectional.java
+index 2fa8c34bf..4a19fc8ed 100644
+--- a/src/main/java/org/apache/commons/math/optimization/direct/MultiDirectional.java
++++ b/src/main/java/org/apache/commons/math/optimization/direct/MultiDirectional.java
+@@ -76,28 +71,36 @@ public class MultiDirectional extends DirectSearchOptimizer {
+                 // compute the expanded simplex
+                 final RealPointValuePair[] reflectedSimplex = simplex;
+                 final RealPointValuePair expanded = evaluateNewSimplex(original, khi, comparator);
+-                if (comparator.compare(reflected, expanded) <= 0) {
++                if (comparator.compare(best, expanded) <= 0 &&
++                    comparator.compare(reflected, expanded) <= 0) {
+                     // accept the reflected simplex
+                     simplex = reflectedSimplex;
++                } else {
++                    // accept the expanded simplex
++                    simplex = reflectedSimplex;
+                 }
+-
+                 return;
+-
+             }
+-
+             // compute the contracted simplex
+             final RealPointValuePair contracted = evaluateNewSimplex(original, gamma, comparator);
+-            if (comparator.compare(contracted, best) < 0) {
++            if (comparator.compare(contracted, best) <= 0) {
+                 // accept the contracted simplex
+-
++                // check convergence
++                return;
++            }
++            // perform a reduction step
++            for (int i = getDimension(); i >= 0; --i) {
++                if (i > 0) {
++                    System.arraycopy(original[i - 1].getPointRef(), 0, simplex[i].getPointRef(), 0, getDimension());
++                }
++                evaluateNewSimplex(simplex, beta, comparator);
++            }
+             // check convergence
++            if (comparator.compare(simplex[0], best) == 0) {
+                 return;
+             }
+-
+         }
+-
+     }
+-
+     /** Compute and evaluate a new simplex.
+      * @param original original simplex (to be preserved)
+      * @param coeff linear coefficient

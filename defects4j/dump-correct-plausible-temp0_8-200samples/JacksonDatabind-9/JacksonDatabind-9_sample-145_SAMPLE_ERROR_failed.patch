@@ -1,0 +1,24 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/ser/std/StdKeySerializer.java b/src/main/java/com/fasterxml/jackson/databind/ser/std/StdKeySerializer.java
+index 60ce578bf..06383fcea 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/ser/std/StdKeySerializer.java
++++ b/src/main/java/com/fasterxml/jackson/databind/ser/std/StdKeySerializer.java
+@@ -24,10 +24,16 @@ public class StdKeySerializer extends StdSerializer<Object>
+     @Override
+     public void serialize(Object value, JsonGenerator jgen, SerializerProvider provider) throws IOException {
+         String str;
+-
+         if (value instanceof Date) {
+-            provider.defaultSerializeDateKey((Date) value, jgen);
+-            return;
++            Date date = (Date) value;
++            if (_useTimestamp) {
++                provider.defaultSerializeDateKey(date, jgen);
++            } else {
++                // 29-Nov-2010, tatu: This is bit awkward, but we must coerce to SQL style time value...
++                Calendar c = provider.getConfig().getCalendar();
++                c.setTimeInMillis(date.getTime());
++                str = _format.format(c, new StringBuffer(), new FieldPosition(0)).toString();
++            }
+         } else {
+             str = value.toString();
+         }

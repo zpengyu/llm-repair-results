@@ -1,0 +1,36 @@
+diff --git a/src/java/org/apache/commons/lang/enums/ValuedEnum.java b/src/java/org/apache/commons/lang/enums/ValuedEnum.java
+index 0823e77d..006ea3c1 100644
+--- a/src/java/org/apache/commons/lang/enums/ValuedEnum.java
++++ b/src/java/org/apache/commons/lang/enums/ValuedEnum.java
+@@ -189,10 +182,27 @@ public abstract class ValuedEnum extends Enum {
+      * @param other  the object to determine the value for
+      * @return the value
+      */
+-            // ignore - should never happen
+-            // ignore - should never happen
+-            // ignore - should never happen
+-
++        Class otherClass = other.getClass();
++        if (otherClass.isInstance(this) == false) {
++            throw new ClassCastException("Different enum class '" + ClassUtils.getShortClassName(otherClass)
++                    + "'");
++        }
++        // can't call other.getValue(), as doesn't exist in JDK 1.2
++        try {
++            return ((Integer) ReflectUtils.invoke(other, GET_VALUE_METHOD_NAME, null, null)).intValue()
++                    - this.iValue;
++        } catch (IllegalArgumentException ex) {
++            throw new ClassCastException("Different enum class '" + ClassUtils.getShortClassName(otherClass)
++                    + "'");
++        } catch (IllegalAccessException ex) {
++            throw new ClassCastException("Different enum class '" + ClassUtils.getShortClassName(otherClass)
++                    + "'");
++        } catch (InvocationTargetException ex) {
++            // can't call other.getValue(), as doesn't exist in JDK 1.2
++            throw new ClassCastException("Different enum class '" + ClassUtils.getShortClassName(otherClass)
++                    + "'");
++        }
++    }
+     /**
+      * <p>Human readable description of this <code>Enum</code> item.</p>
+      *

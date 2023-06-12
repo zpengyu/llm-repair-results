@@ -1,0 +1,20 @@
+    Object returnValueFor(Class<?> type) {
+        if (Primitives.isPrimitiveOrWrapper(type)) {
+            return Primitives.defaultValueForPrimitiveOrWrapper(type);
+            //new instances are used instead of Collections.emptyList(), etc.
+            //to avoid UnsupportedOperationException if code under test modifies returned collection
+        } else if (type.isInterface()) {
+            if (Collection.class.isAssignableFrom(type)) {
+                return new LinkedList<Object>();
+            } else if (Set.class.isAssignableFrom(type)) {
+                return new HashSet<Object>();
+            } else if (List.class.isAssignableFrom(type)) {
+                return new LinkedList<Object>();
+            } else if (Map.class.isAssignableFrom(type)) {
+                return new HashMap<Object, Object>();
+            }
+            //Let's not care about the rest of collections.
+        }
+        return null;
+    }
+

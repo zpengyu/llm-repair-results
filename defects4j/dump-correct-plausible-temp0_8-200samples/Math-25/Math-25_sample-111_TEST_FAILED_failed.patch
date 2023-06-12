@@ -1,0 +1,56 @@
+diff --git a/src/main/java/org/apache/commons/math3/optimization/fitting/HarmonicFitter.java b/src/main/java/org/apache/commons/math3/optimization/fitting/HarmonicFitter.java
+index 42399c04d..091253b0c 100644
+--- a/src/main/java/org/apache/commons/math3/optimization/fitting/HarmonicFitter.java
++++ b/src/main/java/org/apache/commons/math3/optimization/fitting/HarmonicFitter.java
+@@ -279,9 +277,8 @@ public class HarmonicFitter extends CurveFitter<HarmonicOscillator.Parametric> {
+                 final double dx = currentX - previousX;
+                 final double dy = currentY - previousY;
+                 final double f2StepIntegral =
+-                    dx * (previousY * previousY + previousY * currentY + currentY * currentY) / 3;
++                        dx * (previousY * previousY + previousY * currentY + currentY * currentY) / 3;
+                 final double fPrime2StepIntegral = dy * dy / dx;
+-
+                 final double x = currentX - startX;
+                 f2Integral += f2StepIntegral;
+                 fPrime2Integral += fPrime2StepIntegral;
+@@ -320,14 +314,34 @@ public class HarmonicFitter extends CurveFitter<HarmonicOscillator.Parametric> {
+                 }
+                 a = 0.5 * (yMax - yMin);
+             } else {
+-                    // In some ill-conditioned cases (cf. MATH-844), the guesser
+-                    // procedure cannot produce sensible results.
+-
+-                a = FastMath.sqrt(c1 / c2);
+-                omega = FastMath.sqrt(c2 / c3);
++                // In some ill-conditioned cases (cf. MATH-844), the guesser
++                // procedure cannot produce sensible results.
++                if (c1 > 0 && c2 > 0 && c3 > 0) {
++                    a = FastMath.sqrt(c1 / c2);
++                    omega = FastMath.sqrt(c2 / c3);
++                } else {
++                    // Range of the observations, assuming that the
++                    // observations are sorted.
++                    final double xRange = observations[observations.length - 1].getX() - observations[0].getX();
++                    if (xRange == 0) {
++                        throw new ZeroException();
++                    }
++                    omega = 2 * Math.PI / xRange;
++                    double yMin = Double.POSITIVE_INFINITY;
++                    double yMax = Double.NEGATIVE_INFINITY;
++                    for (int i = 1; i < observations.length; ++i) {
++                        final double y = observations[i].getY();
++                        if (y < yMin) {
++                            yMin = y;
++                        }
++                        if (y > yMax) {
++                            yMax = y;
++                        }
++                    }
++                    a = 0.5 * (yMax - yMin);
++                }
+             }
+         }
+-
+         /**
+          * Estimate a first guess of the phase.
+          */

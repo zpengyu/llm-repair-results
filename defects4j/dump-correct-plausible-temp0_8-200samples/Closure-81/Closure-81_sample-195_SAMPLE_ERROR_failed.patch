@@ -1,0 +1,21 @@
+diff --git a/src/com/google/javascript/jscomp/parsing/IRFactory.java b/src/com/google/javascript/jscomp/parsing/IRFactory.java
+index 32a15610..6214243c 100644
+--- a/src/com/google/javascript/jscomp/parsing/IRFactory.java
++++ b/src/com/google/javascript/jscomp/parsing/IRFactory.java
+@@ -530,8 +530,15 @@ public class IRFactory {
+         int lpColumn = functionNode.getAbsolutePosition() +
+             functionNode.getLp();
+         newName.setCharno(position2charno(lpColumn));
++      } else {
++        // We need to set the name's location to the actual position of the
++        // name, not the end of the LP.
++        // TODO(bowdidge): This is going to break in the presence of comments.
++        newName.setLineno(functionNode.getLineno());
++        newName.setCharno(functionNode.getAbsolutePosition() +
++                          functionNode.getCharno() +
++                          functionNode.getLp() + 1);
+       }
+-
+       node.addChildToBack(newName);
+       Node lp = newNode(Token.LP);
+       // The left paren's complicated because it's not represented by an

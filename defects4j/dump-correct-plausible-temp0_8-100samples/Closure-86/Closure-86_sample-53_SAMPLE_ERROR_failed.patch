@@ -1,0 +1,24 @@
+diff --git a/src/com/google/javascript/jscomp/NodeUtil.java b/src/com/google/javascript/jscomp/NodeUtil.java
+index 933d4ffa..2c1ae1e4 100644
+--- a/src/com/google/javascript/jscomp/NodeUtil.java
++++ b/src/com/google/javascript/jscomp/NodeUtil.java
+@@ -2451,9 +2451,18 @@ public final class NodeUtil {
+       case Token.NAME:
+         return isImmutableValue(value) || locals.apply(value);
+       case Token.GETELEM:
+-      case Token.GETPROP:
+         // There is no information about the locality of object properties.
+         return locals.apply(value);
++      case Token.GETPROP:
++        if (locals.apply(value)) {
++          return true;
++        }
++        // Treat class prototype properties as having an unknown locality.
++        if (value.getFirstChild().isThis()
++            && value.getLastChild().getType() == Token.STRING) {
++          return false;
++        }
++        return evaluatesToLocalValue(value.getFirstChild(), locals);
+       case Token.CALL:
+         return callHasLocalResult(value)
+             || isToStringMethodCall(value)

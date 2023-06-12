@@ -1,0 +1,48 @@
+diff --git a/gson/src/main/java/com/google/gson/TypeInfoFactory.java b/gson/src/main/java/com/google/gson/TypeInfoFactory.java
+index 0aa1455a..5a8fa7ef 100644
+--- a/gson/src/main/java/com/google/gson/TypeInfoFactory.java
++++ b/gson/src/main/java/com/google/gson/TypeInfoFactory.java
+@@ -105,12 +98,37 @@ final class TypeInfoFactory {
+           + "ParameterizedType, GenericArrayType or TypeVariable. Can't extract type.");
+     }
+   }
+-
+-
+-      // Evaluate type on this type
+-
+-
+-
++  /**
++   * Evaluates the "actual" type for the method's return value.  If the method's return value is a
++   * "TypeVariable" or has a "TypeVariable" in a parameterized type then it evaluates the real type.
++   *
++   * @param m the actual method object to retrieve the type from
++   * @param typeDefiningM the type that contains the method {@code m}
++   * @return the type information for the method's return value
++   */
++  public static TypeInfo getTypeInfoForMethodReturn(Method m, Type typeDefiningM) {
++    Class<?> classDefiningM = TypeUtils.toRawClass(typeDefiningM);
++    Type methodReturnType = m.getGenericReturnType();
++    Type actualType = getActualType(methodReturnType, typeDefiningM, classDefiningM);
++    return new TypeInfo(actualType);
++  }
++  /**
++   * Evaluates the "actual" type for the method's parameter.  If the method's parameter is a
++   * "TypeVariable" or has a "TypeVariable" in a parameterized type then it evaluates the real type.
++   *
++   * @param m the actual method object to retrieve the type from
++   * @param typeDefiningM the type that contains the method {@code m}
++   * @param indexOfParam index of the parameter to retrieve
++   * @return the type information for the method's parameter
++   */
++  public static TypeInfo getTypeInfoForMethodParameter(Method m, Type typeDefiningM,
++      int indexOfParam) {
++    Class<?> classDefiningM = TypeUtils.toRawClass(typeDefiningM);
++    Type paramType = m.getGenericParameterTypes()[indexOfParam];
++    Type actualType = getActualType(paramType, typeDefiningM, classDefiningM);
++    return new TypeInfo(actualType);
++  }
++  // Evaluate type on this type
+   private static Type[] extractRealTypes(
+       Type[] actualTypeArguments, Type parentType, Class<?> rawParentClass) {
+     Preconditions.checkNotNull(actualTypeArguments);

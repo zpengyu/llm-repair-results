@@ -1,0 +1,41 @@
+diff --git a/gson/src/main/java/com/google/gson/internal/ConstructorConstructor.java b/gson/src/main/java/com/google/gson/internal/ConstructorConstructor.java
+index cd5c2f6c..015a057e 100644
+--- a/gson/src/main/java/com/google/gson/internal/ConstructorConstructor.java
++++ b/gson/src/main/java/com/google/gson/internal/ConstructorConstructor.java
+@@ -178,25 +177,32 @@ public final class ConstructorConstructor {
+             return (T) new TreeMap<Object, Object>();
+           }
+         };
+-      } else if (type instanceof ParameterizedType && !(String.class.isAssignableFrom(
++      } else if (type instanceof ParameterizedType
++          && !(String.class.isAssignableFrom(
+           TypeToken.get(((ParameterizedType) type).getActualTypeArguments()[0]).getRawType()))) {
+         return new ObjectConstructor<T>() {
+           @Override public T construct() {
+             return (T) new LinkedHashMap<Object, Object>();
+           }
+         };
+-      } else {
++      } else if (type instanceof ParameterizedType
++          && String.class.isAssignableFrom(
++          TypeToken.get(((ParameterizedType) type).getActualTypeArguments()[0]).getRawType())) {
+         return new ObjectConstructor<T>() {
+           @Override public T construct() {
+             return (T) new LinkedTreeMap<String, Object>();
+           }
+         };
++      } else {
++        return new ObjectConstructor<T>() {
++          @Override public T construct() {
++            return (T) new LinkedHashMap<Object, Object>();
++          }
++        };
+       }
+     }
+-
+     return null;
+   }
+-
+   private <T> ObjectConstructor<T> newUnsafeAllocator(
+       final Type type, final Class<? super T> rawType) {
+     return new ObjectConstructor<T>() {

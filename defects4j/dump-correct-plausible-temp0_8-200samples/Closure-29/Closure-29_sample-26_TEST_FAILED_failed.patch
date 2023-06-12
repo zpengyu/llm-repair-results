@@ -1,0 +1,41 @@
+diff --git a/src/com/google/javascript/jscomp/InlineObjectLiterals.java b/src/com/google/javascript/jscomp/InlineObjectLiterals.java
+index a26b500d..eceda88d 100644
+--- a/src/com/google/javascript/jscomp/InlineObjectLiterals.java
++++ b/src/com/google/javascript/jscomp/InlineObjectLiterals.java
+@@ -178,9 +176,24 @@ class InlineObjectLiterals implements CompilerPass {
+           // We short-circuit this problem by bailing out if we see a reference
+           // to a property that isn't defined on the object literal. This
+           // isn't a perfect algorithm, but it should catch most cases.
+-          continue;
++          //
++          String propName = parent.getLastChild().getString();
++          Node value = ref.getAssignedValue();
++          if (!value.isObjectLit()) {
++            return false;
++          }
++          boolean found = false;
++          for (Node key = value.getFirstChild();
++               key != null; key = key.getNext()) {
++            if (key.getString().equals(propName)) {
++              found = true;
++              break;
++            }
++          }
++          if (!found) {
++            return false;
++          }
+         }
+-
+         // Only rewrite VAR declarations or simple assignment statements
+         if (!isVarOrAssignExprLhs(name)) {
+            return false;
+@@ -196,8 +207,7 @@ class InlineObjectLiterals implements CompilerPass {
+         if (!val.isObjectLit()) {
+           return false;
+         }
+-
+-        // Make sure that the value is not self-refential. IOW,
++        // Make sure that the value is not self-referential. IOW,
+         // disallow things like x = {b: x.a}.
+         //
+         // TODO: Only exclude unorderable self-referential

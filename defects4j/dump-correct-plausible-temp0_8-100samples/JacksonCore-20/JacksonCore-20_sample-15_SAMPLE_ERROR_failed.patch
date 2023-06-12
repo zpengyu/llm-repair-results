@@ -1,0 +1,27 @@
+diff --git a/src/main/java/com/fasterxml/jackson/core/JsonGenerator.java b/src/main/java/com/fasterxml/jackson/core/JsonGenerator.java
+index 4eef7341..f20f5ea7 100644
+--- a/src/main/java/com/fasterxml/jackson/core/JsonGenerator.java
++++ b/src/main/java/com/fasterxml/jackson/core/JsonGenerator.java
+@@ -1326,11 +1326,18 @@ public abstract class JsonGenerator
+      * @since 2.8
+      */
+     public void writeEmbeddedObject(Object object) throws IOException {
+-        // 01-Sep-2016, tatu: As per [core#318], handle small number of cases
+-        throw new JsonGenerationException("No native support for writing embedded objects",
+-                this);
++        if (object == null) {
++            writeNull();
++            return;
++        }
++        if (object.getClass() == byte[].class) {
++            _writeBinary((byte[]) object);
++        } else {
++            throw new JsonGenerationException("No native support for writing embedded objects of type "
++                    + object.getClass().getName(),
++                    this);
++        }
+     }
+-
+     /*
+     /**********************************************************
+     /* Public API, write methods, Native Ids (type, object)

@@ -1,0 +1,26 @@
+diff --git a/src/com/google/javascript/jscomp/TypeInference.java b/src/com/google/javascript/jscomp/TypeInference.java
+index 6c9c7846..91a2bd17 100644
+--- a/src/com/google/javascript/jscomp/TypeInference.java
++++ b/src/com/google/javascript/jscomp/TypeInference.java
+@@ -1202,13 +1198,18 @@ class TypeInference
+     FunctionType replacementFnType = fnType.visit(replacer)
+         .toMaybeFunctionType();
+     Preconditions.checkNotNull(replacementFnType);
+-
+     callTarget.setJSType(replacementFnType);
+     n.setJSType(replacementFnType.getReturnType());
+-
++    if (replacer.madeChanges) {
++      // Now that we've done the inference, we need to do another pass on the
++      // call site with the new type information.
++      // To be more efficient, we just call the visitor
++      // again (avoiding traversing the entire tree).
++      n.putBooleanProp(Node.ANALYZED_DURING_GTI, false);
++      n.getFirstChild().getJSType().visit(this);
++    }
+     return replacer.madeChanges;
+   }
+-
+   private FlowScope traverseNew(Node n, FlowScope scope) {
+     scope = traverseChildren(n, scope);
+ 

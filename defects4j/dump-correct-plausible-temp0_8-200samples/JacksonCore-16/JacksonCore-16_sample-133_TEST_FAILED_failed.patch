@@ -1,0 +1,48 @@
+diff --git a/src/main/java/com/fasterxml/jackson/core/util/JsonParserSequence.java b/src/main/java/com/fasterxml/jackson/core/util/JsonParserSequence.java
+index bed27f2b..5be01f09 100644
+--- a/src/main/java/com/fasterxml/jackson/core/util/JsonParserSequence.java
++++ b/src/main/java/com/fasterxml/jackson/core/util/JsonParserSequence.java
+@@ -32,7 +30,7 @@ public class JsonParserSequence extends JsonParserDelegate
+      *
+      * @since 2.8
+      */
+-
++    protected boolean _hasToken;
+     /*
+      *******************************************************
+      * Construction
+@@ -103,15 +95,28 @@ public class JsonParserSequence extends JsonParserDelegate
+     @Override
+     public JsonToken nextToken() throws IOException, JsonParseException
+     {
+-        JsonToken t = delegate.nextToken();
+-        if (t != null) return t;
+-        while (switchToNext()) {
+-            t = delegate.nextToken();
+-            if (t != null) return t;
++        if (!_hasToken) {
++            // First, need to fetch a token from the current delegate
++            JsonToken t = delegate.nextToken();
++            if (t == null) {
++                while (switchToNext()) {
++                    t = delegate.nextToken();
++                    if (t != null) {
++                        _hasToken = true;
++                        return t;
++                    }
++                }
++            } else {
++                _hasToken = true;
++                return t;
++            }
++            return null;
+         }
++        // already have a token, need to clear it so that it won't
++        // block delegation
++        _hasToken = false;
+         return null;
+     }
+-
+     /*
+     /*******************************************************
+     /* Additional extended API

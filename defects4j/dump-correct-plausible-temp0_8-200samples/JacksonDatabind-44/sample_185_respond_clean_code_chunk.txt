@@ -1,0 +1,28 @@
+    protected JavaType _narrow(Class<?> subclass)
+    {
+        if (_class == subclass) {
+            return this;
+        }
+        if (!_class.isAssignableFrom(subclass)) { // just to ensure
+            throw new IllegalArgumentException("Class "+subclass.getName()+" not sub-type of "+_class.getName());
+        }
+        // Otherwise, stitch together the hierarchy. First, super-class
+        Class<?> cc = subclass.getSuperclass();
+        JavaType sup = (cc == null || cc == Object.class) ?
+                null : _fromClass(cc, new TypeBindings(this));
+        // if not found, try a super-interface
+        if (sup == null) {
+            for (Class<?> intCls : subclass.getInterfaces()) {
+                sup = _fromClass(intCls, new TypeBindings(this));
+                if (sup != null) {
+                    break;
+                }
+            }
+        }
+        // should not get here but...
+        if (sup == null) {
+            throw new IllegalArgumentException("Internal error: cannot resolve JavaType for "+subclass.getName());
+        }
+        sup = sup.withTypeHandler(this._typeHandler).withValueHandler(this._valueHandler);
+        return sup.withContentTypeHandler(this._contentTypeHandler);
+    }

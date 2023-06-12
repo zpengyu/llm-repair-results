@@ -1,0 +1,25 @@
+diff --git a/src/main/java/org/jsoup/safety/Whitelist.java b/src/main/java/org/jsoup/safety/Whitelist.java
+index 23a215d..917847f 100644
+--- a/src/main/java/org/jsoup/safety/Whitelist.java
++++ b/src/main/java/org/jsoup/safety/Whitelist.java
+@@ -341,16 +341,12 @@ public class Whitelist {
+         String value = el.absUrl(attr.getKey());
+         if (!preserveRelativeLinks)
+             attr.setValue(value);
+-
+-        for (Protocol protocol : protocols) {
+-            String prot = protocol.toString() + ":";
+-            if (value.toLowerCase().startsWith(prot)) {
+-                return true;
+-            }
+-        }
++        if (value.isEmpty()) return false;
++        Protocol prot = Protocol.lookup(value);
++        if (protocols.contains(prot))
++            return true;
+         return false;
+     }
+-
+     Attributes getEnforcedAttributes(String tagName) {
+         Attributes attrs = new Attributes();
+         TagName tag = TagName.valueOf(tagName);

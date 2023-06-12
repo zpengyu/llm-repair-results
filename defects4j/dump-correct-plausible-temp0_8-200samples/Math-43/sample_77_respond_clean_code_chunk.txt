@@ -1,0 +1,39 @@
+    public void addValue(double value) {
+        sumImpl.increment(value);
+        sumsqImpl.increment(value);
+        minImpl.increment(value);
+        maxImpl.increment(value);
+        sumLogImpl.increment(value);
+        secondMoment.increment(value);
+        // If mean, variance or geomean have been overridden,
+        // need to increment these
+        if (!(meanImpl instanceof Mean)) {
+            meanImpl.increment(value);
+        }
+        if (!(varianceImpl instanceof Variance)) {
+            varianceImpl.increment(value);
+        }
+        if (!(geoMeanImpl instanceof GeometricMean)) {
+            geoMeanImpl.increment(value);
+        }
+        n++;
+        if (n == 1) {
+            return;
+        }
+        sumOfLogs = sumLogImpl.getResult();
+        sum = sumImpl.getResult();
+        sumsq = sumsqImpl.getResult();
+        min = minImpl.getResult();
+        max = maxImpl.getResult();
+        mean = meanImpl.getResult();
+        if (n < 2) {
+            variance = Double.NaN;
+            secondMomentValue = Double.NaN;
+        } else if (n == 2) {
+            secondMomentValue = sumsq - sum * sum / n;
+            variance = Double.NaN;
+        } else {
+            secondMomentValue = secondMoment.getResult();
+            variance = varianceImpl.getResult();
+        }
+    }

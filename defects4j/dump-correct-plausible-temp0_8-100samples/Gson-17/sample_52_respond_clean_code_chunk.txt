@@ -1,0 +1,27 @@
+  public Date read(JsonReader in) throws IOException {
+    JsonToken peek = in.peek();
+    if (peek == JsonToken.NUMBER) {
+      long millisecondsSinceEpoch = in.nextLong();
+      if (dateType == Date.class) {
+        return new Date(millisecondsSinceEpoch);
+      } else if (dateType == Timestamp.class) {
+        return new Timestamp(millisecondsSinceEpoch);
+      } else if (dateType == java.sql.Date.class) {
+        return new java.sql.Date(millisecondsSinceEpoch);
+      } else {
+        throw new AssertionError();
+      }
+    } else if (peek == JsonToken.STRING) {
+      String nextString = in.nextString();
+      if (nextString.length() == 0) {
+        return null;
+      }
+      try {
+        return this.format.parse(nextString);
+      } catch (ParseException var7) {
+        throw new JsonSyntaxException(var7);
+      }
+    } else {
+      throw new JsonParseException("The date should be a string value or a number value");
+    }
+  }

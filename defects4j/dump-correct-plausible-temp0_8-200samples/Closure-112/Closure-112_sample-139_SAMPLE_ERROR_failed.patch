@@ -1,0 +1,35 @@
+diff --git a/src/com/google/javascript/jscomp/TypeInference.java b/src/com/google/javascript/jscomp/TypeInference.java
+index 6c9c7846..9a41c288 100644
+--- a/src/com/google/javascript/jscomp/TypeInference.java
++++ b/src/com/google/javascript/jscomp/TypeInference.java
+@@ -1197,18 +1194,24 @@ class TypeInference
+     // replace it with UNKNOWN.
+     TemplateTypeReplacer replacer = new TemplateTypeReplacer(
+         registry, inferred);
+-    Node callTarget = n.getFirstChild();
+-
+     FunctionType replacementFnType = fnType.visit(replacer)
+         .toMaybeFunctionType();
+     Preconditions.checkNotNull(replacementFnType);
+-
++    boolean madeChanges = replacer.madeChanges;
++    // TODO(blickly): When we correctly compute call targets and don't
++    // rely on the outer function type, remove the resetting of JSTypes.
++    Node callTarget = n.getFirstChild();
+     callTarget.setJSType(replacementFnType);
+     n.setJSType(replacementFnType.getReturnType());
+-
+-    return replacer.madeChanges;
++    // Only visit the CALL if we have changed the type, because the
++    // call has already been typed without these constraints.
++    // The right fix is to have a more accurate call target in the
++    // first place so we don't have to do this.
++    if (madeChanges) {
++      visitCall(n, replacementFnType, null);
++    }
++    return madeChanges;
+   }
+-
+   private FlowScope traverseNew(Node n, FlowScope scope) {
+     scope = traverseChildren(n, scope);
+ 

@@ -1,0 +1,57 @@
+diff --git a/src/java/org/apache/commons/cli2/option/GroupImpl.java b/src/java/org/apache/commons/cli2/option/GroupImpl.java
+index 27640c1..511cbb1 100644
+--- a/src/java/org/apache/commons/cli2/option/GroupImpl.java
++++ b/src/java/org/apache/commons/cli2/option/GroupImpl.java
+@@ -238,31 +238,22 @@ public class GroupImpl
+         throws OptionException {
+         // number of options found
+         int present = 0;
+-
+         // reference to first unexpected option
+         Option unexpected = null;
+-
++        // validate each option
+         for (final Iterator i = options.iterator(); i.hasNext();) {
+             final Option option = (Option) i.next();
+-
+-            // needs validation?
+-            boolean validate = option.isRequired() || option instanceof Group;
+-            if (validate) {
+-                option.validate(commandLine);
++            // ignore option groups
++            if (option instanceof Group) {
++                continue;
+             }
+-
+-            // if the child option is present then validate it
+             if (commandLine.hasOption(option)) {
+                 if (++present > maximum) {
+                     unexpected = option;
+-
+                     break;
+                 }
+-
+-                option.validate(commandLine);
+             }
+         }
+-
+         // too many options
+         if (unexpected != null) {
+             throw new OptionException(this, ResourceConstants.UNEXPECTED_TOKEN,
+@@ -273,7 +263,15 @@ public class GroupImpl
+         if (present < minimum) {
+             throw new OptionException(this, ResourceConstants.MISSING_OPTION);
+         }
+-
++        // validate the option groups
++        for (final Iterator i = options.iterator(); i.hasNext();) {
++            final Option option = (Option) i.next();
++            // ignore normal options
++            if (option instanceof Group == false) {
++                continue;
++            }
++            option.validate(commandLine);
++        }
+         // validate each anonymous argument
+         for (final Iterator i = anonymous.iterator(); i.hasNext();) {
+             final Option option = (Option) i.next();

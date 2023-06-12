@@ -1,0 +1,17 @@
+    protected void _serializeXmlNull(JsonGenerator jgen) throws IOException
+    {
+        // 14-Nov-2016, tatu: As per [dataformat-xml#213], we may have explicitly
+        //    configured root name...
+        if (jgen instanceof ToXmlGenerator) {
+            ToXmlGenerator xmlGen = (ToXmlGenerator) jgen;
+            // 14-Nov-2016, tatu: Also, if it's not a root-level null, we may NOT
+            //    need to do this
+            if (xmlGen.isInArray() || xmlGen.isInObject()) {
+                // so just serialize using default method
+                jgen.writeNull();
+                return;
+            }
+            _initWithRootName(xmlGen, ROOT_NAME_FOR_NULL);
+        }
+        super.serializeValue(jgen, null);
+    }

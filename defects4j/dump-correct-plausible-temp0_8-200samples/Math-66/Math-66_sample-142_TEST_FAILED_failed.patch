@@ -1,0 +1,68 @@
+diff --git a/src/main/java/org/apache/commons/math/optimization/univariate/BrentOptimizer.java b/src/main/java/org/apache/commons/math/optimization/univariate/BrentOptimizer.java
+index f07c1b0c3..25e6bd44f 100644
+--- a/src/main/java/org/apache/commons/math/optimization/univariate/BrentOptimizer.java
++++ b/src/main/java/org/apache/commons/math/optimization/univariate/BrentOptimizer.java
+@@ -54,18 +52,10 @@ public class BrentOptimizer extends AbstractUnivariateRealOptimizer {
+      */
+     protected double doOptimize()
+         throws MaxIterationsExceededException, FunctionEvaluationException {
+-        throw new UnsupportedOperationException();
+-    }
+-    public double optimize(final UnivariateRealFunction f, final GoalType goalType, final double min, final double max, final double startValue) throws MaxIterationsExceededException, FunctionEvaluationException {
+-        clearResult();
+         return localMin(getGoalType() == GoalType.MINIMIZE,
+-                        f, goalType, min, startValue, max,
++                        getMin(), getStartValue(), getMax(),
+                         getRelativeAccuracy(), getAbsoluteAccuracy());
+     }
+-    public double optimize(final UnivariateRealFunction f, final GoalType goalType, final double min, final double max) throws MaxIterationsExceededException, FunctionEvaluationException {
+-        return optimize(f, goalType, min, max, min + GOLDEN_SECTION * (max - min));
+-    }
+-
+     /**
+      * Find the minimum of the function within the interval {@code (lo, hi)}.
+      *
+@@ -91,8 +81,6 @@ public class BrentOptimizer extends AbstractUnivariateRealOptimizer {
+      * the function.
+      */
+     private double localMin(boolean isMinim,
+-                            UnivariateRealFunction f,
+-                            GoalType goalType,
+                             double lo, double mid, double hi,
+                             double eps, double t)
+         throws MaxIterationsExceededException, FunctionEvaluationException {
+@@ -116,8 +103,8 @@ public class BrentOptimizer extends AbstractUnivariateRealOptimizer {
+         double w = x;
+         double d = 0;
+         double e = 0;
+-        double fx = computeObjectiveValue(f, x);
+-        if (goalType == GoalType.MAXIMIZE) {
++        double fx = computeObjectiveValue(x);
++        if (isMinim) {
+             fx = -fx;
+         }
+         double fv = fx;
+@@ -196,12 +175,10 @@ public class BrentOptimizer extends AbstractUnivariateRealOptimizer {
+                 } else {
+                     u = x + d;
+                 }
+-
+-                double fu = computeObjectiveValue(f, u);
+-                if (goalType == GoalType.MAXIMIZE) {
++                double fu = computeObjectiveValue(u);
++                if (isMinim) {
+                     fu = -fu;
+                 }
+-
+                 // Update a, b, v, w and x.
+                 if (fu <= fx) {
+                     if (u < x) {
+@@ -235,7 +212,7 @@ public class BrentOptimizer extends AbstractUnivariateRealOptimizer {
+                     }
+                 }
+             } else { // termination
+-                setResult(x, (goalType == GoalType.MAXIMIZE) ? -fx : fx, count);
++                setResult(x, isMinim ? -fx : fx, count);
+                 return x;
+             }
+             ++count;

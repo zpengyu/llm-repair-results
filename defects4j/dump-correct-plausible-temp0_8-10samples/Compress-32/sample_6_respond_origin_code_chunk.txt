@@ -1,0 +1,69 @@
+    private void applyPaxHeadersToCurrentEntry(Map<String, String> headers) {
+        /*
+         * The following headers are defined for Pax.
+         * atime, ctime, charset: cannot use these without changing TarArchiveEntry fields
+         * mtime
+         * comment
+         * gid, gname
+         * linkpath
+         * size
+         * uid,uname
+         * SCHILY.devminor, SCHILY.devmajor: don't have setters/getters for those
+         */
+        for (Entry<String, String> ent : headers.entrySet()){
+            String key = ent.getKey();
+            String val = ent.getValue();
+            if ("path".equals(key)){
+                currEntry.setName(val);
+            } else if ("linkpath".equals(key)){
+                currEntry.setLinkName(val);
+            } else if ("gid".equals(key)){
+                try {
+                    int gid = Integer.parseInt(val);
+                    currEntry.setGroupId(gid);
+                } catch(NumberFormatException ex) {
+                    ;
+                }
+            } else if ("gname".equals(key)){
+                currEntry.setGroupName(val);
+            } else if ("uid".equals(key)){
+                try {
+                    int uid = Integer.parseInt(val);
+                    currEntry.setUserId(uid);
+                } catch(NumberFormatException ex) {
+                    ;
+                }
+            } else if ("uname".equals(key)){
+                currEntry.setUserName(val);
+            } else if ("size".equals(key)){
+                try {
+                    long sz = Long.parseLong(val);
+                    currEntry.setSize(sz);
+                } catch(NumberFormatException ex) {
+                    ;
+                }
+            } else if ("mtime".equals(key)){
+                try {
+                    double mtime = Double.parseDouble(val);
+                    currEntry.setModTime((long) (mtime * 1000));
+                } catch(NumberFormatException ex) {
+                    ;
+                }
+            } else if ("SCHILY.devminor".equals(key)){
+                try {
+                    int devminor = Integer.parseInt(val);
+                    currEntry.setDevMinor(devminor);
+                } catch(NumberFormatException ex) {
+                    ;
+                }
+            } else if ("SCHILY.devmajor".equals(key)){
+                try {
+                    int devmajor = Integer.parseInt(val);
+                    currEntry.setDevMajor(devmajor);
+                } catch(NumberFormatException ex) {
+                    ;
+                }
+            }
+        }
+    }
+

@@ -1,0 +1,26 @@
+diff --git a/src/com/google/javascript/jscomp/FunctionInjector.java b/src/com/google/javascript/jscomp/FunctionInjector.java
+index c17b3cb3..485e7917 100644
+--- a/src/com/google/javascript/jscomp/FunctionInjector.java
++++ b/src/com/google/javascript/jscomp/FunctionInjector.java
+@@ -720,17 +715,11 @@ class FunctionInjector {
+       // For each named parameter check if a mutable argument use more than one.
+       if (fnParam != null) {
+         if (cArg != null) {
+-
+-          // Check for arguments that are evaluated more than once.
+-          // Note: Unlike block inlining, there it is not possible that a
+-          // parameter reference will be in a loop.
+-          if (NodeUtil.mayEffectMutableState(cArg, compiler)
+-              && NodeUtil.getNameReferenceCount(
+-                  block, fnParam.getString()) > 1) {
+-            return CanInlineResult.NO;
++            // an argument can be undefined and it is not necessarily an issue
++            // because the function can handle that
++            // Therefore we do not check if the arg is defined since that is a
++            // dynamic check and we can only statically check for undefined.
+           }
+-        }
+-
+         // Move to the next name.
+         fnParam = fnParam.getNext();
+       }

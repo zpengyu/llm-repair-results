@@ -1,0 +1,28 @@
+    boolean isAssignedOnceInLifetime() {
+      Reference ref = getOneAndOnlyAssignment();
+      if (ref == null) {
+        return false;
+      }
+
+      // Make sure this assignment is not in a loop.
+      for (BasicBlock block = ref.getBasicBlock();
+           block != null; block = block.getParent()) {
+        if (block.isFunction) {
+          break;
+        } else if (block.isLoop) {
+          return false;
+        }
+      }
+
+      // Make sure the value is not changed by a SETELEM/SETPROP.
+      Node value = getValue();
+      for (Node cursor = value;
+           cursor != null; cursor = cursor.getParent()) {
+        if (cursor.isAssign()) {
+          return false;
+        }
+      }
+
+      return true;
+    }
+

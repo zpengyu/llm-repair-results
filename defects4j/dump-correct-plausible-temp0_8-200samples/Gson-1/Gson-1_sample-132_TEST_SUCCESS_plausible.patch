@@ -1,0 +1,54 @@
+diff --git a/gson/src/main/java/com/google/gson/TypeInfoFactory.java b/gson/src/main/java/com/google/gson/TypeInfoFactory.java
+index 0aa1455a..67d8ca80 100644
+--- a/gson/src/main/java/com/google/gson/TypeInfoFactory.java
++++ b/gson/src/main/java/com/google/gson/TypeInfoFactory.java
+@@ -90,13 +86,43 @@ final class TypeInfoFactory {
+         int indexOfActualTypeArgument = getIndex(classTypeVariables, fieldTypeVariable);
+         Type[] actualTypeArguments = objParameterizedType.getActualTypeArguments();
+         return actualTypeArguments[indexOfActualTypeArgument];
+-
+-
+       }
+-
+-      throw new UnsupportedOperationException("Expecting parameterized type, got " + parentType
+-          + ".\n Are you missing the use of TypeToken idiom?\n See "
+-          + "http://sites.google.com/site/gson/gson-user-guide#TOC-Serializing-and-Deserializing-Gener");
++      if (rawParentClass.getSuperclass() == null) {
++        return typeToEvaluate;
++      }
++      // Evaluate type on this type's superclass if this type is a class.
++      if (parentType == rawParentClass) {
++        parentType = rawParentClass.getGenericSuperclass();
++      }
++      // Evaluate type on this type's superclass if this type is an interface.
++      if (parentType == null) {
++        Type[] genericInterfaces = rawParentClass.getGenericInterfaces();
++        for (Type genericInterface : genericInterfaces) {
++          if (genericInterface instanceof ParameterizedType) {
++            ParameterizedType parameterizedType = (ParameterizedType) genericInterface;
++            if (parameterizedType.getRawType() instanceof Class<?>) {
++              Class<?> interfaceRawClass = (Class<?>) parameterizedType.getRawType();
++              if (interfaceRawClass.isAssignableFrom(rawParentClass)) {
++                parentType = genericInterface;
++                break;
++              }
++            }
++          }
++        }
++      }
++      // Evaluate type on this type's superclass if this type is an interface.
++      if (parentType == null) {
++        Type[] genericInterfaces = rawParentClass.getGenericInterfaces();
++        for (Type genericInterface : genericInterfaces) {
++          if (genericInterface instanceof Class<?>
++              && ((Class<?>) genericInterface).isAssignableFrom(rawParentClass)) {
++            parentType = genericInterface;
++            break;
++          }
++        }
++      }
++      return getActualType(typeToEvaluate, parentType,
++          TypeUtils.toRawClass(parentType));
+     } else if (typeToEvaluate instanceof WildcardType) {
+       WildcardType castedType = (WildcardType) typeToEvaluate;
+       return getActualType(castedType.getUpperBounds()[0], parentType, rawParentClass);

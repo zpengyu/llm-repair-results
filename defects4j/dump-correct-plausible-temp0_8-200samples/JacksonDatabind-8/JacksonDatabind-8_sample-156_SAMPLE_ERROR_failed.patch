@@ -1,0 +1,24 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/deser/impl/CreatorCollector.java b/src/main/java/com/fasterxml/jackson/databind/deser/impl/CreatorCollector.java
+index fd590d628..517340e74 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/deser/impl/CreatorCollector.java
++++ b/src/main/java/com/fasterxml/jackson/databind/deser/impl/CreatorCollector.java
+@@ -293,13 +291,14 @@ public class CreatorCollector
+             // one more thing: ok to override in sub-class
+             if (oldOne.getClass() == newOne.getClass()) {
+                 // [databind#667]: avoid one particular class of bogus problems
+-
++                if (!isCreatorAnnotated(oldOne.getAnnotated())) {
+                     throw new IllegalArgumentException("Conflicting "+TYPE_DESCS[typeIndex]
+-                            +" creators: already had explicitly marked "+oldOne+", encountered "+newOne);
+-                // otherwise, which one to choose?
+-                    // new type more generic, use old
+-                // new type more specific, use it
++                            +" creators: already had "+oldOne+", encountered "+newOne);
++                }
+             }
++            // otherwise, which one to choose?
++            // new type more generic, use old
++            // new type more specific, use it
+         }
+         if (explicit) {
+             _explicitCreators |= mask;

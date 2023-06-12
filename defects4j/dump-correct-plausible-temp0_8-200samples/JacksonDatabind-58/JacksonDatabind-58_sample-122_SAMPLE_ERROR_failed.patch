@@ -1,0 +1,21 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/deser/BeanDeserializerFactory.java b/src/main/java/com/fasterxml/jackson/databind/deser/BeanDeserializerFactory.java
+index bc8e6736f..7899d6ab6 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/deser/BeanDeserializerFactory.java
++++ b/src/main/java/com/fasterxml/jackson/databind/deser/BeanDeserializerFactory.java
+@@ -748,9 +746,15 @@ public class BeanDeserializerFactory
+         if(objectIdInfo != null){
+             prop.setObjectIdInfo(objectIdInfo);
+         }
++        AnnotatedMember a = mutator;
++        if (a instanceof AnnotatedMethod) {
++            Method m = ((AnnotatedMethod) a).getAnnotated();
++            if (ctxt.canOverrideAccessModifiers()) {
++                ClassUtil.checkAndFixAccess(m, ctxt.isEnabled(MapperFeature.OVERRIDE_PUBLIC_ACCESS_MODIFIERS));
++            }
++        }
+         return prop;
+     }
+-
+     /**
+      * Method that will construct a regular bean property setter using
+      * the given setter method.

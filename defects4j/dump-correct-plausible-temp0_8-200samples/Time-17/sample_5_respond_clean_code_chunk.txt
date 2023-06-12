@@ -1,0 +1,30 @@
+    public long adjustOffset(long instant, boolean earlierOrLater) {
+        long[] transitions = getTransitions();
+        long instantBefore = convertUTCToLocal(instant - 3 * DateTimeConstants.MILLIS_PER_HOUR);
+        long instantAfter = convertUTCToLocal(instant + 3 * DateTimeConstants.MILLIS_PER_HOUR);
+        if (instantBefore == instantAfter) {
+            return instant;  // not an overlap (less than is a gap, equal is normal case)
+        }
+        long local = convertUTCToLocal(instant);
+        if (earlierOrLater) {
+            // currently in later offset
+            int index = Arrays.binarySearch(transitions, instant + 1);
+            if (index < 0) {
+                index = -index - 2;
+            }
+            if (index < 0 || index >= transitions.length) {
+                return instant;
+            }
+            return transitions[index] - 1;
+        } else {
+            // currently in earlier offset
+            int index = Arrays.binarySearch(transitions, instant);
+            if (index < 0) {
+                index = -index - 1;
+            }
+            if (index < 0 || index >= transitions.length) {
+                return instant;
+            }
+            return transitions[index];
+        }
+    }

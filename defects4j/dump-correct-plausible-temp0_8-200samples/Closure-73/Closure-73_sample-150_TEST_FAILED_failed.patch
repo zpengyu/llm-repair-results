@@ -1,0 +1,42 @@
+diff --git a/src/com/google/javascript/jscomp/CodeGenerator.java b/src/com/google/javascript/jscomp/CodeGenerator.java
+index b58df9b3..37032ae8 100644
+--- a/src/com/google/javascript/jscomp/CodeGenerator.java
++++ b/src/com/google/javascript/jscomp/CodeGenerator.java
+@@ -1004,8 +1004,8 @@ class CodeGenerator {
+         case '\'': sb.append(singlequoteEscape); break;
+         case '>':                       // Break --> into --\> or ]]> into ]]\>
+           if (i >= 2 &&
+-              ((s.charAt(i - 1) == '-' && s.charAt(i - 2) == '-') ||
+-               (s.charAt(i - 1) == ']' && s.charAt(i - 2) == ']'))) {
++                  ((s.charAt(i - 1) == '-' && s.charAt(i - 2) == '-') ||
++                          (s.charAt(i - 1) == ']' && s.charAt(i - 2) == ']'))) {
+             sb.append("\\>");
+           } else {
+             sb.append(c);
+@@ -1014,15 +1014,13 @@ class CodeGenerator {
+         case '<':
+           // Break </script into <\/script
+           final String END_SCRIPT = "/script";
+-
+           // Break <!-- into <\!--
+           final String START_COMMENT = "!--";
+-
+           if (s.regionMatches(true, i + 1, END_SCRIPT, 0,
+-                              END_SCRIPT.length())) {
++                  END_SCRIPT.length())) {
+             sb.append("<\\");
+           } else if (s.regionMatches(false, i + 1, START_COMMENT, 0,
+-                                     START_COMMENT.length())) {
++                  START_COMMENT.length())) {
+             sb.append("<\\");
+           } else {
+             sb.append(c);
+@@ -1044,6 +1042,8 @@ class CodeGenerator {
+             // check is measurably faster than using the CharsetEncoder.
+             if (c > 0x1f && c <= 0x7f) {
+               sb.append(c);
++            } else if ((c >= 0x80) && (c <= 0xff)) {
++              sb.append(c);
+             } else {
+               // Other characters can be misinterpreted by some js parsers,
+               // or perhaps mangled by proxies along the way,

@@ -1,0 +1,30 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/ser/PropertyBuilder.java b/src/main/java/com/fasterxml/jackson/databind/ser/PropertyBuilder.java
+index 9a9d91ebf..db65233ea 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/ser/PropertyBuilder.java
++++ b/src/main/java/com/fasterxml/jackson/databind/ser/PropertyBuilder.java
+@@ -93,10 +92,13 @@ public class PropertyBuilder
+             serializationType = serializationType.withContentTypeHandler(contentTypeSer);
+             ct = serializationType.getContentType();
+         }
+-        
++        // Custom null handling?
++        JsonSerializer<Object> nullSer = null;
++        if (propDef.hasNullSerializer()) {
++            nullSer = prov.serializerInstance(am, propDef.getNullSerializer());
++        }
+         Object valueToSuppress = null;
+         boolean suppressNulls = false;
+-
+         JsonInclude.Value inclV = _defaultInclusion.withOverrides(propDef.findInclusion());
+         JsonInclude.Include inclusion = inclV.getValueInclusion();
+         if (inclusion == JsonInclude.Include.USE_DEFAULTS) { // should not occur but...
+@@ -155,8 +154,7 @@ public class PropertyBuilder
+         }
+         BeanPropertyWriter bpw = new BeanPropertyWriter(propDef,
+                 am, _beanDesc.getClassAnnotations(), declaredType,
+-                ser, typeSer, serializationType, suppressNulls, valueToSuppress);
+-
++                ser, typeSer, serializationType, suppressNulls, valueToSuppress, nullSer);
+         // How about custom null serializer?
+         Object serDef = _annotationIntrospector.findNullSerializer(am);
+         if (serDef != null) {

@@ -1,0 +1,26 @@
+diff --git a/gson/src/main/java/com/google/gson/TypeInfoFactory.java b/gson/src/main/java/com/google/gson/TypeInfoFactory.java
+index 0aa1455a..ba001811 100644
+--- a/gson/src/main/java/com/google/gson/TypeInfoFactory.java
++++ b/gson/src/main/java/com/google/gson/TypeInfoFactory.java
+@@ -90,10 +86,18 @@ final class TypeInfoFactory {
+         int indexOfActualTypeArgument = getIndex(classTypeVariables, fieldTypeVariable);
+         Type[] actualTypeArguments = objParameterizedType.getActualTypeArguments();
+         return actualTypeArguments[indexOfActualTypeArgument];
+-
+-
++      } else if (parentType instanceof TypeVariable<?>) {
++      // Evaluate type on this type
++      TypeVariable<?> parentTypeVariable = (TypeVariable<?>) parentType;
++      Type[] parentBounds = parentTypeVariable.getBounds();
++      for (Type parentBound : parentBounds) {
++        Type actualType = getActualType(parentBound, parentType, rawParentClass);
++        if (!parentBound.equals(actualType)) {
++          return actualType;
++        }
+       }
+-
++      return parentTypeVariable;
++    }
+       throw new UnsupportedOperationException("Expecting parameterized type, got " + parentType
+           + ".\n Are you missing the use of TypeToken idiom?\n See "
+           + "http://sites.google.com/site/gson/gson-user-guide#TOC-Serializing-and-Deserializing-Gener");

@@ -1,0 +1,51 @@
+public class ReturnsDeepStubs implements Answer<Object>, Serializable {
+    private static final long serialVersionUID = -7105341425736035847L;
+    private MockitoCore mockitoCore = new MockitoCore();
+    private ReturnsEmptyValues delegate = new ReturnsEmptyValues();
+    public Object answer(InvocationOnMock invocation) throws Throwable {
+        GenericMetadataSupport returnTypeGenericMetadata =
+                actualParameterizedType(invocation.getMock()).resolveGenericReturnType(invocation.getMethod());
+        Class<?> rawType = returnTypeGenericMetadata.rawType();
+        if (!mockitoCore.isTypeMockable(rawType)) {
+            return delegate.returnValueFor(rawType);
+        }
+        Object mock = createNewDeepStubMock(returnTypeGenericMetadata);
+        return recordDeepStubMock(mock, invocation.getMock());
+    }
+    private Object createNewDeepStubMock(GenericMetadataSupport returnTypeGenericMetadata) {
+        return mockitoCore.mock(
+                returnTypeGenericMetadata.rawType(),
+                withSettingsUsing(returnTypeGenericMetadata)
+        );
+    }
+    private MockSettings withSettingsUsing(GenericMetadataSupport returnTypeGenericMetadata) {
+        MockSettings mockSettings =
+                returnTypeGenericMetadata.rawExtraInterfaces().length > 0 ?
+                withSettings().extraInterfaces(returnTypeGenericMetadata.rawExtraInterfaces())
+                : withSettings();
+        return mockSettings
+                .defaultAnswer(returnsDeepStubsAnswerUsing(returnTypeGenericMetadata));
+    }
+    private ReturnsDeepStubs returnsDeepStubsAnswerUsing(final GenericMetadataSupport returnTypeGenericMetadata) {
+        return new ReturnsDeepStubs() {
+            @Override
+            protected GenericMetadataSupport actualParameterizedType(Object mock) {
+                return returnTypeGenericMetadata;
+            }
+        };
+    }
+    private Object recordDeepStubMock(final Object mock, Object mockToRecord) throws Throwable {
+    	InternalMockHandler<Object> handler = new MockUtil().getMockHandler(mockToRecord);
+    	InvocationContainerImpl container = (InvocationContainerImpl) handler.getInvocationContainer();
+        container.addAnswer(new Answer<Object>() {
+            public Object answer(InvocationOnMock invocation) throws Throwable {
+                return mock;
+            }
+        }, false);
+        return mock;
+    }
+    protected GenericMetadataSupport actualParameterizedType(Object mock) {
+        CreationSettings mockSettings = (CreationSettings) new MockUtil().getMockHandler(mock).getMockSettings();
+        return GenericMetadataSupport.inferFrom(mockSettings.getTypeToMock());
+    }
+}

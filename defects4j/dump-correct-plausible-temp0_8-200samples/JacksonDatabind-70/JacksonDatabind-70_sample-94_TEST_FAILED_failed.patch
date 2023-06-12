@@ -1,0 +1,37 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/deser/impl/BeanPropertyMap.java b/src/main/java/com/fasterxml/jackson/databind/deser/impl/BeanPropertyMap.java
+index aeaa0dc42..a923e5e01 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/deser/impl/BeanPropertyMap.java
++++ b/src/main/java/com/fasterxml/jackson/databind/deser/impl/BeanPropertyMap.java
+@@ -423,12 +423,12 @@ System.err.println("And new propr #"+slot+" '"+key+"'");
+      * Specialized method for removing specified existing entry.
+      * NOTE: entry MUST exist, otherwise an exception is thrown.
+      */
+-    public void remove(SettableBeanProperty propToRm)
++   public void remove(SettableBeanProperty propToRm)
+     {
+         ArrayList<SettableBeanProperty> props = new ArrayList<SettableBeanProperty>(_size);
+         String key = getPropertyName(propToRm);
+         boolean found = false;
+-
++        int last = 0;
+         for (int i = 1, end = _hashArea.length; i < end; i += 2) {
+             SettableBeanProperty prop = (SettableBeanProperty) _hashArea[i];
+             if (prop == null) {
+@@ -445,13 +445,16 @@ System.err.println("And new propr #"+slot+" '"+key+"'");
+                 }
+             }
+             props.add(prop);
++            last = i;
+         }
+         if (!found) {
+             throw new NoSuchElementException("No entry '"+propToRm.getName()+"' found, can't remove");
+         }
++        // There may be a hole at end, close it (see [databind#1633])
++        // If there is no hole, this becomes an optimization: no-op
++        props.add((SettableBeanProperty) _hashArea[last+1]);
+         init(props);
+     }
+-
+     /**
+      * Convenience method that tries to find property with given name, and
+      * if it is found, call {@link SettableBeanProperty#deserializeAndSet}

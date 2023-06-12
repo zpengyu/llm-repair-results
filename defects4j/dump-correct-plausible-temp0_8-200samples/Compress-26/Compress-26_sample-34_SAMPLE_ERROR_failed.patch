@@ -1,0 +1,35 @@
+diff --git a/src/main/java/org/apache/commons/compress/utils/IOUtils.java b/src/main/java/org/apache/commons/compress/utils/IOUtils.java
+index f5fd0bd4..364bfaac 100644
+--- a/src/main/java/org/apache/commons/compress/utils/IOUtils.java
++++ b/src/main/java/org/apache/commons/compress/utils/IOUtils.java
+@@ -92,18 +92,22 @@ public final class IOUtils {
+      * @throws IOException
+      */
+     public static long skip(InputStream input, long numToSkip) throws IOException {
+-        long available = numToSkip;
+-        while (numToSkip > 0) {
+-            long skipped = input.skip(numToSkip);
+-            if (skipped == 0) {
++        long remaining = numToSkip;
++        int n;
++        if (numToSkip <= 0) {
++            return 0;
++        }
++        int size = (int) Math.min(MAX_SKIP_BUFFER_SIZE, numToSkip);
++        byte[] skipBuffer = new byte[size];
++        while (remaining > 0) {
++            n = input.read(skipBuffer, 0, (int) Math.min(size, remaining));
++            if (n < 0) {
+                 break;
+             }
+-            numToSkip -= skipped;
++            remaining -= n;
+         }
+-
+-        return available - numToSkip;
++        return numToSkip - remaining;
+     }
+-
+     /**
+      * Reads as much from input as possible to fill the given array.
+      *

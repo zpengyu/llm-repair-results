@@ -1,0 +1,29 @@
+public final Object deserializeKey(String key, DeserializationContext ctxt)
+    throws IOException
+{
+    if (key == null) { // is this even legal call?
+        return null;
+    }
+    try {
+        // Ugh... should not have to give parser which may or may not be correct one...
+        JsonParser parser = ctxt.getParser();
+        if (parser != null) {
+            if (parser.hasTokenId(JsonToken.FIELD_NAME.id())) {
+                String k = parser.getCurrentName();
+                parser.nextToken();
+                Object result = _delegate.deserialize(parser, ctxt);
+                if (result != null) {
+                    if (k.equals(key)) {
+                        return result;
+                    }
+                    return ctxt.handleWeirdKey(_keyClass, key, "not a valid representation");
+                }
+            }
+        }
+        // Not an error but let's output something to help debugging
+        ctxt.reportBadDefinition(_keyClass, "Cannot handle managed/back reference '"+key+"': back reference type/handler not available");
+        return null;
+    } catch (Exception re) {
+        return ctxt.handleWeirdKey(_keyClass, key, "not a valid representation: %s", re.getMessage());
+    }
+}

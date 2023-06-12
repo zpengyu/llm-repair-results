@@ -1,0 +1,16 @@
+diff --git a/src/org/mockito/internal/configuration/SpyAnnotationEngine.java b/src/org/mockito/internal/configuration/SpyAnnotationEngine.java
+index e292e1300..2a944c7ad 100644
+--- a/src/org/mockito/internal/configuration/SpyAnnotationEngine.java
++++ b/src/org/mockito/internal/configuration/SpyAnnotationEngine.java
+@@ -29,7 +29,10 @@ public class SpyAnnotationEngine implements AnnotationEngine {
+         Field[] fields = context.getDeclaredFields();
+         for (Field field : fields) {
+             if (field.isAnnotationPresent(Spy.class)) {
+-                assertNoAnnotations(Spy.class, field, Mock.class, org.mockito.MockitoAnnotations.Mock.class, Captor.class);
++                if (field.isAnnotationPresent(Mock.class) || field.isAnnotationPresent(org.mockito.MockitoAnnotations.Mock.class) || field.isAnnotationPresent(Captor.class)) {
++                    throw new MockitoException(field.getName() + " is annotated with both Spy and Mock/Captor. "
++                            + "At most one annotation of the following can be used: Spy, Mock and Captor.");
++                }
+                 boolean wasAccessible = field.isAccessible();
+                 field.setAccessible(true);
+                 try {

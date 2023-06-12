@@ -1,0 +1,28 @@
+diff --git a/src/com/google/javascript/jscomp/CollapseVariableDeclarations.java b/src/com/google/javascript/jscomp/CollapseVariableDeclarations.java
+index 26ca29ca..3d317894 100644
+--- a/src/com/google/javascript/jscomp/CollapseVariableDeclarations.java
++++ b/src/com/google/javascript/jscomp/CollapseVariableDeclarations.java
+@@ -204,15 +175,18 @@ class CollapseVariableDeclarations implements CompilerPass {
+           && !blacklistedVars.contains(var);
+     }
+   }
+-
+-
+   private void applyCollapses() {
+     for (Collapse collapse : collapses) {
+-
+-      Node var = new Node(Token.VAR);
++    	int c = 0;
++    	for(Node n = collapse.startNode; n != collapse.endNode; n = n.getNext()){
++    		if(n.isVar()){
++    			c++;
++    		}
++    	}
++    	Node var = new Node(Token.VAR,
++            new Node(Token.NAME, "f"+ (c+1)));
+       var.copyInformationFrom(collapse.startNode);
+       collapse.parent.addChildBefore(var, collapse.startNode);
+-
+       boolean redeclaration = false;
+       for (Node n = collapse.startNode; n != collapse.endNode;) {
+         Node next = n.getNext();

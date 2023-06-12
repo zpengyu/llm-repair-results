@@ -1,0 +1,37 @@
+diff --git a/src/main/java/org/apache/commons/math3/util/MathArrays.java b/src/main/java/org/apache/commons/math3/util/MathArrays.java
+index 9ef28e3d8..8045545c5 100644
+--- a/src/main/java/org/apache/commons/math3/util/MathArrays.java
++++ b/src/main/java/org/apache/commons/math3/util/MathArrays.java
+@@ -817,12 +817,29 @@ public class MathArrays {
+         if (len != b.length) {
+             throw new DimensionMismatchException(len, b.length);
+         }
+-
++        // handle special cases
++        if (len == 1) {
+             // Revert to scalar multiplication.
+-
++            return a[0] * b[0];
++        } else if (len == 2) {
++            // Use specialized formula for performance.
++            final double a0 = a[0];
++            final double a1 = a[1];
++            final double b0 = b[0];
++            final double b1 = b[1];
++            return a0 * b0 +
++                   a1 * b1;
++        } else if (len < 1024) {
++            // Use Kahan summation algorithm for performance.
++            double result = 0;
++            for (int i = 0; i < len; ++i) {
++                result += a[i] * b[i];
++            }
++            return result;
++        }
++        // use pairwise summation for performance
+         final double[] prodHigh = new double[len];
+         double prodLowSum = 0;
+-
+         for (int i = 0; i < len; i++) {
+             final double ai = a[i];
+             final double ca = SPLIT_FACTOR * ai;

@@ -1,0 +1,125 @@
+###Provide a fix for the buggy function
+###Buggy Function
+class FibonacciExample {
+    public static void main(String args[]) {
+        int n1 = 0, n2 = 1, n3, i, count = 10;
+
+        System.out.print(n1 + " " + n2);
+
+        for (i = 2; i < count; ++i) {
+            n3 = n1 - n2;
+            System.out.print(" " + n3);
+            n1 = n2;
+            n2 = n3;
+        }
+    }
+}
+
+###Fixed Function
+class FibonacciExample {
+    public static void main(String args[]) {
+        int n1 = 0, n2 = 1, n3, i, count = 10;
+
+        System.out.print(n1 + " " + n2);
+
+        for (i = 2; i < count; ++i) {
+            n3 = n1 + n2;
+            System.out.print(" " + n3);
+            n1 = n2;
+            n2 = n3;
+        }
+    }
+}
+
+###Provide a fix for the buggy function
+###Buggy Function
+static Type getSupertype(Type context, Class<?> contextRawType, Class<?> supertype) {
+  checkArgument(supertype.isAssignableFrom(contextRawType));
+  return resolve(context, contextRawType,
+      $Gson$Types.getGenericSupertype(context, contextRawType, supertype));
+}
+###Fixed Function
+static Type getSupertype(Type context, Class<?> contextRawType, Class<?> supertype) {
+  if (context instanceof WildcardType) {
+    // wildcards are useless for resolving supertypes. As the upper bound has the same raw type, use it instead
+    context = ((WildcardType)context).getUpperBounds()[0];
+  }
+  checkArgument(supertype.isAssignableFrom(contextRawType));
+  return resolve(context, contextRawType,
+      $Gson$Types.getGenericSupertype(context, contextRawType, supertype));
+}
+###Provide a fix for the buggy function
+###Buggy Function
+  private <T> ObjectConstructor<T> newDefaultImplementationConstructor(
+      final Type type, Class<? super T> rawType) {
+    if (Collection.class.isAssignableFrom(rawType)) {
+      if (SortedSet.class.isAssignableFrom(rawType)) {
+        return new ObjectConstructor<T>() {
+          @Override public T construct() {
+            return (T) new TreeSet<Object>();
+          }
+        };
+      } else if (EnumSet.class.isAssignableFrom(rawType)) {
+        return new ObjectConstructor<T>() {
+          @SuppressWarnings("rawtypes")
+          @Override public T construct() {
+            if (type instanceof ParameterizedType) {
+              Type elementType = ((ParameterizedType) type).getActualTypeArguments()[0];
+              if (elementType instanceof Class) {
+                return (T) EnumSet.noneOf((Class)elementType);
+              } else {
+                throw new JsonIOException("Invalid EnumSet type: " + type.toString());
+              }
+            } else {
+              throw new JsonIOException("Invalid EnumSet type: " + type.toString());
+            }
+          }
+        };
+      } else if (Set.class.isAssignableFrom(rawType)) {
+        return new ObjectConstructor<T>() {
+          @Override public T construct() {
+            return (T) new LinkedHashSet<Object>();
+          }
+        };
+      } else if (Queue.class.isAssignableFrom(rawType)) {
+        return new ObjectConstructor<T>() {
+          @Override public T construct() {
+            return (T) new LinkedList<Object>();
+          }
+        };
+      } else {
+        return new ObjectConstructor<T>() {
+          @Override public T construct() {
+            return (T) new ArrayList<Object>();
+          }
+        };
+      }
+    }
+
+    if (Map.class.isAssignableFrom(rawType)) {
+      if (SortedMap.class.isAssignableFrom(rawType)) {
+        return new ObjectConstructor<T>() {
+          @Override public T construct() {
+            return (T) new TreeMap<Object, Object>();
+          }
+        };
+      } else if (type instanceof ParameterizedType && !(String.class.isAssignableFrom(
+          TypeToken.get(((ParameterizedType) type).getActualTypeArguments()[0]).getRawType()))) {
+        return new ObjectConstructor<T>() {
+          @Override public T construct() {
+            return (T) new LinkedHashMap<Object, Object>();
+          }
+        };
+      } else {
+        return new ObjectConstructor<T>() {
+          @Override public T construct() {
+            return (T) new LinkedTreeMap<String, Object>();
+          }
+        };
+      }
+    }
+
+    return null;
+  }
+
+###Fixed Function

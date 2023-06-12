@@ -1,0 +1,25 @@
+    public void verify(VerificationData data) {
+        AssertionError error = null;
+        boolean timedOut = false;
+        timer.start();
+        while (timer.isCounting() && !timedOut) {
+            try {
+                delegate.verify(data);
+                if (returnOnSuccess) {
+                    return;
+                } else {
+                    error = null;
+                }
+            } catch (MockitoAssertionError e) {
+                error = handleVerifyException(e);
+                timedOut = true;
+            }
+            catch (org.mockito.exceptions.verification.junit.ArgumentsAreDifferent e) {
+                error = handleVerifyException(e);
+                timedOut = true;
+            }
+        }
+        if (error != null) {
+            throw error;
+        }
+    }

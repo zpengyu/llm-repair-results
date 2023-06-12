@@ -1,0 +1,45 @@
+diff --git a/gson/src/main/java/com/google/gson/internal/UnsafeAllocator.java b/gson/src/main/java/com/google/gson/internal/UnsafeAllocator.java
+index a72d3d10..ce8a7281 100644
+--- a/gson/src/main/java/com/google/gson/internal/UnsafeAllocator.java
++++ b/gson/src/main/java/com/google/gson/internal/UnsafeAllocator.java
+@@ -45,6 +44,9 @@ public abstract class UnsafeAllocator {
+         @Override
+         @SuppressWarnings("unchecked")
+         public <T> T newInstance(Class<T> c) throws Exception {
++          if (c.isInterface() || Modifier.isAbstract(c.getModifiers())) {
++            throw new UnsupportedOperationException(c.getName() + " is not an instantiable class");
++          }
+           return (T) allocateInstance.invoke(unsafe, c);
+         }
+       };
+@@ -68,6 +69,9 @@ public abstract class UnsafeAllocator {
+         @Override
+         @SuppressWarnings("unchecked")
+         public <T> T newInstance(Class<T> c) throws Exception {
++          if (c.isInterface() || Modifier.isAbstract(c.getModifiers())) {
++            throw new UnsupportedOperationException(c.getName() + " is not an instantiable class");
++          }
+           return (T) newInstance.invoke(null, c, constructorId);
+         }
+       };
+@@ -87,6 +90,9 @@ public abstract class UnsafeAllocator {
+         @Override
+         @SuppressWarnings("unchecked")
+         public <T> T newInstance(Class<T> c) throws Exception {
++          if (c.isInterface() || Modifier.isAbstract(c.getModifiers())) {
++            throw new UnsupportedOperationException(c.getName() + " is not an instantiable class");
++          }
+           return (T) newInstance.invoke(null, c, Object.class);
+         }
+       };
+@@ -107,4 +111,9 @@ public abstract class UnsafeAllocator {
+    * throw an {@link java.lang.UnsupportedOperationException}
+    * @param c instance of the class to be checked
+    */
++  public <T> void checkInstantiable(Class<T> c) {
++    if (c.isInterface() || Modifier.isAbstract(c.getModifiers())) {
++      throw new UnsupportedOperationException(c.getName() + " is not an instantiable class");
++    }
++  }
+ }
+\ No newline at end of file

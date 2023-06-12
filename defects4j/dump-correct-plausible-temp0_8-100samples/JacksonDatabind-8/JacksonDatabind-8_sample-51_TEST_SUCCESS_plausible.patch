@@ -1,0 +1,25 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/deser/impl/CreatorCollector.java b/src/main/java/com/fasterxml/jackson/databind/deser/impl/CreatorCollector.java
+index fd590d628..6169d9fc9 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/deser/impl/CreatorCollector.java
++++ b/src/main/java/com/fasterxml/jackson/databind/deser/impl/CreatorCollector.java
+@@ -293,11 +291,18 @@ public class CreatorCollector
+             // one more thing: ok to override in sub-class
+             if (oldOne.getClass() == newOne.getClass()) {
+                 // [databind#667]: avoid one particular class of bogus problems
+-
++                if (_explicitCreators == 0) {
++                    if (_hasNonDefaultCreator) {
++                        // 17-Feb-2016, tatu: As per [databind#1182], this is only an error if we had
++                        //   a non-default creator already. In cases where we do not (such as with
++                        //   default constructors, which have this flag disabled) this is ok.
++                    }
++                } else {
+                     throw new IllegalArgumentException("Conflicting "+TYPE_DESCS[typeIndex]
+                             +" creators: already had explicitly marked "+oldOne+", encountered "+newOne);
++                }
+                 // otherwise, which one to choose?
+-                    // new type more generic, use old
++                // new type more generic, use old
+                 // new type more specific, use it
+             }
+         }

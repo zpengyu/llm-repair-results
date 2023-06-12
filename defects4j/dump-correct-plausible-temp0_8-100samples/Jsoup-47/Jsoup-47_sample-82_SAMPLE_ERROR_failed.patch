@@ -1,0 +1,42 @@
+diff --git a/src/main/java/org/jsoup/nodes/Entities.java b/src/main/java/org/jsoup/nodes/Entities.java
+index 5a2b368..14a8162 100644
+--- a/src/main/java/org/jsoup/nodes/Entities.java
++++ b/src/main/java/org/jsoup/nodes/Entities.java
+@@ -76,9 +76,8 @@ public class Entities {
+     }
+ 
+     // this method is ugly, and does a lot. but other breakups cause rescanning and stringbuilder generations
+-    static void escape(StringBuilder accum, String string, Document.OutputSettings out,
++static void escape(StringBuilder accum, String string, Document.OutputSettings out,
+                        boolean inAttribute, boolean normaliseWhite, boolean stripLeadingWhite) {
+-
+         boolean lastWasWhite = false;
+         boolean reachedNonWhite = false;
+         final EscapeMode escapeMode = out.escapeMode();
+@@ -146,14 +143,23 @@ public class Entities {
+                 }
+             } else {
+                 final String c = new String(Character.toChars(codePoint));
+-                if (encoder.canEncode(c)) // uses fallback encoder for simplicity
+-                    accum.append(c);
++                if (encoder.canEncode(c)) {
++                    String encoded = encoder.encode(CharBuffer.wrap(c)).toString();
++                    accum.append(encoded);
++                } else if (map.containsKey(c))
++                    accum.append('&').append(map.get(c)).append(';');
+                 else
+                     accum.append("&#x").append(Integer.toHexString(codePoint)).append(';');
+             }
+         }
+     }
+-
++    private static boolean canEncode(CoreCharset charset, char c, CharsetEncoder fallback) {
++        if (charset == null) return false;
++        if (c < charset.first) return false;
++        if (c > charset.last) return fallback.canEncode(c);
++        int index = c - charset.first;
++        return (charset.table[index / 8] & (1 << (7 - (index % 8)))) != 0;
++    }
+     static String unescape(String string) {
+         return unescape(string, false);
+     }

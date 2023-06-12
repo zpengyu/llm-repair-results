@@ -1,0 +1,23 @@
+diff --git a/src/com/google/javascript/jscomp/CheckGlobalThis.java b/src/com/google/javascript/jscomp/CheckGlobalThis.java
+index d6770e15..84ae7871 100644
+--- a/src/com/google/javascript/jscomp/CheckGlobalThis.java
++++ b/src/com/google/javascript/jscomp/CheckGlobalThis.java
+@@ -141,10 +135,15 @@ final class CheckGlobalThis implements Callback {
+         }
+       }
+     }
+-
+-    return true;
++    else {
++      // The old version of shouldTraverse was only returning true
++      // if the parent was an assignment (not including the block, script,
++      // name, or assign types). For the cases that aren't an assignment,
++      // we return true, so that it will traverse those nodes.
++      return true;
++    }
++    return false;
+   }
+-
+   public void visit(NodeTraversal t, Node n, Node parent) {
+     if (n.getType() == Token.THIS && shouldReportThis(n, parent)) {
+       compiler.report(t.makeError(n, level, GLOBAL_THIS));

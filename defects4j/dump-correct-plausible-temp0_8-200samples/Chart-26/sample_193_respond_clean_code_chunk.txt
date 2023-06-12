@@ -1,0 +1,78 @@
+    protected AxisState drawLabel(String label, Graphics2D g2, 
+            Rectangle2D plotArea, Rectangle2D dataArea, RectangleEdge edge, 
+            AxisState state) {
+        if (label == null || label.equals("")) {
+            return state;
+        }
+        Font font = getLabelFont();
+        RectangleInsets insets = getLabelInsets();
+        g2.setFont(font);
+        g2.setPaint(getLabelPaint());
+        FontMetrics fm = g2.getFontMetrics();
+        Rectangle2D labelBounds = TextUtilities.getTextBounds(label, g2, fm);
+        Shape hotspot = null;
+        double angle = 0.0;
+        if (isVerticalTickLabels()) {
+            angle = Math.PI / 2.0;
+        }
+        double x = dataArea.getCenterX();
+        double y = state.getCursor();
+        TextAnchor anchor = null;
+        TextAnchor rotationAnchor = null;
+        double offset = 0.0;
+        if (edge == RectangleEdge.TOP) {
+            y = state.getCursor() - insets.getBottom() 
+                    - labelBounds.getHeight() / 2.0;
+            anchor = TextAnchor.BOTTOM_CENTER;
+            rotationAnchor = TextAnchor.BOTTOM_CENTER;
+            offset = -labelBounds.getWidth() / 2.0;
+        }
+        else if (edge == RectangleEdge.BOTTOM) {
+            y = state.getCursor() + insets.getTop() 
+                    + labelBounds.getHeight() / 2.0;
+            anchor = TextAnchor.TOP_CENTER;
+            rotationAnchor = TextAnchor.TOP_CENTER;
+            offset = labelBounds.getWidth() / 2.0;
+        }
+        else if (edge == RectangleEdge.LEFT) {
+            x = state.getCursor() - insets.getRight() 
+                    - labelBounds.getWidth() / 2.0;
+            anchor = TextAnchor.CENTER_RIGHT;
+            rotationAnchor = TextAnchor.CENTER_RIGHT;
+            offset = -labelBounds.getHeight() / 2.0;
+        }
+        else if (edge == RectangleEdge.RIGHT) {
+            x = state.getCursor() + insets.getLeft() 
+                    + labelBounds.getWidth() / 2.0;
+            anchor = TextAnchor.CENTER_LEFT;
+            rotationAnchor = TextAnchor.CENTER_LEFT;
+            offset = labelBounds.getHeight() / 2.0;
+        }
+        float xx = (float) x + (float) offset;
+        float yy = (float) y;
+        Shape labelBoundsAtTip = TextUtilities.calculateRotatedStringBounds(
+                label, g2, xx, yy, anchor, angle, rotationAnchor);
+        state.cursorUp(insets.getTop() + labelBoundsAtTip.getHeight() 
+                + insets.getBottom());
+        TextUtilities.drawRotatedString(label, g2, xx, yy, anchor, angle, 
+                rotationAnchor);
+        if (this.additionalUnit != null) {
+            String unitStr = this.additionalUnit.getSymbol();
+            Rectangle2D unitBounds = TextUtilities.getTextBounds(
+                    unitStr, g2, fm);
+            double cx = x + unitBounds.getWidth() / 2.0;
+            double cy = y - unitBounds.getHeight() / 2.0;
+            if (edge == RectangleEdge.TOP) {
+                cy = y + unitBounds.getHeight() / 2.0;
+            }
+            else if (edge == RectangleEdge.LEFT) {
+                cx = x + unitBounds.getWidth() / 2.0;
+            }
+            else if (edge == RectangleEdge.RIGHT) {
+                cx = x - unitBounds.getWidth() / 2.0;
+            }
+            TextUtilities.drawAlignedString(unitStr, g2, (float) cx, (float) cy, 
+                    TextAnchor.CENTER);
+        }
+        return state;
+    }

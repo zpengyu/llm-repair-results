@@ -1,0 +1,49 @@
+diff --git a/src/main/java/org/jsoup/nodes/LeafNode.java b/src/main/java/org/jsoup/nodes/LeafNode.java
+index 0e068b5..532ff90 100644
+--- a/src/main/java/org/jsoup/nodes/LeafNode.java
++++ b/src/main/java/org/jsoup/nodes/LeafNode.java
+@@ -27,20 +23,27 @@ abstract class LeafNode extends Node {
+                 attributes.put(nodeName(), (String) coreValue);
+         }
+     }
+-
+-    String coreValue() {
+-        return attr(nodeName());
++    private String coreValue() {
++        if(value instanceof String){
++            return (String) value;
++        }
++        else{
++            return ((Attributes) value).get(nodeName());
++        }
+     }
+-
+-    void coreValue(String value) {
+-        attr(nodeName(), value);
++    private void coreValue(String value) {
++        if(value instanceof String){
++            this.value = value;
++        }
++        else{
++            ((Attributes) value).put(nodeName(), value);
++        }
+     }
+-
+     @Override
+     public String attr(String key) {
+         Validate.notNull(key);
+         if (!hasAttributes()) {
+-            return key.equals(nodeName()) ? (String) value : EmptyString;
++            return key.equals(nodeName()) ? coreValue() : EmptyString;
+         }
+         return super.attr(key);
+     }
+@@ -48,7 +50,7 @@ abstract class LeafNode extends Node {
+     @Override
+     public Node attr(String key, String value) {
+         if (!hasAttributes() && key.equals(nodeName())) {
+-            this.value = value;
++            coreValue(value);
+         } else {
+             ensureAttributes();
+             super.attr(key, value);

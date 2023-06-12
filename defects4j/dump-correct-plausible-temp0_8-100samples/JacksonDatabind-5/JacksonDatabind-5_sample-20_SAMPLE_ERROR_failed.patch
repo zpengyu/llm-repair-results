@@ -1,0 +1,24 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/introspect/AnnotatedClass.java b/src/main/java/com/fasterxml/jackson/databind/introspect/AnnotatedClass.java
+index 929076729..eb4360b24 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/introspect/AnnotatedClass.java
++++ b/src/main/java/com/fasterxml/jackson/databind/introspect/AnnotatedClass.java
+@@ -655,7 +655,18 @@ public final class AnnotatedClass
+                      */
+                 } else {
+                     // Well, or, as per [Issue#515], multi-level merge within mixins...
+-                        mixIns.add(_constructMethod(m));
++                    am = mixIns.find(m);
++                    if (am != null) {
++                        _addMixUnders(m, am);
++                    } else {
++                        // Last chance: already got something? (due to multiple mixins)
++                        am = _findMixInMethod(mixIns, m);
++                        if (am != null) {
++                            _addMixUnders(m, am);
++                        } else {
++                            mixIns.add(_constructMethod(m));
++                        }
++                    }
+                 }
+             }
+         }

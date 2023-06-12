@@ -1,0 +1,62 @@
+private boolean shouldCollapseTo(Node n) {
+  return n.isVar() || canBeRedeclared(n, t.getScope());
+}
+private boolean canBeRedeclared(Node n, Scope s) {
+  if (!NodeUtil.isExprAssign(n)) {
+    return false;
+  }
+  Node assign = n.getFirstChild();
+  Node lhs = assign.getFirstChild();
+  if (!lhs.isName()) {
+    return false;
+  }
+  Var var = s.getVar(lhs.getString());
+  return var != null
+      && var.getScope() == s
+      && !blacklistedVars.contains(var);
+}
+private void blacklistStubVars(NodeTraversal t, Node varNode) {
+  for (Node child = varNode.getFirstChild();
+       child != null; child = child.getNext()) {
+    if (child.getFirstChild() == null) {
+      blacklistedVars.add(t.getScope().getVar(child.getString()));
+    }
+  }
+}
+private boolean isAssignLhs(Node n) {
+  return n.isGetProp() || n.isGetElem() || n.isName();
+}
+@Override
+public void visit(NodeTraversal t, Node n, Node parent) {
+  Node varNode = n;
+  Node firstRedeclaredNode = n.getNext();
+  boolean hasVar = n.isVar();
+  for (Node node = firstRedeclaredNode;
+       node != null && shouldCollapseTo(node);
+       node = node.getNext()) {
+    if (node.isVar()) {
+      hasVar = true;
+      blacklistStubVars(t, node);
+    }
+    node.detachFromParent();
+    varNode.getParent().addChildAfter(node, varNode);
+  }
+  if (hasVar) {
+    while (n != firstRedeclaredNode) {
+      Node next = n.getNext();
+      if (n.isVar()) {
+        while (n.hasChildren()) {
+          varNode.addChildToBack(n.removeFirstChild());
+        }
+        n.detachFromParent();
+      } else {
+        Preconditions.checkState(isAssignLhs(n.getFirstChild().getFirstChild()));
+        n.replaceWith(n.removeFirstChild());
+      }
+      n = next;
+    }
+    JSDocInfo info = new JSDocInfo();
+    info.addSuppression("duplicate");
+    varNode.setJSDocInfo(info);
+  }
+}

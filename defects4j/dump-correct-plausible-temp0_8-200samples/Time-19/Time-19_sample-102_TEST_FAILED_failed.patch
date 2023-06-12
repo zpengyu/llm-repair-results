@@ -1,0 +1,33 @@
+diff --git a/src/main/java/org/joda/time/DateTimeZone.java b/src/main/java/org/joda/time/DateTimeZone.java
+index 17672725..7150d195 100644
+--- a/src/main/java/org/joda/time/DateTimeZone.java
++++ b/src/main/java/org/joda/time/DateTimeZone.java
+@@ -879,10 +879,10 @@ public abstract class DateTimeZone implements Serializable {
+      */
+     public int getOffsetFromLocal(long instantLocal) {
+         // get the offset at instantLocal (first estimate)
+-        final int offsetLocal = getOffset(instantLocal);
++        int offsetLocal = getOffset(instantLocal);
+         // adjust instantLocal using the estimate and recalc the offset
+-        final long instantAdjusted = instantLocal - offsetLocal;
+-        final int offsetAdjusted = getOffset(instantAdjusted);
++        long instantAdjusted = instantLocal - offsetLocal;
++        int offsetAdjusted = getOffset(instantAdjusted);
+         // if the offsets differ, we must be near a DST boundary
+         if (offsetLocal != offsetAdjusted) {
+             // we need to ensure that time is always after the DST gap
+@@ -897,9 +897,13 @@ public abstract class DateTimeZone implements Serializable {
+                     return offsetLocal;
+                 }
+             }
+-        } else if (offsetLocal > 0) {
++        }
++        // if the adjustment didn't work, we are in a "summer" offset
++        else if (offsetLocal > 0) {
++            // get the previous transition, which will be in "winter"
+             long prev = previousTransition(instantAdjusted);
+             if (prev < instantAdjusted) {
++                // "summer" is still in effect at prev, so use offsetLocal
+                 int offsetPrev = getOffset(prev);
+                 int diff = offsetPrev - offsetLocal;
+                 if (instantAdjusted - prev <= diff) {

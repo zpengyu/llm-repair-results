@@ -1,0 +1,46 @@
+diff --git a/src/main/java/org/apache/commons/compress/archivers/ar/ArArchiveInputStream.java b/src/main/java/org/apache/commons/compress/archivers/ar/ArArchiveInputStream.java
+index 9112fa85..702a160f 100644
+--- a/src/main/java/org/apache/commons/compress/archivers/ar/ArArchiveInputStream.java
++++ b/src/main/java/org/apache/commons/compress/archivers/ar/ArArchiveInputStream.java
+@@ -57,25 +54,7 @@ public class ArArchiveInputStream extends ArchiveInputStream {
+      *             if the entry could not be read
+      */
+     public ArArchiveEntry getNextArEntry() throws IOException {
+-                    // hit EOF before previous entry was complete
+-                    // TODO: throw an exception instead?
+-
+-        if (offset == 0) {
+-            final byte[] expected = ArArchiveEntry.HEADER.getBytes();
+-            final byte[] realized = new byte[expected.length]; 
+-            final int read = read(realized);
+-            if (read != expected.length) {
+-                throw new IOException("failed to read header");
+-            }
+-            for (int i = 0; i < expected.length; i++) {
+-                if (expected[i] != realized[i]) {
+-                    throw new IOException("invalid header " + new String(realized));
+-                }
+-            }
+-        }
+-
+                 // hit eof
+-
+         if (input.available() == 0) {
+             return null;
+         }
+@@ -110,13 +86,10 @@ public class ArArchiveInputStream extends ArchiveInputStream {
+                 }
+             }
+         }
+-
+         return new ArArchiveEntry(new String(name).trim(),
+-                                          Long.parseLong(new String(length)
+-                                                         .trim()));
++                                  Long.parseLong(new String(length)
++                                                 .trim()));
+     }
+-
+-
+     public ArchiveEntry getNextEntry() throws IOException {
+         return getNextArEntry();
+     }

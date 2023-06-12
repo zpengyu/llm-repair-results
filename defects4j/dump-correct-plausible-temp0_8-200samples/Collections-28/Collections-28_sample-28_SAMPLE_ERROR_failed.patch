@@ -1,0 +1,168 @@
+diff --git a/src/main/java/org/apache/commons/collections4/trie/AbstractPatriciaTrie.java b/src/main/java/org/apache/commons/collections4/trie/AbstractPatriciaTrie.java
+index 9eaf0837..afcbb02e 100644
+--- a/src/main/java/org/apache/commons/collections4/trie/AbstractPatriciaTrie.java
++++ b/src/main/java/org/apache/commons/collections4/trie/AbstractPatriciaTrie.java
+@@ -2089,121 +2089,10 @@ abstract class AbstractPatriciaTrie<K, V> extends AbstractBitwiseTrie<K, V> {
+     /**
+      * A submap used for prefix views over the {@link Trie}.
+      */
+-    private class PrefixRangeMap extends RangeMap {
+-
+-        private final K prefix;
+-
+-        private final int offsetInBits;
+-
+-        private final int lengthInBits;
+-
+-        private K fromKey = null;
+-
+-        private K toKey = null;
+-
+-        private transient int expectedModCount = 0;
+-
+-        private int size = -1;
+-
+-        /**
+-         * Creates a {@link PrefixRangeMap}.
+-         */
+-        private PrefixRangeMap(final K prefix, final int offsetInBits, final int lengthInBits) {
+-            this.prefix = prefix;
+-            this.offsetInBits = offsetInBits;
+-            this.lengthInBits = lengthInBits;
+-        }
+-
+-        /**
+-         * This method does two things. It determines the FROM
+-         * and TO range of the {@link PrefixRangeMap} and the number
+-         * of elements in the range. This method must be called every
+-         * time the {@link Trie} has changed.
+-         */
+-        private int fixup() {
+-            // The trie has changed since we last found our toKey / fromKey
+-            if (size == - 1 || AbstractPatriciaTrie.this.modCount != expectedModCount) {
+-                final Iterator<Map.Entry<K, V>> it = super.entrySet().iterator();
+-                size = 0;
+-
+-                Map.Entry<K, V> entry = null;
+-                if (it.hasNext()) {
+-                    entry = it.next();
+-                    size = 1;
+-                }
+-
+-                fromKey = entry == null ? null : entry.getKey();
+-                if (fromKey != null) {
+-                    final TrieEntry<K, V> prior = previousEntry((TrieEntry<K, V>)entry);
+-                    fromKey = prior == null ? null : prior.getKey();
+-                }
+-
+-                toKey = fromKey;
+-
+-                while (it.hasNext()) {
+-                    ++size;
+-                    entry = it.next();
+-                }
+-
+-                toKey = entry == null ? null : entry.getKey();
+-
+-                if (toKey != null) {
+-                    entry = nextEntry((TrieEntry<K, V>)entry);
+-                    toKey = entry == null ? null : entry.getKey();
+-                }
+-
+-                expectedModCount = AbstractPatriciaTrie.this.modCount;
+-            }
+-
+-            return size;
+-        }
+-
+         @Override
+-        public K firstKey() {
+-            fixup();
+-
+-            Map.Entry<K,V> e = null;
+-            if (fromKey == null) {
+-                e = firstEntry();
+-            } else {
+-                e = higherEntry(fromKey);
+-            }
+-
+-            final K first = e != null ? e.getKey() : null;
+-            if (e == null || !getKeyAnalyzer().isPrefix(prefix, offsetInBits, lengthInBits, first)) {
+-                throw new NoSuchElementException();
+-            }
+-
+-            return first;
+-        }
+-
+-        @Override
+-        public K lastKey() {
+-            fixup();
+-
+-            Map.Entry<K,V> e = null;
+-            if (toKey == null) {
+-                e = lastEntry();
+-            } else {
+-                e = lowerEntry(toKey);
+-            }
+-
+-            final K last = e != null ? e.getKey() : null;
+-            if (e == null || !getKeyAnalyzer().isPrefix(prefix, offsetInBits, lengthInBits, last)) {
+-                throw new NoSuchElementException();
+-            }
+-
+-            return last;
+-        }
+-
+-        /**
+-         * Returns true if this {@link PrefixRangeMap}'s key is a prefix of the provided key.
+-         */
+-        @Override
+-        protected boolean inRange(final K key) {
++        public boolean inRange(final K key) {
+             return getKeyAnalyzer().isPrefix(prefix, offsetInBits, lengthInBits, key);
+         }
+-
+         /**
+          * Same as {@link #inRange(Object)}.
+          */
+@@ -2227,40 +2114,6 @@ abstract class AbstractPatriciaTrie<K, V> extends AbstractBitwiseTrie<K, V> {
+         protected boolean inToRange(final K key, final boolean forceInclusive) {
+             return getKeyAnalyzer().isPrefix(prefix, offsetInBits, lengthInBits, key);
+         }
+-
+-        @Override
+-        protected Set<Map.Entry<K, V>> createEntrySet() {
+-            return new PrefixRangeEntrySet(this);
+-        }
+-
+-        @Override
+-        public K getFromKey() {
+-            return fromKey;
+-        }
+-
+-        @Override
+-        public K getToKey() {
+-            return toKey;
+-        }
+-
+-        @Override
+-        public boolean isFromInclusive() {
+-            return false;
+-        }
+-
+-        @Override
+-        public boolean isToInclusive() {
+-            return false;
+-        }
+-
+-        @Override
+-        protected SortedMap<K, V> createRangeMap(final K fromKey, final boolean fromInclusive,
+-                                                 final K toKey, final boolean toInclusive) {
+-            return new RangeEntryMap(fromKey, fromInclusive, toKey, toInclusive);
+-        }
+-
+-    }
+-
+     /**
+      * A prefix {@link RangeEntrySet} view of the {@link Trie}.
+      */

@@ -1,0 +1,83 @@
+###Provide a fix for the buggy function
+###Buggy Function
+class FibonacciExample {
+    public static void main(String args[]) {
+        int n1 = 0, n2 = 1, n3, i, count = 10;
+
+        System.out.print(n1 + " " + n2);
+
+        for (i = 2; i < count; ++i) {
+            n3 = n1 - n2;
+            System.out.print(" " + n3);
+            n1 = n2;
+            n2 = n3;
+        }
+    }
+}
+
+###Fixed Function
+class FibonacciExample {
+    public static void main(String args[]) {
+        int n1 = 0, n2 = 1, n3, i, count = 10;
+
+        System.out.print(n1 + " " + n2);
+
+        for (i = 2; i < count; ++i) {
+            n3 = n1 + n2;
+            System.out.print(" " + n3);
+            n1 = n2;
+            n2 = n3;
+        }
+    }
+}
+
+###Provide a fix for the buggy function
+###Buggy Function
+public String title() {
+    // title is a preserve whitespace tag (for document output), but normalised here 
+    Element titleEl = getElementsByTag("title").first();
+    return titleEl != null ? titleEl.text().trim() : "";
+}
+###Fixed Function
+public String title() {
+    // title is a preserve whitespace tag (for document output), but normalised here
+    Element titleEl = getElementsByTag("title").first();
+    return titleEl != null ? StringUtil.normaliseWhitespace(titleEl.text()).trim() : "";
+}
+###Provide a fix for the buggy function
+###Buggy Function
+    static String unescape(String string) {
+        if (!string.contains("&"))
+            return string;
+
+        Matcher m = unescapePattern.matcher(string); // &(#(x|X)?([0-9a-fA-F]+)|[a-zA-Z]+);?
+        StringBuffer accum = new StringBuffer(string.length()); // pity matcher can't use stringbuilder, avoid syncs
+        // todo: replace m.appendReplacement with own impl, so StringBuilder and quoteReplacement not required
+
+        while (m.find()) {
+            int charval = -1;
+            String num = m.group(3);
+            if (num != null) {
+                try {
+                    int base = m.group(2) != null ? 16 : 10; // 2 is hex indicator
+                    charval = Integer.valueOf(num, base);
+                } catch (NumberFormatException e) {
+                } // skip
+            } else {
+                String name = m.group(1);
+                if (full.containsKey(name))
+                    charval = full.get(name);
+            }
+
+            if (charval != -1 || charval > 0xFFFF) { // out of range
+                String c = Character.toString((char) charval);
+                m.appendReplacement(accum, c);
+            } else {
+                m.appendReplacement(accum, m.group(0));
+            }
+        }
+        m.appendTail(accum);
+        return accum.toString();
+    }
+
+###Fixed Function

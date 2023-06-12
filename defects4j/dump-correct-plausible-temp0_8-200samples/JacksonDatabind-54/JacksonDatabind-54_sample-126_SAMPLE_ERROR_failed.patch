@@ -1,0 +1,38 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/ser/PropertyBuilder.java b/src/main/java/com/fasterxml/jackson/databind/ser/PropertyBuilder.java
+index 9a9d91ebf..69b7af638 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/ser/PropertyBuilder.java
++++ b/src/main/java/com/fasterxml/jackson/databind/ser/PropertyBuilder.java
+@@ -93,19 +92,27 @@ public class PropertyBuilder
+             serializationType = serializationType.withContentTypeHandler(contentTypeSer);
+             ct = serializationType.getContentType();
+         }
+-        
++        // [databind#1256]: Need to resolve actual content type from type and serialization type
++        JavaType actualType = (serializationType == null) ? declaredType : serializationType;
++        // but if not a container type, retain only declared type; otherwise
++        // handling of null values gets tricky:
++        if (!actualType.isContainerType()) {
++            actualType = declaredType;
++        }
++        // [databind#1256]: Also, check if we can resolve type serializer
++        // properly, which may also mean we can use actual type as well
++        // (as in case of content-only serializer, but not declared type)
++        TypeSerializer contentTS = contentTypeSer;
++        if ((contentTS == null) && (actualType != declaredType)) {
++            contentTS = _provider.findValueTypeSerializer(actualType, propDef);
++        }
+         Object valueToSuppress = null;
+         boolean suppressNulls = false;
+-
+         JsonInclude.Value inclV = _defaultInclusion.withOverrides(propDef.findInclusion());
+         JsonInclude.Include inclusion = inclV.getValueInclusion();
+         if (inclusion == JsonInclude.Include.USE_DEFAULTS) { // should not occur but...
+             inclusion = JsonInclude.Include.ALWAYS;
+         }
+-
+-        // 12-Jul-2016, tatu: [databind#1256] Need to make sure we consider type refinement
+-        JavaType actualType = (serializationType == null) ? declaredType : serializationType;
+-        
+         switch (inclusion) {
+         case NON_DEFAULT:
+             // 11-Nov-2015, tatu: This is tricky because semantics differ between cases,

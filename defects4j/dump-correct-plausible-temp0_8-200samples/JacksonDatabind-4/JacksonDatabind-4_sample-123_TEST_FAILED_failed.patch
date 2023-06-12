@@ -1,0 +1,95 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/deser/std/StringArrayDeserializer.java b/src/main/java/com/fasterxml/jackson/databind/deser/std/StringArrayDeserializer.java
+index 773d1fbd8..2e7b9aaf2 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/deser/std/StringArrayDeserializer.java
++++ b/src/main/java/com/fasterxml/jackson/databind/deser/std/StringArrayDeserializer.java
+@@ -49,30 +44,27 @@ public final class StringArrayDeserializer
+         if (_elementDeserializer != null) {
+             return _deserializeCustom(jp, ctxt);
+         }
+-
+         final ObjectBuffer buffer = ctxt.leaseObjectBuffer();
+         Object[] chunk = buffer.resetAndStart();
+-
+         int ix = 0;
+         JsonToken t;
+-
+-            while ((t = jp.nextToken()) != JsonToken.END_ARRAY) {
+-                // Ok: no need to convert Strings, but must recognize nulls
+-                String value;
+-                if (t == JsonToken.VALUE_STRING) {
+-                    value = jp.getText();
+-                } else if (t == JsonToken.VALUE_NULL) {
+-                    value = null; // since we have established that '_elementDeserializer == null' earlier
+-                } else {
+-                    value = _parseString(jp, ctxt);
+-                }
+-                if (ix >= chunk.length) {
+-                    chunk = buffer.appendCompletedChunk(chunk);
+-                    ix = 0;
+-                }
+-                chunk[ix++] = value;
++        while ((t = jp.nextToken()) != JsonToken.END_ARRAY) {
++            // Ok: no need to convert Strings, but must recognize nulls
++            String value;
++            if (t == JsonToken.VALUE_STRING) {
++                value = jp.getText();
++            } else if (t == JsonToken.VALUE_NULL) {
++                value = null;
++            } else {
++                value = _parseString(jp, ctxt);
++            }
++            if (ix >= chunk.length) {
++                chunk = buffer.appendCompletedChunk(chunk);
++                ix = 0;
+             }
+-            // note: pass String.class, not String[].class, as we need element type for error info
++            chunk[ix++] = value;
++        }
++        // note: pass String.class, not String[].class, as we need element type for error info
+         String[] result = buffer.completeAndClearBuffer(chunk, ix, String.class);
+         ctxt.returnObjectBuffer(buffer);
+         return result;
+@@ -86,20 +77,18 @@ public final class StringArrayDeserializer
+         final ObjectBuffer buffer = ctxt.leaseObjectBuffer();
+         Object[] chunk = buffer.resetAndStart();
+         final JsonDeserializer<String> deser = _elementDeserializer;
+-        
+         int ix = 0;
+         JsonToken t;
+-
+-            while ((t = jp.nextToken()) != JsonToken.END_ARRAY) {
+-                // Ok: no need to convert Strings, but must recognize nulls
+-                String value = (t == JsonToken.VALUE_NULL) ? deser.getNullValue() : deser.deserialize(jp, ctxt);
+-                if (ix >= chunk.length) {
+-                    chunk = buffer.appendCompletedChunk(chunk);
+-                    ix = 0;
+-                }
+-                chunk[ix++] = value;
++        while ((t = jp.nextToken()) != JsonToken.END_ARRAY) {
++            // Ok: no need to convert Strings, but must recognize nulls
++            String value = (t == JsonToken.VALUE_NULL) ? deser.getNullValue() : deser.deserialize(jp, ctxt);
++            if (ix >= chunk.length) {
++                chunk = buffer.appendCompletedChunk(chunk);
++                ix = 0;
+             }
+-            // note: pass String.class, not String[].class, as we need element type for error info
++            chunk[ix++] = value;
++        }
++        // note: pass String.class, not String[].class, as we need element type for error info
+         String[] result = buffer.completeAndClearBuffer(chunk, ix, String.class);
+         ctxt.returnObjectBuffer(buffer);
+         return result;
+@@ -124,9 +111,12 @@ public final class StringArrayDeserializer
+             }
+             throw ctxt.mappingException(_valueClass);
+         }
++        if (_elementDeserializer != null) {
++            String value = (jp.getCurrentToken() == JsonToken.VALUE_NULL) ? _elementDeserializer.getNullValue() : _elementDeserializer.deserialize(jp, ctxt);
++            return new String[] { value };
++        }
+         return new String[] { (jp.getCurrentToken() == JsonToken.VALUE_NULL) ? null : _parseString(jp, ctxt) };
+     }
+-
+     /**
+      * Contextualization is needed to see whether we can "inline" deserialization
+      * of String values, or if we have to use separate value deserializer.

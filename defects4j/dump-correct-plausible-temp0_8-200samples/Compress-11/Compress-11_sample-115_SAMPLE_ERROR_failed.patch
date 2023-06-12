@@ -1,0 +1,56 @@
+diff --git a/src/main/java/org/apache/commons/compress/archivers/ArchiveStreamFactory.java b/src/main/java/org/apache/commons/compress/archivers/ArchiveStreamFactory.java
+index e2847a61..7d82cb7f 100644
+--- a/src/main/java/org/apache/commons/compress/archivers/ArchiveStreamFactory.java
++++ b/src/main/java/org/apache/commons/compress/archivers/ArchiveStreamFactory.java
+@@ -246,10 +242,48 @@ public class ArchiveStreamFactory {
+                 // autodetection, simply not a TAR
+                 // ignored
+             }
++            // COMPRESS-117 - improve auto-recognition
++            // check for BZip2
++            try {
++                in.mark(512);
++                final int firstByte = in.read();
++                if (firstByte == 'B') {
++                    return new BZip2CompressorInputStream(in);
++                }
++                in.reset();
++            } catch (IOException e) {
++                // ignored
++            }
++            // check for XZ
++            try {
++                final int firstByte = in.read();
++                if (firstByte == 0xFD) {
++                    final int secondByte = in.read();
++                    if (secondByte == '7'
++                            || secondByte == 'z') {
++                        return new XZCompressorInputStream(in);
++                    }
++                }
++                in.reset();
++            } catch (IOException e) {
++                // ignored
++            }
++            // check for GZIP
++            try {
++                in.mark(3);
++                final int firstByte = in.read();
++                if (firstByte == 31) {
++                    final int secondByte = in.read();
++                    if (secondByte == 139) {
++                        return new GzipCompressorInputStream(in);
++                    }
++                }
++                in.reset();
++            } catch (IOException e) {
++                // ignored
++            }
+         } catch (IOException e) {
+             throw new ArchiveException("Could not use reset and mark operations.", e);
+         }
+-
+         throw new ArchiveException("No Archiver found for the stream signature");
+-    }
+-}
++    }}

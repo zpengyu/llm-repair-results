@@ -1,0 +1,21 @@
+    // All passes must run the variable check. This synthesizes
+    // variables later so that the compiler doesn't crash. It also
+    // checks the externs file for validity. If you don't want to warn
+    // about missing variable declarations, we shut that specific
+    // error off.
+    if (!options.checkSymbols &&
+        (warningsGuard == null || !warningsGuard.disables(
+            DiagnosticGroups.CHECK_VARIABLES))) {
+      guards.add(new DiagnosticGroupWarningsGuard(
+          DiagnosticGroups.CHECK_VARIABLES, CheckLevel.OFF));
+    }
+
+    // Initialize the warnings guard.
+    List<WarningsGuard> guards = Lists.newArrayList();
+    guards.add(
+        new SuppressDocWarningsGuard(
+            getDiagnosticGroups().getRegisteredGroups()));
+    guards.add(options.getWarningsGuard());
+
+    this.warningsGuard = new ComposeWarningsGuard(guards);
+  }

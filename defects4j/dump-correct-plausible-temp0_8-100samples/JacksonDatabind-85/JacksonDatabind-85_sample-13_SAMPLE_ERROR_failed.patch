@@ -1,0 +1,22 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/ser/std/DateTimeSerializerBase.java b/src/main/java/com/fasterxml/jackson/databind/ser/std/DateTimeSerializerBase.java
+index ae5fd6538..bc4f81057 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/ser/std/DateTimeSerializerBase.java
++++ b/src/main/java/com/fasterxml/jackson/databind/ser/std/DateTimeSerializerBase.java
+@@ -89,11 +84,14 @@ public abstract class DateTimeSerializerBase<T>
+         // 08-Jun-2017, tatu: Unfortunately there's no generally usable
+         //    mechanism for changing `DateFormat` instances (or even clone()ing)
+         //    So: require it be `SimpleDateFormat`; can't config other types
+-//            serializers.reportBadDefinition(handledType(), String.format(
+-            // Ugh. No way to change `Locale`, create copy; must re-crete completely:
++            serializers.reportBadDefinition(handledType(), String.format(
++                    "Configured `Serializer` (of type %s) does not support "
++                            +"`DateFormat` customization (`JsonFormat.with[Locale|TimeZone]`); "
++                            +"cannot configure as `Serializer`",
++                    ClassUtil.nameOf(getClass())));
++        }
+         return this;
+     }
+-
+     /*
+     /**********************************************************
+     /* Accessors

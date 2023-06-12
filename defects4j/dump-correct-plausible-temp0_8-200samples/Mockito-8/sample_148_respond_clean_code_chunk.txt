@@ -1,0 +1,30 @@
+    protected void registerTypeVariablesOn(Type classType) {
+        if (!(classType instanceof ParameterizedType)) {
+            return;
+        }
+        ParameterizedType parameterizedType = (ParameterizedType) classType;
+        TypeVariable[] typeParameters = ((Class<?>) parameterizedType.getRawType()).getTypeParameters();
+        Type[] actualTypeArguments = parameterizedType.getActualTypeArguments();
+        for (int i = 0; i < actualTypeArguments.length; i++) {
+            TypeVariable typeParameter = typeParameters[i];
+            Type actualTypeArgument = actualTypeArguments[i];
+            if (actualTypeArgument instanceof TypeVariable) {
+                Map<TypeVariable<?>, Type> bound = ((TypeVariable<?>) actualTypeArgument).getBounds();
+                if (bound != null && bound.size() > 0) {
+                    Type type = bound.values().iterator().next();
+                    if (type instanceof WildcardType) {
+                        contextualActualTypeParameters.put(typeParameter, boundsOf((WildcardType) type));
+                    } else {
+                        contextualActualTypeParameters.put(typeParameter, type);
+                    }
+                } else {
+                    contextualActualTypeParameters.put(typeParameter, actualTypeArgument);
+                }
+            } else if (actualTypeArgument instanceof WildcardType) {
+                contextualActualTypeParameters.put(typeParameter, boundsOf((WildcardType) actualTypeArgument));
+            } else {
+                contextualActualTypeParameters.put(typeParameter, actualTypeArgument);
+            }
+            // logger.log("For '" + parameterizedType + "' found type variable : { '" + typeParameter + "(" + System.identityHashCode(typeParameter) + ")" + "' : '" + actualTypeArgument + "(" + System.identityHashCode(typeParameter) + ")" + "' }");
+        }
+    }

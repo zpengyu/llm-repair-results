@@ -1,0 +1,51 @@
+diff --git a/src/main/java/org/apache/commons/compress/archivers/zip/Zip64ExtendedInformationExtraField.java b/src/main/java/org/apache/commons/compress/archivers/zip/Zip64ExtendedInformationExtraField.java
+index 430232a7..78e27fa2 100644
+--- a/src/main/java/org/apache/commons/compress/archivers/zip/Zip64ExtendedInformationExtraField.java
++++ b/src/main/java/org/apache/commons/compress/archivers/zip/Zip64ExtendedInformationExtraField.java
+@@ -266,17 +266,46 @@ public class Zip64ExtendedInformationExtraField implements ZipExtraField {
+             }
+             int offset = 0;
+             if (hasUncompressedSize) {
++                long originalUncompressedSize = size.getValue();
+                 size = new ZipEightByteInteger(rawCentralDirectoryData, offset);
++                long newUncompressedSize = size.getValue();
++                if (newUncompressedSize > 0xFFFFFFFFL && originalUncompressedSize == 0xFFFFFFFFL) {
++                    // if the uncompressed size is less than 0xFFFFFFFF, we can't truncate
++                    // the size and get the real size later.
++                    throw new ZipException("central directory zip64 extended information"
++                                           + " extra field uncompressed size value is "
++                                           + newUncompressedSize
++                                           + " but would be truncated to "
++                                           + originalUncompressedSize);
++                }
+                 offset += DWORD;
+             }
+             if (hasCompressedSize) {
++                long originalCompressedSize = compressedSize.getValue();
+                 compressedSize = new ZipEightByteInteger(rawCentralDirectoryData,
+                                                          offset);
++                long newCompressedSize = compressedSize.getValue();
++                if (newCompressedSize > 0xFFFFFFFFL && originalCompressedSize == 0xFFFFFFFFL) {
++                    throw new ZipException("central directory zip64 extended information"
++                                           + " extra field compressed size value is "
++                                           + newCompressedSize
++                                           + " but would be truncated to "
++                                           + originalCompressedSize);
++                }
+                 offset += DWORD;
+             }
+             if (hasRelativeHeaderOffset) {
++                long originalRelativeHeaderOffset = relativeHeaderOffset.getValue();
+                 relativeHeaderOffset =
+                     new ZipEightByteInteger(rawCentralDirectoryData, offset);
++                long newRelativeHeaderOffset = relativeHeaderOffset.getValue();
++                if (newRelativeHeaderOffset > 0xFFFFFFFFL && originalRelativeHeaderOffset == 0xFFFFFFFFL) {
++                    throw new ZipException("central directory zip64 extended information"
++                                           + " extra field relative header offset value is "
++                                           + newRelativeHeaderOffset
++                                           + " but would be truncated to "
++                                           + originalRelativeHeaderOffset);
++                }
+                 offset += DWORD;
+             }
+             if (hasDiskStart) {

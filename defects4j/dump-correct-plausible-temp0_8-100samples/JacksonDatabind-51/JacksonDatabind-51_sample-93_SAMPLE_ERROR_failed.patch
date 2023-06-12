@@ -1,0 +1,18 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/jsontype/impl/TypeDeserializerBase.java b/src/main/java/com/fasterxml/jackson/databind/jsontype/impl/TypeDeserializerBase.java
+index 339362e1e..ac0df009d 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/jsontype/impl/TypeDeserializerBase.java
++++ b/src/main/java/com/fasterxml/jackson/databind/jsontype/impl/TypeDeserializerBase.java
+@@ -181,7 +181,12 @@ public abstract class TypeDeserializerBase
+                     //   generic type with custom type resolvers. If so, should try to retain them.
+                     //  Whether this is sufficient to avoid problems remains to be seen, but for
+                     //  now it should improve things.
+-                        type = ctxt.getTypeFactory().constructSpecializedType(_baseType, type.getRawClass());
++                    if (_baseType.isContainerType()
++                            && !type.isContainerType()) {
++                        type = _baseType.narrowContentsBy(type.getRawClass());
++                    } else {
++                        type = _baseType.narrowBy(type.getRawClass());
++                    }
+                 }
+                 deser = ctxt.findContextualValueDeserializer(type, _property);
+             }

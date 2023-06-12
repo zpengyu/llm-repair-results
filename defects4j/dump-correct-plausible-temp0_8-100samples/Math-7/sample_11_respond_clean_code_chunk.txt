@@ -1,0 +1,188 @@
+    protected double acceptStep(final AbstractStepInterpolator interpolator,
+                                final double[] y, final double[] yDot, final double tEnd)
+        throws MaxCountExceededException, DimensionMismatchException, NoBracketingException {
+            double previousT = interpolator.getGlobalPreviousTime();
+            final double currentT = interpolator.getGlobalCurrentTime();
+            // initialize the events states if needed
+            if (! statesInitialized) {
+                for (EventState state : eventsStates) {
+                    state.reinitializeBegin(interpolator);
+                }
+                statesInitialized = true;
+            }
+            // search for next events that may occur during the step
+            final int orderingSign = interpolator.isForward() ? +1 : -1;
+            SortedSet<EventState> occuringEvents = new TreeSet<EventState>(new Comparator<EventState>() {
+                /** {@inheritDoc} */
+                public int compare(EventState es0, EventState es1) {
+                    return orderingSign * Double.compare(es0.getEventTime(), es1.getEventTime());
+                }
+            });
+            for (final EventState state : eventsStates) {
+                if (state.evaluateStep(interpolator)) {
+                    // the event occurs during the current step
+                    occuringEvents.add(state);
+                }
+            }
+            while (!occuringEvents.isEmpty()) {
+                // handle the chronologically first event
+                final Iterator<EventState> iterator = occuringEvents.iterator();
+                final EventState currentEvent = iterator.next();
+                iterator.remove();
+                // restrict the interpolator to the first part of the step, up to the event
+                final double eventT = currentEvent.getEventTime();
+                interpolator.setSoftPreviousTime(previousT);
+                interpolator.setSoftCurrentTime(eventT);
+                // get state at event time
+                interpolator.setInterpolatedTime(eventT);
+                final double[] eventY = interpolator.getInterpolatedState().clone();
+                // advance all event states to current time
+                currentEvent.stepAccepted(eventT, eventY);
+                isLastStep = currentEvent.stop();
+                // handle the first part of the step, up to the event
+                for (final StepHandler handler : stepHandlers) {
+                    handler.handleStep(interpolator, isLastStep);
+                }
+                if (isLastStep) {
+                    // the event asked to stop integration
+                    System.arraycopy(eventY, 0, y, 0, y.length);
+                    for (final EventState remaining : occuringEvents) {
+                        remaining.stepAccepted(eventT, eventY);
+                    }
+                    return eventT;
+                }
+                // evaluate the event function at the event time
+                final double eventDot = currentEvent.evaluateEvent(eventT, eventY);
+                boolean needReset = currentEvent.reset(eventT, eventY);
+                if (needReset) {
+                    // some event handler has triggered changes that
+                    // invalidate the derivatives, we need to recompute them
+                    System.arraycopy(eventY, 0, y, 0, y.length);
+                    computeDerivatives(eventT, y, yDot);
+                    resetOccurred = true;
+                    for (final EventState remaining : occuringEvents) {
+                        remaining.stepAccepted(eventT, eventY);
+                    }
+                    return eventT;
+                }
+                if (eventDot * orderingSign >= 0) {
+                    // there is no sign change, we can simply continue integrating
+                    previousT = eventT;
+                    interpolator.setSoftPreviousTime(eventT);
+                    interpolator.setSoftCurrentTime(currentT);
+                    // check if the same event occurs again in the remaining part of the step
+                    if (currentEvent.evaluateStep(interpolator)) {
+                        // the event occurs during the current step
+                        occuringEvents.add(currentEvent);
+                    }
+                } else {
+                    // we need to thin out the sample to get closer to the sign change
+                    final double[] previousY = interpolator.getInterpolatedState().clone();
+                    double threshold = FastMath.abs(eventDot);
+                    double newStep = FastMath.max(threshold, 1.0e-6 * FastMath.abs(previousT - currentT));
+                    interpolator.setSoftCurrentTime(previousT + newStep);
+                    // prepare a tighter bracketing interval for the new event time
+                    double previousTau = 0;
+                    double previousF = eventDot;
+                    while (true) {
+                        // evaluate the event function at a closer point
+                        interpolator.setInterpolatedTime(previousT + newStep);
+                        final double newDot = currentEvent.evaluateEvent(interpolator.getInterpolatedTime(),
+                                                                         interpolator.getInterpolatedState());
+                        if (FastMath.abs(newDot) < FastMath.abs(eventDot)) {
+                            // we can use the new point to narrow the bracketing interval
+                            if (newDot * eventDot < 0) {
+                                // there is a sign change
+                                break;
+                            }
+                            // the sign is still unchanged
+                            previousT = interpolator.getGlobalPreviousTime();
+                            previousF = newDot;
+                            previousTau = 0;
+                        }
+                        // reduce the integration step to get closer to the event
+                        newStep *= 0.5;
+                        interpolator.setSoftCurrentTime(previousT + newStep);
+                    }
+                    // We have a bracketing interval with a sign change.
+                    // Narrow the interval until the event is isolated within a step.
+                    double t0 = previousT;
+                    double g0 = previousF;
+                    double t1 = interpolator.getGlobalPreviousTime();
+                    double g1 = newDot;
+                    while (true) {
+                        // Use Muller's method to interpolate a root of the event function.
+                        // The interpolation step is assumed to be an over-estimate of the
+                        // true step (this is actually always the case).
+                        final double step = t1 - t0;
+                        final double t2   = t1 + step;
+                        final double g2   = currentEvent.evaluateEvent(t2, interpolator.getInterpolatedState());
+                        // assume a parabolic model for the root, solve and compute uncertainty
+                        final double shift = (t2 - t1) * (g2 - g1) / (2 * ((t1 - t0) * (g2 - g1) - (t2 - t1) * (g1 - g0)));
+                        final double tau   = t1 + shift;
+                        final double ratio = (t1 - tau) / (t1 - t0);
+                        // check that the new point is within the bounds
+                        final double ratioLow = (previousTau - shift) / (previousTau - 0);
+                        final double ratioUp  = (previousTau - shift) / (previousTau - step);
+                        final double minRatio = FastMath.min(ratioLow, ratioUp);
+                        if (minRatio < 0.2) {
+                            // we are getting too close to the boundaries of the bracketing interval,
+                            // reduce the step to enforce isolation within the step
+                            final double factor = FastMath.max(0.1, 0.9 * minRatio);
+                            newStep *= factor;
+                            interpolator.setSoftCurrentTime(previousT + newStep);
+                            t1 = interpolator.getGlobalPreviousTime();
+                            g1 = newDot;
+                            continue;
+                        }
+                        // update the bracketing interval and the interpolation point
+                        if ((ratio >= 0.1) && (ratio <= 0.9)) {
+                            // we are close enough to the root
+                            t1 = tau;
+                            g1 = currentEvent.evaluateEvent(t1, interpolator.getInterpolatedState());
+                            break;
+                        }
+                        t0 = t1;
+                        g0 = g1;
+                        t1 = tau;
+                        g1 = currentEvent.evaluateEvent(t1, interpolator.getInterpolatedState());
+                    }
+                    // we have isolated the event within a step
+                    final int    remainingEvaluations = maxIterationCount - evaluations;
+                    final double ta                  = FastMath.max(previousT, t1 - newStep);
+                    final double tb                  = FastMath.min(currentT, t1 + newStep);
+                    final double newT                = solver.solve(remainingEvaluations, f, ta, tb, t1, 1.0e-6 * FastMath.abs(t1));
+                    // update the bracketing interval
+                    if (solver.getIterationCount() >= maxIterationCount) {
+                        throw new MathIllegalStateException(LocalizedODEFormats.TOO_MANY_FUNCTION_EVALUATIONS,
+                                                            maxIterationCount, t1);
+                    }
+                    // reset the interpolator and continue the integration
+                    interpolator.setSoftPreviousTime(previousT);
+                    interpolator.setSoftCurrentTime(newT);
+                    previousT = newT;
+                }
+                // prepare handling of the remaining part of the step
+                previousT = eventT;
+                interpolator.setSoftPreviousTime(eventT);
+                interpolator.setSoftCurrentTime(currentT);
+                // check if the same event occurs again in the remaining part of the step
+                if (currentEvent.evaluateStep(interpolator)) {
+                    // the event occurs during the current step
+                    occuringEvents.add(currentEvent);
+                }
+            }
+            // last part of the step, after the last event
+            interpolator.setInterpolatedTime(currentT);
+            final double[] currentY = interpolator.getInterpolatedState();
+            for (final EventState state : eventsStates) {
+                state.stepAccepted(currentT, currentY);
+                isLastStep = isLastStep || state.stop();
+            }
+            isLastStep = isLastStep || Precision.equals(currentT, tEnd, 1);
+            // handle the remaining part of the step, after all events if any
+            for (StepHandler handler : stepHandlers) {
+                handler.handleStep(interpolator, isLastStep);
+            }
+            return currentT;
+    }

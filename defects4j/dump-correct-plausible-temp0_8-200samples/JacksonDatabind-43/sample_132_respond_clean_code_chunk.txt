@@ -1,0 +1,19 @@
+    public Object deserializeSetAndReturn(JsonParser p,
+    		DeserializationContext ctxt, Object instance) throws IOException
+    {
+        Object id = _valueDeserializer.deserialize(p, ctxt);
+        if (id == null) { // [databind#742]
+            ctxt.reportBadDefinition(_objectIdReader,
+                    String.format("Object Id definition for %s (for %s) is invalid: id value is missing",
+                            _objectIdReader.idProperty.getType(), _objectIdReader.forValueType));
+        }
+        // note: no null checks (unlike usually); deserializer should fail if one found
+        ReadableObjectId roid = ctxt.findObjectId(id, _objectIdReader.generator, _objectIdReader.resolver);
+        roid.bindItem(instance);
+        // also: may need to set a property value as well
+        SettableBeanProperty idProp = _objectIdReader.idProperty;
+        if (idProp != null) {
+            return idProp.setAndReturn(instance, id);
+        }
+        return instance;
+    }

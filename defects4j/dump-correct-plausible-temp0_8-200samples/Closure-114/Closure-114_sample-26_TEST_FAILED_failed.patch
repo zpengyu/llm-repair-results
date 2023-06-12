@@ -1,0 +1,17 @@
+diff --git a/src/com/google/javascript/jscomp/NameAnalyzer.java b/src/com/google/javascript/jscomp/NameAnalyzer.java
+index 9542fbff..7806619a 100644
+--- a/src/com/google/javascript/jscomp/NameAnalyzer.java
++++ b/src/com/google/javascript/jscomp/NameAnalyzer.java
+@@ -573,6 +573,12 @@ final class NameAnalyzer implements CompilerPass {
+           if (parent.getFirstChild().getNext() != n) {
+             recordDepScope(recordNode, ns);
+           } else {
++            // The rhs of the assignment is the caller, so it's used by the
++            // context. Don't associate it w/ the lhs.
++            // FYI: this fixes only the specific case where the assignment is the
++            // caller expression, but it could be nested deeper in the caller and
++            // we would still get a bug.
++            // See testAssignWithCall2 for an example of this.
+             recordDepScope(nameNode, ns);
+           }
+         } else {

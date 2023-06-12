@@ -1,0 +1,19 @@
+    public long adjustOffset(long instant, boolean earlierOrLater) {
+        long offset = getOffset(instant);  // get the offset BEFORE the gap
+        instant = convertUTCToLocal(instant);  // and then recalculate instant
+        if (earlierOrLater) {
+            // TODO: this block is untested as no rules exist in real life to test it
+            long next = nextTransition(instant);
+            if (next == (instant - offset)) {
+                // next transition is in the current daylight saving period, so use it
+                return convertLocalToUTC(next, true, offset);
+            } else {
+                // next transition is in the gap or standard period
+                return instant - offset;
+            }
+        } else {
+            long prev = previousTransition(instant);
+            return convertLocalToUTC(prev, true, offset);
+        }
+    }
+

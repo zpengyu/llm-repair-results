@@ -1,0 +1,65 @@
+diff --git a/src/main/java/org/apache/commons/lang3/RandomStringUtils.java b/src/main/java/org/apache/commons/lang3/RandomStringUtils.java
+index 7f269a0c..89fe6916 100644
+--- a/src/main/java/org/apache/commons/lang3/RandomStringUtils.java
++++ b/src/main/java/org/apache/commons/lang3/RandomStringUtils.java
+@@ -227,19 +227,16 @@ public class RandomStringUtils {
+         } else if (count < 0) {
+             throw new IllegalArgumentException("Requested random string length " + count + " is less than 0.");
+         }
+-
+         if (start == 0 && end == 0) {
+-                if (!letters && !numbers) {
+-                    end = Integer.MAX_VALUE;
+-                } else {
+-                    end = 'z' + 1;
+-                    start = ' ';
+-                }
++            end = 'z' + 1;
++            start = ' ';
++            if (!letters && !numbers) {
++                start = 0;
++                end = Integer.MAX_VALUE;
++            }
+         }
+-
+         char[] buffer = new char[count];
+         int gap = end - start;
+-
+         while (count-- != 0) {
+             char ch;
+             if (chars == null) {
+@@ -247,11 +244,9 @@ public class RandomStringUtils {
+             } else {
+                 ch = chars[random.nextInt(gap) + start];
+             }
+-            if (letters && Character.isLetter(ch)
+-                    || numbers && Character.isDigit(ch)
+-                    || !letters && !numbers) {
+-                if(ch >= 56320 && ch <= 57343) {
+-                    if(count == 0) {
++            if (letters && Character.isLetter(ch) || numbers && Character.isDigit(ch) || !letters && !numbers) {
++                if (ch >= 56320 && ch <= 57343) {
++                    if (count == 0) {
+                         count++;
+                     } else {
+                         // low surrogate, insert high surrogate after putting it in
+@@ -259,8 +254,8 @@ public class RandomStringUtils {
+                         count--;
+                         buffer[count] = (char) (55296 + random.nextInt(128));
+                     }
+-                } else if(ch >= 55296 && ch <= 56191) {
+-                    if(count == 0) {
++                } else if (ch >= 55296 && ch <= 56191) {
++                    if (count == 0) {
+                         count++;
+                     } else {
+                         // high surrogate, insert low surrogate before putting it in
+@@ -268,7 +263,7 @@ public class RandomStringUtils {
+                         count--;
+                         buffer[count] = ch;
+                     }
+-                } else if(ch >= 56192 && ch <= 56319) {
++                } else if (ch >= 56192 && ch <= 56319) {
+                     // private high surrogate, no effing clue, so skip it
+                     count++;
+                 } else {

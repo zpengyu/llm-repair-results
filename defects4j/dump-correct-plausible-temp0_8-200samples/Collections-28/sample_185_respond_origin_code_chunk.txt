@@ -1,0 +1,229 @@
+class TrieRangeMap implements SortedMap<K, V> {
+
+    private final K fromKey;
+
+    private final boolean fromInclusive;
+
+    private final K toKey;
+
+    private final boolean toInclusive;
+
+    private final TrieEntry<K, V> fromEntry;
+
+    private final TrieEntry<K, V> toEntry;
+
+    private final int size;
+
+    public TrieRangeMap(final K fromKey, final boolean fromInclusive,
+                        final K toKey, final boolean toInclusive) {
+        this.fromKey = fromKey;
+        this.fromInclusive = fromInclusive;
+        this.toKey = toKey;
+        this.toInclusive = toInclusive;
+
+        this.fromEntry = fromKey != null ? TrieRangeMap.this.trie.find(fromKey, fromInclusive) : TrieRangeMap.this.trie.firstEntry();
+        this.toEntry = toKey != null ? TrieRangeMap.this.trie.find(toKey, toInclusive) : null;
+
+        if (fromKey != null) {
+            if (toKey != null) {
+                this.size = TrieRangeMap.this.trie.getCount(fromEntry, toEntry, false);
+            } else {
+                this.size = TrieRangeMap.this.trie.getCount(fromEntry);
+            }
+        } else if (toKey != null) {
+            this.size = TrieRangeMap.this.trie.getCount(toEntry);
+        } else {
+            this.size = TrieRangeMap.this.trie.getSize();
+        }
+    }
+
+    @Override
+    public boolean isEmpty() {
+        return size == 0;
+    }
+
+    @Override
+    public int size() {
+        return size;
+    }
+
+    @Override
+    public boolean containsKey(final Object key) {
+        return inRange((K)key);
+    }
+
+    @Override
+    public boolean containsValue(final Object value) {
+        for (final Entry<K, V> entry : entrySet()) {
+            if (Util.<V>equals(entry.getValue(), value)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    @Override
+    public V get(final Object key) {
+        if (inRange((K)key)) {
+            return TrieRangeMap.this.trie.get(key);
+        }
+
+        return null;
+    }
+
+    @Override
+    public V put(final K key, final V value) {
+        if (inRange(key)) {
+            return TrieRangeMap.this.trie.put(key, value);
+        }
+
+        throw new IllegalArgumentException("Key is out of range!");
+    }
+
+    @Override
+    public V remove(final Object key) {
+        if (inRange((K)key)) {
+            return TrieRangeMap.this.trie.remove(key);
+        }
+
+        return null;
+    }
+
+    @Override
+    public void putAll(final Map<? extends K, ? extends V> map) {
+        for (final Entry<? extends K, ? extends V> entry : map.entrySet()) {
+            put(entry.getKey(), entry.getValue());
+        }
+    }
+
+    @Override
+    public void clear() {
+        final Iterator<Entry<K, V>> it = entrySet().iterator();
+
+        while (it.hasNext()) {
+            it.next();
+            it.remove();
+        }
+    }
+
+    @Override
+    public Comparator<? super K> comparator() {
+        return TrieRangeMap.this.trie.comparator();
+    }
+
+    @Override
+    public SortedMap<K, V> subMap(final K fromKey, final K toKey) {
+        if (!inRange(fromKey)) {
+            throw new IllegalArgumentException("From key out of range!");
+        }
+
+        if (!inRange(toKey)) {
+            throw new IllegalArgumentException("To key out of range!");
+        }
+
+        return new TrieRangeMap(fromKey, true, toKey, false);
+    }
+
+    @Override
+    public SortedMap<K, V> headMap(final K toKey) {
+        if (!inRange(toKey)) {
+            throw new IllegalArgumentException("To key out of range!");
+        }
+
+        return new TrieRangeMap(fromKey, fromInclusive, toKey, false);
+    }
+
+    @Override
+    public SortedMap<K, V> tailMap(final K fromKey) {
+        if (!inRange(fromKey)) {
+            throw new IllegalArgumentException("From key out of range!");
+        }
+
+        return new TrieRangeMap(fromKey, true, toKey, toInclusive);
+    }
+
+    @Override
+    public K firstKey() {
+        final TrieEntry<K, V> e = fromEntry;
+        if (e != null) {
+            return e.getKey();
+        }
+
+        throw new NoSuchElementException();
+    }
+
+    @Override
+    public K lastKey() {
+        final TrieEntry<K, V> e = toEntry;
+        if (e != null) {
+            return e.getKey();
+        }
+
+        throw new NoSuchElementException();
+    }
+
+    @Override
+    public Set<K> keySet() {
+        return new AbstractSet<K>() {
+            @Override
+            public Iterator<K> iterator() {
+                return new TrieIterator<K, V>(TrieRangeMap.this.trie, TrieRangeMap.this.trie.size()) {
+                    @Override
+                    protected K get(final TrieEntry<K, V> entry) {
+                        return entry.getKey();
+                    }
+                };
+            }
+
+            @Override
+            public int size() {
+                return size;
+            }
+        };
+    }
+
+    @Override
+    public Collection<V> values() {
+        return new AbstractCollection<V>() {
+            @Override
+            public Iterator<V> iterator() {
+                return new TrieIterator<K, V>(TrieRangeMap.this.trie, TrieRangeMap.this.trie.size()) {
+                    @Override
+                    protected V get(final TrieEntry<K, V> entry) {
+                        return entry.getValue();
+                    }
+                };
+            }
+
+            @Override
+            public int size() {
+                return size;
+            }
+        };
+    }
+
+    @Override
+    public Set<Entry<K, V>> entrySet() {
+        return new AbstractSet<Entry<K, V>>() {
+            @Override
+            public Iterator<Entry<K, V>> iterator() {
+                return new TrieIterator<K, V>(TrieRangeMap.this.trie, TrieRangeMap.this.trie.size()) {
+                    @Override
+                    protected Entry<K, V> get(final TrieEntry<K, V> entry) {
+                        return entry;
+                    }
+                };
+            }
+
+            @Override
+            public int size() {
+                return size;
+            }
+        };
+    }
+
+    private boolean inRange(final K key) {
+        return TrieRangeMap.this.trie.inRange(key, fromKey, fromInclusive, toKey, toInclusive);
+    }
+}

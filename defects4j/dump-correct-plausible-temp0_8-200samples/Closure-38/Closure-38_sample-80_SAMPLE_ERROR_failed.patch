@@ -1,0 +1,25 @@
+diff --git a/src/com/google/javascript/jscomp/CodeConsumer.java b/src/com/google/javascript/jscomp/CodeConsumer.java
+index 47ecfb1d..b4a68251 100644
+--- a/src/com/google/javascript/jscomp/CodeConsumer.java
++++ b/src/com/google/javascript/jscomp/CodeConsumer.java
+@@ -238,8 +238,6 @@ abstract class CodeConsumer {
+   }
+ 
+   void addNumber(double x) {
+-    // This is not pretty printing. This is to prevent misparsing of x- -4 as
+-    // x--4 (which is a syntax error).
+     char prev = getLastChar();
+     boolean negativeZero = isNegativeZero(x);
+     if (x < 0 && prev == '-') {
+@@ -262,10 +259,9 @@ abstract class CodeConsumer {
+         add(Long.toString(value));
+       }
+     } else {
+-      add(String.valueOf(x));
++      add(String.format(Locale.ROOT, "%.7g", x));
+     }
+   }
+-
+   static boolean isNegativeZero(double x) {
+     return x == 0.0 && Math.copySign(1, x) == -1.0;
+   }

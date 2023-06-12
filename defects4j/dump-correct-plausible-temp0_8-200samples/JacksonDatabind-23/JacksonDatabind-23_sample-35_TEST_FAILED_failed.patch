@@ -1,0 +1,57 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/ser/std/NumberSerializers.java b/src/main/java/com/fasterxml/jackson/databind/ser/std/NumberSerializers.java
+index 6d0db8734..8d99af780 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/ser/std/NumberSerializers.java
++++ b/src/main/java/com/fasterxml/jackson/databind/ser/std/NumberSerializers.java
+@@ -197,18 +169,22 @@ public class NumberSerializers
+     @JacksonStdImpl
+     public final static class FloatSerializer extends Base<Object>
+     {
+-
+         final static FloatSerializer instance = new FloatSerializer();
+-
+         public FloatSerializer() { super(Float.class, JsonParser.NumberType.FLOAT, "number"); }
+-
+-
+         @Override
+         public void serialize(Object value, JsonGenerator gen, SerializerProvider provider) throws IOException {
+-            gen.writeNumber(((Float) value).floatValue());
++            float v = ((Float) value).floatValue();
++            /* To check for NaN, need to use different method
++             * in different JDKs (!) -- when we have JDK7, can
++             * just call Float.isNan(v):
++             */
++            if (Float.isNaN(v) || Float.isInfinite(v)) {
++                provider.defaultSerializeValue(v, gen);
++            } else {
++                gen.writeNumber(v);
++            }
+         }
+     }
+-
+     /**
+      * This is the special serializer for regular {@link java.lang.Double}s
+      * (and primitive doubles)
+@@ -219,17 +195,17 @@ public class NumberSerializers
+     @JacksonStdImpl
+     public final static class DoubleSerializer extends Base<Object>
+     {
+-
+         final static DoubleSerializer instance = new DoubleSerializer();
+-
+         public DoubleSerializer() { super(Double.class, JsonParser.NumberType.DOUBLE, "number"); }
+-
+-
+         @Override
+         public void serialize(Object value, JsonGenerator gen, SerializerProvider provider) throws IOException {
+-            gen.writeNumber(((Double) value).doubleValue());
++            double v = ((Double) value).doubleValue();
++            if (Double.isNaN(v) || Double.isInfinite(v)) {
++                provider.defaultSerializeValue(v, gen);
++            } else {
++                gen.writeNumber(v);
++            }
+         }
+-
+         // IMPORTANT: copied from `NonTypedScalarSerializerBase`
+         @Override
+         public void serializeWithType(Object value, JsonGenerator gen,

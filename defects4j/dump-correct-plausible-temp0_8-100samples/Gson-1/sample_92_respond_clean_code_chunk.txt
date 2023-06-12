@@ -1,0 +1,102 @@
+final class TypeInfoFactory {
+  private TypeInfoFactory() {
+    // Not instantiable since it provides factory methods only.
+  }
+  public static TypeInfoArray getTypeInfoForArray(Type type) {
+    Preconditions.checkArgument(TypeUtils.isArray(type));
+    return new TypeInfoArray(type);
+  }
+  /**
+   * Evaluates the "actual" type for the field.  If the field is a "TypeVariable" or has a
+   * "TypeVariable" in a parameterized type then it evaluates the real type.
+   *
+   * @param f the actual field object to retrieve the type from
+   * @param typeDefiningF the type that contains the field {@code f}
+   * @return the type information for the field
+   */
+  public static TypeInfo getTypeInfoForField(Field f, Type typeDefiningF) {
+    Class<?> classDefiningF = TypeUtils.toRawClass(typeDefiningF);
+    Type type = f.getGenericType();
+    Type actualType = getActualType(type, typeDefiningF, classDefiningF);
+    return new TypeInfo(actualType);
+  }
+  private static Type getActualType(
+      Type typeToEvaluate, Type parentType, Class<?> rawParentClass) {
+    if (typeToEvaluate instanceof Class<?>) {
+      return typeToEvaluate;
+    } else if (typeToEvaluate instanceof ParameterizedType) {
+      ParameterizedType castedType = (ParameterizedType) typeToEvaluate;
+      Type owner = castedType.getOwnerType();
+      Type[] actualTypeParameters =
+          extractRealTypes(castedType.getActualTypeArguments(), parentType, rawParentClass);
+      Type rawType = castedType.getRawType();
+      return new ParameterizedTypeImpl(rawType, actualTypeParameters, owner);
+    } else if (typeToEvaluate instanceof GenericArrayType) {
+      GenericArrayType castedType = (GenericArrayType) typeToEvaluate;
+      Type componentType = castedType.getGenericComponentType();
+      Type actualType = getActualType(componentType, parentType, rawParentClass);
+      if (componentType.equals(actualType)) {
+        return castedType;
+      }
+      return actualType instanceof Class<?> ?
+          TypeUtils.wrapWithArray(TypeUtils.toRawClass(actualType))
+          : new GenericArrayTypeImpl(actualType);
+    } else if (typeToEvaluate instanceof TypeVariable<?>) {
+      if (parentType instanceof ParameterizedType) {
+        // The class definition has the actual types used for the type variables.
+        // Find the matching actual type for the Type Variable used for the field.
+        // For example, class Foo<A> { A a; }
+        // new Foo<Integer>(); defines the actual type of A to be Integer.
+        // So, to find the type of the field a, we will have to look at the class'
+        // actual type arguments.
+        TypeVariable<?> fieldTypeVariable = (TypeVariable<?>) typeToEvaluate;
+        TypeVariable<?>[] classTypeVariables = rawParentClass.getTypeParameters();
+        ParameterizedType objParameterizedType = (ParameterizedType) parentType;
+        int indexOfActualTypeArgument = getIndex(classTypeVariables, fieldTypeVariable);
+        Type[] actualTypeArguments = objParameterizedType.getActualTypeArguments();
+        return actualTypeArguments[indexOfActualTypeArgument];
+      }
+      throw new UnsupportedOperationException("Expecting parameterized type, got " + parentType
+          + ".\n Are you missing the use of TypeToken idiom?\n See "
+          + "http://sites.google.com/site/gson/gson-user-guide#TOC-Serializing-and-Deserializing-Gener");
+    } else if (typeToEvaluate instanceof WildcardType) {
+      WildcardType castedType = (WildcardType) typeToEvaluate;
+      return getActualType(castedType.getUpperBounds()[0], parentType, rawParentClass);
+    } else {
+      throw new IllegalArgumentException("Type \'" + typeToEvaluate + "\' is not a Class, "
+          + "ParameterizedType, GenericArrayType or TypeVariable. Can't extract type.");
+    }
+  }
+      // Evaluate type on this type
+  private static Type[] extractRealTypes(
+      Type[] actualTypeArguments, Type parentType, Class<?> rawParentClass) {
+    Preconditions.checkNotNull(actualTypeArguments);
+    Type[] retTypes = new Type[actualTypeArguments.length];
+    for (int i = 0; i < actualTypeArguments.length; ++i) {
+      retTypes[i] = getActualType(actualTypeArguments[i], parentType, rawParentClass);
+    }
+    return retTypes;
+  }
+  private static int getIndex(TypeVariable<?>[] types, TypeVariable<?> type) {
+    for (int i = 0; i < types.length; ++i) {
+      if (type.equals(types[i])) {
+        return i;
+      }
+    }
+    throw new IllegalStateException(
+        "How can the type variable not be present in the class declaration!");
+  }
+}
+1. Type of Method Call: The limitation is that we just look for the bug in a single line and we are not able to capture the bug if it is present in the multiple lines (for example: find the bug if it is there in the if condition or any method call or any other flow control statement).
+2. Identifier Type: The limitation is that we do not find the bug if the bug is introduced by changing the type of the identifier used in the bug fixes (for example: int to long, double to float).
+3. Print Statement: We have removed the print statement from the code before comparing the code.
+4. Blank Spaces: We have ignored the blank spaces in the code before comparing the code.
+1. In case of any bug, the current solution will not be able to find the bug when it is introduced in the method call or in the if condition or in any other flow control statement. We will be able to find the bug when it is introduced in a single line.
+2. The solution can be extended further to find the bug when it is introduced by changing the type of the identifier.
+1. http://www.ibm.com/developerworks/java/library/j-bugpatterns/
+2. http://sites.google.com/site/gson/gson-user-guide
+3. https://github.com/google/gson
+4. http://www.oracle.com/technetwork/articles/java/index-137868.html
+5. http://www.javacodegeeks.com/2011/09/jdk7-nio-2-example-to-list-files-and.html
+6. http://stackoverflow.com/questions/17090510/java-7-nio-how-can-i-read-a-file-line-by-line
+7. http://www.programcreek.com/2012/04/java-read-a-file-line-by-line-code-example/

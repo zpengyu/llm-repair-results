@@ -1,0 +1,59 @@
+import org.mockito.internal.creation.settings.CreationSettings;
+import org.mockito.internal.stubbing.answers.ReturnsEmptyValues;
+import org.mockito.invocation.InvocationOnMock;
+import org.mockito.mock.MockCreationSettings;
+import org.mockito.stubbing.Answer;
+import static org.mockito.Mockito.withSettings;
+public class ReturnsDeepStubs implements Answer<Object>, Serializable {
+    private static final long serialVersionUID = -7105341425736035847L;
+    public Object answer(InvocationOnMock invocation) throws Throwable {
+        Class<?> rawType = invocation.getMethod().getReturnType();
+        if (!isTypeMockable(rawType)) {
+            return delegate().returnValueFor(rawType);
+        }
+        InternalMockHandler<Object> handler = new MockUtil().getMockHandler(invocation.getMock());
+        InvocationContainerImpl container = (InvocationContainerImpl) handler.getInvocationContainer();
+        for (StubbedInvocationMatcher stubbedInvocationMatcher : container.getStubbedInvocations()) {
+            if (container.getInvocationForStubbing().matches(stubbedInvocationMatcher.getInvocation())) {
+                return stubbedInvocationMatcher.answer(invocation);
+            }
+        }
+        return recordDeepStubAnswer(
+                newDeepStubMock(rawType),
+                container
+        );
+    }
+    private Object newDeepStubMock(Class<?> rawType) {
+        return mock(
+                rawType,
+                withSettings()
+                        .defaultAnswer(newDeepStubAnswer())
+        );
+    }
+    private ReturnsDeepStubs newDeepStubAnswer() {
+        return new ReturnsDeepStubs();
+    }
+    private Object recordDeepStubAnswer(final Object mock, InvocationContainerImpl container) throws Throwable {
+        container.addAnswer(new DeeplyStubbedAnswer(mock), false);
+        return mock;
+    }
+    private static class DeeplyStubbedAnswer implements Answer<Object>, Serializable {
+        private final Object mock;
+        DeeplyStubbedAnswer(Object mock) {
+            this.mock = mock;
+        }
+        public Object answer(InvocationOnMock invocation) throws Throwable {
+            return mock;
+        }
+    }
+    private static MockitoCore mockitoCore() {
+        return LazyHolder.MOCKITO_CORE;
+    }
+    private static ReturnsEmptyValues delegate() {
+        return LazyHolder.DELEGATE;
+    }
+    private static class LazyHolder {
+        private static final MockitoCore MOCKITO_CORE = new MockitoCore();
+        private static final ReturnsEmptyValues DELEGATE = new ReturnsEmptyValues();
+    }
+}

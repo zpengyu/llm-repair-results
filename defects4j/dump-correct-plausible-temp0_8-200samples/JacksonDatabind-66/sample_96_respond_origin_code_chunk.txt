@@ -1,0 +1,20 @@
+        public final Object deserializeKey(String key, DeserializationContext ctxt)
+            throws IOException
+        {
+            if (key == null) {
+                key = "null";
+            }
+
+            try {
+                final TokenBuffer tb = new TokenBuffer(ctxt, false);
+                tb.writeFieldName(key);
+                Object result = _delegate.deserialize(tb.asParser(), ctxt);
+                if (result != null) {
+                    return result;
+                }
+                return ctxt.handleWeirdKey(_keyClass, key, "not a valid representation");
+            } catch (Exception re) {
+                return ctxt.handleWeirdKey(_keyClass, key, "not a valid representation: %s", re.getMessage());
+            }
+        }
+

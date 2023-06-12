@@ -1,0 +1,31 @@
+diff --git a/src/main/java/org/jsoup/nodes/Document.java b/src/main/java/org/jsoup/nodes/Document.java
+index 7022584..e7495bf 100644
+--- a/src/main/java/org/jsoup/nodes/Document.java
++++ b/src/main/java/org/jsoup/nodes/Document.java
+@@ -119,14 +119,22 @@ public class Document extends Element {
+                     toMove.add(tn);
+             }
+         }
+-
+         for (Node node: toMove) {
+             element.removeChild(node);
+-            body().appendChild(new TextNode(" ", ""));
+-            body().appendChild(node);
++            Element context = contextElement(element);
++            context.appendChild(new TextNode(" ", ""));
++            context.appendChild(node);
+         }
+     }
+-
++    Element contextElement(Element el) {
++        Element context = body();
++        while (el != null) {
++            if (el.parent() instanceof Element)
++                context = (Element) el.parent();
++            el = el.parent();
++        }
++        return context;
++    }
+     @Override
+     public String outerHtml() {
+         return super.html(); // no outer wrapper tag

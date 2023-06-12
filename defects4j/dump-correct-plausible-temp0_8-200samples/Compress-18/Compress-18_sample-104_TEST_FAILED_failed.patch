@@ -1,0 +1,25 @@
+diff --git a/src/main/java/org/apache/commons/compress/archivers/tar/TarArchiveOutputStream.java b/src/main/java/org/apache/commons/compress/archivers/tar/TarArchiveOutputStream.java
+index da6bbfde..cb0e3991 100644
+--- a/src/main/java/org/apache/commons/compress/archivers/tar/TarArchiveOutputStream.java
++++ b/src/main/java/org/apache/commons/compress/archivers/tar/TarArchiveOutputStream.java
+@@ -470,16 +469,16 @@ public class TarArchiveOutputStream extends ArchiveOutputStream {
+                 + 3 /* blank, equals and newline */
+                 + 2 /* guess 9 < actual length < 100 */;
+             String line = len + " " + key + "=" + value + "\n";
+-            int actualLength = line.getBytes(CharsetNames.UTF_8).length;
+-            while (len != actualLength) {
++            byte[] bytes = line.getBytes(CharsetNames.UTF_8);
++            while (len != bytes.length) {
+                 // Adjust for cases where length < 10 or > 100
+                 // or where UTF-8 encoding isn't a single octet
+                 // per character.
+                 // Must be in loop as size may go from 99 to 100 in
+                 // first pass so we'd need a second.
+-                len = actualLength;
++                len = bytes.length;
+                 line = len + " " + key + "=" + value + "\n";
+-                actualLength = line.getBytes(CharsetNames.UTF_8).length;
++                bytes = line.getBytes(CharsetNames.UTF_8);
+             }
+             w.write(line);
+         }

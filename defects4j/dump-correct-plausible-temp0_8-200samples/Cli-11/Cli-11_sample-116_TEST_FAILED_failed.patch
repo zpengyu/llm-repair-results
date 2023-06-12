@@ -1,0 +1,49 @@
+diff --git a/src/java/org/apache/commons/cli/HelpFormatter.java b/src/java/org/apache/commons/cli/HelpFormatter.java
+index 2e15c47..9ac4eb8 100644
+--- a/src/java/org/apache/commons/cli/HelpFormatter.java
++++ b/src/java/org/apache/commons/cli/HelpFormatter.java
+@@ -614,26 +614,34 @@ public class HelpFormatter {
+                                      final Option option, 
+                                      final boolean required)
+     {
++        if (option.getOpt() == null) {
++            appendOption(buff, option.getLongOpt(), required);
++            return;
++        }
+         if (!required)
+         {
+             buff.append("[");
+         }
+-
+-        if (option.getOpt() != null)
++        buff.append("-").append(option.getOpt());
++        if (option.hasArg() && (option.getArgName() != null))
+         {
+-            buff.append("-").append(option.getOpt());
++            buff.append(" <").append(option.getArgName()).append(">");
+         }
+-        else
++        // if the Option is not a required option
++        if (!required)
+         {
+-            buff.append("--").append(option.getLongOpt());
++            buff.append("]");
+         }
+-
+-        // if the Option has a value
+-        if (option.hasArg() && (option.getArgName() != null))
++    }
++    private static void appendOption(final StringBuffer buff, 
++                                     final String option, 
++                                     final boolean required)
++    {
++        if (!required)
+         {
+-            buff.append(" <").append(option.getArgName()).append(">");
++            buff.append("[");
+         }
+-
++        buff.append("--").append(option);
+         // if the Option is not a required option
+         if (!required)
+         {

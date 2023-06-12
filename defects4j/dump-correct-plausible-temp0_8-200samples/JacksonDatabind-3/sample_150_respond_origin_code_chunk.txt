@@ -1,0 +1,111 @@
+/**
+ * Deserializer that can deserialize instances of {@link String}
+ * from JSON Strings.
+ * 
+ * @author tsaloranta
+ */
+public final class StringDeserializer
+    extends StdScalarDeserializer<String>
+    implements ContextualDeserializer
+{
+    private static final long serialVersionUID = 1L;
+
+    public final static StringDeserializer instance = new StringDeserializer();
+
+    /**
+     * This is the default deserializer that gets applied in absence of anything else
+     * (which usually means: default deserializer for basic {@link String} type,
+     * without any other annotations to indicate alternative handling)
+     */
+    public StringDeserializer() { super(String.class); }
+
+    public String deserialize(JsonParser jp, DeserializationContext ctxt) throws IOException, JsonProcessingException
+    {
+        JsonToken t = jp.getCurrentToken();
+        if (t == JsonToken.VALUE_STRING) {
+            return jp.getText();
+        }
+        // [JACKSON-330]: need to allow nulls...
+        if (t == JsonToken.VALUE_NULL) {
+            return getNullValue();
+        }
+        // [JACKSON-606]: should accept Int, Long, Float, Double too (but NOT BigInteger/BigDecimal;
+        // those are better handled using proper type deserializers)
+        // [JACKSON-700]: should also accept boolean
+        if (t != null) {
+            switch (t.id()) {
+            case ID_NUMBER_INT:
+                return jp.getNumberValue().toString();
+            case ID_NUMBER_FLOAT: // coercing should work too
+                return jp.getNumberValue().toString();
+            case ID_TRUE:
+                return "true";
+            case ID_FALSE:
+                return "false";
+            }
+        }
+        // Otherwise, no can do:
+        throw ctxt.mappingException(getValueClass(), t);
+    }
+
+    @Override
+    public String deserializeWithType(JsonParser jp, DeserializationContext ctxt,
+            TypeDeserializer typeDeserializer)
+        throws IOException, JsonProcessingException
+    {
+        /* 28-Nov-2010, tatu: Actually, here we can fully delegate to typed
+         *    variant, since Strings can not contain type information.
+         */
+        return deserialize(jp, ctxt);
+    }
+    
+    /*
+    /**********************************************************
+    /* JsonDeserializer impl
+    /**********************************************************
+     */
+
+    @Override
+    public String getNullValue() {
+        return "";
+    }
+
+    @Override
+    public String getEmptyValue() {
+        return "";
+    }
+
+    /*
+    /**********************************************************
+    /* Contextualization
+    /**********************************************************
+     */
+    
+    @Override
+    public JsonDeserializer<?> createContextual(DeserializationContext ctxt,
+            BeanProperty property) throws JsonMappingException
+    {
+        // [JACKSON-620]: should be able to convert empty Strings -> null (if indicated)
+        if (property != null) {
+            Object value = property.getMember().getAnnotation(JsonDeserialize.class);
+            if (value != null) {
+                JsonDeserialize ann = (JsonDeserialize) value;
+                Class<?> deserClass = ann.using();
+                if (deserClass != JsonDeserializer.None.class) {
+                    return ctxt.deserializerInstance(property.getMember(), deserClass);
+                }
+                value = ann.contentUsing();
+                if (value != JsonDeserializer.None.class) {
+                    return StringDeserializer.forType((Class<? extends String>) value);
+                }
+                value = ann.keyUsing();
+                if (value != JsonDeserializer.None.class) {
+                    return StringDeserializer.forType((Class<? extends String>) value);
+                }
+            }
+        }
+        return this;
+    }
+}
+
+

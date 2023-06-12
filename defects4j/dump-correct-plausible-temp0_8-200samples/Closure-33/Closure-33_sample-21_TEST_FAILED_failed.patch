@@ -1,0 +1,41 @@
+diff --git a/src/com/google/javascript/rhino/jstype/PrototypeObjectType.java b/src/com/google/javascript/rhino/jstype/PrototypeObjectType.java
+index 77c5441e..b8913f5d 100644
+--- a/src/com/google/javascript/rhino/jstype/PrototypeObjectType.java
++++ b/src/com/google/javascript/rhino/jstype/PrototypeObjectType.java
+@@ -570,12 +569,32 @@ class PrototypeObjectType extends ObjectType {
+         if (!isPropertyTypeDeclared(prop)) {
+           JSType typeToInfer = propType;
+           if (!hasProperty(prop)) {
+-            typeToInfer = getNativeType(JSTypeNative.VOID_TYPE)
+-                .getLeastSupertype(propType);
++            typeToInfer =
++                getNativeType(JSTypeNative.VOID_TYPE).getLeastSupertype(propType);
+           }
+           defineInferredProperty(prop, typeToInfer, null);
+         }
+       }
++    } else {
++      // Handle the case where the constraint object is a named type.
++      //
++      // /** @constructor */
++      // function Foo() {}
++      // /** @type {number} */
++      // Foo.prototype.prop;
++      // var obj = new Foo;
++      // obj.prop = 'asdf';
++      // obj.prop - 5;
++      //
++      // We want to use type information on the constraint to improve
++      // the type of the object.
++      if (constraintObj.isNamedType()) {
++        for (String prop : constraintObj.getOwnPropertyNames()) {
++          JSType propType = constraintObj.getPropertyType(prop);
++          if (!isPropertyTypeDeclared(prop)) {
++            defineInferredProperty(prop, propType, null);
++          }
++        }
++      }
+     }
+-  }
+-}
++  }}

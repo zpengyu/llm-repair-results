@@ -1,0 +1,61 @@
+diff --git a/src/java/org/apache/commons/jxpath/ri/axes/AttributeContext.java b/src/java/org/apache/commons/jxpath/ri/axes/AttributeContext.java
+index 25d0931..20a74ce 100644
+--- a/src/java/org/apache/commons/jxpath/ri/axes/AttributeContext.java
++++ b/src/java/org/apache/commons/jxpath/ri/axes/AttributeContext.java
+@@ -30,12 +30,13 @@ import org.apache.commons.jxpath.ri.model.NodePointer;
+  * @version $Revision$ $Date$
+  */
+ public class AttributeContext extends EvalContext {
+-
++    private static final int ITERATOR_NOT_CREATED_YET = 1;
++    private static final int ITERATOR_CREATED_BUT_EMPTY = 2;
++    private static final int ITERATOR_CREATED_AND_NOT_EMPTY = 3;
+     private NodeTest nodeTest;
+-    private boolean setStarted = false;
++    private int iteratorState = ITERATOR_NOT_CREATED_YET;
+     private NodeIterator iterator;
+     private NodePointer currentNodePointer;
+-
+     /**
+      * @param parentContext represents the previous step on the path
+      * @param nodeTest is the name of the attribute we are looking for
+@@ -48,9 +48,8 @@ public class AttributeContext extends EvalContext {
+     public NodePointer getCurrentNodePointer() {
+         return currentNodePointer;
+     }
+-
+     public void reset() {
+-        setStarted = false;
++        iteratorState = ITERATOR_NOT_CREATED_YET;
+         iterator = null;
+         super.reset();
+     }
+@@ -67,19 +64,21 @@ public class AttributeContext extends EvalContext {
+         }
+         return true;
+     }
+-
+     public boolean nextNode() {
+         super.setPosition(getCurrentPosition() + 1);
+-        if (!setStarted) {
+-            setStarted = true;
++        if (iteratorState == ITERATOR_NOT_CREATED_YET) {
+             if (!(nodeTest instanceof NodeNameTest)) {
+                 return false;
+             }
+             QName name = ((NodeNameTest) nodeTest).getNodeName();
+-            iterator =
+-                parentContext.getCurrentNodePointer().attributeIterator(name);
+-        }
+-        if (iterator == null) {
++            iterator = parentContext.getCurrentNodePointer().attributeIterator(name);
++            if (iterator.getPosition() == 0) {
++                iteratorState = ITERATOR_CREATED_BUT_EMPTY;
++                return false;
++            } else {
++                iteratorState = ITERATOR_CREATED_AND_NOT_EMPTY;
++            }
++        } else if (iteratorState == ITERATOR_CREATED_BUT_EMPTY) {
+             return false;
+         }
+         if (!iterator.setPosition(iterator.getPosition() + 1)) {

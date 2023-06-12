@@ -1,0 +1,47 @@
+diff --git a/src/main/java/org/jsoup/helper/W3CDom.java b/src/main/java/org/jsoup/helper/W3CDom.java
+index fb864f5..3b416f9 100644
+--- a/src/main/java/org/jsoup/helper/W3CDom.java
++++ b/src/main/java/org/jsoup/helper/W3CDom.java
+@@ -68,7 +68,7 @@ public class W3CDom {
+     protected static class W3CBuilder implements NodeVisitor {
+         private static final String xmlnsKey = "xmlns";
+         private static final String xmlnsPrefix = "xmlns:";
+-
++        private static final String xmlPrefix = "xml";
+         private final Document doc;
+         private final HashMap<String, String> namespaces = new HashMap<>();
+         private Element dest;
+@@ -143,14 +136,29 @@ public class W3CDom {
+                 }
+                 namespaces.put(prefix, attr.getValue());
+             }
+-
+             // get the element prefix if any
+             int pos = el.tagName().indexOf(":");
+-            return pos > 0 ? el.tagName().substring(0, pos) : "";
++            if (pos < 0) {
++                // no prefix, so namespace is easy
++                return "";
++            } else {
++                // detect xml: namespace
++                // The following code is from: https://github.com/jhy/jsoup/commit/29f0e6b247c05b69ac9d21d50b9177314e24c48b
++                String prefix = el.tagName().substring(0, pos);
++                if (prefix.equals(xmlPrefix)) {
++                    if (namespaces.containsKey(xmlPrefix)) {
++                        // ok, assume xml prefix means xml namespace
++                        return xmlPrefix;
++                    } else {
++                        // assume this is an 'xml' attribute
++                        return "";
++                    }
++                } else {
++                    return prefix;
++                }
++            }
+         }
+-
+     }
+-
+     /**
+      * Serialize a W3C document to a String.
+      * @param doc Document

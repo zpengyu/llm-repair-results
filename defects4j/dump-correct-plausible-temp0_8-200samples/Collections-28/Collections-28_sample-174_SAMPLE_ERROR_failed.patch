@@ -1,0 +1,56 @@
+diff --git a/src/main/java/org/apache/commons/collections4/trie/AbstractPatriciaTrie.java b/src/main/java/org/apache/commons/collections4/trie/AbstractPatriciaTrie.java
+index 9eaf0837..26d62f39 100644
+--- a/src/main/java/org/apache/commons/collections4/trie/AbstractPatriciaTrie.java
++++ b/src/main/java/org/apache/commons/collections4/trie/AbstractPatriciaTrie.java
+@@ -2131,33 +2121,39 @@ abstract class AbstractPatriciaTrie<K, V> extends AbstractBitwiseTrie<K, V> {
+                     entry = it.next();
+                     size = 1;
+                 }
+-
+                 fromKey = entry == null ? null : entry.getKey();
+                 if (fromKey != null) {
+-                    final TrieEntry<K, V> prior = previousEntry((TrieEntry<K, V>)entry);
+-                    fromKey = prior == null ? null : prior.getKey();
++                    TrieEntry<K, V> prior = previousEntry((TrieEntry<K, V>)entry);
++                    while (prior != null) {
++                        final int bitIndex = getKeyAnalyzer().getBitIndex(prefix, offsetInBits, lengthInBits, prior.getKey());
++                        if (bitIndex != -1 && bitIndex < offsetInBits + lengthInBits) {
++                            fromKey = prior.getKey();
++                            break;
++                        }
++                        prior = previousEntry(prior);
++                    }
+                 }
+-
+                 toKey = fromKey;
+-
+                 while (it.hasNext()) {
+                     ++size;
+                     entry = it.next();
+                 }
+-
+                 toKey = entry == null ? null : entry.getKey();
+-
+                 if (toKey != null) {
+-                    entry = nextEntry((TrieEntry<K, V>)entry);
+-                    toKey = entry == null ? null : entry.getKey();
++                    TrieEntry<K, V> next = nextEntry((TrieEntry<K, V>)entry);
++                    while (next != null) {
++                        final int bitIndex = getKeyAnalyzer().getBitIndex(prefix, offsetInBits, lengthInBits, next.getKey());
++                        if (bitIndex != -1 && bitIndex < offsetInBits + lengthInBits) {
++                            toKey = next.getKey();
++                            break;
++                        }
++                        next = nextEntry(next);
++                    }
+                 }
+-
+                 expectedModCount = AbstractPatriciaTrie.this.modCount;
+             }
+-
+             return size;
+         }
+-
+         @Override
+         public K firstKey() {
+             fixup();

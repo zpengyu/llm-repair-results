@@ -1,0 +1,59 @@
+diff --git a/src/com/google/javascript/jscomp/TypeValidator.java b/src/com/google/javascript/jscomp/TypeValidator.java
+index c6d25483..e17a661d 100644
+--- a/src/com/google/javascript/jscomp/TypeValidator.java
++++ b/src/com/google/javascript/jscomp/TypeValidator.java
+@@ -722,9 +722,8 @@ class TypeValidator {
+    *     to an Object type, if possible.
+    */
+   String getReadableJSTypeName(Node n, boolean dereference) {
+-
+     // The best type name is the actual type name.
+-
++    String typeName = getJSType(n).toString();
+     // If we're analyzing a GETPROP, the property may be inherited by the
+     // prototype chain. So climb the prototype chain and find out where
+     // the property was originally defined.
+@@ -748,34 +746,23 @@ class TypeValidator {
+         if (objectType != null &&
+             (objectType.getConstructor() != null ||
+              objectType.isFunctionPrototypeType())) {
+-          return objectType.toString() + "." + propName;
++          typeName = objectType.toString() + "." + propName;
+         }
+       }
+     }
+-
+-    JSType type = getJSType(n);
+-    if (dereference) {
+-      ObjectType dereferenced = type.dereference();
+-      if (dereferenced != null) {
+-        type = dereferenced;
+-      }
++    if (typeName == null) {
++      return null;
+     }
+-    if (type.isFunctionPrototypeType() ||
+-        (type.toObjectType() != null &&
+-         type.toObjectType().getConstructor() != null)) {
+-      return type.toString();
+-    }
+-    String qualifiedName = n.getQualifiedName();
+-    if (qualifiedName != null) {
+-      return qualifiedName;
+-    } else if (type.isFunctionType()) {
++    if (typeName.startsWith("function(")) {
+       // Don't show complex function names.
+       return "function";
+-    } else {
+-      return type.toString();
+     }
++    // Don't show anonymous object types.
++    if (typeName.startsWith("{")) {
++      return null;
++    }
++    return typeName;
+   }
+-
+   /**
+    * This method gets the JSType from the Node argument and verifies that it is
+    * present.

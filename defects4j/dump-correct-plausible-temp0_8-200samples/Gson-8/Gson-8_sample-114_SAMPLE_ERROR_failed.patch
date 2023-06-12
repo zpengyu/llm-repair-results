@@ -1,0 +1,20 @@
+diff --git a/gson/src/main/java/com/google/gson/internal/UnsafeAllocator.java b/gson/src/main/java/com/google/gson/internal/UnsafeAllocator.java
+index a72d3d10..d5e3a8c9 100644
+--- a/gson/src/main/java/com/google/gson/internal/UnsafeAllocator.java
++++ b/gson/src/main/java/com/google/gson/internal/UnsafeAllocator.java
+@@ -97,7 +93,14 @@ public abstract class UnsafeAllocator {
+     return new UnsafeAllocator() {
+       @Override
+       public <T> T newInstance(Class<T> c) {
+-        throw new UnsupportedOperationException("Cannot allocate " + c);
++        if (c.isInterface() || Modifier.isAbstract(c.getModifiers())) {
++          throw new UnsupportedOperationException("Cannot allocate " + c);
++        }
++        try {
++          return c.newInstance();
++        } catch (Exception e) {
++          throw new UnsupportedOperationException("Cannot allocate " + c, e);
++        }
+       }
+     };
+   }

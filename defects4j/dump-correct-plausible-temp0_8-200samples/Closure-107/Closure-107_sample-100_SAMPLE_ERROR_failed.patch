@@ -1,0 +1,24 @@
+diff --git a/src/com/google/javascript/jscomp/CommandLineRunner.java b/src/com/google/javascript/jscomp/CommandLineRunner.java
+index eb937f1c..6df4b2ad 100644
+--- a/src/com/google/javascript/jscomp/CommandLineRunner.java
++++ b/src/com/google/javascript/jscomp/CommandLineRunner.java
+@@ -860,10 +850,17 @@ public class CommandLineRunner extends
+       // because the user didn't really ask for i18n.
+       options.messageBundle = new EmptyMessageBundle();
+     }
+-
++    else {
++      if (wLevel == WarningLevel.DEFAULT) {
++        // Note that by providing this message bundle, we guarantee that
++        // any use of goog.getMsg() will always be a compiler error in
++        // simple mode, even if the user hasn't provided their own message
++        // bundle.
++        options.messageBundle = new PseudoTranslationBundle();
++      }
++    }
+     return options;
+   }
+-
+   @Override
+   protected Compiler createCompiler() {
+     return new Compiler(getErrorPrintStream());

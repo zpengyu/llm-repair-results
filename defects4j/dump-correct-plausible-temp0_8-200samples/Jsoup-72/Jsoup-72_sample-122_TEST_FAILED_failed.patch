@@ -1,0 +1,26 @@
+diff --git a/src/main/java/org/jsoup/parser/CharacterReader.java b/src/main/java/org/jsoup/parser/CharacterReader.java
+index c5d91e0..88df480 100644
+--- a/src/main/java/org/jsoup/parser/CharacterReader.java
++++ b/src/main/java/org/jsoup/parser/CharacterReader.java
+@@ -420,7 +420,7 @@ public final class CharacterReader {
+      * That saves both having to create objects as hash keys, and running through the entry list, at the expense of
+      * some more duplicates.
+      */
+-    private static String cacheString(final char[] charBuf, final String[] stringCache, final int start, final int count) {
++ private static String cacheString(final char[] charBuf, final String[] stringCache, final int start, final int count) {
+         // limit (no cache):
+         if (count > maxStringCacheLen)
+             return new String(charBuf, start, count);
+@@ -430,8 +429,11 @@ public final class CharacterReader {
+         int offset = start;
+         for (int i = 0; i < count; i++) {
+             hash = 31 * hash + charBuf[offset++];
++            // Skip characters that would cause the hash to exceed the limits of an integer.
++            if (hash < 0) {
++                return new String(charBuf, start, count);
++            }
+         }
+-
+         // get from cache
+         final int index = hash & stringCache.length - 1;
+         String cached = stringCache[index];

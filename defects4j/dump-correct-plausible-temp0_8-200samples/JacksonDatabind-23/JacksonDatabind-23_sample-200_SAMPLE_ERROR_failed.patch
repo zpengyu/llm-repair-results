@@ -1,0 +1,49 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/ser/std/NumberSerializers.java b/src/main/java/com/fasterxml/jackson/databind/ser/std/NumberSerializers.java
+index 6d0db8734..3a2c5509e 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/ser/std/NumberSerializers.java
++++ b/src/main/java/com/fasterxml/jackson/databind/ser/std/NumberSerializers.java
+@@ -197,18 +169,16 @@ public class NumberSerializers
+     @JacksonStdImpl
+     public final static class FloatSerializer extends Base<Object>
+     {
+-
+         final static FloatSerializer instance = new FloatSerializer();
+-
+         public FloatSerializer() { super(Float.class, JsonParser.NumberType.FLOAT, "number"); }
+-
+-
+         @Override
+         public void serialize(Object value, JsonGenerator gen, SerializerProvider provider) throws IOException {
+-            gen.writeNumber(((Float) value).floatValue());
++            float f = ((Float) value).floatValue();
++            if (!serializeSpecialFloatingPointValues(f, gen, provider)) {
++                gen.writeNumber(f);
++            }
+         }
+     }
+-
+     /**
+      * This is the special serializer for regular {@link java.lang.Double}s
+      * (and primitive doubles)
+@@ -219,17 +189,15 @@ public class NumberSerializers
+     @JacksonStdImpl
+     public final static class DoubleSerializer extends Base<Object>
+     {
+-
+         final static DoubleSerializer instance = new DoubleSerializer();
+-
+         public DoubleSerializer() { super(Double.class, JsonParser.NumberType.DOUBLE, "number"); }
+-
+-
+         @Override
+         public void serialize(Object value, JsonGenerator gen, SerializerProvider provider) throws IOException {
+-            gen.writeNumber(((Double) value).doubleValue());
++            double valueToWrite = ((Double) value).doubleValue();
++            if (!serializeSpecialFloatingPointValues(valueToWrite, gen, provider)) {
++                gen.writeNumber(valueToWrite);
++            }
+         }
+-
+         // IMPORTANT: copied from `NonTypedScalarSerializerBase`
+         @Override
+         public void serializeWithType(Object value, JsonGenerator gen,

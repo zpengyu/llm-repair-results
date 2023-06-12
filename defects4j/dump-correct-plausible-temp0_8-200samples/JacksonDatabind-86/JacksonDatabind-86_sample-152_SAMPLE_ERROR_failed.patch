@@ -1,0 +1,147 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/type/ResolvedRecursiveType.java b/src/main/java/com/fasterxml/jackson/databind/type/ResolvedRecursiveType.java
+index 7b8c69af7..03fa7a321 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/type/ResolvedRecursiveType.java
++++ b/src/main/java/com/fasterxml/jackson/databind/type/ResolvedRecursiveType.java
+@@ -7,108 +7,68 @@ import com.fasterxml.jackson.databind.JavaType;
+  *
+  * @since 2.7
+  */
+-public class ResolvedRecursiveType extends TypeBase
+-{
+-    private static final long serialVersionUID = 1L;
+-
+-    protected JavaType _referencedType;
+-
+-    public ResolvedRecursiveType(Class<?> erasedType, TypeBindings bindings) {
+-        super(erasedType, bindings, null, null, 0, null, null, false);
+-    }
+-
+-    public void setReference(JavaType ref)
+-    {
+-        // sanity check; should not be called multiple times
+-        if (_referencedType != null) {
+-            throw new IllegalStateException("Trying to re-set self reference; old value = "+_referencedType+", new = "+ref);
+-        }
+-        _referencedType = ref;
+-    }
+-
+-
+-    public JavaType getSelfReferencedType() { return _referencedType; }
+-
+-    @Override
+-    public StringBuilder getGenericSignature(StringBuilder sb) {
+-        return _referencedType.getGenericSignature(sb);
+-    }
+-
+-    @Override
+-    public StringBuilder getErasedSignature(StringBuilder sb) {
+-        return _referencedType.getErasedSignature(sb);
+-    }
+-
+     @Override
+     public JavaType withContentType(JavaType contentType) {
+-        return this;
++        if (_referencedType == null) {
++            throw new IllegalStateException("Cannot call withContainedType() on unresolved type");
++        }
++        return _referencedType.withContentType(contentType);
+     }
+-    
+     @Override
+     public JavaType withTypeHandler(Object h) {
+-        return this;
++        if (_referencedType == null) {
++            throw new IllegalStateException("Cannot call withTypeHandler() on unresolved type");
++        }
++        return _referencedType.withTypeHandler(h);
+     }
+-
+     @Override
+     public JavaType withContentTypeHandler(Object h) {
+-        return this;
++        if (_referencedType == null) {
++            throw new IllegalStateException("Cannot call withContentTypeHandler() on unresolved type");
++        }
++        return _referencedType.withContentTypeHandler(h);
+     }
+-
+     @Override
+     public JavaType withValueHandler(Object h) {
+-        return this;
++        if (_referencedType == null) {
++            throw new IllegalStateException("Cannot call withValueHandler() on unresolved type");
++        }
++        return _referencedType.withValueHandler(h);
+     }
+-
+     @Override
+     public JavaType withContentValueHandler(Object h) {
+-        return this;
++        if (_referencedType == null) {
++            throw new IllegalStateException("Cannot call withContainedValueHandler() on unresolved type");
++        }
++        return _referencedType.withContentValueHandler(h);
+     }
+-
+     @Override
+     public JavaType withStaticTyping() {
+-        return this;
++        if (_referencedType == null) {
++            throw new IllegalStateException("Cannot call withStaticTyping() on unresolved type");
++        }
++        return _referencedType.withStaticTyping();
+     }
+-
+     @Deprecated // since 2.7
+     @Override
+     protected JavaType _narrow(Class<?> subclass) {
+-        return this;
++        if (_referencedType == null) {
++            throw new IllegalStateException("Cannot call _narrow() on unresolved type");
++        }
++        return _referencedType.narrowBy(subclass);
+     }
+-
+     @Override
+     public JavaType refine(Class<?> rawType, TypeBindings bindings,
+             JavaType superClass, JavaType[] superInterfaces) {
+-        return null;
+-    }
+-
+-    @Override
+-    public boolean isContainerType() {
+-        return false;
+-    }
+-
+-    @Override
+-    public String toString() {
+-        StringBuilder sb = new StringBuilder(40)
+-                .append("[recursive type; ");
+         if (_referencedType == null) {
+-            sb.append("UNRESOLVED");
+-        } else {
+-            // [databind#1301]: Typically resolves to a loop so short-cut
+-            //   and only include type-erased class
+-            sb.append(_referencedType.getRawClass().getName());
++            throw new IllegalStateException("Cannot call refine() on unresolved type");
+         }
+-        return sb.toString();
++        return _referencedType.refine(rawType, bindings, superClass, superInterfaces);
+     }
+-
+     @Override
+-    public boolean equals(Object o) {
+-        if (o == this) return true;
+-        if (o == null) return false;
+-        // Do NOT ever match unresolved references
++    public boolean isContainerType() {
+         if (_referencedType == null) {
+-            return false;
++            throw new IllegalStateException("Cannot call isContainerType() on unresolved type");
+         }
+-        return (o.getClass() == getClass()
+-                && _referencedType.equals(((ResolvedRecursiveType) o).getSelfReferencedType()));
++        return _referencedType.isContainerType();
+     }
+\ No newline at end of file
+-}

@@ -1,0 +1,33 @@
+diff --git a/src/main/java/org/apache/commons/compress/archivers/tar/TarUtils.java b/src/main/java/org/apache/commons/compress/archivers/tar/TarUtils.java
+index 121012d0..ceb5ab0e 100644
+--- a/src/main/java/org/apache/commons/compress/archivers/tar/TarUtils.java
++++ b/src/main/java/org/apache/commons/compress/archivers/tar/TarUtils.java
+@@ -101,16 +96,26 @@ public class TarUtils {
+             final byte currentByte = buffer[start];
+             // CheckStyle:MagicNumber OFF
+             if (currentByte < '0' || currentByte > '7'){
++                if (currentByte == ' ') {
++                    break; // spaces can be trailing
++                }
+                 throw new IllegalArgumentException(
+                         exceptionMessage(buffer, offset, length, start, currentByte));
+             }
+             result = (result << 3) + (currentByte - '0'); // convert from ASCII
+             // CheckStyle:MagicNumber ON
+         }
+-
+         return result;
+     }
+-
++    private static String exceptionMessage(final byte[] buffer, final int offset, final int length, final int badByteOffset, final byte badByte) {
++        String msg = "Malformed octal value at offset "+badByteOffset+": 0x"+Integer.toHexString(badByte);
++        if (badByteOffset >= offset + length){
++            msg += " (no data available)";
++        } else {
++            msg += " ("+new String(buffer, offset, length, Charset.forName("UTF-8"))+")";
++        }
++        return msg;
++    }
+     /** 
+      * Compute the value contained in a byte buffer.  If the most
+      * significant bit of the first byte in the buffer is set, this

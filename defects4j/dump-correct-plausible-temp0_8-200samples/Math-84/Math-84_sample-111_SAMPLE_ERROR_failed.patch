@@ -1,0 +1,86 @@
+diff --git a/src/main/java/org/apache/commons/math/optimization/direct/MultiDirectional.java b/src/main/java/org/apache/commons/math/optimization/direct/MultiDirectional.java
+index 2fa8c34bf..736ac30f7 100644
+--- a/src/main/java/org/apache/commons/math/optimization/direct/MultiDirectional.java
++++ b/src/main/java/org/apache/commons/math/optimization/direct/MultiDirectional.java
+@@ -58,46 +58,44 @@ public class MultiDirectional extends DirectSearchOptimizer {
+ 
+     /** {@inheritDoc} */
+     @Override
+-    protected void iterateSimplex(final Comparator<RealPointValuePair> comparator)
+-        throws FunctionEvaluationException, OptimizationException, IllegalArgumentException {
+-
+-        while (true) {
+-
+-            incrementIterationsCounter();
+-
+-            // save the original vertex
+-            final RealPointValuePair[] original = simplex;
+-            final RealPointValuePair best = original[0];
+-
+-            // perform a reflection step
+-            final RealPointValuePair reflected = evaluateNewSimplex(original, 1.0, comparator);
+-            if (comparator.compare(reflected, best) < 0) {
+-
+-                // compute the expanded simplex
+-                final RealPointValuePair[] reflectedSimplex = simplex;
+-                final RealPointValuePair expanded = evaluateNewSimplex(original, khi, comparator);
+-                if (comparator.compare(reflected, expanded) <= 0) {
+-                    // accept the reflected simplex
+-                    simplex = reflectedSimplex;
+-                }
+-
+-                return;
+-
+-            }
+-
+-            // compute the contracted simplex
+-            final RealPointValuePair contracted = evaluateNewSimplex(original, gamma, comparator);
+-            if (comparator.compare(contracted, best) < 0) {
+-                // accept the contracted simplex
+-
+-            // check convergence
+-                return;
++protected void iterateSimplex(final Comparator<RealPointValuePair> comparator)
++    throws FunctionEvaluationException, OptimizationException, IllegalArgumentException {
++    while (true) {
++        incrementIterationsCounter();
++        // save the original vertex
++        final RealPointValuePair[] original = simplex;
++        final RealPointValuePair best = original[0];
++        // perform a reflection step
++        final RealPointValuePair reflected = evaluateNewSimplex(original, 1.0, comparator);
++        if (comparator.compare(reflected, best) < 0) {
++            // compute the expanded simplex
++            final RealPointValuePair[] reflectedSimplex = simplex;
++            final RealPointValuePair expanded = evaluateNewSimplex(original, khi, comparator);
++            if (comparator.compare(reflected, expanded) <= 0) {
++                // accept the reflected simplex
++                simplex = reflectedSimplex;
++            } else {
++                // accept the expanded simplex
++                simplex = expandedSimplex;
+             }
+-
++            return;
+         }
+-
++        // perform a one-dimensional contraction step
++        final RealPointValuePair[] contractedSimplex = new RealPointValuePair[n + 1];
++        contractedSimplex[0] = original[0];
++        for (int i = 1; i < simplex.length; ++i) {
++            contractedSimplex[i] = new RealPointValuePair(original[i].getPointRef() * delta,
++                                                          Double.NaN);
++        }
++        final RealPointValuePair contracted = evaluateNewSimplex(contractedSimplex, 1.0, comparator);
++        if (comparator.compare(contracted, best) < 0) {
++            // accept the contracted simplex
++            simplex = contractedSimplex;
++        }
++        // check convergence
++        return;
+     }
+-
++}
+     /** Compute and evaluate a new simplex.
+      * @param original original simplex (to be preserved)
+      * @param coeff linear coefficient

@@ -1,0 +1,24 @@
+diff --git a/src/com/google/javascript/jscomp/TypeInference.java b/src/com/google/javascript/jscomp/TypeInference.java
+index 53e8cb48..10f6a691 100644
+--- a/src/com/google/javascript/jscomp/TypeInference.java
++++ b/src/com/google/javascript/jscomp/TypeInference.java
+@@ -556,14 +553,14 @@ class TypeInference
+         //boolean isVarTypeBetter = isVarDeclaration &&
+         //    (varType.restrictByNotNullOrUndefined().isSubtype(resultType)
+         //     || !resultType.isSubtype(varType));
+-
+-
+         if (isVarTypeBetter) {
+           redeclareSimpleVar(scope, left, resultType);
++        } else if (isVarDeclaration) {
++          scope.inferQualifiedSlot(left, varName,
++              leftType == null ? unknownType : leftType,
++              resultType);
+         }
+-        left.setJSType(isVarDeclaration || leftType == null ?
+-            resultType : null);
+-
++        left.setJSType(resultType);
+         if (var != null && var.isTypeInferred()) {
+           JSType oldType = var.getType();
+           var.setType(oldType == null ?

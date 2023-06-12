@@ -1,0 +1,80 @@
+diff --git a/src/com/google/javascript/jscomp/CodeConsumer.java b/src/com/google/javascript/jscomp/CodeConsumer.java
+index dbdb0a9b..14fcd4cd 100644
+--- a/src/com/google/javascript/jscomp/CodeConsumer.java
++++ b/src/com/google/javascript/jscomp/CodeConsumer.java
+@@ -36,15 +35,19 @@ abstract class CodeConsumer {
+    * node at the current position.
+    */
+   void startSourceMapping(Node node) {
++    if (node != null) {
++      sourceMap.startMapping(node, this);
++    }
+   }
+-
+   /**
+    * Finishes the source mapping for the given
+    * node at the current position.
+    */
+   void endSourceMapping(Node node) {
++    if (node != null) {
++      sourceMap.endMapping(this);
++    }
+   }
+-
+   /**
+    * Provides a means of interrupting the CodeGenerator. Derived classes should
+    * return false to stop further processing.
+@@ -80,23 +78,47 @@ abstract class CodeConsumer {
+   void appendBlockEnd() {
+     append("}");
+   }
+-
+   void startNewLine() {
++    lineLength = 0;
++    lastChar = '\n';  // Treat start of line as if it had a newline.
++    linesSinceCut++;
+   }
+-
+   void maybeLineBreak() {
+     maybeCutLine();
+   }
+-
+   void maybeCutLine() {
++    if (lineLength >= lineLengthLimit) {
++      if (lineLength == lineLengthLimit) {
++        // If we were exactly at the line length limit, we need to
++        // back up one character so we have a place to put the '\n'.
++        // When we later append the character again, it will go after
++        // the '\n'.
++        lineLength--;
++      }
++      append("\n");
++      startNewLine();
++    }
+   }
+-
+   void endLine() {
++    if (lastChar != '\n') {
++      maybeCutLine();
++      append("\n");
++      startNewLine();
++    }
+   }
+-
+   void notePreferredLineBreak() {
++    if (preferLineBreakAtEndOfFile) {
++      return;
++    }
++    preferLineBreakAtEndOfFile = true;
++    if (lastChar == '\n') {
++      preferLineBreakAtEndOfFile = false;
++    } else {
++      // lineLength is used only to decide whether to insert a line break.
++      // Do not count it towards the line length.
++      lineLength = 0;
++    }
+   }
+-
+   void beginBlock() {
+     if (statementNeedsEnded) {
+       append(";");

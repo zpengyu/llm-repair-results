@@ -1,0 +1,33 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/introspect/AnnotatedClass.java b/src/main/java/com/fasterxml/jackson/databind/introspect/AnnotatedClass.java
+index 929076729..f1237b4f3 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/introspect/AnnotatedClass.java
++++ b/src/main/java/com/fasterxml/jackson/databind/introspect/AnnotatedClass.java
+@@ -643,19 +643,19 @@ public final class AnnotatedClass
+                     continue;
+                 }
+                 AnnotatedMethod am = methods.find(m);
+-                /* Do we already have a method to augment (from sub-class
+-                 * that will mask this mixIn)? If so, add if visible
+-                 * without masking (no such annotation)
+-                 */
+                 if (am != null) {
+                     _addMixUnders(m, am);
+-                    /* Otherwise will have precedence, but must wait
+-                     * until we find the real method (mixIn methods are
+-                     * just placeholder, can't be called)
+-                     */
+                 } else {
++                    AnnotatedMethod newMethod = _constructMethod(m);
++                    mixIns.add(newMethod);
+                     // Well, or, as per [Issue#515], multi-level merge within mixins...
+-                        mixIns.add(_constructMethod(m));
++                    if (newMethod.getDeclaringClass().isInterface() && !m.getDeclaringClass().isInterface()) {
++                        // Need to copy it again, from actual implementation class, to get it right
++                        am = methods.find(m);
++                        if (am != null) {
++                            _addMixUnders(m, am);
++                        }
++                    }
+                 }
+             }
+         }

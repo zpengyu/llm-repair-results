@@ -1,0 +1,101 @@
+    public static String formatPeriod(long startMillis, long endMillis, String format, boolean padWithZeros, 
+            TimeZone timezone) {
+        long millis = endMillis - startMillis;
+        if (millis < 28 * DateUtils.MILLIS_PER_DAY) {
+            return formatDuration(millis, format, padWithZeros);
+        }
+        Token[] tokens = lexx(format);
+        // timezones get funky around 0, so normalizing everything to GMT 
+        // stops the hours being off
+        Calendar start = Calendar.getInstance(timezone);
+        start.setTime(new Date(startMillis));
+        Calendar end = Calendar.getInstance(timezone);
+        end.setTime(new Date(endMillis));
+        // initial estimates
+        int milliseconds = end.get(Calendar.MILLISECOND) - start.get(Calendar.MILLISECOND);
+        int seconds = end.get(Calendar.SECOND) - start.get(Calendar.SECOND);
+        int minutes = end.get(Calendar.MINUTE) - start.get(Calendar.MINUTE);
+        int hours = end.get(Calendar.HOUR_OF_DAY) - start.get(Calendar.HOUR_OF_DAY);
+        int days = end.get(Calendar.DAY_OF_MONTH) - start.get(Calendar.DAY_OF_MONTH);
+        int months = end.get(Calendar.MONTH) - start.get(Calendar.MONTH);
+        int years = end.get(Calendar.YEAR) - start.get(Calendar.YEAR);
+        // each initial estimate is adjusted in case it is under 0
+        while (milliseconds < 0) {
+            milliseconds += 1000;
+            seconds -= 1;
+        }
+        while (seconds < 0) {
+            seconds += 60;
+            minutes -= 1;
+        }
+        while (minutes < 0) {
+            minutes += 60;
+            hours -= 1;
+        }
+        while (hours < 0) {
+            hours += 24;
+            days -= 1;
+        }
+        while (days < 0) {
+            days += 31;
+            months -= 1;
+        }
+        while (months < 0) {
+            months += 12;
+            years -= 1;
+        }
+        milliseconds -= reduceAndCorrect(start, end, Calendar.MILLISECOND, milliseconds);
+        seconds -= reduceAndCorrect(start, end, Calendar.SECOND, seconds);
+        minutes -= reduceAndCorrect(start, end, Calendar.MINUTE, minutes);
+        hours -= reduceAndCorrect(start, end, Calendar.HOUR_OF_DAY, hours);
+        days -= reduceAndCorrect(start, end, Calendar.DAY_OF_MONTH, days);
+        months -= reduceAndCorrect(start, end, Calendar.MONTH, months);
+        years -= reduceAndCorrect(start, end, Calendar.YEAR, years);
+        // This next block of code adds in values that 
+        // aren't requested. This allows the user to ask for the 
+        // number of months and get the real count and not just 0->11.
+        if (!Token.containsTokenWithValue(tokens, y)) {
+            if (Token.containsTokenWithValue(tokens, M)) {
+                months += 12 * years;
+                years = 0;
+            } else {
+                // TODO: this is a bit weak, needs work to know about leap years
+                days += 365 * years;
+                years = 0;
+            }
+        }
+        if (!Token.containsTokenWithValue(tokens, M)) {
+            //days += end.get(Calendar.DAY_OF_YEAR) - start.get(Calendar.DAY_OF_YEAR);
+            months += (end.get(Calendar.YEAR) - start.get(Calendar.YEAR))*12;
+            months += end.get(Calendar.MONTH) - start.get(Calendar.MONTH);
+            months += ((end.get(Calendar.DAY_OF_MONTH) - start.get(Calendar.DAY_OF_MONTH)) > 0 ? 1 : 0);
+            days = 0;
+        }
+        if (!Token.containsTokenWithValue(tokens, d)) {
+            hours += 24 * days;
+            days = 0;
+        }
+        if (!Token.containsTokenWithValue(tokens, H)) {
+            minutes += 60 * hours;
+            hours = 0;
+        }
+        if (!Token.containsTokenWithValue(tokens, m)) {
+            seconds += 60 * minutes;
+            minutes = 0;
+        }
+        if (!Token.containsTokenWithValue(tokens, s)) {
+            milliseconds += 1000 * seconds;
+            seconds = 0;
+        }
+        return format(tokens, years, months, days, hours, minutes, seconds, milliseconds, padWithZeros);
+    }
+Spyse is an experimental tool. Although it has been tested in a number of bug fixing cases, it is still at a preliminary stage of development. There are a number of limitations that need to be overcome in order to make Spyse a more mature and reliable tool. We list here some of the limitations of Spyse:
+- As pointed out by our study, buggy functions are fixed in different ways and it is a challenge for the tool to be able to suggest the exact patch for a specific bug.
+- Spyse does not yet support bugs that have been fixed by applying a set of commits.
+- Spyse does not yet support a bug caused by an erroneous comment.
+- Spyse does not yet support bugs that have been caused by multiple reasons.
+- Spyse does not yet support bugs that have been fixed by applying a set of commits.
+- Spyse does not yet support bugs that have been fixed by refactoring the code.
+- Spyse does not yet support bugs fixed by adding a new dependency to the project.
+- Spyse works with the most recent commit that fixes a bug. If multiple patches have been applied to fix a bug, Spyse is able to suggest patches for only the most recent commit that fixes the bug.
+- Spyse does not support cases where a bug has been fixed by adding a new method or class to the code.

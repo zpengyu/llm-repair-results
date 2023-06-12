@@ -1,0 +1,104 @@
+     * @param name The name node.
+     * @param value The value assigned to the name.
+     * @param refs The reference list for that name.
+     * @return True if the references can be replaced.
+     */
+    private boolean isInlinableReference(
+        Node name, Node value, List<Reference> refs) {
+      boolean ret = false;
+
+      // We're looking for object literal assignments only.
+      if (!value.isObjectLit()) {
+        return false;
+      }
+
+      // Make sure that the value is not self-referential. IOW,
+      // disallow things like x = {b: x.a}.
+      //
+      // TODO: Only exclude unorderable self-referential
+      // assignments. i.e. x = {a: x.b, b: x.a} is not orderable,
+      // but x = {a: 1, b: x.a} is.
+      //
+      // Also, ES5 getters/setters aren't handled by this pass.
+      for (Node child = value.getFirstChild(); child != null;
+           child = child.getNext()) {
+        if (child.isGetterDef() ||
+            child.isSetterDef()) {
+          // ES5 get/set not supported.
+          return false;
+        }
+
+        Node childVal = child.getFirstChild();
+        // Check if childVal is the parent of any of the passed in
+        // references, as that is how self-referential assignments
+        // will happen.
+        for (Reference t : refs) {
+          Node refNode = t.getParent();
+          while (!NodeUtil.isStatementBlock(refNode)) {
+            if (refNode == childVal) {
+              // There's a self-referential assignment
+              return false;
+            }
+            refNode = refNode.getParent();
+          }
+        }
+      }
+
+      // We have found an acceptable object literal assignment. As
+      // long as there are no other assignments that mess things up,
+      // we can inline.
+      ret = true;
+
+      // The object literal is considered acceptable and the references
+      // can be replaced. Now check if all of them are acceptable.
+      for (Reference ref : refs) {
+        Node parent = ref.getParent();
+        Node gramps = ref.getGrandparent();
+
+        // Ignore most indirect references, like x.y (but not x.y(),
+        // since the function referenced by y might reference 'this').
+        //
+        if (parent.isGetProp()) {
+          Preconditions.checkState(parent.getFirstChild() == name);
+          // A call target may be using the object as a 'this' value.
+          if (gramps.isCall()
+              && gramps.getFirstChild() == parent) {
+            return false;
+          }
+
+          // Deleting a property has different semantics from deleting
+          // a variable, so deleted properties should not be inlined.
+
+          // NOTE(nicksantos): This pass's object-splitting algorithm has
+          // a blind spot. It assumes that if a property isn't defined on an
+          // object, then the value is undefined. This is not true, because
+          // Object.prototype can have arbitrary properties on it.
+          //
+          // We short-circuit this problem by bailing out if we see a reference
+          // to a property that isn't defined on the object literal. This
+          // isn't a perfect algorithm, but it should catch most cases.
+          String propName = parent.getLastChild().getString();
+          if (!value.hasProp(propName)) {
+            return false;
+          }
+
+          continue;
+        }
+
+        // Only rewrite VAR declarations or simple assignment statements
+        if (!isVarOrAssignExprLhs(name)) {
+           return false;
+        }
+
+        // If the value is a complex expression, it might actually
+        // *change* the reference.  This can happen in things like
+        // constructors.
+        //
+        // TODO: There's probably a better way to do this.
+        if (!NodeUtil.isLiteralValue(value, true)) {
+          return false;
+        }
+      }
+
+      return ret;
+    }

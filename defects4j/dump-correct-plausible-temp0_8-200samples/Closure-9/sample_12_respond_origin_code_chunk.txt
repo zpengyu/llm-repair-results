@@ -1,0 +1,34 @@
+/**
+ * Traverses a node tree and appends a suffix to all global variable names.
+ */
+private class SuffixVarsCallback extends AbstractPostOrderCallback {
+
+  private static final String EXPORTS = "exports";
+
+  private final String suffix;
+
+  SuffixVarsCallback(String suffix) {
+    this.suffix = suffix;
+  }
+
+  @Override
+  public void visit(NodeTraversal t, Node n, Node parent) {
+    if (n.isName()) {
+      String name = n.getString();
+      if (suffix.equals(name)) {
+        return;
+      }
+      if (EXPORTS.equals(name)) {
+        n.setString(suffix);
+        n.putProp(Node.ORIGINALNAME_PROP, EXPORTS);
+      } else {
+        Scope.Var var = t.getScope().getVar(name);
+        if (var != null && var.isGlobal()) {
+          n.setString(name + "$$" + suffix);
+          n.putProp(Node.ORIGINALNAME_PROP, name);
+        }
+      }
+    }
+  }
+}
+

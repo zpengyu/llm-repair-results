@@ -1,0 +1,33 @@
+diff --git a/src/main/java/org/jsoup/helper/W3CDom.java b/src/main/java/org/jsoup/helper/W3CDom.java
+index fb864f5..318cf85 100644
+--- a/src/main/java/org/jsoup/helper/W3CDom.java
++++ b/src/main/java/org/jsoup/helper/W3CDom.java
+@@ -68,11 +68,9 @@ public class W3CDom {
+     protected static class W3CBuilder implements NodeVisitor {
+         private static final String xmlnsKey = "xmlns";
+         private static final String xmlnsPrefix = "xmlns:";
+-
+         private final Document doc;
+-        private final HashMap<String, String> namespaces = new HashMap<>();
++        private final Map<String, String> namespaces = new HashMap<>();
+         private Element dest;
+-
+         public W3CBuilder(Document doc) {
+             this.doc = doc;
+         }
+@@ -80,10 +77,13 @@ public class W3CDom {
+         public void head(org.jsoup.nodes.Node source, int depth) {
+             if (source instanceof org.jsoup.nodes.Element) {
+                 org.jsoup.nodes.Element sourceEl = (org.jsoup.nodes.Element) source;
+-
+                 String prefix = updateNamespaces(sourceEl);
+                 String namespace = namespaces.get(prefix);
+-
++                // Some non-namespace aware XML parsers cannot parse a document
++                // that has a default namespace defined. So we make sure one
++                // is always defined.
++                if (namespace == null)
++                    namespace = "";
+                 Element el = doc.createElementNS(namespace, sourceEl.tagName());
+                 copyAttributes(sourceEl, el);
+                 if (dest == null) { // sets up the root

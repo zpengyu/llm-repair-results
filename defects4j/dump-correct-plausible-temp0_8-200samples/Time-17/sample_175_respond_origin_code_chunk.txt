@@ -1,0 +1,22 @@
+public long adjustOffset(long instant, boolean earlierOrLater) {
+    long instantBefore = convertUTCToLocal(instant - 3 * DateTimeConstants.MILLIS_PER_HOUR);
+    long instantAfter = convertUTCToLocal(instant + 3 * DateTimeConstants.MILLIS_PER_HOUR);
+    if (instantBefore == instantAfter) {
+        return instant;  // not an overlap (less than is a gap, equal is normal case)
+    }
+    long local = convertUTCToLocal(instant);
+    long[] range = new long[] {instantBefore, instantAfter};
+    if (earlierOrLater) {
+        Arrays.sort(range);
+    }
+    if (local < range[0]) {
+        return instantAfter;
+    }
+    if (local >= range[1]) {
+        return instantBefore;
+    }
+    if (earlierOrLater) {
+        return instantBefore;
+    }
+    return instantAfter;
+}

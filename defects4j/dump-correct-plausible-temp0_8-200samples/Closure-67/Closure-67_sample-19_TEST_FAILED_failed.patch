@@ -1,0 +1,32 @@
+diff --git a/src/com/google/javascript/jscomp/AnalyzePrototypeProperties.java b/src/com/google/javascript/jscomp/AnalyzePrototypeProperties.java
+index 17ab404c..0609a207 100644
+--- a/src/com/google/javascript/jscomp/AnalyzePrototypeProperties.java
++++ b/src/com/google/javascript/jscomp/AnalyzePrototypeProperties.java
+@@ -311,7 +311,7 @@ class AnalyzePrototypeProperties implements CompilerPass {
+            n.getParent().getType() == Token.NAME);
+     }
+ 
+-    private boolean isPrototypePropertyAssign(Node assign) {
++     private boolean isPrototypePropertyAssign(Node assign) {
+       Node n = assign.getFirstChild();
+       if (n != null && NodeUtil.isVarOrSimpleAssignLhs(n, assign)
+           && n.getType() == Token.GETPROP
+@@ -319,12 +319,13 @@ class AnalyzePrototypeProperties implements CompilerPass {
+         // We want to exclude the assignment itself from the usage list
+         boolean isChainedProperty =
+             n.getFirstChild().getType() == Token.GETPROP;
+-
+         if (isChainedProperty) {
+-          Node child = n.getFirstChild().getFirstChild().getNext();
+-
+-          if (child.getType() == Token.STRING &&
+-              child.getString().equals("prototype")) {
++          Node child = n.getFirstChild();
++          Node child2 = null;
++          if(child.hasChildren())
++            child2 = child.getFirstChild().getNext();
++          if (child2 != null && child2.getType() == Token.STRING &&
++              child2.getString().equals("prototype")) {
+             return true;
+           }
+         }

@@ -1,0 +1,47 @@
+diff --git a/src/main/java/org/jsoup/nodes/FormElement.java b/src/main/java/org/jsoup/nodes/FormElement.java
+index 3949f22..ba612c1 100644
+--- a/src/main/java/org/jsoup/nodes/FormElement.java
++++ b/src/main/java/org/jsoup/nodes/FormElement.java
+@@ -75,13 +75,14 @@ public class FormElement extends Element {
+      * list will not be reflected in the DOM.
+      * @return a list of key vals
+      */
+-    public List<Connection.KeyVal> formData() {
++public List<Connection.KeyVal> formData() {
+         ArrayList<Connection.KeyVal> data = new ArrayList<>();
+-
+         // iterate the form control elements and accumulate their values
+-        for (Element el: elements) {
++        for (Element el : elements) {
+             if (!el.tag().isFormSubmittable()) continue; // contents are form listable, superset of submitable
+             if (el.hasAttr("disabled")) continue; // skip disabled form inputs
++            String val = el.val();
++            if (val == null) continue; // skip form elements that have a null value (eg unselected checkboxes)
+             String name = el.attr("name");
+             if (name.length() == 0) continue;
+             String type = el.attr("type");
+@@ -90,7 +89,7 @@ public class FormElement extends Element {
+             if ("select".equals(el.normalName())) {
+                 Elements options = el.select("option[selected]");
+                 boolean set = false;
+-                for (Element option: options) {
++                for (Element option : options) {
+                     data.add(HttpConnection.KeyVal.create(name, option.val()));
+                     set = true;
+                 }
+@@ -102,13 +101,11 @@ public class FormElement extends Element {
+             } else if ("checkbox".equalsIgnoreCase(type) || "radio".equalsIgnoreCase(type)) {
+                 // only add checkbox or radio if they have the checked attribute
+                 if (el.hasAttr("checked")) {
+-                    final String val = el.val().length() >  0 ? el.val() : "on";
+                     data.add(HttpConnection.KeyVal.create(name, val));
+                 }
+             } else {
+-                data.add(HttpConnection.KeyVal.create(name, el.val()));
++                data.add(HttpConnection.KeyVal.create(name, val));
+             }
+         }
+         return data;
+-    }
+-}
++    }}

@@ -1,0 +1,66 @@
+public class AttributeContext extends EvalContext {
+    private static final int ITERATOR_NOT_CREATED_YET = 1;
+    private static final int ITERATOR_CREATED_BUT_EMPTY = 2;
+    private static final int ITERATOR_CREATED_AND_NOT_EMPTY = 3;
+
+    private NodeTest nodeTest;
+    private int iteratorState = ITERATOR_NOT_CREATED_YET;
+    private NodeIterator iterator;
+    private NodePointer currentNodePointer;
+
+    /**
+     * @param parentContext represents the previous step on the path
+     * @param nodeTest is the name of the attribute we are looking for
+     */
+    public AttributeContext(EvalContext parentContext, NodeTest nodeTest) {
+        super(parentContext);
+        this.nodeTest = nodeTest;
+    }
+
+    public NodePointer getCurrentNodePointer() {
+        return currentNodePointer;
+    }
+
+    public void reset() {
+        iteratorState = ITERATOR_NOT_CREATED_YET;
+        iterator = null;
+        super.reset();
+    }
+
+    public boolean setPosition(int position) {
+        if (position < getCurrentPosition()) {
+            reset();
+        }
+        while (getCurrentPosition() < position) {
+            if (!nextNode()) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    public boolean nextNode() {
+        super.setPosition(getCurrentPosition() + 1);
+        if (iteratorState == ITERATOR_NOT_CREATED_YET) {
+            if (!(nodeTest instanceof NodeNameTest)) {
+                return false;
+            }
+            QName name = ((NodeNameTest) nodeTest).getNodeName();
+            iterator = parentContext.getCurrentNodePointer().attributeIterator(name);
+            if (iterator.getPosition() == 0) {
+                iteratorState = ITERATOR_CREATED_BUT_EMPTY;
+                return false;
+            } else {
+                iteratorState = ITERATOR_CREATED_AND_NOT_EMPTY;
+            }
+        } else if (iteratorState == ITERATOR_CREATED_BUT_EMPTY) {
+            return false;
+        }
+        if (!iterator.setPosition(iterator.getPosition() + 1)) {
+            return false;
+        }
+        currentNodePointer = iterator.getNodePointer();
+        return true;
+    }
+}
+

@@ -1,0 +1,30 @@
+    private Attribute parseAttribute() {
+        tq.consumeWhitespace();
+        String key = tq.consumeAttributeKey();
+        String value = "";
+        tq.consumeWhitespace();
+        if (tq.matchChomp("=")) {
+            tq.consumeWhitespace();
+
+            char quote = tq.peek();
+            StringBuilder valueAccum = new StringBuilder();
+            if (quote == '"' || quote == '\'') {
+                tq.advance();
+                value = tq.chompTo((char)quote);
+            } else {
+                while (!tq.matchesAny("<", "/>", ">") && !tq.matchesWhitespace() && !tq.isEmpty()) {
+                    valueAccum.append(tq.consume());
+                }
+                value = valueAccum.toString();
+            }
+            tq.consumeWhitespace();
+        }
+        if (key.length() != 0)
+            return Attribute.createFromEncoded(key, value);
+        else {
+            tq.consume();
+                
+            return null;
+        }
+    }
+

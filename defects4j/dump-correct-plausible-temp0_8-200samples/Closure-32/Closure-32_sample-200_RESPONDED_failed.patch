@@ -1,0 +1,35 @@
+diff --git a/src/com/google/javascript/jscomp/parsing/JsDocInfoParser.java b/src/com/google/javascript/jscomp/parsing/JsDocInfoParser.java
+index ad292c02..f9fc9ca5 100644
+--- a/src/com/google/javascript/jscomp/parsing/JsDocInfoParser.java
++++ b/src/com/google/javascript/jscomp/parsing/JsDocInfoParser.java
+@@ -1326,9 +1326,10 @@ public final class JsDocInfoParser {
+    * @return The extraction information.
+    */
+   @SuppressWarnings("fallthrough")
++private static final Pattern WHITESPACE = Pattern.compile("\\s*");
++private static final Pattern NEWLINE = Pattern.compile("\\n");
+   private ExtractionInfo extractMultilineTextualBlock(JsDocToken token,
+                                                       WhitespaceOption option) {
+-
+     if (token == JsDocToken.EOC || token == JsDocToken.EOL ||
+         token == JsDocToken.EOF) {
+       return new ExtractionInfo("", token);
+@@ -1427,7 +1406,17 @@ public final class JsDocInfoParser {
+       }
+     } while (true);
+   }
+-
++  private static String trimEnd(String line) {
++    // First, trim all whitespace from the end of the line.
++    line = WHITESPACE.matcher(line).replaceFirst("");
++    // Next, find the first newline character. If there are any
++    // whitespace characters after it, trim them.
++    Matcher m = NEWLINE.matcher(line);
++    if (m.find()) {
++      line = WHITESPACE.matcher(line.substring(m.end())).replaceFirst("");
++    }
++    return line;
++  }
+ 
+   /**
+    * Extracts the top-level block comment from the JsDoc comment, if any.

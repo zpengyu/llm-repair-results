@@ -1,0 +1,23 @@
+  protected void declareNameInScope(FlowScope scope, Node node, JSType type) {
+    switch (node.getType()) {
+      case Token.NAME:
+        scope.inferSlotType(node.getString(), type);
+        break;
+      case Token.THIS:
+        scope.inferDeclaredType(node.getFirstChild(), type);
+        break;
+      case Token.GETPROP:
+        String qualifiedName = node.getQualifiedName();
+        Preconditions.checkNotNull(qualifiedName);
+        JSType origType = node.getJSType();
+        origType = origType == null ? getNativeType(UNKNOWN_TYPE) : origType;
+        scope.inferQualifiedSlot(node, qualifiedName, origType, type);
+        break;
+      default:
+        throw new IllegalArgumentException("Node cannot be refined. \n" +
+            node.toStringTree());
+    }
+  }
+![](https://puu.sh/BfZ6I/e6df9d0522.png)
+![](https://puu.sh/BfZ6S/2f42a00f7c.png)
+![](https://puu.sh/BfZ6Y/5c6b29f1ce.png)

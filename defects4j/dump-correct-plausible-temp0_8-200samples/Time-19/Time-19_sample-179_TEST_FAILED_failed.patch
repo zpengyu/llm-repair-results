@@ -1,0 +1,32 @@
+diff --git a/src/main/java/org/joda/time/DateTimeZone.java b/src/main/java/org/joda/time/DateTimeZone.java
+index 17672725..ad6a6f20 100644
+--- a/src/main/java/org/joda/time/DateTimeZone.java
++++ b/src/main/java/org/joda/time/DateTimeZone.java
+@@ -877,7 +877,7 @@ public abstract class DateTimeZone implements Serializable {
+      * @param instantLocal  the millisecond instant, relative to this time zone, to get the offset for
+      * @return the millisecond offset to subtract from local time to get UTC time
+      */
+-    public int getOffsetFromLocal(long instantLocal) {
++   public int getOffsetFromLocal(long instantLocal) {
+         // get the offset at instantLocal (first estimate)
+         final int offsetLocal = getOffset(instantLocal);
+         // adjust instantLocal using the estimate and recalc the offset
+@@ -897,6 +897,18 @@ public abstract class DateTimeZone implements Serializable {
+                     return offsetLocal;
+                 }
+             }
++            // we need to ensure that time is always after the DST gap
++            // this happens naturally for positive offsets, but not for negative
++            if ((offsetLocal - offsetAdjusted) > 0) {
++                // if we just return offsetAdjusted then the time is pushed
++                // back before the transition, whereas it should be
++                // on or after the transition
++                long nextLocal = nextTransition(instantAdjusted);
++                long nextAdjusted = nextTransition(instantLocal - offsetAdjusted);
++                if (nextLocal != nextAdjusted) {
++                    return offsetLocal;
++                }
++            }
+         } else if (offsetLocal > 0) {
+             long prev = previousTransition(instantAdjusted);
+             if (prev < instantAdjusted) {

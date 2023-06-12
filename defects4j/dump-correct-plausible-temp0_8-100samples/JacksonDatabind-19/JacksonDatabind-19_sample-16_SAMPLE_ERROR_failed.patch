@@ -1,0 +1,19 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/type/TypeFactory.java b/src/main/java/com/fasterxml/jackson/databind/type/TypeFactory.java
+index 6aeb747d2..69fd2724e 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/type/TypeFactory.java
++++ b/src/main/java/com/fasterxml/jackson/databind/type/TypeFactory.java
+@@ -1019,8 +1019,12 @@ public final class TypeFactory
+     {
+         // 28-May-2015, tatu: Properties are special, as per [databind#810]
+         JavaType[] typeParams = findTypeParameters(rawClass, Map.class);
+-        // ok to have no types ("raw")
+-        if (typeParams == null) {
++        if (typeParams == null) { // [databind#821]
++            if (rawClass == Properties.class) {
++                return _typeFactory().constructMapType(Properties.class,
++                        _typeFactory().constructType(String.class),
++                        _typeFactory().constructType(String.class));
++            }
+             return MapType.construct(rawClass, _unknownType(), _unknownType());
+         }
+         // but exactly 2 types if any found

@@ -1,0 +1,33 @@
+diff --git a/src/main/java/com/fasterxml/jackson/core/json/JsonGeneratorImpl.java b/src/main/java/com/fasterxml/jackson/core/json/JsonGeneratorImpl.java
+index 81b90fed..04c6d4ca 100644
+--- a/src/main/java/com/fasterxml/jackson/core/json/JsonGeneratorImpl.java
++++ b/src/main/java/com/fasterxml/jackson/core/json/JsonGeneratorImpl.java
+@@ -185,11 +161,26 @@ public abstract class JsonGeneratorImpl extends GeneratorBase
+     /* Partial API
+     /**********************************************************
+      */
+-
+     // // Overrides just to make things final, to possibly help with inlining
+-    
+     @Override
+     public final void writeStringField(String fieldName, String value) throws IOException
++    {
++        if (_cfgUnqNames) {
++            _writeStringFieldNameUnq(fieldName, value);
++        } else {
++            _writeStringFieldName(fieldName, value);
++        }
++    }
++    private final void _writeStringFieldNameUnq(String fieldName, String value) throws IOException
++    {
++        if (_cfgUnqNames) { // always true, but just in case...
++            writeFieldName(fieldName);
++            writeString(value);
++            return;
++        }
++        _writeStringFieldName(fieldName, value);
++    }
++    private final void _writeStringFieldName(String fieldName, String value) throws IOException
+     {
+         writeFieldName(fieldName);
+         writeString(value);

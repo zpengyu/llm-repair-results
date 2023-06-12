@@ -1,0 +1,41 @@
+diff --git a/src/org/mockito/internal/util/Primitives.java b/src/org/mockito/internal/util/Primitives.java
+index b44b8253d..dc047bc7d 100644
+--- a/src/org/mockito/internal/util/Primitives.java
++++ b/src/org/mockito/internal/util/Primitives.java
+@@ -9,14 +9,16 @@ import java.util.Map;
+ 
+ @SuppressWarnings("unchecked")
+ public class Primitives {
+-    
++    private Primitives() {
++        //Prevent instantiation
++    }
+     public static <T> Class<T> primitiveTypeOf(Class<T> clazz) {
+-        if(clazz.isPrimitive()) {
++        Class<T> primitiveType = (Class<T>) primitiveTypes.get(clazz);
++        if(primitiveType == null) {
+             return clazz;
+         }
+-        return (Class<T>) primitiveTypes.get(clazz);
++        return primitiveType;
+     }
+-
+     public static boolean isPrimitiveWrapper(Class<?> type) {
+         return wrapperReturnValues.containsKey(type);
+     }
+@@ -28,11 +28,10 @@ public class Primitives {
+     public static <T> T primitiveValueOrNullFor(Class<T> primitiveType) {
+         return (T) primitiveValues.get(primitiveType);
+     }
+-    private static Map<Class<?>, Class<?>> wrapperTypes = new HashMap<Class<?>, Class<?>>();
+-    private static Map<Class<?>, Class<?>> primitiveTypes = new HashMap<Class<?>, Class<?>>();
+-    private static Map<Class<?>, Object> wrapperReturnValues = new HashMap<Class<?>, Object>();
+-    private static Map<Class<?>, Object> primitiveValues = new HashMap<Class<?>, Object>();
+-
++    private static final Map<Class<?>, Class<?>> wrapperTypes = new HashMap<Class<?>, Class<?>>();
++    private static final Map<Class<?>, Class<?>> primitiveTypes = new HashMap<Class<?>, Class<?>>();
++    private static final Map<Class<?>, Object> wrapperReturnValues = new HashMap<Class<?>, Object>();
++    private static final Map<Class<?>, Object> primitiveValues = new HashMap<Class<?>, Object>();
+     static {
+         primitiveTypes.put(Boolean.class, Boolean.TYPE);
+         primitiveTypes.put(Character.class, Character.TYPE);

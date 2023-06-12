@@ -1,0 +1,33 @@
+diff --git a/src/main/java/org/apache/commons/compress/archivers/tar/TarUtils.java b/src/main/java/org/apache/commons/compress/archivers/tar/TarUtils.java
+index 34ecc5ac..91113414 100644
+--- a/src/main/java/org/apache/commons/compress/archivers/tar/TarUtils.java
++++ b/src/main/java/org/apache/commons/compress/archivers/tar/TarUtils.java
+@@ -135,7 +131,7 @@ public class TarUtils {
+         if (trailer == 0 || trailer == ' '){
+             end--;
+         }
+-
++        boolean overflow = false;
+         for ( ;start < end; start++) {
+             final byte currentByte = buffer[start];
+             // CheckStyle:MagicNumber OFF
+@@ -143,13 +139,17 @@ public class TarUtils {
+                 throw new IllegalArgumentException(
+                         exceptionMessage(buffer, offset, length, start, currentByte));
+             }
++            if (result > (Long.MAX_VALUE >>> 3)){
++                overflow = true;
++            }
+             result = (result << 3) + (currentByte - '0'); // convert from ASCII
+             // CheckStyle:MagicNumber ON
+         }
+-
++        if (overflow) {
++            throw new NumberFormatException("Octal value " + toString(buffer, offset, length) + " is too large to fit in a Long");
++        }
+         return result;
+     }
+-
+     /** 
+      * Compute the value contained in a byte buffer.  If the most
+      * significant bit of the first byte in the buffer is set, this

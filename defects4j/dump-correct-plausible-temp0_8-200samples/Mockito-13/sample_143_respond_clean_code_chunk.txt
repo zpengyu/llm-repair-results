@@ -1,0 +1,36 @@
+    public Object handle(Invocation invocation) throws Throwable {
+        VerificationMode verificationMode = mockingProgress.pullVerificationMode();
+        StubbedInvocationMatcher stubbedInvocationMatcher = null;
+        if(verificationMode != null) {
+            if (verificationMode instanceof MockAwareVerificationMode && ((MockAwareVerificationMode) verificationMode).getMock() == invocation.getMock()) {
+                VerificationDataImpl data = new VerificationDataImpl(invocationContainerImpl, matchersBinder.bindMatchers(mockingProgress.getArgumentMatcherStorage(),invocation));
+                verificationMode.verify(data);
+                return null;
+            } else {
+                stubbedInvocationMatcher = invocationContainerImpl.findAnswerFor(invocation);
+            }
+        } else {
+            if(invocationContainerImpl.hasAnswersForStubbing()) {
+                InvocationMatcher invocationMatcher = matchersBinder.bindMatchers(mockingProgress.getArgumentMatcherStorage(),invocation);
+                invocationContainerImpl.setMethodForStubbing(invocationMatcher);
+                return null;
+            }
+            InvocationMatcher invocationMatcher = matchersBinder.bindMatchers(mockingProgress.getArgumentMatcherStorage(),invocation);
+            invocationContainerImpl.setInvocationForPotentialStubbing(invocationMatcher);
+            OngoingStubbingImpl<T> ongoingStubbing = new OngoingStubbingImpl<T>(invocationContainerImpl);
+            mockingProgress.reportOngoingStubbing(ongoingStubbing);
+            stubbedInvocationMatcher = invocationContainerImpl.findAnswerFor(invocation);
+            if (stubbedInvocationMatcher == null) {
+                Object ret = mockSettings.getDefaultAnswer().answer(invocation);
+                invocationContainerImpl.resetInvocationForPotentialStubbing(invocationMatcher);
+                return ret;
+            } else {
+                invocationContainerImpl.resetInvocationForPotentialStubbing(invocationMatcher);
+            }
+        }
+        if(stubbedInvocationMatcher != null) {
+            stubbedInvocationMatcher.captureArgumentsFrom(invocation);
+            return stubbedInvocationMatcher.answer(invocation);
+        }
+        return null;
+    }

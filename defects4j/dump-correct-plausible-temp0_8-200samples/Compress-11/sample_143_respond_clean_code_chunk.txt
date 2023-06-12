@@ -1,0 +1,27 @@
+    public ArchiveInputStream createArchiveInputStream(final InputStream in)
+            throws ArchiveException {
+        if (in == null) {
+            throw new IllegalArgumentException("Stream must not be null.");
+        }
+        if (!in.markSupported()) {
+            throw new IllegalArgumentException("Mark is not supported.");
+        }
+        ArchiveInputStream result;
+        try {
+            in.mark(1);
+            result = createArchiveInputStream(
+                    new BufferedInputStream(in, 512),
+                    new byte[1]);
+        } catch (IOException e) {
+            throw new ArchiveException("Could not use reset and mark operations.", e);
+        } finally {
+            if (result != null) {
+                try {
+                    in.reset();
+                } catch (IOException ignored) {
+                    // can't reset
+                }
+            }
+        }
+        return result;
+    }

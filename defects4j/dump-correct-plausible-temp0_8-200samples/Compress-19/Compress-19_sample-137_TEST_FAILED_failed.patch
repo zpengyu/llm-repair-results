@@ -1,0 +1,33 @@
+diff --git a/src/main/java/org/apache/commons/compress/archivers/zip/Zip64ExtendedInformationExtraField.java b/src/main/java/org/apache/commons/compress/archivers/zip/Zip64ExtendedInformationExtraField.java
+index 430232a7..1baf6662 100644
+--- a/src/main/java/org/apache/commons/compress/archivers/zip/Zip64ExtendedInformationExtraField.java
++++ b/src/main/java/org/apache/commons/compress/archivers/zip/Zip64ExtendedInformationExtraField.java
+@@ -257,12 +257,22 @@ public class Zip64ExtendedInformationExtraField implements ZipExtraField {
+                 + (hasRelativeHeaderOffset ? DWORD : 0)
+                 + (hasDiskStart ? WORD : 0);
+             if (rawCentralDirectoryData.length != expectedLength) {
+-                throw new ZipException("central directory zip64 extended"
+-                                       + " information extra field's length"
+-                                       + " doesn't match central directory"
+-                                       + " data.  Expected length "
+-                                       + expectedLength + " but is "
+-                                       + rawCentralDirectoryData.length);
++                if (!hasUncompressedSize && !hasCompressedSize) {
++                    // Appears to be an attempt at a zip64 extended
++                    // information extra field.
++                    // Strip to match expected length
++                    byte[] newCentralDirectoryData = new byte[expectedLength];
++                    System.arraycopy(rawCentralDirectoryData, 0, newCentralDirectoryData, 0,
++                                     Math.min(expectedLength, rawCentralDirectoryData.length));
++                    rawCentralDirectoryData = newCentralDirectoryData;
++                } else {
++                    throw new ZipException("central directory zip64 extended"
++                                           + " information extra field's length"
++                                           + " doesn't match central directory"
++                                           + " data.  Expected length "
++                                           + expectedLength + " but is "
++                                           + rawCentralDirectoryData.length);
++                }
+             }
+             int offset = 0;
+             if (hasUncompressedSize) {

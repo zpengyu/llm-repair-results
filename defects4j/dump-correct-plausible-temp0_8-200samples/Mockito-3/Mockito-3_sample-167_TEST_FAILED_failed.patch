@@ -1,0 +1,61 @@
+diff --git a/src/org/mockito/internal/invocation/InvocationMatcher.java b/src/org/mockito/internal/invocation/InvocationMatcher.java
+index a3a7c08df..ee5f0b4ec 100644
+--- a/src/org/mockito/internal/invocation/InvocationMatcher.java
++++ b/src/org/mockito/internal/invocation/InvocationMatcher.java
+@@ -102,7 +86,7 @@ public class InvocationMatcher implements DescribedInvocation, CapturesArgumensF
+         	Class[] params2 = m2.getParameterTypes();
+         	if (params1.length == params2.length) {
+         	    for (int i = 0; i < params1.length; i++) {
+-        		if (params1[i] != params2[i])
++        		if (!sameType(params1[i], params2[i]))
+         		    return false;
+         	    }
+         	    return true;
+@@ -110,7 +94,46 @@ public class InvocationMatcher implements DescribedInvocation, CapturesArgumensF
+         }
+         return false;
+     }
+-    
++    public static boolean sameType(Class<?> type1, Class<?> type2) {
++        if (type1 == type2) {
++            return true;
++        }
++        if (type1.isPrimitive()) {
++            return primitiveType(type1) == primitiveType(type2);
++        }
++        return false;
++    }
++    private static Class<?> primitiveType(Class<?> type) {
++        if (Integer.TYPE.equals(type)) {
++            return Integer.class;
++        }
++        if (Long.TYPE.equals(type)) {
++            return Long.class;
++        }
++        if (Double.TYPE.equals(type)) {
++            return Double.class;
++        }
++        if (Float.TYPE.equals(type)) {
++            return Float.class;
++        }
++        if (Boolean.TYPE.equals(type)) {
++            return Boolean.class;
++        }
++        if (Character.TYPE.equals(type)) {
++            return Character.class;
++        }
++        if (Byte.TYPE.equals(type)) {
++            return Byte.class;
++        }
++        if (Short.TYPE.equals(type)) {
++            return Short.class;
++        }
++        // TODO Auto-generated method stub
++        if (Void.TYPE.equals(type)) {
++            return Void.class;
++        }
++        return null;
++    }
+     public Location getLocation() {
+         return invocation.getLocation();
+     }

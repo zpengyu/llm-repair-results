@@ -1,0 +1,26 @@
+diff --git a/src/org/mockito/internal/stubbing/answers/AnswersValidator.java b/src/org/mockito/internal/stubbing/answers/AnswersValidator.java
+index 5d8057846..49cee64f3 100644
+--- a/src/org/mockito/internal/stubbing/answers/AnswersValidator.java
++++ b/src/org/mockito/internal/stubbing/answers/AnswersValidator.java
+@@ -24,10 +20,18 @@ public class AnswersValidator {
+         if (answer instanceof DoesNothing) {
+             validateDoNothing((DoesNothing) answer, invocation);
+         }
+-        
++        if (answer instanceof ForwardsInvocations) {
++            validateForwardsInvocations((ForwardsInvocations) answer, invocation);
++        }
++    }
++    private void validateForwardsInvocations(ForwardsInvocations answer, Invocation invocation) {
++        if (!invocation.isValidReturnType(answer.getType())) {
++            reporter.wrongTypeForStubbedInvocation(invocation.printMethodReturnType(), answer.printType(), invocation.getMethodName());
++        }
++        if (invocation.isVoid()) {
++            reporter.cannotForwardToVoidMethod(invocation.getMethodName());
++        }
+     }
+-
+-
+     private void validateDoNothing(DoesNothing answer, Invocation invocation) {
+         if (!invocation.isVoid()) {
+             reporter.onlyVoidMethodsCanBeSetToDoNothing();

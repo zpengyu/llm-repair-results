@@ -1,0 +1,28 @@
+diff --git a/src/main/java/com/fasterxml/jackson/core/json/JsonGeneratorImpl.java b/src/main/java/com/fasterxml/jackson/core/json/JsonGeneratorImpl.java
+index 81b90fed..2c6e4a78 100644
+--- a/src/main/java/com/fasterxml/jackson/core/json/JsonGeneratorImpl.java
++++ b/src/main/java/com/fasterxml/jackson/core/json/JsonGeneratorImpl.java
+@@ -194,4 +168,22 @@ public abstract class JsonGeneratorImpl extends GeneratorBase
+         writeFieldName(fieldName);
+         writeString(value);
+     }
++    public final void writeFieldName(SerializableString name)
++        throws IOException
++    {
++        if (_cfgPrettyPrinter != null) {
++            _writePPFieldName(name);
++            return;
++        }
++        int status = _writeContext.writeFieldName(name.getValue());
++        if (status == JsonWriteContext.STATUS_EXPECT_VALUE) {
++            _reportError("Can not write a field name, expecting a value");
++        }
++        char[] nameChars = name.asQuotedChars();
++        if (_cfgUnqNames) { // and it's a quoted name too
++            writeRaw(nameChars, 0, nameChars.length);
++            return;
++        }
++        writeFieldName(name.getValue());
++    }
+ }
+\ No newline at end of file

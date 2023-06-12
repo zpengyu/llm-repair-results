@@ -1,0 +1,39 @@
+diff --git a/src/java/org/apache/commons/jxpath/ri/axes/UnionContext.java b/src/java/org/apache/commons/jxpath/ri/axes/UnionContext.java
+index 0ea5b51..04f4177 100644
+--- a/src/java/org/apache/commons/jxpath/ri/axes/UnionContext.java
++++ b/src/java/org/apache/commons/jxpath/ri/axes/UnionContext.java
+@@ -32,7 +32,7 @@ import org.apache.commons.jxpath.ri.model.NodePointer;
+ public class UnionContext extends NodeSetContext {
+     private EvalContext contexts[];
+     private boolean prepared;
+-
++    private NodeSet unionSet;
+     public UnionContext(EvalContext parentContext, EvalContext contexts[]) {
+         super(parentContext, new BasicNodeSet());
+         this.contexts = contexts;
+@@ -45,21 +43,17 @@ public class UnionContext extends NodeSetContext {
+     public boolean setPosition(int position) {
+         if (!prepared) {
+             prepared = true;
+-            BasicNodeSet nodeSet = (BasicNodeSet) getNodeSet();
+-            ArrayList pointers = new ArrayList();
++            unionSet = new BasicNodeSet();
+             for (int i = 0; i < contexts.length; i++) {
+                 EvalContext ctx = (EvalContext) contexts[i];
+                 while (ctx.nextSet()) {
+                     while (ctx.nextNode()) {
+                         NodePointer ptr = ctx.getCurrentNodePointer();
+-                        if (!pointers.contains(ptr)) {
+-                            nodeSet.add(ptr);
+-                            pointers.add(ptr);
+-                        }
++                        unionSet.add(ptr);
+                     }
+                 }
+             }
+         }
+-        return super.setPosition(position);
++        return unionSet.setPosition(position);
+     }
+ }
+\ No newline at end of file

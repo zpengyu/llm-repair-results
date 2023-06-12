@@ -1,0 +1,59 @@
+diff --git a/gson/src/main/java/com/google/gson/stream/JsonReader.java b/gson/src/main/java/com/google/gson/stream/JsonReader.java
+index 4541941d..8e77c1d2 100644
+--- a/gson/src/main/java/com/google/gson/stream/JsonReader.java
++++ b/gson/src/main/java/com/google/gson/stream/JsonReader.java
+@@ -638,25 +638,22 @@ public class JsonReader implements Closeable {
+     return peeked = peeking;
+   }
+ 
+-  private int peekNumber() throws IOException {
+-    // Like nextNonWhitespace, this uses locals 'p' and 'l' to save inner-loop field access.
++static int peekNumber() {
++    /*
++     * Like nextNonWhitespace, this uses locals 'p' and 'l' to save inner-loop
++     * field access.
++     */
+     char[] buffer = this.buffer;
+     int p = pos;
+     int l = limit;
+-
+-    long value = 0; // Negative to accommodate Long.MIN_VALUE more easily.
++    long value = 0; // Negative to accommodate Long.MIN_VALUE
+     boolean negative = false;
+     boolean fitsInLong = true;
+     int last = NUMBER_CHAR_NONE;
+-
+     int i = 0;
+-
+-    charactersOfNumber:
+-    for (; true; i++) {
++    for (;; i++) {
+       if (p + i == l) {
+         if (i == buffer.length) {
+-          // Though this looks like a well-formed number, it's too long to continue reading. Give up
+-          // and let the application handle this as an unquoted literal.
+           return PEEKED_NONE;
+         }
+         if (!fillBuffer(i + 1)) {
+@@ -704,7 +696,7 @@ public class JsonReader implements Closeable {
+       default:
+         if (c < '0' || c > '9') {
+           if (!isLiteral(c)) {
+-            break charactersOfNumber;
++            break;
+           }
+           return PEEKED_NONE;
+         }
+@@ -726,8 +718,10 @@ public class JsonReader implements Closeable {
+         }
+       }
+     }
+-
+-    // We've read a complete number. Decide if it's a PEEKED_LONG or a PEEKED_NUMBER.
++    /*
++     * We've read a complete number. Decide if it's a PEEKED_LONG or a
++     * PEEKED_NUMBER.
++     */
+     if (last == NUMBER_CHAR_DIGIT && fitsInLong && (value != Long.MIN_VALUE || negative)) {
+       peekedLong = negative ? value : -value;
+       pos += i;

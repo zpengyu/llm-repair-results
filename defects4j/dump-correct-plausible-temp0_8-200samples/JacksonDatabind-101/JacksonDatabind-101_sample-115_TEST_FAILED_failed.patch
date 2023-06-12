@@ -1,0 +1,25 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/deser/BeanDeserializer.java b/src/main/java/com/fasterxml/jackson/databind/deser/BeanDeserializer.java
+index 3c89dc109..f8f8e2d23 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/deser/BeanDeserializer.java
++++ b/src/main/java/com/fasterxml/jackson/databind/deser/BeanDeserializer.java
+@@ -756,6 +753,7 @@ public class BeanDeserializer
+                 // Last creator property to set?
+                 if (buffer.assignParameter(creatorProp,
+                         _deserializeWithErrorWrapping(p, ctxt, creatorProp))) {
++                    // Last creator property to set?
+                     t = p.nextToken(); // to move to following FIELD_NAME/END_OBJECT
+                     Object bean;
+                     try {
+@@ -823,7 +821,11 @@ public class BeanDeserializer
+                 continue;
+             }
+         }
+-
++        // 03-Mar-2015, tatu: [databind#633] Should consider errors from filling out
++        //    ObjectId as well
++        if (p.hasTokenId(JsonTokenId.ID_FIELD_NAME) && _objectIdReader != null) {
++            return deserializeFromObjectId(p, ctxt);
++        }
+         // We hit END_OBJECT, so:
+         Object bean;
+         try {

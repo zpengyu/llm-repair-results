@@ -1,0 +1,34 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/deser/BuilderBasedDeserializer.java b/src/main/java/com/fasterxml/jackson/databind/deser/BuilderBasedDeserializer.java
+index 316efa3a9..0044b4556 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/deser/BuilderBasedDeserializer.java
++++ b/src/main/java/com/fasterxml/jackson/databind/deser/BuilderBasedDeserializer.java
+@@ -589,12 +587,17 @@ public class BuilderBasedDeserializer
+                         wrapAndThrow(e, _beanType.getRawClass(), propName, ctxt);
+                         continue;
+                     }
++                    // if so, need to copy all remaining tokens into buffer
+                     while (t == JsonToken.FIELD_NAME) {
+-                        p.nextToken();
++                        p.nextToken(); // to skip name
+                         tokens.copyCurrentStructure(p);
+                         t = p.nextToken();
+                     }
+                     tokens.writeEndObject();
++                    // must ensure that we update current token
++                    if (t != JsonToken.END_OBJECT) {
++                        throw ctxt.mappingException("Expected END_OBJECT after copying contents of a JsonParser into TokenBuffer, got "+t);
++                    }
+                     if (bean.getClass() != _beanType.getRawClass()) {
+                         ctxt.reportMappingException("Can not create polymorphic instances with unwrapped values");
+                         return null;
+@@ -624,10 +627,8 @@ public class BuilderBasedDeserializer
+                 buffer.bufferAnyProperty(_anySetter, propName, _anySetter.deserialize(p, ctxt));
+             }
+         }
+-
+         // We hit END_OBJECT, so:
+         Object bean;
+-        // !!! 15-Feb-2012, tatu: Need to modify creator to use Builder!
+         try {
+             bean = creator.build(ctxt, buffer);
+         } catch (Exception e) {

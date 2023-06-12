@@ -1,0 +1,48 @@
+    public JsonSerializer<?> createContextual(SerializerProvider serializers,
+            BeanProperty property) throws JsonMappingException
+    {
+        if (property == null) {
+            return this;
+        }
+        JsonFormat.Value format = findFormatOverrides(serializers, property, handledType());
+        if (format == null) {
+            return this;
+        }
+        // Simple case first: serialize as numeric timestamp?
+        JsonFormat.Shape shape = format.getShape();
+        if (shape.isNumeric()) {
+            return withFormat(Boolean.TRUE, null);
+        }
+        // 08-Jun-2017, tatu: With [databind#1648], this gets bit tricky..
+        // First: custom pattern will override things
+        if (shape == JsonFormat.Shape.STRING) {
+            if (format.hasPattern()) {
+                return withFormat(Boolean.FALSE,
+                        _cloneFormat(format.getPattern(), serializers));
+            }
+        }
+        // Otherwise, need one of these changes:
+            TimeZone tz = format.getTimeZone();
+        Locale loc = format.getLocale();
+        // Jackson's own `StdDateFormat` is quite easy to deal with...
+        if (loc == null) {
+            loc = serializers.getLocale();
+        }
+        if (tz == null) {
+            tz = serializers.getTimeZone();
+        }
+        if (tz != null || loc != null) {
+            DateFormat df = serializers.getConfig().getDateFormat();
+            if (df instanceof StdDateFormat) {
+                DateFormat df2 = ((StdDateFormat) df).withTimeZone(tz)
+                        .withLocale(loc);
+                return withFormat(Boolean.FALSE, df2);
+            }
+        }
+            // Ugh. No way to change `Locale`, create copy; must re-crete completely:
+            serializers.reportBadDefinition(handledType(), String.format(
+                    "Cannot change configuration of `%s`: incompatible with Java DateFormat",
+                    StdDateFormat.class.getName()));
+        }
+        return this;
+}

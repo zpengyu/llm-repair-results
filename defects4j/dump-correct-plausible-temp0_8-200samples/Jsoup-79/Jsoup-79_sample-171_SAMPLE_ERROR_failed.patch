@@ -1,0 +1,37 @@
+diff --git a/src/main/java/org/jsoup/nodes/LeafNode.java b/src/main/java/org/jsoup/nodes/LeafNode.java
+index 0e068b5..e6a3e91 100644
+--- a/src/main/java/org/jsoup/nodes/LeafNode.java
++++ b/src/main/java/org/jsoup/nodes/LeafNode.java
+@@ -5,19 +5,23 @@ import org.jsoup.helper.Validate;
+ import java.util.List;
+ 
+ abstract class LeafNode extends Node {
+-
+     Object value; // either a string value, or an attribute map (in the rare case multiple attributes are set)
+-
+-    protected final boolean hasAttributes() {
+-        return value instanceof Attributes;
+-    }
+-
+     @Override
+     public final Attributes attributes() {
+-        ensureAttributes();
+-        return (Attributes) value;
++        if (value instanceof Attributes) {
++            return (Attributes) value;
++        } else {
++            Attributes attributes = new Attributes();
++            if (hasAttributes()) {
++                // if value is a single attribute set the core value back to null
++                // if value is multiple attributes, then it must be an Attributes object
++                if (value != null)
++                    attributes.put(nodeName(), (String) value);
++                value = attributes;
++            }
++            return attributes;
++        }
+     }
+-
+     private void ensureAttributes() {
+         if (!hasAttributes()) {
+             Object coreValue = value;

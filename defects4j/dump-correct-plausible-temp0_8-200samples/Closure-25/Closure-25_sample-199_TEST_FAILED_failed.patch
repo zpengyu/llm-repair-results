@@ -1,0 +1,30 @@
+diff --git a/src/com/google/javascript/jscomp/TypeInference.java b/src/com/google/javascript/jscomp/TypeInference.java
+index dbe40e0f..0e4c8111 100644
+--- a/src/com/google/javascript/jscomp/TypeInference.java
++++ b/src/com/google/javascript/jscomp/TypeInference.java
+@@ -1032,8 +1032,7 @@ class TypeInference
+     }
+   }
+ 
+-  private FlowScope traverseNew(Node n, FlowScope scope) {
+-
++   private FlowScope traverseNew(Node n, FlowScope scope) {
+     Node constructor = n.getFirstChild();
+     scope = traverse(constructor, scope);
+     JSType constructorType = constructor.getJSType();
+@@ -1044,11 +1043,13 @@ class TypeInference
+         type = getNativeType(UNKNOWN_TYPE);
+       } else {
+         FunctionType ct = constructorType.toMaybeFunctionType();
+-        if (ct == null && constructorType instanceof FunctionType) {
++        if (ct == null) {
+           // If constructorType is a NoObjectType, then toMaybeFunctionType will
+           // return null. But NoObjectType implements the FunctionType
+           // interface, precisely because it can validly construct objects.
+-          ct = (FunctionType) constructorType;
++          if (constructorType instanceof FunctionType) {
++            ct = (FunctionType) constructorType;
++          }
+         }
+         if (ct != null && ct.isConstructor()) {
+           type = ct.getInstanceType();

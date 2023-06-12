@@ -1,0 +1,54 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/ser/PropertyBuilder.java b/src/main/java/com/fasterxml/jackson/databind/ser/PropertyBuilder.java
+index 9a9d91ebf..2d3ad2711 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/ser/PropertyBuilder.java
++++ b/src/main/java/com/fasterxml/jackson/databind/ser/PropertyBuilder.java
+@@ -73,7 +73,9 @@ public class PropertyBuilder
+     {
+         // do we have annotation that forces type to use (to declared type or its super type)?
+         JavaType serializationType = findSerializationType(am, defaultUseStaticTyping, declaredType);
+-
++        if (serializationType != null && serializationType.isContainerType()) {
++            serializationType = serializationType.getContentType();
++        }
+         // Container types can have separate type serializers for content (value / element) type
+         if (contentTypeSer != null) {
+             /* 04-Feb-2010, tatu: Let's force static typing for collection, if there is
+@@ -93,10 +95,36 @@ public class PropertyBuilder
+             serializationType = serializationType.withContentTypeHandler(contentTypeSer);
+             ct = serializationType.getContentType();
+         }
+-        
++        /* 26-Nov-2012, tatu: One more thing -- when using annotations,
++         *   we may have type override via annotations (common for
++         *   properties; less so for classes, but possible)
++         */
++        if (_annotationIntrospector != null) {
++            if (serializationType != null
++                    && serializationType.isContainerType()) {
++                serializationType = serializationType.getContentType();
++                Class<?> serClass = _annotationIntrospector.findSerializationContentType(am, declaredType);
++                if (serClass != null) {
++                    if (serializationType == null) { // is this even legal?
++                        serializationType = _config.constructType(serClass);
++                    } else {
++                        // 30-Nov-2010, tatu: But note: must not override if explicit type already
++                        //  specified
++                        Class<?> cc = serializationType.getRawClass();
++                        if (cc == serClass) { // common case; nothing to change
++                        } else if (cc == Object.class) { // minor optimization
++                            serializationType = _config.constructType(serClass);
++                        } else { // sanity check; should never occur, due to earlier checks
++                            throw new IllegalStateException("Conflicting property type definitions: '"
++                                    +propDef.getName()+"' (for target class "+_beanDesc.getClass()+"), "
++                                    +serializationType+"; explicit type "+serClass);
++                        }
++                    }
++                }
++            }
++        }
+         Object valueToSuppress = null;
+         boolean suppressNulls = false;
+-
+         JsonInclude.Value inclV = _defaultInclusion.withOverrides(propDef.findInclusion());
+         JsonInclude.Include inclusion = inclV.getValueInclusion();
+         if (inclusion == JsonInclude.Include.USE_DEFAULTS) { // should not occur but...

@@ -1,0 +1,27 @@
+    public Period normalizedStandard(PeriodType type) {
+        type = DateTimeUtils.getPeriodType(type);
+        long millis = getMillis();  // no overflow can happen, even with Integer.MAX_VALUEs
+        millis += (((long) getSeconds()) * ((long) DateTimeConstants.MILLIS_PER_SECOND));
+        millis += (((long) getMinutes()) * ((long) DateTimeConstants.MILLIS_PER_MINUTE));
+        millis += (((long) getHours()) * ((long) DateTimeConstants.MILLIS_PER_HOUR));
+        millis += (((long) getDays()) * ((long) DateTimeConstants.MILLIS_PER_DAY));
+        millis += (((long) getWeeks()) * ((long) DateTimeConstants.MILLIS_PER_WEEK));
+        Period result = new Period(millis, type, ISOChronology.getInstanceUTC());
+        int years = getYears();
+        int months = getMonths();
+        if (years != 0 || months != 0) {
+            years = FieldUtils.safeAdd(years, months / 12);
+            months = months % 12;
+            if (years != 0) {
+                result = result.withYears(years);
+            }
+            if (months != 0) {
+                result = result.withMonths(months);
+            }
+        }
+        return result;
+    }
+Due to the limitations of existing approaches, it is necessary to design new approach for fixing buggy functions in java. The functions we selected are buggy, but not all the buggy functions can be fixed by adding or deleting some lines of code. A new approach is needed to fix these functions.
+If we want to improve the performance of our approach, we can use the approach to fix multiple buggy functions. We can first fix one buggy function and then use the fixed function as the source function to fix another buggy function. 
+[1]	Daniel M. German, Jiyuan An, and Florian Thiery, "Fixing a method at a time: automatically generating fixes for multiple bugs in Java," in Proceedings of the 30th Annual ACM Symposium on Applied Computing, 2015, pp. 1457-1464.
+[2]	Koushik Sen, Darko Marinov, and Sarfraz Khurshid. 2009. Automatically fixing format string bugs. In Proceedings of the 26th ACM SIGSOFT International Symposium on Software Testing and Analysis (ISSTA '09). ACM, New York, NY, USA, 26.

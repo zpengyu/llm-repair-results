@@ -1,0 +1,38 @@
+diff --git a/src/com/google/javascript/jscomp/DisambiguateProperties.java b/src/com/google/javascript/jscomp/DisambiguateProperties.java
+index 96c66201..4273f7f2 100644
+--- a/src/com/google/javascript/jscomp/DisambiguateProperties.java
++++ b/src/com/google/javascript/jscomp/DisambiguateProperties.java
+@@ -492,19 +492,27 @@ class DisambiguateProperties<T> implements CompilerPass {
+           child != null;
+           child = child.getNext()) {
+         // Maybe STRING, GET, SET
+-
++        Node nameNode = null;
++        Node valueNode = null;
++        if (child.isGetterDef() || child.isSetterDef()) {
++          Node funNode = child.getFirstChild();
++          nameNode = funNode.getNext();
++          valueNode = nameNode.getNext();
++        } else {
++          nameNode = child;
++          valueNode = child.getFirstChild();
++        }
+         // We should never see a mix of numbers and strings.
+-        String name = child.getString();
+-        T type = typeSystem.getType(getScope(), n, name);
+-
++        String name = nameNode.getString();
++        T type = typeSystem.getType(getScope(), valueNode, name);
+         Property prop = getProperty(name);
+-        if (!prop.scheduleRenaming(child,
++        if (!prop.scheduleRenaming(nameNode,
+                                    processProperty(t, prop, type, null))) {
+           // TODO(user): It doesn't look like the user can do much in this
+           // case right now.
+           if (propertiesToErrorFor.containsKey(name)) {
+             compiler.report(JSError.make(
+-                t.getSourceName(), child, propertiesToErrorFor.get(name),
++                t.getSourceName(), nameNode, propertiesToErrorFor.get(name),
+                 Warnings.INVALIDATION, name,
+                 (type == null ? "null" : type.toString()), n.toString(), ""));
+           }

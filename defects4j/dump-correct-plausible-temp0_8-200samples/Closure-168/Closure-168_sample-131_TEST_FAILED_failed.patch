@@ -1,0 +1,23 @@
+diff --git a/src/com/google/javascript/jscomp/TypedScopeCreator.java b/src/com/google/javascript/jscomp/TypedScopeCreator.java
+index 5e7bfa3f..e8205c17 100644
+--- a/src/com/google/javascript/jscomp/TypedScopeCreator.java
++++ b/src/com/google/javascript/jscomp/TypedScopeCreator.java
+@@ -2034,9 +2030,16 @@ final class TypedScopeCreator implements ScopeCreator {
+                 .recordEscapedQualifiedName(n.getQualifiedName());
+           }
+         }
++      } else if (n.isGetElem() && NodeUtil.isLValue(n)) {
++        Node base = n.getFirstChild();
++        if (base.isName() && base.getString().equals("arguments")) {
++          Scope scope = t.getScope();
++          if (scope.isLocal()) {
++            data.get(scope.getRootNode()).recordEscapedVarName("arguments");
++          }
++        }
+       }
+-    }
+-  }
++    }  }
+ 
+   private AstFunctionContents getFunctionAnalysisResults(@Nullable Node n) {
+     if (n == null) {

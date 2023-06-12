@@ -1,0 +1,21 @@
+    public ZipArchiveInputStream(InputStream inputStream,
+                                 String encoding,
+                                 boolean useUnicodeExtraFields,
+                                 boolean allowStoredEntriesWithDataDescriptor) {
+        zipEncoding = ZipEncodingHelper.getZipEncoding(encoding);
+        this.useUnicodeExtraFields = useUnicodeExtraFields;
+        in = new PushbackInputStream(inputStream, buf.capacity());
+        this.allowStoredEntriesWithDataDescriptor =
+            allowStoredEntriesWithDataDescriptor;
+        // haven't read anything so far
+        byte[] signature = new byte[4];
+        int signatureLength = IOUtils.readFully(in, signature);
+        if (signatureLength != 4) {
+            throw new ZipException("not in ZIP format");
+        }
+        int header = ZipLong.getValue(signature);
+        if (header != ZipArchiveOutputStream.CENSIG) {
+            throw new ZipException("not in ZIP format");
+        }
+    }
+

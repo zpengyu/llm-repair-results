@@ -1,0 +1,29 @@
+    private static String cacheString(final char[] charBuf, final String[] stringCache, final int start, final int count) {
+        // limit (no cache):
+        if (count > maxStringCacheLen)
+            return new String(charBuf, start, count);
+        // calculate hash:
+        int hash = 0;
+        int offset = start;
+        for (int i = 0; i < count; i++) {
+            hash = 31 * hash + charBuf[offset++];
+        }
+        // get from cache
+        final int index = hash & stringCache.length - 1;
+        String cached = stringCache[index];
+        if (cached == null) { // miss, add
+            cached = new String(charBuf, start, count);
+            stringCache[index] = cached;
+        } else { // hashcode hit, check equality
+            if (rangeEquals(charBuf, start, count, cached)) { // hit
+                return cached;
+            } else { // hashcode conflict
+                // hashcode hit, but equals failed. Two strings with different content but same hashcodes.
+                // because of the high frequency of hashcode conflicts, a special case of intern() is done here,
+                // where the string is only interned (and no new string created) if it is already in the hash table.
+                // this saves a new string object being created, and with it, field storage in Entities and Attributes.
+                return cached.equals(charBuf, start, count) ? cached.intern() : new String(charBuf, start, count);
+            }
+        }
+        return cached;
+    }

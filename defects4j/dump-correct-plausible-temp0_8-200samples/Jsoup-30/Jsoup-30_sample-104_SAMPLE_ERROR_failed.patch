@@ -1,0 +1,57 @@
+diff --git a/src/main/java/org/jsoup/safety/Cleaner.java b/src/main/java/org/jsoup/safety/Cleaner.java
+index c6879b1..47d4c2b 100644
+--- a/src/main/java/org/jsoup/safety/Cleaner.java
++++ b/src/main/java/org/jsoup/safety/Cleaner.java
+@@ -18,9 +18,17 @@ import java.util.List;
+  <p/>
+  Rather than interacting directly with a Cleaner object, generally see the {@code clean} methods in {@link org.jsoup.Jsoup}.
+  */
++package org.jsoup.safety;
++import org.jsoup.helper.Validate;
++import org.jsoup.nodes.*;
++import org.jsoup.select.NodeTraversor;
++import org.jsoup.select.NodeVisitor;
++import java.util.List;
++/**
++ * HTML cleaner, configured by a {@link Whitelist}.
++ */
+ public class Cleaner {
+-    private Whitelist whitelist;
+-
++    private final Whitelist whitelist;
+     /**
+      Create a new cleaner, that sanitizes documents using the supplied whitelist.
+      @param whitelist white-list to clean with
+@@ -67,14 +69,12 @@ public class Cleaner {
+     /**
+      Iterates the input and copies trusted nodes (tags, attributes, text) into the destination.
+      */
+-    private int copySafeNodes(Element root, Element destination) {
+-        List<Node> sourceChildren = root.childNodes();
++    private int copySafeNodes(Element source, Element destination) {
++        List<Node> sourceChildren = source.childNodes();
+         int numDiscarded = 0;
+-
+-        for (Node source : sourceChildren) {
+-            if (source instanceof Element) {
+-                Element sourceEl = (Element) source;
+-
++        for (Node sourceNode : sourceChildren) {
++            if (sourceNode instanceof Element) {
++                Element sourceEl = (Element) sourceNode;
+                 if (whitelist.isSafeTag(sourceEl.tagName())) { // safe, clone and copy safe attrs
+                     ElementMeta meta = createSafeElement(sourceEl);
+                     Element destChild = meta.el;
+@@ -86,9 +85,9 @@ public class Cleaner {
+                     numDiscarded++;
+                     numDiscarded += copySafeNodes(sourceEl, destination);
+                 }
+-            } else if (source instanceof TextNode) {
+-                TextNode sourceText = (TextNode) source;
+-                TextNode destText = new TextNode(sourceText.getWholeText(), source.baseUri());
++            } else if (sourceNode instanceof TextNode) {
++                TextNode sourceText = (TextNode) sourceNode;
++                TextNode destText = new TextNode(sourceText.getWholeText(), sourceNode.baseUri());
+                 destination.appendChild(destText);
+             }
+         }

@@ -1,0 +1,36 @@
+diff --git a/src/com/google/javascript/jscomp/TypeCheck.java b/src/com/google/javascript/jscomp/TypeCheck.java
+index 6030d48d..9a762d66 100644
+--- a/src/com/google/javascript/jscomp/TypeCheck.java
++++ b/src/com/google/javascript/jscomp/TypeCheck.java
+@@ -1574,11 +1570,28 @@ public class TypeCheck implements NodeTraversal.Callback, CompilerPass {
+            !isExtern)) {
+         report(t, n, CONSTRUCTOR_NOT_CALLABLE, childType.toString());
+       }
+-
+       // Functions with explcit 'this' types must be called in a GETPROP
+       // or GETELEM.
+-
+-      visitParameterList(t, n, functionType);
++      if (functionType.isConstructor() ||
++          functionType.isInterface() ||
++          functionType.isEquivalentTo(
++              getNativeType(NO_OBJECT_TYPE)) ||
++          (functionType.isExplicitlyTyped() &&
++           functionType.getTypeOfThis().isUnknownType()) ||
++          functionType.getTypeOfThis().isFunctionPrototypeType()) {
++        if (n.isGetProp() || n.isGetElem() ||
++            n.getParent().isNew() ||
++            n.getParent().isCall()) {
++          if (functionType.isConstructor()) {
++            visitParameterList(t, n, functionType);
++          } else {
++            report(t, n, NON_CONSTRUCTOR_CALLED_AS_CONSTRUCTOR,
++                   childType.toString());
++          }
++        } else {
++          report(t, n, FUNCTION_WITHOUT_CALL, childType.toString());
++        }
++      }
+       ensureTyped(t, n, functionType.getReturnType());
+     } else {
+       ensureTyped(t, n);

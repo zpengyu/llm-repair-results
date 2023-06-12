@@ -1,0 +1,35 @@
+    protected void burstToken(String token, boolean stopAtNonOption)
+    {
+        if (token.startsWith("--"))
+        {
+            process(token.substring(1));
+        }
+        else if (token.startsWith("-"))
+        {
+            String ch = String.valueOf(token.charAt(1));
+
+            if (options.hasOption(ch))
+            {
+                tokens.add("-" + ch);
+                currentOption = options.getOption(ch);
+
+                if (currentOption.hasArg() && (token.length() != 2))
+                {
+                    tokens.add(token.substring(2));
+                }
+            }
+            else if (stopAtNonOption)
+            {
+                process(token.substring(1));
+            }
+            else
+            {
+                tokens.add(token);
+            }
+        }
+        else
+        {
+            tokens.add(token);
+        }
+    }
+

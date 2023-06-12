@@ -1,0 +1,32 @@
+diff --git a/src/main/java/org/jsoup/nodes/Entities.java b/src/main/java/org/jsoup/nodes/Entities.java
+index 5a2b368..ba07844 100644
+--- a/src/main/java/org/jsoup/nodes/Entities.java
++++ b/src/main/java/org/jsoup/nodes/Entities.java
+@@ -137,12 +134,21 @@ public class Entities {
+                             accum.append(c);
+                         break;
+                     default:
+-                        if (canEncode(coreCharset, c, encoder))
+-                            accum.append(c);
+-                        else if (map.containsKey(c))
+-                            accum.append('&').append(map.get(c)).append(';');
+-                        else
+-                            accum.append("&#x").append(Integer.toHexString(codePoint)).append(';');
++                        // code point is between 0xFF and 0xFFFF inclusive
++                        if (codePoint < 0xFF) {
++                            if (canEncode(coreCharset, c, encoder))
++                                accum.append(c);
++                            else if (map.containsKey(c))
++                                accum.append('&').append(map.get(c)).append(';');
++                            else
++                                accum.append("&#x").append(Integer.toHexString(codePoint)).append(';');
++                        } else {
++                            final String c1 = new String(Character.toChars(codePoint));
++                            if (encoder.canEncode(c1)) // uses fallback encoder for simplicity
++                                accum.append(c1);
++                            else
++                                accum.append("&#x").append(Integer.toHexString(codePoint)).append(';');
++                        }
+                 }
+             } else {
+                 final String c = new String(Character.toChars(codePoint));

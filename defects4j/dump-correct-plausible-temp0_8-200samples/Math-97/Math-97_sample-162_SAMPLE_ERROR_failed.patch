@@ -1,0 +1,39 @@
+diff --git a/src/java/org/apache/commons/math/analysis/BrentSolver.java b/src/java/org/apache/commons/math/analysis/BrentSolver.java
+index 8dab47503..cade1d537 100644
+--- a/src/java/org/apache/commons/math/analysis/BrentSolver.java
++++ b/src/java/org/apache/commons/math/analysis/BrentSolver.java
+@@ -124,22 +124,26 @@ public class BrentSolver extends UnivariateRealSolverImpl {
+      */
+     public double solve(double min, double max) throws MaxIterationsExceededException, 
+         FunctionEvaluationException {
+-        
+         clearResult();
+         verifyInterval(min, max);
+-        
+         double ret = Double.NaN;
+-        
+         double yMin = f.value(min);
+         double yMax = f.value(max);
+-
+         // Verify bracketing
+         double sign = yMin * yMax;
+-        if (sign >= 0) {
++        if (sign > 0) {
+             // check if either value is close to a zero
+-                // neither value is close to zero and min and max do not bracket root.
+-                throw new IllegalArgumentException
+-                ("Function values at endpoints do not have different signs." +
++            double epsilon = FastMath.max(relativeAccuracy * FastMath.abs(min), absoluteAccuracy);
++            if (FastMath.abs(yMin) <= epsilon) {
++                return min;
++            }
++            epsilon = FastMath.max(relativeAccuracy * FastMath.abs(max), absoluteAccuracy);
++            if (FastMath.abs(yMax) <= epsilon) {
++                return max;
++            }
++            // neither value is close to zero and min and max do not bracket root.
++            throw new IllegalArgumentException
++                ("Function values at endpoints do not have opposite signs." +
+                         "  Endpoints: [" + min + "," + max + "]" + 
+                         "  Values: [" + yMin + "," + yMax + "]");
+         } else {

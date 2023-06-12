@@ -1,0 +1,30 @@
+diff --git a/src/main/java/org/jsoup/parser/HtmlTreeBuilder.java b/src/main/java/org/jsoup/parser/HtmlTreeBuilder.java
+index 5a46c4c..e890aef 100644
+--- a/src/main/java/org/jsoup/parser/HtmlTreeBuilder.java
++++ b/src/main/java/org/jsoup/parser/HtmlTreeBuilder.java
+@@ -380,9 +380,12 @@ public class HtmlTreeBuilder extends TreeBuilder {
+     }
+ 
+     void resetInsertionMode() {
++        int pos = stack.size() -1;
++        Element node = isFosterInserts() ? stack.get(1) : stack.get(pos);
++        int initialPos = pos;
+         boolean last = false;
+-        for (int pos = stack.size() -1; pos >= 0; pos--) {
+-            Element node = stack.get(pos);
++        for (; pos >= 0; pos--) {
++            node = stack.get(pos);
+             if (pos == 0) {
+                 last = true;
+                 node = contextElement;
+@@ -426,8 +429,9 @@ public class HtmlTreeBuilder extends TreeBuilder {
+                 break; // frag
+             }
+         }
++        if (pos == initialPos)
++            transition(HtmlTreeBuilderState.InBody);
+     }
+-
+     // todo: tidy up in specific scope methods
+     private String[] specificScopeTarget = {null};
+ 

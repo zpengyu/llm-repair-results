@@ -1,0 +1,38 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/deser/BeanDeserializer.java b/src/main/java/com/fasterxml/jackson/databind/deser/BeanDeserializer.java
+index cd54e7788..9737039de 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/deser/BeanDeserializer.java
++++ b/src/main/java/com/fasterxml/jackson/databind/deser/BeanDeserializer.java
+@@ -789,8 +787,6 @@ public class BeanDeserializer
+             SettableBeanProperty creatorProp = creator.findCreatorProperty(propName);
+             if (creatorProp != null) {
+                 // first: let's check to see if this might be part of value with external type id:
+-                // 11-Sep-2015, tatu: Important; do NOT pass buffer as last arg, but null,
+-                //   since it is not the bean
+                 if (ext.handlePropertyValue(p, ctxt, propName, buffer)) {
+                     ;
+                 } else {
+@@ -830,17 +826,6 @@ public class BeanDeserializer
+                 buffer.bufferProperty(prop, prop.deserialize(p, ctxt));
+                 continue;
+             }
+-            // external type id (or property that depends on it)?
+-            if (ext.handlePropertyValue(p, ctxt, propName, null)) {
+-                continue;
+-            }
+-            /* As per [JACKSON-313], things marked as ignorable should not be
+-             * passed to any setter
+-             */
+-            if (_ignorableProps != null && _ignorableProps.contains(propName)) {
+-                handleIgnoredProperty(p, ctxt, handledType(), propName);
+-                continue;
+-            }
+             // "any property"?
+             if (_anySetter != null) {
+                 buffer.bufferAnyProperty(_anySetter, propName, _anySetter.deserialize(p, ctxt));
+@@ -854,5 +838,4 @@ public class BeanDeserializer
+             wrapInstantiationProblem(e, ctxt);
+             return null; // never gets here
+         }
+-    }
+-}
++    }}

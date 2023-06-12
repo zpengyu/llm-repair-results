@@ -1,0 +1,27 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/deser/BasicDeserializerFactory.java b/src/main/java/com/fasterxml/jackson/databind/deser/BasicDeserializerFactory.java
+index 81acbdb27..d08887b8f 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/deser/BasicDeserializerFactory.java
++++ b/src/main/java/com/fasterxml/jackson/databind/deser/BasicDeserializerFactory.java
+@@ -742,8 +740,21 @@ nonAnnotatedParamIndex, ctor);
+             creators.addPropertyCreator(candidate.creator(), true, properties);
+             return;
+         }
++        // 21-Nov-2018, tatu: As per [databind#2342], need to consider injected member
++        //    annotation as well...
++        if (param != null) {
++            if (param.hasAnnotation(JsonInject.class)) {
++                useProps = true;
++            }
++        }
++        if (useProps) {
++            SettableBeanProperty[] properties = new SettableBeanProperty[] {
++                    constructCreatorProperty(ctxt, beanDesc, paramName, 0, param, injectId)
++            };
++            creators.addPropertyCreator(candidate.creator(), true, properties);
++            return;
++        }
+         _handleSingleArgumentCreator(creators, candidate.creator(), true, true);
+-
+         // one more thing: sever link to creator property, to avoid possible later
+         // problems with "unresolved" constructor property
+         if (paramDef != null) {

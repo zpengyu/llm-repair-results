@@ -1,0 +1,44 @@
+diff --git a/src/main/java/com/fasterxml/jackson/core/json/ReaderBasedJsonParser.java b/src/main/java/com/fasterxml/jackson/core/json/ReaderBasedJsonParser.java
+index 1cfcfa1b..79613450 100644
+--- a/src/main/java/com/fasterxml/jackson/core/json/ReaderBasedJsonParser.java
++++ b/src/main/java/com/fasterxml/jackson/core/json/ReaderBasedJsonParser.java
+@@ -1951,7 +1951,7 @@ public class ReaderBasedJsonParser // final in 2.3, earlier
+         char[] outBuf = _textBuffer.getCurrentSegment();
+         int outPtr = _textBuffer.getCurrentSegmentSize();
+         final int maxCode = codes.length;
+-
++        boolean useCode = false;
+         while (true) {
+             if (_inputPtr >= _inputEnd) {
+                 if (!_loadMore()) { // acceptable for now (will error out later)
+@@ -1962,6 +1962,7 @@ public class ReaderBasedJsonParser // final in 2.3, earlier
+             int i = (int) c;
+             if (i <= maxCode) {
+                 if (codes[i] != 0) {
++                    useCode = true;
+                     break;
+                 }
+             } else if (!Character.isJavaIdentifierPart(c)) {
+@@ -1979,16 +1979,15 @@ public class ReaderBasedJsonParser // final in 2.3, earlier
+             }
+         }
+         _textBuffer.setCurrentLength(outPtr);
+-        {
+-            TextBuffer tb = _textBuffer;
+-            char[] buf = tb.getTextBuffer();
+-            int start = tb.getTextOffset();
+-            int len = tb.size();
+-
++        TextBuffer tb = _textBuffer;
++        char[] buf = tb.getTextBuffer();
++        int start = tb.getTextOffset();
++        int len = tb.size();
++        if (useCode){
+             return _symbols.findSymbol(buf, start, len, hash);
+         }
++        return new String(buf, start, len);
+     }
+-
+     @Override
+     protected final void _finishString() throws IOException
+     {

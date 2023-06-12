@@ -1,0 +1,47 @@
+    public long getDateTimeMillis(int year, int monthOfYear, int dayOfMonth,
+                                  int hourOfDay, int minuteOfHour,
+                                  int secondOfMinute, int millisOfSecond)
+        throws IllegalArgumentException
+    {
+        Chronology base;
+        if ((base = getBase()) != null) {
+            return base.getDateTimeMillis
+                (year, monthOfYear, dayOfMonth,
+                 hourOfDay, minuteOfHour, secondOfMinute, millisOfSecond);
+        }
+        
+        if (secondOfMinute < 0 || secondOfMinute > 59) {
+            throw new IllegalFieldValueException(
+                    DateTimeFieldType.secondOfMinute(),
+                    Integer.valueOf(secondOfMinute), null, null);
+        }
+        if (millisOfSecond < 0 || millisOfSecond > 999) {
+            throw new IllegalFieldValueException(
+                    DateTimeFieldType.millisOfSecond(),
+                    Integer.valueOf(millisOfSecond), null, null);
+        }
+
+        // Assume date is Gregorian.
+        long instant;
+        try {
+            instant = iGregorianChronology.getDateTimeMillis
+                (year, monthOfYear, dayOfMonth,
+                 hourOfDay, minuteOfHour, secondOfMinute, millisOfSecond);
+            if (instant < iCutoverMillis) {
+                // Maybe it's Julian.
+                instant = iJulianChronology.getDateTimeMillis
+                    (year, monthOfYear, dayOfMonth,
+                     hourOfDay, minuteOfHour, secondOfMinute, millisOfSecond);
+                if (instant >= iCutoverMillis) {
+                    // Okay, it's in the illegal cutover gap.
+                    throw new IllegalArgumentException("Specified date does not exist");
+                }
+            }
+        } catch (IllegalArgumentException e) {
+            throw new IllegalArgumentException("Illegal values for Year, Month, Day, Hour, Minute and Millisecond: " +
+                year + "," + monthOfYear + "," + dayOfMonth + "," +
+                hourOfDay + "," + minuteOfHour + "," + millisOfSecond);
+        }
+        return instant;
+    }
+

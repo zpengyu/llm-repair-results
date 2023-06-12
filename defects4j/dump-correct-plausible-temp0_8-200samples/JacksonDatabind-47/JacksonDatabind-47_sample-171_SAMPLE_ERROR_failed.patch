@@ -1,0 +1,30 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/AnnotationIntrospector.java b/src/main/java/com/fasterxml/jackson/databind/AnnotationIntrospector.java
+index 624a1fd7e..f1ba4de0b 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/AnnotationIntrospector.java
++++ b/src/main/java/com/fasterxml/jackson/databind/AnnotationIntrospector.java
+@@ -831,6 +827,12 @@ public abstract class AnnotationIntrospector
+         if (type.isMapLikeType()) {
+             JavaType keyType = type.getKeyType();
+             Class<?> keyClass = findSerializationKeyType(a, keyType);
++            if (keyClass != null && !keyClass.isAssignableFrom(keyType.getRawClass())) {
++                throw new JsonMappingException(null,
++                        String.format("Invalid type key class %s (of type %s) specified for property '%s'; must be subtype of (actual) type %s",
++                                ClassUtil.nameOf(keyClass), keyClass.getName(), a.getName(),
++                                keyType));
++            }
+             if (keyClass != null) {
+                 if (keyType.hasRawClass(keyClass)) {
+                     keyType = keyType.withStaticTyping();
+@@ -864,6 +865,12 @@ public abstract class AnnotationIntrospector
+         if (contentType != null) { // collection[like], map[like], array, reference
+             // And then value types for all containers:
+            Class<?> contentClass = findSerializationContentType(a, contentType);
++           if (contentClass != null && !contentClass.isAssignableFrom(contentType.getRawClass())) {
++               throw new JsonMappingException(null,
++                       String.format("Invalid content type class %s (of type %s) specified for property '%s'; must be subtype of (actual) type %s",
++                               ClassUtil.nameOf(contentClass), contentClass.getName(), a.getName(),
++                               contentType));
++           }
+            if (contentClass != null) {
+                if (contentType.hasRawClass(contentClass)) {
+                    contentType = contentType.withStaticTyping();

@@ -1,0 +1,31 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/deser/std/StringCollectionDeserializer.java b/src/main/java/com/fasterxml/jackson/databind/deser/std/StringCollectionDeserializer.java
+index 42c6f0491..857c8e58f 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/deser/std/StringCollectionDeserializer.java
++++ b/src/main/java/com/fasterxml/jackson/databind/deser/std/StringCollectionDeserializer.java
+@@ -130,9 +130,24 @@ public final class StringCollectionDeserializer
+         if (isDefaultDeserializer(valueDeser)) {
+             valueDeser = null;
+         }
+-        return withResolved(delegate, valueDeser, nuller, unwrapSingle);
++        JsonDeserializer<?> result = withResolved(delegate, valueDeser, nuller, unwrapSingle);
++        if (property == null || property.getType() == null || _valueInstantiator == null) {
++            return result;
++        }
++        Class<?> raw = _valueInstantiator.getRawClass();
++        if (raw == null) {
++            return result;
++        }
++        // Even though we ignore type of property to deserialize (as it's always Collection),
++        // we can still handle cases where it is refined
++        Class<?> type = property.getType().getRawClass();
++        if (type.isAssignableFrom(raw)) {
++            return result;
++        }
++        return new CollectionDeserializer(result._containerType, result._valueInstantiator, result._valueDeserializer,
++                result._delegateDeserializer, result._property, result._contentTypeDeserializer, result._valueNullProvider,
++                unwrapSingle, result._unwrapRoot, result._ignoreAllUnknown);
+     }    
+-    
+     /*
+     /**********************************************************
+     /* ContainerDeserializerBase API

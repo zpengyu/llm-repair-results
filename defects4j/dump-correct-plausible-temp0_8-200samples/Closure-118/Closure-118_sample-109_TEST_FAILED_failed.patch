@@ -1,0 +1,24 @@
+diff --git a/src/com/google/javascript/jscomp/DisambiguateProperties.java b/src/com/google/javascript/jscomp/DisambiguateProperties.java
+index 96c66201..53db4774 100644
+--- a/src/com/google/javascript/jscomp/DisambiguateProperties.java
++++ b/src/com/google/javascript/jscomp/DisambiguateProperties.java
+@@ -496,7 +495,9 @@ class DisambiguateProperties<T> implements CompilerPass {
+         // We should never see a mix of numbers and strings.
+         String name = child.getString();
+         T type = typeSystem.getType(getScope(), n, name);
+-
++        String typeString = type.toString();
++        if(typeString == null)
++            typeString = "null";
+         Property prop = getProperty(name);
+         if (!prop.scheduleRenaming(child,
+                                    processProperty(t, prop, type, null))) {
+@@ -506,7 +507,7 @@ class DisambiguateProperties<T> implements CompilerPass {
+             compiler.report(JSError.make(
+                 t.getSourceName(), child, propertiesToErrorFor.get(name),
+                 Warnings.INVALIDATION, name,
+-                (type == null ? "null" : type.toString()), n.toString(), ""));
++                (typeString), n.toString(), ""));
+           }
+         }
+       }

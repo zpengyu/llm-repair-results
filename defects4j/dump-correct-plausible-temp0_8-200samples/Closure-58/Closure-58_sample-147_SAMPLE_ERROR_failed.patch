@@ -1,0 +1,19 @@
+diff --git a/src/com/google/javascript/jscomp/LiveVariablesAnalysis.java b/src/com/google/javascript/jscomp/LiveVariablesAnalysis.java
+index 94e813d8..5f3d07b2 100644
+--- a/src/com/google/javascript/jscomp/LiveVariablesAnalysis.java
++++ b/src/com/google/javascript/jscomp/LiveVariablesAnalysis.java
+@@ -203,8 +200,14 @@ class LiveVariablesAnalysis extends
+             // for(var x in y) {...}
+             lhs = lhs.getLastChild();
+           }
++          if (NodeUtil.isLhsByDestructuring(lhs)) {
++            // In a destructuring pattern, the operand is never (re)assigned
++            // inside the loop.
++            addToSetIfLocal(lhs, gen);
++          } else {
+             addToSetIfLocal(lhs, kill);
+             addToSetIfLocal(lhs, gen);
++          }
+           computeGenKill(rhs, gen, kill, conditional);
+         }
+         return;

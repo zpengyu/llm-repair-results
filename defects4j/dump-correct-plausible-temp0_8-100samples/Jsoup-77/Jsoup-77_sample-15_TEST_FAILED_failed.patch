@@ -1,0 +1,22 @@
+diff --git a/src/main/java/org/jsoup/parser/XmlTreeBuilder.java b/src/main/java/org/jsoup/parser/XmlTreeBuilder.java
+index 06ef739..bb8e64a 100644
+--- a/src/main/java/org/jsoup/parser/XmlTreeBuilder.java
++++ b/src/main/java/org/jsoup/parser/XmlTreeBuilder.java
+@@ -126,9 +125,16 @@ public class XmlTreeBuilder extends TreeBuilder {
+         }
+         if (firstFound == null)
+             return; // not found, skip
+-
++        // firstFound is the first encountered, is it also top of stack?
++        if (stack.get(stack.size()-1) == firstFound) {
++            stack.remove(stack.size()-1);
++            return;
++        }
++        boolean skipTag = false;
+         for (int pos = stack.size() -1; pos >= 0; pos--) {
+             Element next = stack.get(pos);
++            // skip all non matching end tags, once found
++            skipTag = next != firstFound;
+             stack.remove(pos);
+             if (next == firstFound)
+                 break;

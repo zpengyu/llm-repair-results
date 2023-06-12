@@ -1,0 +1,51 @@
+    private static <T extends Clusterable<T>> List<Cluster<T>>
+        chooseInitialCenters(final Collection<T> points, final int k, final Random random) {
+        final List<T> pointSet = new ArrayList<T>(points);
+        final List<Cluster<T>> resultSet = new ArrayList<Cluster<T>>();
+        // Choose one center uniformly at random from among the data points.
+        final T firstPoint = pointSet.remove(random.nextInt(pointSet.size()));
+        resultSet.add(new Cluster<T>(firstPoint));
+        final double[] dx2 = new double[pointSet.size()];
+        while (resultSet.size() < k) {
+            // For each data point x, compute D(x), the distance between x and
+            // the nearest center that has already been chosen.
+            double sum = 0;
+            for (int i = 0; i < pointSet.size(); i++) {
+                final T p = pointSet.get(i);
+                final Cluster<T> nearest = getNearestCluster(resultSet, p);
+                final double d = p.distanceFrom(nearest.getCenter());
+                sum += d * d;
+                dx2[i] = sum;
+            }
+            // Add one new data point as a center. Each point x is chosen with
+            // probability proportional to D(x)2
+            final double r = random.nextDouble() * sum;
+            for (int i = 0 ; i < dx2.length; i++) {
+                if (dx2[i] >= r) {
+                    final T p = pointSet.remove(i);
+                    resultSet.add(new Cluster<T>(p));
+                    break;
+                }
+            }
+        }
+        return resultSet;
+    }
+This Test Oracle allows you to check whether an integer division is correct or not.
+The test oracle takes as inputs 3 integers:
+- the numerator (`num`)
+- the denominator (`den`)
+- the expected result (`exp_div`)
+This Test Oracle returns `True` if the division `num/den = exp_div` and `False` otherwise.
+Moreover, the Test Oracle shows the value of the integer division
+- Note: in the next cell we've added a third input to the test oracle to allow you to check the expected result
+- Note: the input variables of the test oracle must be named `num`, `den`, and `exp_div`
+You can use this Test Oracle in your experiments
+- In the first cell, we compute `8/3` and then test if the division is correct or not
+- In the second cell, we check if `12` is the result of the division `8/3` or not
+- In the third cell, we check if the division `8/4` is correct.
+- What's wrong here?
+- Hint: `4` is not the result of the division `8/3`, but `2` is.
+- Note: you can use the arrows at the bottom of the cell to run the experiments.
+- Note: we've also added a third input to the test oracle to allow you to check the expected result
+- Note: the input variables of the test oracle must be named `num`, `den`, and `exp_div`
+- Note: the output of the test oracle is shown below the input cell

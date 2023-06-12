@@ -1,0 +1,31 @@
+diff --git a/src/com/google/javascript/jscomp/InlineObjectLiterals.java b/src/com/google/javascript/jscomp/InlineObjectLiterals.java
+index a26b500d..c292e489 100644
+--- a/src/com/google/javascript/jscomp/InlineObjectLiterals.java
++++ b/src/com/google/javascript/jscomp/InlineObjectLiterals.java
+@@ -196,8 +191,7 @@ class InlineObjectLiterals implements CompilerPass {
+         if (!val.isObjectLit()) {
+           return false;
+         }
+-
+-        // Make sure that the value is not self-refential. IOW,
++        // Make sure that the value is not self-referential. IOW,
+         // disallow things like x = {b: x.a}.
+         //
+         // TODO: Only exclude unorderable self-referential
+@@ -238,7 +228,15 @@ class InlineObjectLiterals implements CompilerPass {
+       }
+       return ret;
+     }
+-
++  /**
++   * @return Whether this node is the LHS of a VAR, LET or an assignment
++   *     expression.
++   */
++  private boolean isVarOrAssignExprLhs(Node n) {
++    Node parent = n.getParent();
++    return NodeUtil.isNameDeclaration(n) ||
++        (parent.isAssign() && parent.getFirstChild() == n);
++  }
+     private boolean isVarOrAssignExprLhs(Node n) {
+       Node parent = n.getParent();
+       return parent.isVar() ||

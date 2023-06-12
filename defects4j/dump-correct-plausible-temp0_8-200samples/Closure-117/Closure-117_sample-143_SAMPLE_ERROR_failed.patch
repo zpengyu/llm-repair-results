@@ -1,0 +1,19 @@
+diff --git a/src/com/google/javascript/jscomp/TypeValidator.java b/src/com/google/javascript/jscomp/TypeValidator.java
+index c6d25483..6a30da66 100644
+--- a/src/com/google/javascript/jscomp/TypeValidator.java
++++ b/src/com/google/javascript/jscomp/TypeValidator.java
+@@ -771,6 +767,14 @@ class TypeValidator {
+     } else if (type.isFunctionType()) {
+       // Don't show complex function names.
+       return "function";
++    } else if (type.isUnionType()) {
++      List<JSType> alternates = type.toMaybeUnionType().getAlternates();
++      if (alternates.size() == 2 && alternates.get(0).isNullType() &&
++          alternates.get(1).isObjectType()) {
++        return alternates.get(1).toString();
++      } else {
++        return type.toString();
++      }
+     } else {
+       return type.toString();
+     }

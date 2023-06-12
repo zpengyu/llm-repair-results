@@ -1,0 +1,71 @@
+diff --git a/source/org/jfree/chart/plot/XYPlot.java b/source/org/jfree/chart/plot/XYPlot.java
+index ec26162..ac11a3b 100644
+--- a/source/org/jfree/chart/plot/XYPlot.java
++++ b/source/org/jfree/chart/plot/XYPlot.java
+@@ -4441,7 +4439,11 @@ public class XYPlot extends Plot implements ValueAxisPlot, Pannable,
+                 while (iterator.hasNext()) {
+                     XYAnnotation annotation = (XYAnnotation) iterator.next();
+                     if (annotation instanceof XYAnnotationBoundsInfo) {
+-                        includedAnnotations.add(annotation);
++                        XYAnnotationBoundsInfo xyabi = (XYAnnotationBoundsInfo)
++                                annotation;
++                        if (xyabi.getIncludeInDataBounds()) {
++                            includedAnnotations.add(annotation);
++                        }
+                     }
+                 }
+             }
+@@ -4458,7 +4459,11 @@ public class XYPlot extends Plot implements ValueAxisPlot, Pannable,
+                 while (iterator.hasNext()) {
+                     XYAnnotation annotation = (XYAnnotation) iterator.next();
+                     if (annotation instanceof XYAnnotationBoundsInfo) {
+-                        includedAnnotations.add(annotation);
++                        XYAnnotationBoundsInfo xyabi = (XYAnnotationBoundsInfo)
++                                annotation;
++                        if (xyabi.getIncludeInDataBounds()) {
++                            includedAnnotations.add(annotation);
++                        }
+                     }
+                 }
+             }
+@@ -4489,35 +4493,20 @@ public class XYPlot extends Plot implements ValueAxisPlot, Pannable,
+                                 DatasetUtilities.findRangeBounds(d));
+                     }
+                 }
+-                
+-                    Collection c = r.getAnnotations();
+-                    Iterator i = c.iterator();
+-                    while (i.hasNext()) {
+-                        XYAnnotation a = (XYAnnotation) i.next();
+-                        if (a instanceof XYAnnotationBoundsInfo) {
+-                            includedAnnotations.add(a);
+-                        }
+-                    }
+             }
+         }
+-
+         Iterator it = includedAnnotations.iterator();
+         while (it.hasNext()) {
+             XYAnnotationBoundsInfo xyabi = (XYAnnotationBoundsInfo) it.next();
+-            if (xyabi.getIncludeInDataBounds()) {
+-                if (isDomainAxis) {
+-                    result = Range.combine(result, xyabi.getXRange());
+-                }
+-                else {
+-                    result = Range.combine(result, xyabi.getYRange());
+-                }
++            if (isDomainAxis) {
++                result = Range.combine(result, xyabi.getXRange());
++            }
++            else {
++                result = Range.combine(result, xyabi.getYRange());
+             }
+         }
+-
+         return result;
+-
+     }
+-
+     /**
+      * Receives notification of a change to the plot's dataset.
+      * <P>

@@ -1,0 +1,22 @@
+protected JavaType _narrow(Class<?> subclass)
+{
+    if (_class == subclass) {
+        return this;
+    }
+    if (!_class.isAssignableFrom(subclass)) {
+        throw new IllegalArgumentException("Class "+subclass.getName()+" not sub-type of "
+                +_class.getName());
+    }
+    JavaType res = new SimpleType(subclass, _bindings, _superClass, _superInterfaces,
+            _valueHandler, _typeHandler, _asStatic);
+    // 15-Jan-2016, tatu: `_valueHandler` is not null iff it is (or contains) placeholder, which
+    //   is a problem; need to re-resolve
+    if ((_valueHandler != null) && !_valueHandler.equals(res.getValueHandler())) {
+        res = res.withValueHandler(_valueHandler);
+    }
+    // 15-Jan-2016, tatu: ditto for type handler
+    if ((_typeHandler != null) && !_typeHandler.equals(res.getTypeHandler())) {
+        res = res.withTypeHandler(_typeHandler);
+    }
+    return res;
+}

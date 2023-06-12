@@ -1,0 +1,75 @@
+###Provide a fix for the buggy function
+###Buggy Function
+class FibonacciExample {
+    public static void main(String args[]) {
+        int n1 = 0, n2 = 1, n3, i, count = 10;
+
+        System.out.print(n1 + " " + n2);
+
+        for (i = 2; i < count; ++i) {
+            n3 = n1 - n2;
+            System.out.print(" " + n3);
+            n1 = n2;
+            n2 = n3;
+        }
+    }
+}
+
+###Fixed Function
+class FibonacciExample {
+    public static void main(String args[]) {
+        int n1 = 0, n2 = 1, n3, i, count = 10;
+
+        System.out.print(n1 + " " + n2);
+
+        for (i = 2; i < count; ++i) {
+            n3 = n1 + n2;
+            System.out.print(" " + n3);
+            n1 = n2;
+            n2 = n3;
+        }
+    }
+}
+
+###Provide a fix for the buggy function
+###Buggy Function
+private static boolean isReduceableFunctionExpression(Node n) {
+  return NodeUtil.isFunctionExpression(n);
+}
+###Fixed Function
+private static boolean isReduceableFunctionExpression(Node n) {
+  return NodeUtil.isFunctionExpression(n)
+      && !NodeUtil.isGetOrSetKey(n.getParent());
+}
+###Provide a fix for the buggy function
+###Buggy Function
+  private boolean inferTemplatedTypesForCall(
+      Node n, FunctionType fnType) {
+    final ImmutableList<TemplateType> keys = fnType.getTemplateTypeMap()
+        .getTemplateKeys();
+    if (keys.isEmpty()) {
+      return false;
+    }
+
+    // Try to infer the template types
+    Map<TemplateType, JSType> inferred =
+        inferTemplateTypesFromParameters(fnType, n);
+
+
+    // Replace all template types. If we couldn't find a replacement, we
+    // replace it with UNKNOWN.
+    TemplateTypeReplacer replacer = new TemplateTypeReplacer(
+        registry, inferred);
+    Node callTarget = n.getFirstChild();
+
+    FunctionType replacementFnType = fnType.visit(replacer)
+        .toMaybeFunctionType();
+    Preconditions.checkNotNull(replacementFnType);
+
+    callTarget.setJSType(replacementFnType);
+    n.setJSType(replacementFnType.getReturnType());
+
+    return replacer.madeChanges;
+  }
+
+###Fixed Function

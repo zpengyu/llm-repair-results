@@ -1,0 +1,41 @@
+diff --git a/src/com/google/javascript/jscomp/CodeConsumer.java b/src/com/google/javascript/jscomp/CodeConsumer.java
+index 74978330..90b0daf1 100644
+--- a/src/com/google/javascript/jscomp/CodeConsumer.java
++++ b/src/com/google/javascript/jscomp/CodeConsumer.java
+@@ -184,23 +183,24 @@ abstract class CodeConsumer {
+     if (newcode.length() == 0) {
+       return;
+     }
+-
+     char c = newcode.charAt(0);
+-    if ((isWordChar(c) || c == '\\') &&
+-        isWordChar(getLastChar())) {
+-      // need space to separate. This is not pretty printing.
+-      // For example: "return foo;"
++    if (isWordChar(c)) {
++      if (isWordChar(getLastChar())) {
++        // need space to separate. This is not pretty printing.
++        // For example: "return foo;"
++        append(" ");
++        // Do not allow a forward slash to appear after a DIV.
++        // For example,
++        // REGEXP DIV REGEXP
++        // is valid and should print like
++        // / // / /
++      }
++    } else if (c == '\\' && getLastChar() != '\\') {
++      // need space to separate.
+       append(" ");
+-      // Do not allow a forward slash to appear after a DIV.
+-      // For example,
+-      // REGEXP DIV REGEXP
+-      // is valid and should print like
+-      // / // / /
+     }
+-
+     append(newcode);
+   }
+-
+   void appendOp(String op, boolean binOp) {
+     append(op);
+   }

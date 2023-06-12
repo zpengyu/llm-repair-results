@@ -1,0 +1,30 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/ser/std/NumberSerializer.java b/src/main/java/com/fasterxml/jackson/databind/ser/std/NumberSerializer.java
+index 958795bce..6f5c37224 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/ser/std/NumberSerializer.java
++++ b/src/main/java/com/fasterxml/jackson/databind/ser/std/NumberSerializer.java
+@@ -73,16 +73,13 @@ public class NumberSerializer
+     @Override
+     public void acceptJsonFormatVisitor(JsonFormatVisitorWrapper visitor, JavaType typeHint) throws JsonMappingException
+     {
+-        if (_isInt) {
++        Class<?> h = handledType();
++        if (h == BigInteger.class) {
+             visitIntFormat(visitor, typeHint, JsonParser.NumberType.BIG_INTEGER);
++        } else if (h == BigDecimal.class) {
++            visitFloatFormat(visitor, typeHint, JsonParser.NumberType.BIG_DECIMAL);
+         } else {
+-            Class<?> h = handledType();
+-            if (h == BigDecimal.class) {
+-                visitFloatFormat(visitor, typeHint, JsonParser.NumberType.BIG_INTEGER);
+-            } else {
+-                // otherwise bit unclear what to call... but let's try:
+-                /*JsonNumberFormatVisitor v2 =*/ visitor.expectNumberFormat(typeHint);
+-            }
++            // otherwise bit unclear what to call... but let's try:
++            /*JsonNumberFormatVisitor v2 =*/ visitor.expectNumberFormat(typeHint);
+         }
+-    }
+-}
+\ No newline at end of file
++    }}
+\ No newline at end of file

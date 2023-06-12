@@ -1,0 +1,45 @@
+diff --git a/src/main/java/org/joda/time/chrono/GJChronology.java b/src/main/java/org/joda/time/chrono/GJChronology.java
+index 70884ba5..8a651d75 100644
+--- a/src/main/java/org/joda/time/chrono/GJChronology.java
++++ b/src/main/java/org/joda/time/chrono/GJChronology.java
+@@ -347,7 +347,7 @@ public final class GJChronology extends AssembledChronology {
+         return instant;
+     }
+ 
+-    public long getDateTimeMillis(int year, int monthOfYear, int dayOfMonth,
++	public long getDateTimeMillis(int year, int monthOfYear, int dayOfMonth,
+                                   int hourOfDay, int minuteOfHour,
+                                   int secondOfMinute, int millisOfSecond)
+         throws IllegalArgumentException
+@@ -358,13 +358,29 @@ public final class GJChronology extends AssembledChronology {
+                 (year, monthOfYear, dayOfMonth,
+                  hourOfDay, minuteOfHour, secondOfMinute, millisOfSecond);
+         }
+-
+         // Assume date is Gregorian.
+         long instant;
++        long gregorianCutoverJulianDay = iGregorianChronology.getGregorianCutover();
++        long millis = iGregorianChronology.getGregorianCutover();
++        DateTimeZone zone = iZone;
++        if (zone != null) {
++            // Follow procedure in LocalGregorianCalendar
++            long gregorianCutover = millis;
++            long localGregorianCutover = gregorianCutover - zone.getOffset(gregorianCutover);
++            // System.out.println("localGregorianCutover: " + new DateTime(localGregorianCutover));
++            long cutoverDiffDays = (localGregorianCutover - iJulianChronology.getGregorianCutover()) / DateTimeConstants.MILLIS_PER_DAY;
++            // System.out.println("cutoverDiffDays: " + cutoverDiffDays);
++            gregorianCutoverJulianDay += cutoverDiffDays;
++            // System.out.println("gregorianCutoverJulianDay: " + gregorianCutoverJulianDay);
++        }
++        // System.out.println("Checking: " + new DateTime(year, monthOfYear, dayOfMonth, 0, 0, 0, 0, iJulianChronology));
++        int julianDay = iJulianChronology.getDayOfYear(year, monthOfYear, dayOfMonth);
++        // System.out.println("julianDay: " + julianDay);
++        if (julianDay >= gregorianCutoverJulianDay) {
+             instant = iGregorianChronology.getDateTimeMillis
+                 (year, monthOfYear, dayOfMonth,
+                  hourOfDay, minuteOfHour, secondOfMinute, millisOfSecond);
+-        if (instant < iCutoverMillis) {
++        } else {
+             // Maybe it's Julian.
+             instant = iJulianChronology.getDateTimeMillis
+                 (year, monthOfYear, dayOfMonth,

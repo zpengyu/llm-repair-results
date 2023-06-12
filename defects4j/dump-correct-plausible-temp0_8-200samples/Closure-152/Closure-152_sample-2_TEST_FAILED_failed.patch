@@ -1,0 +1,22 @@
+diff --git a/src/com/google/javascript/rhino/jstype/FunctionType.java b/src/com/google/javascript/rhino/jstype/FunctionType.java
+index f68dfea6..60a2a348 100644
+--- a/src/com/google/javascript/rhino/jstype/FunctionType.java
++++ b/src/com/google/javascript/rhino/jstype/FunctionType.java
+@@ -868,9 +866,14 @@ public class FunctionType extends PrototypeObjectType {
+     // Warning about typeOfThis if it doesn't resolve to an ObjectType
+     // is handled further upstream.
+     // TODO(nicksantos): Handle this correctly if we have a UnionType.
+-    typeOfThis = (ObjectType) safeResolve(typeOfThis, t, scope);
+-
+-    boolean changed = false;
++    JSType resolvedThisType = safeResolve(typeOfThis, t, scope);
++    boolean changed = (resolvedThisType != typeOfThis);
++    if (resolvedThisType.isUnionType()) {
++      // This warning is handled upstream.
++      typeOfThis = (ObjectType) resolvedThisType;
++    } else {
++      typeOfThis = (ObjectType) resolvedThisType;
++    }
+     ImmutableList.Builder<ObjectType> resolvedInterfaces =
+         ImmutableList.builder();
+     for (ObjectType iface : implementedInterfaces) {

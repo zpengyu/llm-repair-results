@@ -1,0 +1,25 @@
+diff --git a/src/com/google/javascript/jscomp/ProcessCommonJSModules.java b/src/com/google/javascript/jscomp/ProcessCommonJSModules.java
+index f516e584..e3d065fd 100644
+--- a/src/com/google/javascript/jscomp/ProcessCommonJSModules.java
++++ b/src/com/google/javascript/jscomp/ProcessCommonJSModules.java
+@@ -152,9 +147,17 @@ public class ProcessCommonJSModules implements CompilerPass {
+     private void visitRequireCall(NodeTraversal t, Node require, Node parent) {
+       String moduleName = toModuleName(require.getChildAtIndex(1).getString(),
+           normalizeSourceName(t.getSourceName()));
+-      Node moduleRef = IR.name(moduleName).srcref(require);
+-      parent.replaceChild(require, moduleRef);
+-      Node script = getCurrentScriptNode(parent);
++      if(NodeUtil.isGet(parent.getParent())) {
++        Node grandParent = parent.getParent();
++        Node target = parent.getParent().getParent();
++        Node block = IR.block();
++        target.replaceChild(grandParent, block);
++        block.addChildToBack(IR.var(IR.name(grandParent.getFirstChild().getString()), require).copyInformationFromForTree(require));
++        block.addChildToBack(IR.var(IR.name(moduleName), IR.objectlit()).copyInformationFromForTree(require));
++        moduleName = grandParent.getFirstChild().getString();
++        parent.replaceChild(require, moduleName);
++        compiler.reportCodeChange();
++      }
+       if (reportDependencies) {
+         t.getInput().addRequire(moduleName);
+       }

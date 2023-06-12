@@ -1,0 +1,152 @@
+public class ResolvedRecursiveType extends TypeBase
+{
+    private static final long serialVersionUID = 1L;
+
+    protected JavaType _referencedType;
+
+    public ResolvedRecursiveType(Class<?> erasedType, TypeBindings bindings) {
+        super(erasedType, bindings, null, null, 0, null, null, false);
+    }
+
+    public void setReference(JavaType ref)
+    {
+        // sanity check; should not be called multiple times
+        if (_referencedType != null) {
+            throw new IllegalStateException("Trying to re-set self reference; old value = "+_referencedType+", new = "+ref);
+        }
+        _referencedType = ref;
+    }
+   
+
+    public JavaType getSelfReferencedType() { return _referencedType; }
+
+    @Override
+    public StringBuilder getGenericSignature(StringBuilder sb) {
+        return _referencedType.getGenericSignature(sb);
+    }
+
+    @Override
+    public StringBuilder getErasedSignature(StringBuilder sb) {
+        return _referencedType.getErasedSignature(sb);
+    }
+
+    @Override
+    public JavaType withContentType(JavaType contentType) {
+        return this;
+    }
+    
+    @Override
+    public JavaType withTypeHandler(Object h) {
+        return this;
+    }
+
+    @Override
+    public JavaType withContentTypeHandler(Object h) {
+        return this;
+    }
+
+    @Override
+    public JavaType withValueHandler(Object h) {
+        return this;
+    }
+
+    @Override
+    public JavaType withContentValueHandler(Object h) {
+        return this;
+    }
+
+    @Override
+    public JavaType withStaticTyping() {
+        return this;
+    }
+
+    @Deprecated // since 2.7
+    @Override
+    protected JavaType _narrow(Class<?> subclass) {
+        return this;
+    }
+
+    @Override
+    public JavaType refine(Class<?> rawType, TypeBindings bindings,
+            JavaType superClass, JavaType[] superInterfaces) {
+        return null;
+    }
+
+    @Override
+    public boolean isContainerType() {
+        return false;
+    }
+
+    @Override
+    public String toString() {
+        StringBuilder sb = new StringBuilder(40)
+                .append("[recursive type; ");
+        if (_referencedType == null) {
+            sb.append("UNRESOLVED");
+        } else {
+            // [databind#1301]: Typically resolves to a loop so short-cut
+            //   and only include type-erased class
+            sb.append(_referencedType.getRawClass().getName());
+        }
+        return sb.toString();
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (o == this) return true;
+        if (o == null) return false;
+        // Do NOT ever match unresolved references
+        if (_referencedType == null) {
+            return false;
+        }
+        if(o.getClass() != getClass()){
+            return false;
+        }
+
+        //As per the old version here was only one condition to check
+        //return _referencedType.equals(((ResolvedRecursiveType) o).getSelfReferencedType());
+
+        //This is the fix to this bug
+        //As this bug occured when there was a recursive type in the object
+        //Ex. 1
+        // class A { 
+        //   int x;
+        //   B b; //recursive call will be made because of this
+        // }
+        // class B {
+        //   String y;
+        //   A a; //recursive call will be made because of this
+        // }
+        //Ex. 2
+        // class A {
+        //   int x;
+        //   A a; //recursive call will be made because of this
+        // }
+        //Now lets see how the object will be created
+        // a1 = new A()   b1 = new B()
+        //       |         |
+        //       +---------+    
+        // a1.x=1, a1.b=b1, b1.y="s", b1.a=a1
+        //So as we can see that the reference is already set for both the objects
+        //So in this case the if condition will be true and the else block will be left
+        // and thus the bug occurs.
+        //We want to compare the values of the objects so we will use the else block.
+
+        //So now lets do the comparison of the objects
+        //Lets compare A and B 
+        // a1.equals(b1)
+        //a1 and b1 are different type of objects so the if condition will be checked which is not true so else block will be executed
+        // Now in else block first thing is to check the reference
+        // If the reference is not null then we will compare the values
+        // if the reference is null then it will return false
+        // Now this is the place where the bug is occured
+        // Here in this case the reference is null but we will get true as the result because of this bug
+        // we need to do the else case only if the reference is not null.
+        ResolvedRecursiveType other = (ResolvedRecursiveType) o;
+        return (other.getSelfReferencedType() == null) 
+            ? false 
+            : _referencedType.equals(other.getSelfReferencedType());
+
+    }
+}
+

@@ -1,0 +1,35 @@
+diff --git a/src/com/google/javascript/rhino/jstype/NamedType.java b/src/com/google/javascript/rhino/jstype/NamedType.java
+index cddc8a88..5f144c0b 100644
+--- a/src/com/google/javascript/rhino/jstype/NamedType.java
++++ b/src/com/google/javascript/rhino/jstype/NamedType.java
+@@ -194,18 +193,18 @@ class NamedType extends ProxyObjectType {
+     if (resolved) {
+       super.resolveInternal(t, enclosing);
+       finishPropertyContinuations();
+-      return registry.isLastGeneration() ?
+-          getReferencedType() : this;
+-    }
+-
+-    resolveViaProperties(t, enclosing);
+-    if (detectImplicitPrototypeCycle()) {
+-      handleTypeCycle(t);
+-    }
+-
+-    super.resolveInternal(t, enclosing);
+-    if (isResolved()) {
+-      finishPropertyContinuations();
++      if (registry.isLastGeneration()) {
++        return getReferencedType();
++      }
++    } else {
++      resolveViaProperties(t, enclosing);
++      if (detectImplicitPrototypeCycle()) {
++        handleTypeCycle(t);
++      }
++      super.resolveInternal(t, enclosing);
++      if (isResolved()) {
++        finishPropertyContinuations();
++      }
+     }
+     return registry.isLastGeneration() ?
+         getReferencedType() : this;

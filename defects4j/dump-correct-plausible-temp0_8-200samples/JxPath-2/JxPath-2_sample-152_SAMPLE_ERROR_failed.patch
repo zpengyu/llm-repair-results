@@ -1,0 +1,45 @@
+diff --git a/src/java/org/apache/commons/jxpath/ri/compiler/Expression.java b/src/java/org/apache/commons/jxpath/ri/compiler/Expression.java
+index 927f617..cf577ec 100644
+--- a/src/java/org/apache/commons/jxpath/ri/compiler/Expression.java
++++ b/src/java/org/apache/commons/jxpath/ri/compiler/Expression.java
+@@ -87,14 +80,13 @@ public abstract class Expression {
+         }
+         return new PointerIterator(ValueUtils.iterate(result),
+                 new QName(null, "value"),
+-                context.getRootContext().getCurrentNodePointer().getLocale());
++                context.getRootContext().getCurrentNodePointer().getLocale(), context.getRootContext().getNamespaceResolver());
+     }
+-
+     public static class PointerIterator implements Iterator {
+         private Iterator iterator;
+         private QName qname;
+         private Locale locale;
+-
++        private NamespaceResolver resolver;
+         //to what method does the following comment refer?
+         /**
+          * @deprecated Use the method that takes a NamespaceManager
+@@ -104,16 +96,19 @@ public abstract class Expression {
+             this.qname = qname;
+             this.locale = locale;
+         }
+-
++        public PointerIterator(Iterator it, QName qname, Locale locale, NamespaceResolver resolver) {
++            this.iterator = it;
++            this.qname = qname;
++            this.locale = locale;
++            this.resolver = resolver;
++        }
+         public boolean hasNext() {
+             return iterator.hasNext();
+         }
+-
+         public Object next() {
+             Object o = iterator.next();
+-            return o instanceof Pointer ? o : NodePointer.newNodePointer(qname, o, locale);
++            return o instanceof Pointer ? o : NodePointer.newNodePointer(qname, o, locale, resolver);
+         }
+-
+         public void remove() {
+             throw new UnsupportedOperationException();
+         }

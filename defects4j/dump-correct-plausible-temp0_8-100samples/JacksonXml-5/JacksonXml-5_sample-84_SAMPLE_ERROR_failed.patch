@@ -1,0 +1,19 @@
+diff --git a/src/main/java/com/fasterxml/jackson/dataformat/xml/ser/XmlSerializerProvider.java b/src/main/java/com/fasterxml/jackson/dataformat/xml/ser/XmlSerializerProvider.java
+index 31eeeb8..1922470 100644
+--- a/src/main/java/com/fasterxml/jackson/dataformat/xml/ser/XmlSerializerProvider.java
++++ b/src/main/java/com/fasterxml/jackson/dataformat/xml/ser/XmlSerializerProvider.java
+@@ -56,9 +56,12 @@ public class XmlSerializerProvider extends DefaultSerializerProvider
+         super(src);
+         // 21-May-2018, tatu: As per [dataformat-xml#282], should NOT really copy
+         //    root name lookup as that may link back to diff version, configuration
+-        _rootNameLookup = src._rootNameLookup;
++        if (src._rootNameLookup instanceof java.io.Serializable) {
++            _rootNameLookup = (SerializedString[]) src._rootNameLookup.clone();
++        } else {
++            _rootNameLookup = null;
++        }
+     }
+-
+     /*
+     /**********************************************************************
+     /* Overridden methods

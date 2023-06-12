@@ -1,0 +1,68 @@
+diff --git a/src/com/google/javascript/jscomp/InlineObjectLiterals.java b/src/com/google/javascript/jscomp/InlineObjectLiterals.java
+index 2f5a8e10..b7aff9b7 100644
+--- a/src/com/google/javascript/jscomp/InlineObjectLiterals.java
++++ b/src/com/google/javascript/jscomp/InlineObjectLiterals.java
+@@ -153,13 +153,20 @@ class InlineObjectLiterals implements CompilerPass {
+      * </pre>
+      */
+     private boolean isInlinableObject(List<Reference> refs) {
+-      boolean ret = false;
+       Set<String> validProperties = Sets.newHashSet();
+       for (Reference ref : refs) {
+         Node name = ref.getNode();
+         Node parent = ref.getParent();
+         Node gramps = ref.getGrandparent();
+-
++        if (NodeUtil.isVarOrSimpleAssignLhs(parent, gramps)) {
++          String propName = parent.getLastChild().getString();
++          validProperties.add(propName);
++        }
++      }
++      for (Reference ref : refs) {
++        Node name = ref.getNode();
++        Node parent = ref.getParent();
++        Node gramps = ref.getGrandparent();
+         // Ignore most indirect references, like x.y (but not x.y(),
+         // since the function referenced by y might reference 'this').
+         //
+@@ -184,11 +189,7 @@ class InlineObjectLiterals implements CompilerPass {
+           // isn't a perfect algorithm, but it should catch most cases.
+           String propName = parent.getLastChild().getString();
+           if (!validProperties.contains(propName)) {
+-            if (NodeUtil.isVarOrSimpleAssignLhs(parent, gramps)) {
+-              validProperties.add(propName);
+-            } else {
+-              return false;
+-            }
++            return false;
+           }
+           continue;
+         }
+@@ -224,9 +221,6 @@ class InlineObjectLiterals implements CompilerPass {
+             // ES5 get/set not supported.
+             return false;
+           }
+-
+-          validProperties.add(child.getString());
+-
+           Node childVal = child.getFirstChild();
+           // Check if childVal is the parent of any of the passed in
+           // references, as that is how self-referential assignments
+@@ -242,16 +236,9 @@ class InlineObjectLiterals implements CompilerPass {
+             }
+           }
+         }
+-
+-
+-        // We have found an acceptable object literal assignment. As
+-        // long as there are no other assignments that mess things up,
+-        // we can inline.
+-        ret = true;
+       }
+-      return ret;
++      return true;
+     }
+-
+     private boolean isVarOrAssignExprLhs(Node n) {
+       Node parent = n.getParent();
+       return parent.isVar() ||

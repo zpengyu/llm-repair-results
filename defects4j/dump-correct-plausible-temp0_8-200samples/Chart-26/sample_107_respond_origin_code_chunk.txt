@@ -1,0 +1,56 @@
+protected AxisState drawLabel(String label, Graphics2D g2, 
+        Rectangle2D plotArea, Rectangle2D dataArea, RectangleEdge edge, 
+        AxisState state) {
+        
+    if (state == null) {
+        throw new IllegalArgumentException("Null 'state' argument.");
+    }
+    if (label == null || label.equals("")) {
+        return state;
+    }
+    Font font = getLabelFont();
+    g2.setFont(font);
+    g2.setPaint(getLabelPaint());
+    FontMetrics fm = g2.getFontMetrics();
+    Rectangle2D labelBounds = TextUtilities.getTextBounds(label, g2, fm);
+    RectangleInsets insets = getLabelInsets();
+    double angle = 0.0;
+    double x = 0.0;
+    double y = 0.0;
+    double w = labelBounds.getWidth();
+    double h = labelBounds.getHeight();
+    Shape hotspot = null;
+    
+    if (edge == RectangleEdge.TOP) {
+        x = dataArea.getCenterX();
+        y = dataArea.getMinY() - insets.getBottom() - h / 2.0;
+        angle = getLabelAngle();
+        hotspot = new Rectangle2D.Double(x - w / 2.0, y - h / 2.0, w, h);
+        state.cursorUp(insets.getTop() + h + insets.getBottom());
+    }
+    else if (edge == RectangleEdge.BOTTOM) {
+        x = dataArea.getCenterX();
+        y = dataArea.getMaxY() + insets.getTop() + h / 2.0;
+        angle = getLabelAngle();
+        hotspot = new Rectangle2D.Double(x - w / 2.0, y - h / 2.0, w, h);
+        state.cursorDown(insets.getTop() + h + insets.getBottom());
+    }
+    else if (edge == RectangleEdge.LEFT) {
+        x = dataArea.getMinX() - insets.getRight() - w / 2.0;
+        y = dataArea.getCenterY();
+        angle = getLabelAngle() - Math.PI / 2.0;
+        hotspot = new Rectangle2D.Double(x - w / 2.0, y - h / 2.0, w, h);
+        state.cursorLeft(insets.getLeft() + w + insets.getRight());
+    }
+    else if (edge == RectangleEdge.RIGHT) {
+        x = dataArea.getMaxX() + insets.getLeft() + w / 2.0;
+        y = dataArea.getCenterY();
+        angle = getLabelAngle() + Math.PI / 2.0;
+        hotspot = new Rectangle2D.Double(x - w / 2.0, y - h / 2.0, w, h);
+        state.cursorRight(insets.getLeft() + w + insets.getRight());
+    }
+    TextUtilities.drawRotatedString(label, g2, (float) x, (float) y, 
+            TextAnchor.CENTER, angle, TextAnchor.CENTER);
+    return state;
+}
+

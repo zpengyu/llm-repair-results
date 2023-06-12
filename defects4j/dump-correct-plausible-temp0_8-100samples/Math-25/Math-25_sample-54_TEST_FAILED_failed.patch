@@ -1,0 +1,40 @@
+diff --git a/src/main/java/org/apache/commons/math3/optimization/fitting/HarmonicFitter.java b/src/main/java/org/apache/commons/math3/optimization/fitting/HarmonicFitter.java
+index 42399c04d..8ae98ba58 100644
+--- a/src/main/java/org/apache/commons/math3/optimization/fitting/HarmonicFitter.java
++++ b/src/main/java/org/apache/commons/math3/optimization/fitting/HarmonicFitter.java
+@@ -320,14 +314,29 @@ public class HarmonicFitter extends CurveFitter<HarmonicOscillator.Parametric> {
+                 }
+                 a = 0.5 * (yMax - yMin);
+             } else {
+-                    // In some ill-conditioned cases (cf. MATH-844), the guesser
+-                    // procedure cannot produce sensible results.
+-
+-                a = FastMath.sqrt(c1 / c2);
+-                omega = FastMath.sqrt(c2 / c3);
++                final double qa = FastMath.sqrt(c1 / c2);
++                final double qomega = FastMath.sqrt(c2 / c3);
++                final double qomega2 = qomega * qomega;
++                final double qa2 = qa * qa;
++                final double p = 0.5 * (sx2 - sxy * sxy / sy2 +
++                                        FastMath.sqrt((sx2 - sxy * sxy / sy2) * (sx2 - sxy * sxy / sy2) +
++                                                      4 * (sxz - sxy * syz / sy2) * (sxz - sxy * syz / sy2)));
++                final double q = sxz - sxy * syz / sy2;
++                // In some ill-conditioned cases (cf. MATH-844), the guesser
++                // procedure cannot produce sensible results.
++                if (FastMath.abs(qomega2 - p) < FastMath.abs(qomega2 + p)) {
++                    a = qa;
++                    omega = qomega;
++                } else {
++                    a = qa * qomega2 / p;
++                    omega = FastMath.sqrt(p);
++                }
++                if (!(a > 0) || !(omega > 0)) {
++                    a = FastMath.sqrt(qa2 + qomega2 + 2 * q * qa / sy2);
++                    omega = FastMath.sqrt(qomega2 + q * q / sy2);
++                }
+             }
+         }
+-
+         /**
+          * Estimate a first guess of the phase.
+          */

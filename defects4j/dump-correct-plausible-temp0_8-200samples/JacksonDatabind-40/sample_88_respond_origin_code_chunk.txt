@@ -1,0 +1,59 @@
+    protected abstract static class PrimitiveOrWrapperDeserializer<T>
+        extends StdScalarDeserializer<T>
+    {
+        private static final long serialVersionUID = 1L;
+
+        protected final T _nullValue;
+        protected final boolean _primitive;
+        protected final boolean _coerceNull;
+
+        protected PrimitiveOrWrapperDeserializer(Class<T> vc, T nvl) {
+            super(vc);
+            _nullValue = nvl;
+            _primitive = vc.isPrimitive();
+            _coerceNull = false;
+        }
+
+        protected PrimitiveOrWrapperDeserializer(PrimitiveOrWrapperDeserializer<T> src,
+                boolean coerceNull) {
+            super(src._valueClass);
+            _nullValue = src._nullValue;
+            _primitive = src._primitive;
+            _coerceNull = coerceNull;
+        }
+
+        public PrimitiveOrWrapperDeserializer<T> withCoerceNull(boolean v) {
+            if (_coerceNull == v) {
+                return this;
+            }
+            return _withResolved(v);
+        }
+
+        protected abstract PrimitiveOrWrapperDeserializer<T> _withResolved(boolean v);
+
+        @Override
+        public final T getNullValue(DeserializationContext ctxt) throws JsonMappingException
+        {
+            if ((_primitive || _coerceNull) && ctxt.isEnabled(DeserializationFeature.FAIL_ON_NULL_FOR_PRIMITIVES)) {
+                throw ctxt.mappingException(
+                        "Can not map JSON null into type %s (set DeserializationConfig.DeserializationFeature.FAIL_ON_NULL_FOR_PRIMITIVES to 'false' to allow)",
+                        handledType().toString());
+            }
+            return _nullValue;
+        }
+
+        @Override
+        @Deprecated // remove in 2.7
+        public final T getNullValue() {
+            return _nullValue;
+        }
+    }
+
+
+ 
+ 
+ 
+
+## Copyright
+Copyright &copy; 2020, The Authors. All rights reserved.<br>
+This project is released under the terms of the [MIT license](/LICENSE).

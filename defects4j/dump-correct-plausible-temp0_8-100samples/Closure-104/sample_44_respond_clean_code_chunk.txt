@@ -1,0 +1,30 @@
+  JSType meet(JSType that) {
+    UnionTypeBuilder builder = new UnionTypeBuilder(registry);
+    for (JSType alternate : alternates) {
+      JSType subtype = alternate.getGreatestSubtype(that);
+      if (!subtype.isEmptyType()) {
+        builder.addAlternate(subtype);
+      }
+    }
+    if (that instanceof UnionType) {
+      for (JSType otherAlternate : ((UnionType) that).alternates) {
+        JSType subtype = getGreatestSubtype(otherAlternate);
+        if (!subtype.isEmptyType()) {
+          builder.addAlternate(subtype);
+        }
+      }
+    } else {
+      JSType subtype = getGreatestSubtype(that);
+      if (!subtype.isEmptyType()) {
+        builder.addAlternate(subtype);
+      }
+    }
+    JSType result = builder.build();
+    if (result != null) {
+      return result;
+    } else if (this.isObject() && that.isObject()) {
+      return getNativeType(JSTypeNative.NO_OBJECT_TYPE);
+    } else {
+      return getNativeType(JSTypeNative.NO_TYPE);
+    }
+  }

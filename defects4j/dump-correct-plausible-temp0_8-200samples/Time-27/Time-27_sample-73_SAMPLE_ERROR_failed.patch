@@ -1,0 +1,34 @@
+diff --git a/src/main/java/org/joda/time/format/PeriodFormatterBuilder.java b/src/main/java/org/joda/time/format/PeriodFormatterBuilder.java
+index a6bf55c7..8e209f1a 100644
+--- a/src/main/java/org/joda/time/format/PeriodFormatterBuilder.java
++++ b/src/main/java/org/joda/time/format/PeriodFormatterBuilder.java
+@@ -798,9 +798,16 @@ public class PeriodFormatterBuilder {
+         int size = elementPairs.size();
+         if (size >= 2 && elementPairs.get(0) instanceof Separator) {
+             Separator sep = (Separator) elementPairs.get(0);
+-                PeriodFormatter f = toFormatter(elementPairs.subList(2, size), notPrinter, notParser);
+-                sep = sep.finish(f.getPrinter(), f.getParser());
+-                return new PeriodFormatter(sep, sep);
++            if ((size >= 4 && elementPairs.get(size - 2) instanceof Separator)) {
++                Separator sep2 = (Separator) elementPairs.get(size - 2);
++                if (sep.iAfterParser == sep2.iAfterParser && sep.iAfterPrinter == sep2.iAfterPrinter && sep.iFinalParser == sep2.iFinalParser && sep.iFinalPrinter == sep2.iFinalPrinter && sep.iUseAfter == sep2.iUseAfter && sep.iUseBefore == sep2.iUseBefore) {
++                    elementPairs.remove(size - 2);
++                    elementPairs.remove(size - 2);
++                    sep = sep.finish(sep2.iPrinter, sep2.iParser);
++                }
++            }
++            PeriodFormatter f = toFormatter(elementPairs.subList(2, size), notPrinter, notParser);
++            return new PeriodFormatter(sep.finish(f.getPrinter(), f.getParser()), sep.finish(f.getPrinter(), f.getParser()));
+         }
+         Object[] comp = createComposite(elementPairs);
+         if (notPrinter) {
+@@ -811,7 +818,8 @@ public class PeriodFormatterBuilder {
+             return new PeriodFormatter((PeriodPrinter) comp[0], (PeriodParser) comp[1]);
+         }
+     }
+-
++Total number of methods: 962
++Total number of commits: 16925
+     private static Object[] createComposite(List<Object> elementPairs) {
+         switch (elementPairs.size()) {
+             case 0:

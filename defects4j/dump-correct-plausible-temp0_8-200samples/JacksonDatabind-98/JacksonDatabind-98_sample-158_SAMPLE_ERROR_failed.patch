@@ -1,0 +1,56 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/deser/impl/ExternalTypeHandler.java b/src/main/java/com/fasterxml/jackson/databind/deser/impl/ExternalTypeHandler.java
+index b0797059f..410be8fe0 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/deser/impl/ExternalTypeHandler.java
++++ b/src/main/java/com/fasterxml/jackson/databind/deser/impl/ExternalTypeHandler.java
+@@ -256,7 +256,6 @@ public class ExternalTypeHandler
+             PropertyValueBuffer buffer, PropertyBasedCreator creator)
+         throws IOException
+     {
+-        // first things first: deserialize all data buffered:
+         final int len = _properties.length;
+         Object[] values = new Object[len];
+         for (int i = 0; i < len; ++i) {
+@@ -283,12 +282,20 @@ public class ExternalTypeHandler
+                         prop.getName(), _properties[i].getTypePropertyName());
+             }
+             values[i] = _deserialize(p, ctxt, i, typeId);
+-
+-            final SettableBeanProperty prop = extProp.getProperty();
+-            // also: if it's creator prop, fill in
+-            if (prop.getCreatorIndex() >= 0) {
++        }
++        // third: assign non-creator properties
++        for (int i = 0; i < len; ++i) {
++            SettableBeanProperty prop = _properties[i].getProperty();
++            if (prop.getCreatorIndex() < 0) {
+                 buffer.assignParameter(prop, values[i]);
+-
++            }
++        }
++        Object bean = creator.build(ctxt, buffer);
++        // also: if it's creator prop, fill in
++        for (int i = 0; i < len; ++i) {
++            SettableBeanProperty prop = _properties[i].getProperty();
++            if (prop.getCreatorIndex() >= 0) {
++                prop.set(bean, values[i]);
+                 // [databind#999] And maybe there's creator property for type id too?
+                 SettableBeanProperty typeProp = extProp.getTypeProperty();
+                 // for now, should only be needed for creator properties, too
+@@ -299,17 +306,8 @@ public class ExternalTypeHandler
+                 }
+             }
+         }
+-        Object bean = creator.build(ctxt, buffer);
+-        // third: assign non-creator properties
+-        for (int i = 0; i < len; ++i) {
+-            SettableBeanProperty prop = _properties[i].getProperty();
+-            if (prop.getCreatorIndex() < 0) {
+-                prop.set(bean, values[i]);
+-            }
+-        }
+         return bean;
+     }
+-
+     @SuppressWarnings("resource")
+     protected final Object _deserialize(JsonParser p, DeserializationContext ctxt,
+             int index, String typeId) throws IOException

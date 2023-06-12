@@ -1,0 +1,57 @@
+    protected boolean equal(
+        EvalContext context,
+        Expression left,
+        Expression right) 
+    {
+        Object l = left.compute(context);
+        Object r = right.compute(context);
+        Object lm = null;
+        Object rm = null;
+
+        if (l instanceof InitialContext || l instanceof SelfContext) {
+            l = ((EvalContext) l).getSingleNodePointer();
+        }
+        if (r instanceof InitialContext || r instanceof SelfContext) {
+            r = ((EvalContext) r).getSingleNodePointer();
+        }
+
+        if (l instanceof Collection) {
+            l = ((Collection) l).iterator();
+        }
+        if (r instanceof Collection) {
+            r = ((Collection) r).iterator();
+        }
+
+        if (l instanceof Iterator && !(r instanceof Iterator)) {
+            return contains((Iterator) l, r);
+        }
+        if (!(l instanceof Iterator) && r instanceof Iterator) {
+            return contains((Iterator) r, l);
+        }
+        if (l instanceof Iterator && r instanceof Iterator) {
+            return findMatch((Iterator) l, (Iterator) r);
+        }
+
+        lm = l;
+        rm = r;
+        if (lm != null && lm instanceof Number) {
+            rm = ValueUtils.convertNumber(r, Number.class);
+            if (rm == null) {
+                return false;
+            }
+        } else if (rm != null && rm instanceof Number) {
+            lm = ValueUtils.convertNumber(l, Number.class);
+            if (lm == null) {
+                return false;
+            }
+        } else if (lm != null && rm != null) {
+            if ((lm instanceof String && rm instanceof String)
+                || (lm instanceof Number && rm instanceof Number)) 
+            {
+                lm = ValueUtils.getStringValue(l);
+                rm = ValueUtils.getStringValue(r);
+            }
+        }
+        return ValueUtils.equal(lm, rm);
+    }
+

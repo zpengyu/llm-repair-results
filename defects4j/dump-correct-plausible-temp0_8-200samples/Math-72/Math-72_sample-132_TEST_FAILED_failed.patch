@@ -1,0 +1,58 @@
+diff --git a/src/main/java/org/apache/commons/math/analysis/solvers/BrentSolver.java b/src/main/java/org/apache/commons/math/analysis/solvers/BrentSolver.java
+index 747f80ac0..bc061a31e 100644
+--- a/src/main/java/org/apache/commons/math/analysis/solvers/BrentSolver.java
++++ b/src/main/java/org/apache/commons/math/analysis/solvers/BrentSolver.java
+@@ -108,41 +106,24 @@ public class BrentSolver extends UnivariateRealSolverImpl {
+             setResult(initial, 0);
+             return result;
+         }
+-
+-        // return the first endpoint if it is good enough
+-        double yMin = f.value(min);
+-        if (Math.abs(yMin) <= functionValueAccuracy) {
+-            setResult(yMin, 0);
+-            return result;
+-        }
+-
+         // reduce interval if min and initial bracket the root
+-        if (yInitial * yMin < 0) {
+-            return solve(f, min, yMin, initial, yInitial, min, yMin);
++        if (isBracketing(yInitial, f.value(min), f.value(max))) {
++            return solve(f, min, yInitial, max, yInitial, initial, yInitial);
+         }
+-
+-        // return the second endpoint if it is good enough
+-        double yMax = f.value(max);
+-        if (Math.abs(yMax) <= functionValueAccuracy) {
+-            setResult(yMax, 0);
+-            return result;
++        // full Brent algorithm starting with provided initial guess
++        return solve(f, min, yInitial, max, yInitial, initial, yInitial);
++    }
++    private boolean isBracketing(double yInitial, double yMin, double yMax){
++        if (yInitial * yMin < 0) {
++            return true;
+         }
+-
+-        // reduce interval if initial and max bracket the root
+-        if (yInitial * yMax < 0) {
+-            return solve(f, initial, yInitial, max, yMax, initial, yInitial);
++        else if (yInitial * yMax < 0) {
++            return true;
+         }
+-
+-        if (yMin * yMax > 0) {
+-            throw MathRuntimeException.createIllegalArgumentException(
+-                  NON_BRACKETING_MESSAGE, min, max, yMin, yMax);
++        else{
++            return false;
+         }
+-
+-        // full Brent algorithm starting with provided initial guess
+-        return solve(f, min, yMin, max, yMax, initial, yInitial);
+-
+     }
+-
+     /**
+      * Find a zero in the given interval.
+      * <p>

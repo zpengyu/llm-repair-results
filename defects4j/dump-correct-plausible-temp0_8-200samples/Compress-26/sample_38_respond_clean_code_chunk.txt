@@ -1,0 +1,23 @@
+    public static long skip(InputStream input, long numToSkip) throws IOException {
+        long available = numToSkip;
+        while (numToSkip > 0) {
+            long skipped = input.skip(numToSkip);
+            if (skipped == 0) {
+                break;
+            }
+            numToSkip -= skipped;
+        }
+        if (numToSkip > 0) {
+            //InputStream.skip() returns 0 if the end of stream was reached.
+            //This will happen if the total number of bytes skipped is less than
+            //'numToSkip', or if the stream is not seekable.
+            //BufferingInputStream supports the mark() and reset() methods and
+            //is therefore seekable. 
+            while (numToSkip > 0) {
+                //skip remaining bytes by reading them
+                input.read();
+                numToSkip--;
+            }
+        }
+        return available - numToSkip;
+    }

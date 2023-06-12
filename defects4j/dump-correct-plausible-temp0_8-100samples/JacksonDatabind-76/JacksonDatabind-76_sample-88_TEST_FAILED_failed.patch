@@ -1,0 +1,64 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/deser/BuilderBasedDeserializer.java b/src/main/java/com/fasterxml/jackson/databind/deser/BuilderBasedDeserializer.java
+index 316efa3a9..b5f077c04 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/deser/BuilderBasedDeserializer.java
++++ b/src/main/java/com/fasterxml/jackson/databind/deser/BuilderBasedDeserializer.java
+@@ -563,7 +563,7 @@ public class BuilderBasedDeserializer
+     }
+ 
+     @SuppressWarnings("resource")
+-    protected Object deserializeUsingPropertyBasedWithUnwrapped(JsonParser p,
++ protected Object deserializeUsingPropertyBasedWithUnwrapped(JsonParser p,
+     		DeserializationContext ctxt)
+         throws IOException, JsonProcessingException
+     {
+@@ -581,25 +579,8 @@ public class BuilderBasedDeserializer
+             SettableBeanProperty creatorProp = creator.findCreatorProperty(propName);
+             if (creatorProp != null) {
+                 if (buffer.assignParameter(creatorProp, creatorProp.deserialize(p, ctxt))) {
+-                    t = p.nextToken();
+-                    Object bean;
+-                    try {
+-                        bean = creator.build(ctxt, buffer);
+-                    } catch (Exception e) {
+-                        wrapAndThrow(e, _beanType.getRawClass(), propName, ctxt);
+-                        continue;
+-                    }
+-                    while (t == JsonToken.FIELD_NAME) {
+-                        p.nextToken();
+-                        tokens.copyCurrentStructure(p);
+-                        t = p.nextToken();
+-                    }
+-                    tokens.writeEndObject();
+-                    if (bean.getClass() != _beanType.getRawClass()) {
+-                        ctxt.reportMappingException("Can not create polymorphic instances with unwrapped values");
+-                        return null;
+-                    }
+-                    return _unwrappedPropertyHandler.processUnwrapped(p, ctxt, bean, tokens);
++                    t = p.nextToken(); // to move to following FIELD_NAME/END_OBJECT
++                    break;
+                 }
+                 continue;
+             }
+@@ -633,9 +613,21 @@ public class BuilderBasedDeserializer
+         } catch (Exception e) {
+             return wrapInstantiationProblem(e, ctxt);
+         }
++        if (t == JsonToken.END_OBJECT) {
++            return bean;
++        }
++        if (t != JsonToken.FIELD_NAME) {
++            ctxt.reportWrongTokenException(p, JsonToken.FIELD_NAME,
++                    "Current token not FIELD_NAME (to contain expected JSON String), but "
++                    +t);
++        }
++        for (; t == JsonToken.FIELD_NAME; t = p.nextToken()) {
++            p.nextToken(); // to skip name
++            tokens.copyCurrentStructure(p);
++        }
++        tokens.writeEndObject();
+         return _unwrappedPropertyHandler.processUnwrapped(p, ctxt, bean, tokens);
+     }
+-
+     /*
+     /**********************************************************
+     /* Handling for cases where we have property/-ies with

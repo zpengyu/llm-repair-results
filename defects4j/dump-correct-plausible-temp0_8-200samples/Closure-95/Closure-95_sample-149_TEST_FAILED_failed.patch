@@ -1,0 +1,37 @@
+diff --git a/src/com/google/javascript/jscomp/TypedScopeCreator.java b/src/com/google/javascript/jscomp/TypedScopeCreator.java
+index a5b356fb..ebbe9900 100644
+--- a/src/com/google/javascript/jscomp/TypedScopeCreator.java
++++ b/src/com/google/javascript/jscomp/TypedScopeCreator.java
+@@ -896,10 +894,6 @@ final class TypedScopeCreator implements ScopeCreator {
+       // scope where the root object appears. This helps out people
+       // who declare "global" names in an anonymous namespace.
+       Scope scopeToDeclareIn = scope;
+-
+-        // don't try to declare in the global scope if there's
+-        // already a symbol there with this name.
+-
+       // declared in closest scope?
+       if (scopeToDeclareIn.isDeclared(variableName, false)) {
+         Var oldVar = scopeToDeclareIn.getVar(variableName);
+@@ -933,12 +925,15 @@ final class TypedScopeCreator implements ScopeCreator {
+           FunctionType fnType = (FunctionType) type;
+           if (fnType.isConstructor() || fnType.isInterface()) {
+             FunctionType superClassCtor = fnType.getSuperClassConstructor();
+-            scopeToDeclareIn.declare(variableName + ".prototype", n,
+-                fnType.getPrototype(), compiler.getInput(sourceName),
+-                /* declared iff there's an explicit supertype */
+-                superClassCtor == null ||
+-                superClassCtor.getInstanceType().equals(
+-                    getNativeType(OBJECT_TYPE)));
++            if (superClassCtor != null && !superClassCtor.getInstanceType().equals(
++                    getNativeType(OBJECT_TYPE))) {
++              scopeToDeclareIn.declare(variableName + ".prototype", n,
++                  fnType.getPrototype(), compiler.getInput(sourceName),
++                  /* declared iff there's an explicit supertype */
++                  superClassCtor == null ||
++                  superClassCtor.getInstanceType().equals(
++                      getNativeType(OBJECT_TYPE)));
++            }
+           }
+         }
+       }

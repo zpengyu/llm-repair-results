@@ -1,0 +1,29 @@
+diff --git a/src/com/google/javascript/jscomp/DeadAssignmentsElimination.java b/src/com/google/javascript/jscomp/DeadAssignmentsElimination.java
+index 19b8b6bd..a1ceaf33 100644
+--- a/src/com/google/javascript/jscomp/DeadAssignmentsElimination.java
++++ b/src/com/google/javascript/jscomp/DeadAssignmentsElimination.java
+@@ -329,10 +329,15 @@ class DeadAssignmentsElimination extends AbstractPostOrderCallback implements
+         // occurs after the RHS is evaluated.
+         return VariableLiveness.KILL;
+       } else {
+-        return VariableLiveness.READ;
++        if (NodeUtil.isNameDeclOrSimpleAssignLhs(n, n.getParent())) {
++          // The RHS is evaluated before the assignment is made so it is
++          // live.
++          return VariableLiveness.READ;
++        } else {
++          return VariableLiveness.MAYBE_LIVE;
++        }
+       }
+     }
+-
+     // Expressions are evaluated left-right, depth first.
+     for (Node child = n.getFirstChild();
+         child != null; child = child.getNext()) {
+@@ -344,5 +349,4 @@ class DeadAssignmentsElimination extends AbstractPostOrderCallback implements
+       }
+     }
+     return VariableLiveness.MAYBE_LIVE;
+-  }
+-}
++  }}

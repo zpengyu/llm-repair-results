@@ -1,0 +1,24 @@
+diff --git a/src/main/java/org/apache/commons/codec/binary/BaseNCodecInputStream.java b/src/main/java/org/apache/commons/codec/binary/BaseNCodecInputStream.java
+index 78f4d67e..85d3683c 100644
+--- a/src/main/java/org/apache/commons/codec/binary/BaseNCodecInputStream.java
++++ b/src/main/java/org/apache/commons/codec/binary/BaseNCodecInputStream.java
+@@ -113,10 +106,15 @@ public class BaseNCodecInputStream extends FilterInputStream {
+                 if (!baseNCodec.hasData()) {
+                     byte[] buf = new byte[doEncode ? 4096 : 8192];
+                     int c = in.read(buf);
+-                    if (doEncode) {
+-                        baseNCodec.encode(buf, 0, c);
+-                    } else {
+-                        baseNCodec.decode(buf, 0, c);
++                    if (c == -1) {
++                        baseNCodec.decode(buf, 0, 0);
++                        break;
++                    } else if (c > 0) {
++                        if (doEncode) {
++                            baseNCodec.encode(buf, 0, c);
++                        } else {
++                            baseNCodec.decode(buf, 0, c);
++                        }
+                     }
+                 }
+                 readLen = baseNCodec.readResults(b, offset, len);

@@ -1,0 +1,23 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/type/ResolvedRecursiveType.java b/src/main/java/com/fasterxml/jackson/databind/type/ResolvedRecursiveType.java
+index 7b8c69af7..3b6aedd84 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/type/ResolvedRecursiveType.java
++++ b/src/main/java/com/fasterxml/jackson/databind/type/ResolvedRecursiveType.java
+@@ -25,10 +22,15 @@ public class ResolvedRecursiveType extends TypeBase
+         }
+         _referencedType = ref;
+     }
+-
+-
++    // TypeBase adds a default implementation of getSelfReferencedType,
++    // but overrides it again in ResolvedTypeBase in a way that assumes
++    // the type must be a ResolvedTypeBase, which is NOT true for
++    // recursive reference types.
++    //
++    // This override is necessary to prevent a ClassCastException when
++    // deserializing the type in ResolvedTypeBase.
++    @Override
+     public JavaType getSelfReferencedType() { return _referencedType; }
+-
+     @Override
+     public StringBuilder getGenericSignature(StringBuilder sb) {
+         return _referencedType.getGenericSignature(sb);

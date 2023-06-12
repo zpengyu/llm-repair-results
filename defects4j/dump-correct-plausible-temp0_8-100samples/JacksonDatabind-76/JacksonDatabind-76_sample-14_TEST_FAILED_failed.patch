@@ -1,0 +1,21 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/deser/BuilderBasedDeserializer.java b/src/main/java/com/fasterxml/jackson/databind/deser/BuilderBasedDeserializer.java
+index 316efa3a9..f69cd02b7 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/deser/BuilderBasedDeserializer.java
++++ b/src/main/java/com/fasterxml/jackson/databind/deser/BuilderBasedDeserializer.java
+@@ -624,10 +622,13 @@ public class BuilderBasedDeserializer
+                 buffer.bufferAnyProperty(_anySetter, propName, _anySetter.deserialize(p, ctxt));
+             }
+         }
+-
+-        // We hit END_OBJECT, so:
++        // either we just got END_OBJECT, OR we just got a FIELD_NAME for the first
++        // actual non-creator property:
++        if (t != JsonToken.END_OBJECT) {
++            tokens.writeEndObject();
++            tokens.copyCurrentStructure(p);
++        }
+         Object bean;
+-        // !!! 15-Feb-2012, tatu: Need to modify creator to use Builder!
+         try {
+             bean = creator.build(ctxt, buffer);
+         } catch (Exception e) {

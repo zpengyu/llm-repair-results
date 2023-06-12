@@ -1,0 +1,20 @@
+    public byte[] getBinaryValue(Base64Variant b64variant)
+        throws IOException, JsonParseException
+    {
+        // Multiple possibilities...
+        JsonNode n = currentNumericNode();
+        if (n != null) {
+            byte[] data = n.binaryValue();
+            if (data != null) {
+                return data;
+            }
+            String str = n.asText();
+            if (str != null) {
+                ByteArrayBuilder builder = new ByteArrayBuilder(100);
+                _decodeBase64(str, builder, b64variant);
+                return builder.toByteArray();
+            }
+        }
+        // otherwise return null to mark we have no binary content
+        return null;
+    }

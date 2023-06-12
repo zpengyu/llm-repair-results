@@ -1,0 +1,21 @@
+    public void serialize(Object value, JsonGenerator jgen, SerializerProvider provider) throws IOException {
+        String str;
+        if (value instanceof Date) {
+            Date date = (Date) value;
+            if (usesTimezone()) {
+                // must convert (since timezone used during formatting, if any)
+                DateFormat format = provider.getConfig().getDateFormat();
+                if (format.getClass() == StdDateFormat.class) {
+                    // need to re-clone for thread-safe access
+                    format = (DateFormat) format.clone();
+                }
+                format.setTimeZone(getTimeZone());
+                str = format.format(date);
+            } else {
+                str = provider.defaultSerializeDateKey(date, jgen);
+            }
+        } else {
+            str = value.toString();
+        }
+        jgen.writeFieldName(str);
+    }

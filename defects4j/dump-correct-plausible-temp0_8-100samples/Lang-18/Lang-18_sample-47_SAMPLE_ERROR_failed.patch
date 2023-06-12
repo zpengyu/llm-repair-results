@@ -1,0 +1,44 @@
+diff --git a/src/main/java/org/apache/commons/lang3/time/FastDateFormat.java b/src/main/java/org/apache/commons/lang3/time/FastDateFormat.java
+index 0c2e4a7b..3fca5ac7 100644
+--- a/src/main/java/org/apache/commons/lang3/time/FastDateFormat.java
++++ b/src/main/java/org/apache/commons/lang3/time/FastDateFormat.java
+@@ -576,13 +570,36 @@ public class FastDateFormat extends Format {
+             default:
+                 throw new IllegalArgumentException("Illegal pattern component: " + token);
+             }
+-
+             rules.add(rule);
+         }
+-
+         return rules;
+     }
+-
++    public synchronized void set(int field, int value) {
++        complete();
++        super.set(field, value);
++    }
++    public synchronized void add(int field, int amount) {
++        if (amount == 0) {
++            return; // Do nothing!
++        }
++        complete();
++        super.add(field, amount);
++    }
++    public synchronized void roll(int field, boolean up) {
++        roll(field, up ? +1 : -1);
++    }
++    public synchronized void roll(int field, int amount) {
++        if (amount == 0) {
++            return; // Do nothing!
++        }
++        complete();
++        super.roll(field, amount);
++    }
++    public synchronized void setTimeZone(TimeZone value) {
++        super.setTimeZone(value);
++        areAllFieldsSet = false;
++        isTimeSet = false;
++    }
+     /**
+      * <p>Performs the parsing of tokens.</p>
+      *

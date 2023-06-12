@@ -1,0 +1,60 @@
+diff --git a/src/java/org/apache/commons/cli/HelpFormatter.java b/src/java/org/apache/commons/cli/HelpFormatter.java
+index 0c5dc6b..c631760 100644
+--- a/src/java/org/apache/commons/cli/HelpFormatter.java
++++ b/src/java/org/apache/commons/cli/HelpFormatter.java
+@@ -789,15 +789,10 @@ public class HelpFormatter {
+      *
+      * @return the StringBuffer with the rendered Options contents.
+      */
+-    protected StringBuffer renderWrappedText(StringBuffer sb, int width, 
+-                                             int nextLineTabStop, String text)
+-    {
++protected StringBuffer renderWrappedText(StringBuffer sb, int width, int nextLineTabStop, String text) {
+         int pos = findWrapPos(text, width, 0);
+-
+-        if (pos == -1)
+-        {
++        if (pos == -1) {
+             sb.append(rtrim(text));
+-
+             return sb;
+         }
+         sb.append(rtrim(text.substring(0, pos))).append(defaultNewLine);
+@@ -805,23 +799,27 @@ public class HelpFormatter {
+         // all following lines must be padded with nextLineTabStop space
+         // characters
+         final String padding = createPadding(nextLineTabStop);
+-
+-        while (true)
+-        {
+-            text = padding + text.substring(pos).trim();
++        String substring = text.substring(pos).trim();
++        if (substring.length() > 0) {
++            text = padding + substring;
++        } else {
++            return sb;
++        }
++        while (true) {
+             pos = findWrapPos(text, width, nextLineTabStop);
+-
+-            if (pos == -1)
+-            {
++            if (pos == -1) {
+                 sb.append(text);
+-
+                 return sb;
+             }
+-
+             sb.append(rtrim(text.substring(0, pos))).append(defaultNewLine);
++            substring = text.substring(pos).trim();
++            if (substring.length() > 0) {
++                text = padding + substring;
++            } else {
++                return sb;
++            }
+         }
+     }
+-
+     /**
+      * Finds the next text wrap position after <code>startPos</code> for the 
+      * text in <code>text</code> with the column width <code>width</code>.

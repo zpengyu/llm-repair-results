@@ -1,0 +1,29 @@
+diff --git a/src/main/java/org/jsoup/helper/HttpConnection.java b/src/main/java/org/jsoup/helper/HttpConnection.java
+index a941e48..cb74e7b 100644
+--- a/src/main/java/org/jsoup/helper/HttpConnection.java
++++ b/src/main/java/org/jsoup/helper/HttpConnection.java
+@@ -399,10 +399,9 @@ public class HttpConnection implements Connection {
+             int i = 0;
+             // BOM:
+             if (input.length >= 3 && (input[0] & 0xFF) == 0xEF
+-                && (input[1] & 0xFF) == 0xBB & (input[2] & 0xFF) == 0xBF) {
++                    && (input[1] & 0xFF) == 0xBB & (input[2] & 0xFF) == 0xBF) {
+                 i = 3;
+             }
+-
+             int end;
+             for (int j = input.length; i < j; ++i) {
+                 int o = input[i];
+@@ -420,8 +418,10 @@ public class HttpConnection implements Connection {
+                 } else {
+                     return false;
+                 }
+-
+-
++                // Check for overflow:
++                if (end > j) {
++                    return false;
++                }
+                 while (i < end) {
+                     i++;
+                     o = input[i];

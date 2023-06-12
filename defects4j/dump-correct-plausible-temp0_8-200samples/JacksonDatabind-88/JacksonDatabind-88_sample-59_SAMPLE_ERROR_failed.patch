@@ -1,0 +1,36 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/jsontype/impl/ClassNameIdResolver.java b/src/main/java/com/fasterxml/jackson/databind/jsontype/impl/ClassNameIdResolver.java
+index 112c00b5c..970d1fcac 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/jsontype/impl/ClassNameIdResolver.java
++++ b/src/main/java/com/fasterxml/jackson/databind/jsontype/impl/ClassNameIdResolver.java
+@@ -55,7 +55,7 @@ public class ClassNameIdResolver
+             //    compatibility -- needed later anyway, and not doing so may open
+             //    security issues.
+             JavaType t = tf.constructFromCanonical(id);
+-                // Probably cleaner to have a method in `TypeFactory` but can't add in patch
++            // Probably cleaner to have a method in `TypeFactory` but can't add in patch
+             return t;
+         }
+         Class<?> cls;
+@@ -74,9 +74,21 @@ public class ClassNameIdResolver
+         } catch (Exception e) {
+             throw new IllegalArgumentException("Invalid type id '"+id+"' (for id type 'Id.class'): "+e.getMessage(), e);
+         }
++        // 16-Jul-2017, tatu: Need to ensure assignment compatibility (see [databind#1735])
++        //   but NOT allow raw types (if type id is bare "Foo" and base type is "List<Bar>",
++        //   should NOT accept)
++        if (_baseType.getRawClass().isAssignableFrom(cls)) {
++            return tf.constructSpecializedType(_baseType, cls);
++        }
++        if (cls.isAssignableFrom(_baseType.getRawClass())) {
++            JavaType supertype = tf.constructGeneralizedType(_baseType, cls);
++            if (_baseType.isContainerType()) {
++                supertype = ((ContainerType<?>) _baseType).narrowContentsBy(supertype);
++            }
++            return supertype;
++        }
+         return tf.constructSpecializedType(_baseType, cls);
+     }    
+-    
+     /*
+     /**********************************************************
+     /* Internal methods

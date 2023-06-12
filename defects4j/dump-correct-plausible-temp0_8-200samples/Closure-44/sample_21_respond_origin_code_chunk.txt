@@ -1,0 +1,32 @@
+  void add(String newcode) {
+    maybeEndStatement();
+
+    if (newcode.length() == 0) {
+      return;
+    }
+
+    char c = newcode.charAt(0);
+    if ((isWordChar(c) || c == '\\') &&
+        isWordChar(getLastChar())) {
+      // need space to separate. This is not pretty printing.
+      // For example: "return foo;"
+      append(" ");
+      // Do not allow a forward slash to appear after a DIV.
+      // For example,
+      // REGEXP DIV REGEXP
+      // is valid and should print like
+      // / // / /
+    } else if (newcode.startsWith("/*")) {
+      // Don't put a space before a comment if it starts with '/*'
+    } else if (c == '/' || c == '-') {
+      // Do not allow a forward slash or a dash to appear before a REGEXP.
+      // For example,
+      // DIV REGEXP
+      // should print as
+      // / / / /
+      append(" ");
+    }
+
+    append(newcode);
+  }
+

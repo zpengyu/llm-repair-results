@@ -1,0 +1,63 @@
+diff --git a/src/org/mockito/internal/stubbing/defaultanswers/ReturnsDeepStubs.java b/src/org/mockito/internal/stubbing/defaultanswers/ReturnsDeepStubs.java
+index e2ded558e..3e6c08e18 100644
+--- a/src/org/mockito/internal/stubbing/defaultanswers/ReturnsDeepStubs.java
++++ b/src/org/mockito/internal/stubbing/defaultanswers/ReturnsDeepStubs.java
+@@ -39,10 +39,38 @@ import static org.mockito.Mockito.withSettings;
+  * @see org.mockito.Mockito#RETURNS_DEEP_STUBS
+  * @see org.mockito.Answers#RETURNS_DEEP_STUBS
+  */
++import java.io.IOException;
++import java.io.Serializable;
++import java.lang.reflect.Modifier;
++import org.mockito.Answers;
++import org.mockito.ReturnValues;
++import org.mockito.internal.InternalMockHandler;
++import org.mockito.internal.creation.MockSettingsImpl;
++import org.mockito.internal.creation.settings.CreationSettings;
++import org.mockito.internal.creation.settings.GlobalSettings;
++import org.mockito.internal.invocation.InvocationContainerImpl;
++import org.mockito.internal.invocation.StubbedInvocationMatcher;
++import org.mockito.internal.invocation.util.MockUtil;
++import org.mockito.internal.progress.MockitoThreadLocal;
++import org.mockito.internal.util.MockUtil;
++import org.mockito.internal.util.reflection.GenericMetadataSupport;
++import org.mockito.invocation.InvocationOnMock;
++import org.mockito.mock.MockCreationSettings;
++import org.mockito.mock.SerializableMode;
++import org.mockito.stubbing.Answer;
++import org.mockito.stubbing.MockitoStubber;
++/**
++ * Returns mock or deep stub for unstubbed method calls (stubbing the unstubbed).
++ *
++ * <li>Finally as we want to mock the actual type, but we want to pass along the contextual generics meta-data
++ * that was resolved for the current return type, for this to happen we associate to the mock an new instance of
++ * {@link ReturnsDeepStubs} answer in which we will store the returned type generic metadata.
++ *
++ * @since 2.0
++ */
+ public class ReturnsDeepStubs implements Answer<Object>, Serializable {
+-
+     private static final long serialVersionUID = -7105341425736035847L;
+-
++    private final MockitoThreadLocal<MockitoStubber> stubber = new MockitoThreadLocal<MockitoStubber>();
+     public Object answer(InvocationOnMock invocation) throws Throwable {
+         GenericMetadataSupport returnTypeGenericMetadata =
+                 actualParameterizedType(invocation.getMock()).resolveGenericReturnType(invocation.getMethod());
+@@ -51,10 +78,15 @@ public class ReturnsDeepStubs implements Answer<Object>, Serializable {
+         if (!mockitoCore().isTypeMockable(rawType)) {
+             return delegate().returnValueFor(rawType);
+         }
+-
++        MockitoStubber mockitoStubber = stubber.get();
++        if (mockitoStubber != null && !mockitoStubber.hasAnswersForStubbing()) {
++            return deepStub(invocation, returnTypeGenericMetadata);
++        }
++        if (mockitoStubber != null) {
++            return mockitoStubber.answer(invocation);
++        }
+         return deepStub(invocation, returnTypeGenericMetadata);
+     }
+-
+     private Object deepStub(InvocationOnMock invocation, GenericMetadataSupport returnTypeGenericMetadata) throws Throwable {
+         InternalMockHandler<Object> handler = new MockUtil().getMockHandler(invocation.getMock());
+         InvocationContainerImpl container = (InvocationContainerImpl) handler.getInvocationContainer();

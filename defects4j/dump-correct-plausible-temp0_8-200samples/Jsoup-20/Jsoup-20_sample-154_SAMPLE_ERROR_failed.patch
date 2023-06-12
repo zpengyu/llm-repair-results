@@ -1,0 +1,20 @@
+diff --git a/src/main/java/org/jsoup/helper/DataUtil.java b/src/main/java/org/jsoup/helper/DataUtil.java
+index 4bdf4fe..171b807 100644
+--- a/src/main/java/org/jsoup/helper/DataUtil.java
++++ b/src/main/java/org/jsoup/helper/DataUtil.java
+@@ -83,7 +83,14 @@ public class DataUtil {
+                 if (foundCharset != null && foundCharset.length() != 0 && !foundCharset.equals(defaultCharset)) { // need to re-decode
+                     charsetName = foundCharset;
+                     byteData.rewind();
+-                    docData = Charset.forName(foundCharset).decode(byteData).toString();
++                    if(foundCharset.equalsIgnoreCase("utf-8")){
++                        CharsetDecoder utf8Decoder = Charset.forName("utf-8").newDecoder();
++                        utf8Decoder.onMalformedInput(CodingErrorAction.REPORT);
++                        utf8Decoder.onUnmappableCharacter(CodingErrorAction.REPORT);
++                        docData = utf8Decoder.decode(byteData).toString();
++                    } else {
++                        docData = Charset.forName(foundCharset).decode(byteData).toString();
++                    }
+                     doc = null;
+                 }
+             }

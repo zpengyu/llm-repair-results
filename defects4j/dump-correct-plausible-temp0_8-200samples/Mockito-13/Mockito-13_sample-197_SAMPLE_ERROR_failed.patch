@@ -1,0 +1,35 @@
+diff --git a/src/org/mockito/internal/MockHandler.java b/src/org/mockito/internal/MockHandler.java
+index 9452f1664..ba478925d 100644
+--- a/src/org/mockito/internal/MockHandler.java
++++ b/src/org/mockito/internal/MockHandler.java
+@@ -82,13 +79,24 @@ public class MockHandler<T> implements MockitoInvocationHandler, MockHandlerInte
+                 // - see VerifyingWithAnExtraCallToADifferentMockTest (bug 138)
+             }
+         }
+-        
+-        invocationContainerImpl.setInvocationForPotentialStubbing(invocationMatcher);
+-        OngoingStubbingImpl<T> ongoingStubbing = new OngoingStubbingImpl<T>(invocationContainerImpl);
+-        mockingProgress.reportOngoingStubbing(ongoingStubbing);
+-
++        else {
++            //this part is added
++			//if verification mode is null, then someone is doing a when(..)
++			//if has answer is true, then someone is doing a when(..).thenReturn
++			//if has answer is false, then someone is doing a when(..).thenThrow
++            if (invocationContainerImpl.hasAnswersForStubbing()) {
++                InvocationMatcher invocationMatcher = matchersBinder.bindMatchers(mockingProgress.getArgumentMatcherStorage(), invocation);
++                invocationContainerImpl.setMethodForStubbing(invocationMatcher);
++                return null;
++            }
++            else {
++            	//invocationContainerImpl.hasAnswersForStubbing() is false and it means someone is doing when(..).thenThrow
++            	invocationContainerImpl.setInvocationForPotentialStubbing(invocationMatcher);
++                OngoingStubbingImpl<T> ongoingStubbing = new OngoingStubbingImpl<T>(invocationContainerImpl);
++                mockingProgress.reportOngoingStubbing(ongoingStubbing);
++            }
++        }
+         StubbedInvocationMatcher stubbedInvocation = invocationContainerImpl.findAnswerFor(invocation);
+-
+         if (stubbedInvocation != null) {
+             stubbedInvocation.captureArgumentsFrom(invocation);
+             return stubbedInvocation.answer(invocation);

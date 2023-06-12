@@ -1,0 +1,32 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/type/ResolvedRecursiveType.java b/src/main/java/com/fasterxml/jackson/databind/type/ResolvedRecursiveType.java
+index 7b8c69af7..f59a442cc 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/type/ResolvedRecursiveType.java
++++ b/src/main/java/com/fasterxml/jackson/databind/type/ResolvedRecursiveType.java
+@@ -96,10 +79,26 @@ public class ResolvedRecursiveType extends TypeBase
+             // [databind#1301]: Typically resolves to a loop so short-cut
+             //   and only include type-erased class
+             sb.append(_referencedType.getRawClass().getName());
++            /* 17-Nov-2014, tatu: If it is a raw (and therefore unresolved)
++             *    type, let's add type bindings to help figure out what the
++             *    thing is
++             */
++            if (_referencedType.isGenericTypes()) {
++                sb.append('<');
++                TypeBindings b = _referencedType.getBindings();
++                for (JavaType t : b.getTypeParameters()) {
++                    if (t != _referencedType) {
++                        t.getGenericSignature(sb);
++                    } else {
++                        sb.append("?");
++                    }
++                }
++                sb.append('>');
++            }
+         }
++        sb.append(']');
+         return sb.toString();
+     }
+-
+     @Override
+     public boolean equals(Object o) {
+         if (o == this) return true;

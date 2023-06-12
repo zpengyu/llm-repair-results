@@ -1,0 +1,13 @@
+void insert(Token.Comment commentToken) {
+    Comment comment = new Comment(commentToken.getData());
+    Node insert = comment;
+    if (commentToken.bogus) {
+        if (comment.getData().length() > 1 && (comment.getData().startsWith("!") || comment.getData().startsWith("?"))) {
+            Document doc = Jsoup.parse("<" + comment.getData().substring(1, comment.getData().length() - 1) + ">", baseUri, Parser.xmlParser());
+            Element el = doc.child(0);
+            insert = new XmlDeclaration(settings.normalizeTag(el.tagName()), comment.getData().startsWith("!"));
+            insert.attributes().addAll(el.attributes());
+        }
+    }
+    insertNode(insert);
+}

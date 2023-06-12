@@ -1,0 +1,46 @@
+diff --git a/src/com/google/javascript/jscomp/Compiler.java b/src/com/google/javascript/jscomp/Compiler.java
+index e0dc0d38..dae486ba 100644
+--- a/src/com/google/javascript/jscomp/Compiler.java
++++ b/src/com/google/javascript/jscomp/Compiler.java
+@@ -1237,9 +1237,8 @@ public class Compiler extends AbstractCompiler {
+    * @return A synthetic root node whose two children are the externs root
+    *     and the main root
+    */
+-  Node parseInputs() {
++    Node parseInputs() {
+     boolean devMode = options.devMode != DevMode.OFF;
+-
+     // If old roots exist (we are parsing a second time), detach each of the
+     // individual file parse trees.
+     if (externsRoot != null) {
+@@ -1348,10 +1329,18 @@ public class Compiler extends AbstractCompiler {
+                   input.getName(), options.devMode != DevMode.OFF);
+           NodeTraversal.traverse(this, n, sia);
+         }
+-
++        if (options.sourceMapOutputPath != null ||
++                options.nameReferenceReportPath != null) {
++          // Annotate the nodes in the tree with information from the
++          // input file. This information is used to construct the SourceMap.
++          SourceInformationAnnotator sia =
++                  new SourceInformationAnnotator(
++                          input.getName(), options.devMode != DevMode.OFF);
++          NodeTraversal.traverse(this, n, sia);
++        }
++        // Add node to root.
+         jsRoot.addChildToBack(n);
+       }
+-
+       if (hasErrors()) {
+         return null;
+       }
+@@ -1359,8 +1348,7 @@ public class Compiler extends AbstractCompiler {
+     } finally {
+       stopTracer(tracer, "parseInputs");
+     }
+-  }
+-
++    }
+   /**
+    * Hoists inputs with the @externs annotation into the externs list.
+    */

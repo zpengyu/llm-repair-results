@@ -1,0 +1,32 @@
+diff --git a/src/java/org/apache/commons/cli/HelpFormatter.java b/src/java/org/apache/commons/cli/HelpFormatter.java
+index 7f61ceb..e990536 100644
+--- a/src/java/org/apache/commons/cli/HelpFormatter.java
++++ b/src/java/org/apache/commons/cli/HelpFormatter.java
+@@ -822,24 +818,15 @@ public class HelpFormatter
+         while (true)
+         {
+             int lastPos = pos;
+-            text = padding + text.substring(pos).trim();
+-            pos = findWrapPos(text, width, 0);
+-
++            pos = findWrapPos(text, width, lastPos);
+             if (pos == -1)
+             {
+-                sb.append(text);
+-
++                sb.append(rtrim(text.substring(lastPos)));
+                 return sb;
+-            } else
+-            if (pos == lastPos)
+-            {
+-                throw new RuntimeException("Text too long for line - throwing exception to avoid infinite loop [CLI-162]: " + text);
+             }
+-
+-            sb.append(rtrim(text.substring(0, pos))).append(defaultNewLine);
++            sb.append(padding).append(rtrim(text.substring(lastPos, pos))).append(defaultNewLine);
+         }
+     }
+-
+     /**
+      * Finds the next text wrap position after <code>startPos</code> for the
+      * text in <code>text</code> with the column width <code>width</code>.

@@ -1,0 +1,49 @@
+diff --git a/src/com/google/javascript/jscomp/TypeValidator.java b/src/com/google/javascript/jscomp/TypeValidator.java
+index c6d25483..bd897e6f 100644
+--- a/src/com/google/javascript/jscomp/TypeValidator.java
++++ b/src/com/google/javascript/jscomp/TypeValidator.java
+@@ -722,9 +722,10 @@ class TypeValidator {
+    *     to an Object type, if possible.
+    */
+   String getReadableJSTypeName(Node n, boolean dereference) {
+-
+     // The best type name is the actual type name.
+-
++    if (n.isQualifiedName()) {
++      return n.getQualifiedName();
++    }
+     // If we're analyzing a GETPROP, the property may be inherited by the
+     // prototype chain. So climb the prototype chain and find out where
+     // the property was originally defined.
+@@ -732,17 +733,9 @@ class TypeValidator {
+       ObjectType objectType = getJSType(n.getFirstChild()).dereference();
+       if (objectType != null) {
+         String propName = n.getLastChild().getString();
+-        if (objectType.getConstructor() != null &&
+-            objectType.getConstructor().isInterface()) {
+-          objectType = FunctionType.getTopDefiningInterface(
+-              objectType, propName);
+-        } else {
+-          // classes
+-          while (objectType != null && !objectType.hasOwnProperty(propName)) {
+-            objectType = objectType.getImplicitPrototype();
+-          }
++        while (objectType != null && !objectType.hasOwnProperty(propName)) {
++          objectType = objectType.getImplicitPrototype();
+         }
+-
+         // Don't show complex function names or anonymous types.
+         // Instead, try to get a human-readable type name.
+         if (objectType != null &&
+@@ -765,10 +757,7 @@ class TypeValidator {
+          type.toObjectType().getConstructor() != null)) {
+       return type.toString();
+     }
+-    String qualifiedName = n.getQualifiedName();
+-    if (qualifiedName != null) {
+-      return qualifiedName;
+-    } else if (type.isFunctionType()) {
++    if (type.isFunctionType()) {
+       // Don't show complex function names.
+       return "function";
+     } else {

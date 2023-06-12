@@ -1,0 +1,24 @@
+    public static long skip(InputStream input, long numToSkip) throws IOException {
+        if (input != null) {
+            if (numToSkip < 0) {
+                throw new IllegalArgumentException();
+            }
+            if (numToSkip == 0) {
+                return 0;
+            }
+            long available = numToSkip;
+            int toRead = (int) Math.min(numToSkip, MAX_SKIP_BUFFER_SIZE);
+            byte buffer[] = new byte[toRead];
+            while (numToSkip > 0) {
+                int read = input.read(buffer, 0, toRead);
+                if (read == -1) {
+                    break;
+                }
+                numToSkip -= read;
+                toRead = (int) Math.min(numToSkip, MAX_SKIP_BUFFER_SIZE);
+            }
+            return available - numToSkip;
+        }
+        return 0;
+    }
+

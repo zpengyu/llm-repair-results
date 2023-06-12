@@ -1,0 +1,56 @@
+public class Primitives {
+    private static final Map<Class<?>, Class<?>> PRIMITIVE_WRAPPER_TYPE;
+    private static final Map<Class<?>, Object> PRIMITIVE_DEFAULT_VALUE;
+    private static final Map<Class<?>, Object> WRAPPER_DEFAULT_VALUE;
+    static {
+        PRIMITIVE_WRAPPER_TYPE = ImmutableMap.<Class<?>, Class<?>>builder()
+                .put(boolean.class, Boolean.class)
+                .put(char.class, Character.class)
+                .put(byte.class, Byte.class)
+                .put(short.class, Short.class)
+                .put(int.class, Integer.class)
+                .put(long.class, Long.class)
+                .put(float.class, Float.class)
+                .put(double.class, Double.class)
+                .build();
+        PRIMITIVE_DEFAULT_VALUE = ImmutableMap.<Class<?>, Object>builder()
+                .put(boolean.class, false)
+                .put(char.class, '\u0000')
+                .put(byte.class, (byte) 0)
+                .put(short.class, (short) 0)
+                .put(int.class, 0)
+                .put(long.class, 0L)
+                .put(float.class, 0F)
+                .put(double.class, 0D)
+                .build();
+        WRAPPER_DEFAULT_VALUE = ImmutableMap.<Class<?>, Object>builder()
+                .put(Boolean.class, false)
+                .put(Character.class, '\u0000')
+                .put(Byte.class, (byte) 0)
+                .put(Short.class, (short) 0)
+                .put(Integer.class, 0)
+                .put(Long.class, 0L)
+                .put(Float.class, 0F)
+                .put(Double.class, 0D)
+                .build();
+    }
+    public static <T> Class<T> primitiveTypeOf(Class<T> clazz) {
+        if (clazz.isPrimitive()) {
+            return clazz;
+        }
+        Class<?> primitiveType = PRIMITIVE_WRAPPER_TYPE.get(clazz);
+        if (primitiveType == null) {
+            return null;
+        }
+        return (Class<T>) primitiveType;
+    }
+    public static boolean isPrimitiveWrapper(Class<?> type) {
+        return WRAPPER_DEFAULT_VALUE.containsKey(type);
+    }
+    public static <T> T primitiveWrapperOf(Class<T> type) {
+        return (T) WRAPPER_DEFAULT_VALUE.get(type);
+    }
+    public static <T> T primitiveValueOrNullFor(Class<T> primitiveType) {
+        return (T) PRIMITIVE_DEFAULT_VALUE.get(primitiveType);
+    }
+}

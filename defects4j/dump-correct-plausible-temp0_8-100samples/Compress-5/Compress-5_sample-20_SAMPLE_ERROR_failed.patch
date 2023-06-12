@@ -1,0 +1,17 @@
+diff --git a/src/main/java/org/apache/commons/compress/archivers/zip/ZipArchiveInputStream.java b/src/main/java/org/apache/commons/compress/archivers/zip/ZipArchiveInputStream.java
+index fc7b80d5..aadda37f 100644
+--- a/src/main/java/org/apache/commons/compress/archivers/zip/ZipArchiveInputStream.java
++++ b/src/main/java/org/apache/commons/compress/archivers/zip/ZipArchiveInputStream.java
+@@ -237,6 +236,12 @@ public class ZipArchiveInputStream extends ArchiveInputStream {
+                 throw new ZipException(e.getMessage());
+             }
+             if (read == 0 && inf.finished()) {
++                if (readBytesOfEntry != current.getSize()) {
++                    throw new ZipException(String.format(
++                        "zip archive is closed, but stream is incomplete. "
++                        + "Read %d bytes, expected %d bytes.",
++                        readBytesOfEntry, current.getSize()));
++                }
+                 return -1;
+             }
+             crc.update(buffer, start, read);

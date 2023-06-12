@@ -1,0 +1,27 @@
+    private void init() {
+        thisYear= Calendar.getInstance(timeZone, locale).get(Calendar.YEAR);
+
+        nameValues= new ConcurrentHashMap<Integer, KeyValue[]>();
+
+        StringBuilder regex= new StringBuilder();
+        List<Strategy> collector = new ArrayList<Strategy>();
+
+        Matcher patternMatcher= formatPattern.matcher(pattern);
+        if(!patternMatcher.lookingAt()) {
+            throw new IllegalArgumentException("Invalid pattern");
+        }
+
+        Strategy currentStrategy= getStrategy(patternMatcher.group());
+        while(patternMatcher.regionStart() < patternMatcher.regionEnd()) {
+            patternMatcher.region(patternMatcher.end(), patternMatcher.regionEnd());
+            if(!patternMatcher.lookingAt()) {
+                break;
+            }
+            currentStrategy= getStrategy(patternMatcher.group());
+            currentStrategy.addRegex(this, regex);
+            collector.add(currentStrategy);
+        }
+        strategies= collector.toArray(new Strategy[collector.size()]);
+        parsePattern= Pattern.compile(regex.toString());
+    }
+##Question: List of ten real-world bugs and one fix for each (10 points)

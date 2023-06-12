@@ -1,0 +1,28 @@
+diff --git a/src/java/org/apache/commons/lang/text/ExtendedMessageFormat.java b/src/java/org/apache/commons/lang/text/ExtendedMessageFormat.java
+index c63fbf6d..74db29d8 100644
+--- a/src/java/org/apache/commons/lang/text/ExtendedMessageFormat.java
++++ b/src/java/org/apache/commons/lang/text/ExtendedMessageFormat.java
+@@ -422,12 +422,14 @@ public class ExtendedMessageFormat extends MessageFormat {
+             return appendTo == null ? null : appendTo.append(QUOTE);
+         }
+         int lastHold = start;
+-        for (int i = pos.getIndex(); i < pattern.length(); i++) {
++        int i = pos.getIndex();
++        while (i < pattern.length()) {
+             if (escapingOn && pattern.substring(i).startsWith(ESCAPED_QUOTE)) {
+                 appendTo.append(c, lastHold, pos.getIndex() - lastHold).append(
+                         QUOTE);
+                 pos.setIndex(i + ESCAPED_QUOTE.length());
+                 lastHold = pos.getIndex();
++                i = pos.getIndex();
+                 continue;
+             }
+             switch (c[pos.getIndex()]) {
+@@ -437,6 +439,7 @@ public class ExtendedMessageFormat extends MessageFormat {
+                         pos.getIndex() - lastHold);
+             default:
+                 next(pos);
++                i++;
+             }
+         }
+         throw new IllegalArgumentException(

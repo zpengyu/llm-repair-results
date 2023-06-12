@@ -1,0 +1,25 @@
+diff --git a/src/com/google/javascript/jscomp/DeadAssignmentsElimination.java b/src/com/google/javascript/jscomp/DeadAssignmentsElimination.java
+index 19b8b6bd..4f98c506 100644
+--- a/src/com/google/javascript/jscomp/DeadAssignmentsElimination.java
++++ b/src/com/google/javascript/jscomp/DeadAssignmentsElimination.java
+@@ -338,11 +337,16 @@ class DeadAssignmentsElimination extends AbstractPostOrderCallback implements
+         child != null; child = child.getNext()) {
+       if (!ControlFlowGraph.isEnteringNewCfgNode(child)) { // Not a FUNCTION
+         VariableLiveness state = isVariableReadBeforeKill(child, variable);
+-        if (state != VariableLiveness.MAYBE_LIVE) {
+-          return state;
++        if (state == VariableLiveness.KILL) {
++          return VariableLiveness.KILL;
++        }
++        if (state == VariableLiveness.READ) {
++          if (NodeUtil.isAssignmentOp(n) || NodeUtil.isVarOrSimpleAssign(n)) {
++            return VariableLiveness.KILL;
++          }
++          return VariableLiveness.READ;
+         }
+       }
+     }
+     return VariableLiveness.MAYBE_LIVE;
+-  }
+-}
++  }}

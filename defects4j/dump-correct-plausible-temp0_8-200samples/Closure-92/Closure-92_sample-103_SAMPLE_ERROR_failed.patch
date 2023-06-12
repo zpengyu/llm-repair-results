@@ -1,0 +1,36 @@
+diff --git a/src/com/google/javascript/jscomp/ProcessClosurePrimitives.java b/src/com/google/javascript/jscomp/ProcessClosurePrimitives.java
+index d1d12a3c..cc463823 100644
+--- a/src/com/google/javascript/jscomp/ProcessClosurePrimitives.java
++++ b/src/com/google/javascript/jscomp/ProcessClosurePrimitives.java
+@@ -806,8 +804,30 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback
+         }
+         compiler.reportCodeChange();
+       }
++      // Replace the references to the provided symbol with a reference to the
++      // namespace.
++      List<Node> replacementNodes = Lists.newArrayList();
++      if (replacementNode.getType() == Token.ASSIGN) {
++        replacementNodes.add(replacementNode.getFirstChild());
++      } else {
++        replacementNodes.add(replacementNode.getFirstChild().getFirstChild());
++      }
++      for (Node aliasNode : aliasNodes) {
++        boolean needsReplacement = true;
++        for (Node replacementNode : replacementNodes) {
++          if (aliasNode.matchesQualifiedName(replacementNode)) {
++            needsReplacement = false;
++            break;
++          }
++        }
++        if (needsReplacement) {
++          aliasNode.getParent().replaceChild(
++              aliasNode,
++              replacementNodes.get(0).cloneTree());
++          compiler.reportCodeChange();
++        }
++      }
+     }
+-
+     /**
+      * Create the declaration node for this name, without inserting it
+      * into the AST.

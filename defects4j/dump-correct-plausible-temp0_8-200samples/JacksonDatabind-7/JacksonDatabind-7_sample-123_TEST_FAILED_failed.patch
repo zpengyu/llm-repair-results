@@ -1,0 +1,27 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/util/TokenBuffer.java b/src/main/java/com/fasterxml/jackson/databind/util/TokenBuffer.java
+index c700587c8..6c516578b 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/util/TokenBuffer.java
++++ b/src/main/java/com/fasterxml/jackson/databind/util/TokenBuffer.java
+@@ -402,14 +402,16 @@ public class TokenBuffer
+      */
+     public TokenBuffer deserialize(JsonParser jp, DeserializationContext ctxt) throws IOException
+     {
++        if (jp.getCurrentToken() == JsonToken.START_OBJECT) {
+             copyCurrentStructure(jp);
+-        /* 28-Oct-2014, tatu: As per #592, need to support a special case of starting from
+-         *    FIELD_NAME, which is taken to mean that we are missing START_OBJECT, but need
+-         *    to assume one did exist.
+-         */
+-        return this;
++            /* 28-Oct-2014, tatu: As per #592, need to support a special case of starting from
++             *    FIELD_NAME, which is taken to mean that we are missing START_OBJECT, but need
++             *    to assume one did exist.
++             */
++            return this;
++        }
++        throw ctxt.wrongTokenException(jp, JsonToken.START_OBJECT, "Current token not START_OBJECT (needed to deserialize TokenBuffer), but " + jp.getCurrentToken());
+     }
+-
+     @Override
+     @SuppressWarnings("resource")
+     public String toString()

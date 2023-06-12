@@ -1,0 +1,37 @@
+diff --git a/src/com/google/javascript/rhino/jstype/PrototypeObjectType.java b/src/com/google/javascript/rhino/jstype/PrototypeObjectType.java
+index 77c5441e..9ed122ce 100644
+--- a/src/com/google/javascript/rhino/jstype/PrototypeObjectType.java
++++ b/src/com/google/javascript/rhino/jstype/PrototypeObjectType.java
+@@ -567,15 +566,23 @@ class PrototypeObjectType extends ObjectType {
+     if (constraintObj.isRecordType()) {
+       for (String prop : constraintObj.getOwnPropertyNames()) {
+         JSType propType = constraintObj.getPropertyType(prop);
+-        if (!isPropertyTypeDeclared(prop)) {
+-          JSType typeToInfer = propType;
+-          if (!hasProperty(prop)) {
+-            typeToInfer = getNativeType(JSTypeNative.VOID_TYPE)
+-                .getLeastSupertype(propType);
+-          }
+-          defineInferredProperty(prop, typeToInfer, null);
++        JSType newType = JSType.UNKNOWN;
++        if (isPropertyTypeDeclared(prop)) {
++          // When the property exists and is already annotated, use the
++          // declared type.
++          newType = getPropertyType(prop).getLeastSupertype(propType);
++        } else if (hasProperty(prop)) {
++          // When the property exists, but is inferred, take the union
++          // of the old type and the constraint.
++          newType = getPropertyType(prop).getLeastSupertype(propType);
++        } else {
++          // When the property doesn't exist, use the type from the
++          // constraint, if the constraint is not @undefined, or @void
++          // otherwise.
++          newType = getNativeType(JSTypeNative.VOID_TYPE)
++              .getLeastSupertype(propType);
+         }
++        defineInferredProperty(prop, newType, null);
+       }
+     }
+-  }
+-}
++  }}

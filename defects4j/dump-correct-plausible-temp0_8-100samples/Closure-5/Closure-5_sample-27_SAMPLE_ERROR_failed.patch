@@ -1,0 +1,145 @@
+diff --git a/src/com/google/javascript/jscomp/InlineObjectLiterals.java b/src/com/google/javascript/jscomp/InlineObjectLiterals.java
+index 2f5a8e10..04c647e2 100644
+--- a/src/com/google/javascript/jscomp/InlineObjectLiterals.java
++++ b/src/com/google/javascript/jscomp/InlineObjectLiterals.java
+@@ -152,14 +152,57 @@ class InlineObjectLiterals implements CompilerPass {
+      *   x.fn();
+      * </pre>
+      */
+-    private boolean isInlinableObject(List<Reference> refs) {
++     * @param name The name node.
++     * @param value The value assigned to the name.
++     * @param refs The reference list for that name.
++     * @return True if the references can be replaced.
++     */
++    private boolean isInlinableReference(
++        Node name, Node value, List<Reference> refs) {
+       boolean ret = false;
+-      Set<String> validProperties = Sets.newHashSet();
++      // We're looking for object literal assignments only.
++      if (!value.isObjectLit()) {
++        return false;
++      }
++      // Make sure that the value is not self-referential. IOW,
++      // disallow things like x = {b: x.a}.
++      //
++      // TODO: Only exclude unorderable self-referential
++      // assignments. i.e. x = {a: x.b, b: x.a} is not orderable,
++      // but x = {a: 1, b: x.a} is.
++      //
++      // Also, ES5 getters/setters aren't handled by this pass.
++      for (Node child = value.getFirstChild(); child != null;
++           child = child.getNext()) {
++        if (child.isGetterDef() ||
++            child.isSetterDef()) {
++          // ES5 get/set not supported.
++          return false;
++        }
++        Node childVal = child.getFirstChild();
++        // Check if childVal is the parent of any of the passed in
++        // references, as that is how self-referential assignments
++        // will happen.
++        for (Reference t : refs) {
++          Node refNode = t.getParent();
++          while (!NodeUtil.isStatementBlock(refNode)) {
++            if (refNode == childVal) {
++              // There's a self-referential assignment
++              return false;
++            }
++            refNode = refNode.getParent();
++          }
++        }
++      }
++      // We have found an acceptable object literal assignment. As
++      // long as there are no other assignments that mess things up,
++      // we can inline.
++      ret = true;
++      // The object literal is considered acceptable and the references
++      // can be replaced. Now check if all of them are acceptable.
+       for (Reference ref : refs) {
+-        Node name = ref.getNode();
+         Node parent = ref.getParent();
+         Node gramps = ref.getGrandparent();
+-
+         // Ignore most indirect references, like x.y (but not x.y(),
+         // since the function referenced by y might reference 'this').
+         //
+@@ -183,12 +224,8 @@ class InlineObjectLiterals implements CompilerPass {
+           // to a property that isn't defined on the object literal. This
+           // isn't a perfect algorithm, but it should catch most cases.
+           String propName = parent.getLastChild().getString();
+-          if (!validProperties.contains(propName)) {
+-            if (NodeUtil.isVarOrSimpleAssignLhs(parent, gramps)) {
+-              validProperties.add(propName);
+-            } else {
+-              return false;
+-            }
++          if (!value.hasProp(propName)) {
++            return false;
+           }
+           continue;
+         }
+@@ -197,57 +233,14 @@ class InlineObjectLiterals implements CompilerPass {
+         if (!isVarOrAssignExprLhs(name)) {
+            return false;
+         }
+-
+-        Node val = ref.getAssignedValue();
+-        if (val == null) {
+-          // A var with no assignment.
+-          continue;
+-        }
+-
+-        // We're looking for object literal assignments only.
+-        if (!val.isObjectLit()) {
+-          return false;
+-        }
+-
+-        // Make sure that the value is not self-referential. IOW,
+-        // disallow things like x = {b: x.a}.
+-        //
+-        // TODO: Only exclude unorderable self-referential
+-        // assignments. i.e. x = {a: x.b, b: x.a} is not orderable,
+-        // but x = {a: 1, b: x.a} is.
++        // If the value is a complex expression, it might actually
++        // *change* the reference.  This can happen in things like
++        // constructors.
+         //
+-        // Also, ES5 getters/setters aren't handled by this pass.
+-        for (Node child = val.getFirstChild(); child != null;
+-             child = child.getNext()) {
+-          if (child.isGetterDef() ||
+-              child.isSetterDef()) {
+-            // ES5 get/set not supported.
+-            return false;
+-          }
+-
+-          validProperties.add(child.getString());
+-
+-          Node childVal = child.getFirstChild();
+-          // Check if childVal is the parent of any of the passed in
+-          // references, as that is how self-referential assignments
+-          // will happen.
+-          for (Reference t : refs) {
+-            Node refNode = t.getParent();
+-            while (!NodeUtil.isStatementBlock(refNode)) {
+-              if (refNode == childVal) {
+-                // There's a self-referential assignment
+-                return false;
+-              }
+-              refNode = refNode.getParent();
+-            }
+-          }
++        // TODO: There's probably a better way to do this.
++        if (!NodeUtil.isLiteralValue(value, true)) {
++          return false;
+         }
+-
+-
+-        // We have found an acceptable object literal assignment. As
+-        // long as there are no other assignments that mess things up,
+-        // we can inline.
+-        ret = true;
+       }
+       return ret;
+     }

@@ -1,0 +1,51 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/type/SimpleType.java b/src/main/java/com/fasterxml/jackson/databind/type/SimpleType.java
+index 0fda4d76f..4987ede64 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/type/SimpleType.java
++++ b/src/main/java/com/fasterxml/jackson/databind/type/SimpleType.java
+@@ -122,20 +122,38 @@ public class SimpleType // note: until 2.6 was final
+         if (_class == subclass) {
+             return this;
+         }
+-        // Should we check that there is a sub-class relationship?
+-        // 15-Jan-2016, tatu: Almost yes, but there are some complications with
+-        //    placeholder values, so no.
+-        /*
+         if (!_class.isAssignableFrom(subclass)) {
+             throw new IllegalArgumentException("Class "+subclass.getName()+" not sub-type of "
+                     +_class.getName());
+         }
+-        */
+-        // 15-Jan-2015, tatu: Not correct; should really re-resolve...
+-        return new SimpleType(subclass, _bindings, _superClass, _superInterfaces,
++        JavaType supertype = _superClass;
++        if (supertype != null && supertype.getRawClass().isAssignableFrom(subclass)) {
++            // need to re-resolve super-type
++            supertype = supertype.narrowBy(subclass);
++        }
++        JavaType[] superInterfaces = _superInterfaces;
++        int len = superInterfaces.length;
++        JavaType[] interfaces = null;
++        for (int i = 0; i < len; ++i) {
++            JavaType iface = superInterfaces[i];
++            Class<?> cls = iface.getRawClass();
++            if (cls.isAssignableFrom(subclass)) {
++                if (interfaces == null) {
++                    interfaces = new JavaType[len];
++                    for (int j = 0; j < i; ++j) {
++                        interfaces[j] = superInterfaces[j];
++                    }
++                }
++                interfaces[i] = iface.narrowBy(subclass);
++            }
++            else if (interfaces != null) {
++                interfaces[i] = iface;
++            }
++        }
++        return construct(subclass, _bindings, supertype,
++                (interfaces == null) ? superInterfaces : interfaces,
+                 _valueHandler, _typeHandler, _asStatic);
+     }
+-
+     @Override
+     public JavaType withContentType(JavaType contentType) {
+         throw new IllegalArgumentException("Simple types have no content types; can not call withContentType()");

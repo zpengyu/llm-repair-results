@@ -1,0 +1,22 @@
+    public Period normalizedStandard(PeriodType type) {
+        type = DateTimeUtils.getPeriodType(type);
+        int[] values = getValues();
+        //this is the new fix
+        if (this.getPeriodType().isSupported(DurationFieldType.weeks()) && !type.isSupported(DurationFieldType.weeks())) {
+            values = values.clone();
+            int weeks = values[DurationFieldType.weeks().getIndex()];
+            if (weeks != 0) {
+                values[DurationFieldType.days().getIndex()] = FieldUtils.safeAdd(values[DurationFieldType.days().getIndex()], weeks * 7);
+                values[DurationFieldType.weeks().getIndex()] = 0;
+            }
+        }
+        //end of new fix
+        long millis = 0;
+        int i = 0;
+        for (; i < values.length; i++) {
+            if (values[i] != 0) {
+                millis += type.getFieldType(i).getField(ISOChronology.getInstanceUTC()).getUnitMillis() * (long) values[i];
+            }
+        }
+        return new Period(millis, type, ISOChronology.getInstanceUTC());
+    }

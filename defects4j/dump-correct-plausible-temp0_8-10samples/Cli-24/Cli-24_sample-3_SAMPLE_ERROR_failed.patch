@@ -1,0 +1,57 @@
+diff --git a/src/java/org/apache/commons/cli/HelpFormatter.java b/src/java/org/apache/commons/cli/HelpFormatter.java
+index 972d49a..7799cba 100644
+--- a/src/java/org/apache/commons/cli/HelpFormatter.java
++++ b/src/java/org/apache/commons/cli/HelpFormatter.java
+@@ -806,19 +806,20 @@ public class HelpFormatter
+      *
+      * @return the StringBuffer with the rendered Options contents.
+      */
+-    protected StringBuffer renderWrappedText(StringBuffer sb, int width, 
++   protected StringBuffer renderWrappedText(StringBuffer sb, int width, 
+                                              int nextLineTabStop, String text)
+     {
++        if (text == null)
++        {
++            return sb;
++        }
+         int pos = findWrapPos(text, width, 0);
+-
+         if (pos == -1)
+         {
+-            sb.append(rtrim(text));
+-
++            renderText(sb, width, nextLineTabStop, text);
+             return sb;
+         }
+-        sb.append(rtrim(text.substring(0, pos))).append(defaultNewLine);
+-
++        renderText(sb, width, nextLineTabStop, text.substring(0, pos)).append(defaultNewLine);
+         if (nextLineTabStop >= width)
+         {
+             // stops infinite loop happening
+@@ -834,23 +833,18 @@ public class HelpFormatter
+         {
+             text = padding + text.substring(pos).trim();
+             pos = findWrapPos(text, width, 0);
+-
+             if (pos == -1)
+             {
+-                sb.append(text);
+-
++                renderText(sb, width, nextLineTabStop, text);
+                 return sb;
+             }
+-            
+             if ( (text.length() > width) && (pos == nextLineTabStop - 1) )
+             {
+                 pos = width;
+             }
+-
+-            sb.append(rtrim(text.substring(0, pos))).append(defaultNewLine);
++            renderText(sb, width, nextLineTabStop, text.substring(0, pos)).append(defaultNewLine);
+         }
+     }
+-
+     /**
+      * Finds the next text wrap position after <code>startPos</code> for the
+      * text in <code>text</code> with the column width <code>width</code>.

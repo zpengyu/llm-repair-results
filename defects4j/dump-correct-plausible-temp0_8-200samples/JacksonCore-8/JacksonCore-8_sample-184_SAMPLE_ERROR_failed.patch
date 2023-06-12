@@ -1,0 +1,28 @@
+diff --git a/src/main/java/com/fasterxml/jackson/core/util/TextBuffer.java b/src/main/java/com/fasterxml/jackson/core/util/TextBuffer.java
+index 74f7b4ce..d6a9ee14 100644
+--- a/src/main/java/com/fasterxml/jackson/core/util/TextBuffer.java
++++ b/src/main/java/com/fasterxml/jackson/core/util/TextBuffer.java
+@@ -297,18 +297,13 @@ public final class TextBuffer
+     
+     public char[] getTextBuffer()
+     {
+-        // Are we just using shared input buffer?
+-        if (_inputStart >= 0) return _inputBuffer;
+-        if (_resultArray != null)  return _resultArray;
+-        if (_resultString != null) {
+-            return (_resultArray = _resultString.toCharArray());
++        if (_textBuffer.length < _textBufferLength) {
++            // 01-Jun-2016, tatu: [databind#1353] Handling of short text
++            //   buffer
++            _textBuffer = new char[_textBufferLength + (_textBufferLength >> 2)];
+         }
+-        // Nope; but does it fit in just one segment?
+-        if (!_hasSegments)  return _currentSegment;
+-        // Nope, need to have/create a non-segmented array and return it
+-        return contentsAsArray();
++        return _textBuffer;
+     }
+-
+     /*
+     /**********************************************************
+     /* Other accessors:

@@ -1,0 +1,47 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/deser/impl/BeanPropertyMap.java b/src/main/java/com/fasterxml/jackson/databind/deser/impl/BeanPropertyMap.java
+index aeaa0dc42..dff8ad7d8 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/deser/impl/BeanPropertyMap.java
++++ b/src/main/java/com/fasterxml/jackson/databind/deser/impl/BeanPropertyMap.java
+@@ -425,33 +425,18 @@ System.err.println("And new propr #"+slot+" '"+key+"'");
+      */
+     public void remove(SettableBeanProperty propToRm)
+     {
+-        ArrayList<SettableBeanProperty> props = new ArrayList<SettableBeanProperty>(_size);
+         String key = getPropertyName(propToRm);
+-        boolean found = false;
+-
+-        for (int i = 1, end = _hashArea.length; i < end; i += 2) {
+-            SettableBeanProperty prop = (SettableBeanProperty) _hashArea[i];
+-            if (prop == null) {
+-                continue;
+-            }
+-            if (!found) {
+-                // 09-Jan-2017, tatu: Important: must check name slot and NOT property name,
+-                //   as only former is lower-case in case-insensitive case
+-                found = key.equals(prop.getName());
+-                if (found) {
+-                    // need to leave a hole here
+-                    _propsInOrder[_findFromOrdered(prop)] = null;
+-                    continue;
+-                }
+-            }
+-            props.add(prop);
+-        }
+-        if (!found) {
+-            throw new NoSuchElementException("No entry '"+propToRm.getName()+"' found, can't remove");
++        int index = _findIndexInHash(key);
++        if (index >= 0) {
++            int orderedIndex = _hashArea[index+1].getCreatorIndex();
++            _propsInOrder[orderedIndex] = null;
++            _hashArea[index] = null;
++            _hashArea[index+1] = null;
++            _nextFreeIndex -= 2;
++            return;
+         }
+-        init(props);
++        throw new NoSuchElementException("No entry '"+propToRm.getName()+"' found, can't remove");
+     }
+-
+     /**
+      * Convenience method that tries to find property with given name, and
+      * if it is found, call {@link SettableBeanProperty#deserializeAndSet}

@@ -1,0 +1,50 @@
+diff --git a/src/java/org/apache/commons/cli/PosixParser.java b/src/java/org/apache/commons/cli/PosixParser.java
+index 2b1bbb1..fc334cd 100644
+--- a/src/java/org/apache/commons/cli/PosixParser.java
++++ b/src/java/org/apache/commons/cli/PosixParser.java
+@@ -94,6 +94,7 @@ public class PosixParser extends Parser {
+      * when an non option is found.
+      * @return The flattened <code>arguments</code> String array.
+      */
++public class PosixParser extends Parser {
+     protected String[] flatten(Options options, String[] arguments, boolean stopAtNonOption)
+     {
+         init();
+@@ -151,13 +148,33 @@ public class PosixParser extends Parser {
+             {
+                 tokens.add(token);
+             }
+-
+-            gobble(iter);
+         }
+-
+         return (String[]) tokens.toArray(new String[tokens.size()]);
+     }
+-
++    private void gobble(Iterator iter)
++    {
++        if (iter.hasNext())
++        {
++            String arg = (String) iter.next();
++            // swallow quoted argument
++            if (arg.startsWith("\"") || arg.startsWith("'"))
++            {
++                StringBuffer buffer = new StringBuffer(arg);
++                while (iter.hasNext())
++                {
++                    String t = (String) iter.next();
++                    buffer.append(" ");
++                    buffer.append(t);
++                    if (t.endsWith(arg.substring(0, 1)))
++                    {
++                        break;
++                    }
++                }
++                tokens.add(buffer.toString().substring(1, buffer.toString().length() - 1));
++            }
++        }
++    }
++}
+     /**
+      * Adds the remaining tokens to the processed tokens list.
+      *

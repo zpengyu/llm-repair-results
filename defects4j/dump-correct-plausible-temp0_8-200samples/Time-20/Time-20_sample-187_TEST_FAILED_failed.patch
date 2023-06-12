@@ -1,0 +1,63 @@
+diff --git a/src/main/java/org/joda/time/format/DateTimeFormatterBuilder.java b/src/main/java/org/joda/time/format/DateTimeFormatterBuilder.java
+index 1ff78bfe..0410e6d3 100644
+--- a/src/main/java/org/joda/time/format/DateTimeFormatterBuilder.java
++++ b/src/main/java/org/joda/time/format/DateTimeFormatterBuilder.java
+@@ -2765,15 +2765,9 @@ public class DateTimeFormatterBuilder {
+         public int parseInto(DateTimeParserBucket bucket, String text, int position) {
+             DateTimeParser[] parsers = iParsers;
+             int length = parsers.length;
+-
+             final Object originalState = bucket.saveState();
+-            boolean isOptional = false;
+-
+             int bestValidPos = position;
+             Object bestValidState = null;
+-
+-            int bestInvalidPos = position;
+-
+             for (int i=0; i<length; i++) {
+                 DateTimeParser parser = parsers[i];
+                 if (parser == null) {
+@@ -2781,7 +2775,6 @@ public class DateTimeFormatterBuilder {
+                     if (bestValidPos <= position) {
+                         return position;
+                     }
+-                    isOptional = true;
+                     break;
+                 }
+                 int parsePos = parser.parseInto(bucket, text, position);
+@@ -2798,26 +2790,20 @@ public class DateTimeFormatterBuilder {
+                         bestValidState = bucket.saveState();
+                     }
+                 } else {
+-                    if (parsePos < 0) {
+-                        parsePos = ~parsePos;
+-                        if (parsePos > bestInvalidPos) {
+-                            bestInvalidPos = parsePos;
+-                        }
++                    parsePos = ~parsePos;
++                    if (parsePos <= position) {
++                        bucket.restoreState(originalState);
++                        return ~position;
+                     }
+                 }
+                 bucket.restoreState(originalState);
+             }
+-
+-            if (bestValidPos > position || (bestValidPos == position && isOptional)) {
++            if (bestValidPos > position) {
+                 // Restore the state to the best valid parse.
+-                if (bestValidState != null) {
+-                    bucket.restoreState(bestValidState);
+-                }
++                bucket.restoreState(bestValidState);
+                 return bestValidPos;
+             }
+-
+-            return ~bestInvalidPos;
+-        }
+-    }
++            return ~position;
++        }    }
+ 
+ }

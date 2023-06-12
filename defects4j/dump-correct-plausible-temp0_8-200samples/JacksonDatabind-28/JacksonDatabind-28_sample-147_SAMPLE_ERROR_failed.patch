@@ -1,0 +1,19 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/deser/std/JsonNodeDeserializer.java b/src/main/java/com/fasterxml/jackson/databind/deser/std/JsonNodeDeserializer.java
+index 6cb784606..e02047f23 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/deser/std/JsonNodeDeserializer.java
++++ b/src/main/java/com/fasterxml/jackson/databind/deser/std/JsonNodeDeserializer.java
+@@ -124,9 +124,12 @@ public class JsonNodeDeserializer
+             if (p.isExpectedStartArrayToken()) {
+                 return deserializeArray(p, ctxt, ctxt.getNodeFactory());
+             }
++            // [JACKSON-526]: allow implicit arrays from single values?
++            if (!p.hasToken(JsonToken.FIELD_NAME)) {
++                return handleNonArray(p, ctxt);
++            }
+             throw ctxt.mappingException(ArrayNode.class);
+-        }
+-    }
++        }    }
+ }
+ 
+ /**

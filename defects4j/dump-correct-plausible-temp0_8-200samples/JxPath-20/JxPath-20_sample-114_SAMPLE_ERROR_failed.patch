@@ -1,0 +1,157 @@
+diff --git a/src/java/org/apache/commons/jxpath/ri/compiler/CoreOperationRelationalExpression.java b/src/java/org/apache/commons/jxpath/ri/compiler/CoreOperationRelationalExpression.java
+index cd4ceac..f5df903 100644
+--- a/src/java/org/apache/commons/jxpath/ri/compiler/CoreOperationRelationalExpression.java
++++ b/src/java/org/apache/commons/jxpath/ri/compiler/CoreOperationRelationalExpression.java
+@@ -32,127 +32,37 @@ import org.apache.commons.jxpath.ri.axes.SelfContext;
+  * @author Matt Benson
+  * @version $Revision$ $Date$
+  */
+-public abstract class CoreOperationRelationalExpression extends CoreOperation {
+-
+-    /**
+-     * Create a new CoreOperationRelationalExpression.
+-     * @param args arguments
+-     */
+-    protected CoreOperationRelationalExpression(Expression[] args) {
+-        super(args);
+-    }
+-
+-    public final Object computeValue(EvalContext context) {
+-        return compute(args[0].compute(context), args[1].compute(context))
+-                ? Boolean.TRUE : Boolean.FALSE;
++/**
++ * Compare left to right.
++ * @param left left operand
++ * @param right right operand
++ * @return operation success/failure
++ */
++private boolean compute(Object left, Object right) {
++    left = reduce(left);
++    right = reduce(right);
++    if (left instanceof InitialContext) {
++        ((InitialContext) left).reset();
+     }
+-
+-    protected final int getPrecedence() {
+-        return RELATIONAL_EXPR_PRECEDENCE;
++    if (right instanceof InitialContext) {
++        ((InitialContext) right).reset();
+     }
+-
+-    protected final boolean isSymmetric() {
+-        return false;
++    if (left instanceof Iterator && right instanceof Iterator) {
++        return findMatch((Iterator) left, (Iterator) right);
+     }
+-
+-    /**
+-     * Template method for subclasses to evaluate the result of a comparison.
+-     * @param compare result of comparison to evaluate
+-     * @return ultimate operation success/failure
+-     */
+-    protected abstract boolean evaluateCompare(int compare);
+-
+-    /**
+-     * Compare left to right.
+-     * @param left left operand
+-     * @param right right operand
+-     * @return operation success/failure
+-     */
+-    private boolean compute(Object left, Object right) {
+-        left = reduce(left);
+-        right = reduce(right);
+-
+-        if (left instanceof InitialContext) {
+-            ((InitialContext) left).reset();
+-        }
+-        if (right instanceof InitialContext) {
+-            ((InitialContext) right).reset();
+-        }
+-        if (left instanceof Iterator && right instanceof Iterator) {
+-            return findMatch((Iterator) left, (Iterator) right);
+-        }
+-        if (left instanceof Iterator) {
+-            return containsMatch((Iterator) left, right);
+-        }
+-        if (right instanceof Iterator) {
+-            return containsMatch((Iterator) right, left);
+-        }
+-        double ld = InfoSetUtil.doubleValue(left);
+-        if (Double.isNaN(ld)) {
+-            return false;
+-        }
+-        double rd = InfoSetUtil.doubleValue(right);
+-        if (Double.isNaN(rd)) {
+-            return false;
+-        }
+-        return evaluateCompare(ld == rd ? 0 : ld < rd ? -1 : 1);
++    if (left instanceof Iterator) {
++        return containsMatch((Iterator) left, right);
+     }
+-
+-    /**
+-     * Reduce an operand for comparison.
+-     * @param o Object to reduce
+-     * @return reduced operand
+-     */
+-    private Object reduce(Object o) {
+-        if (o instanceof SelfContext) {
+-            o = ((EvalContext) o).getSingleNodePointer();
+-        }
+-        if (o instanceof Collection) {
+-            o = ((Collection) o).iterator();
+-        }
+-        return o;
++    if (right instanceof Iterator) {
++        return containsMatch((Iterator) right, left);
+     }
+-
+-    /**
+-     * Learn whether any element returned from an Iterator matches a given value.
+-     * @param it Iterator
+-     * @param value to look for
+-     * @return whether a match was found
+-     */
+-    private boolean containsMatch(Iterator it, Object value) {
+-        while (it.hasNext()) {
+-            Object element = it.next();
+-            if (compute(element, value)) {
+-                return true;
+-            }
+-        }
++    double ld = InfoSetUtil.doubleValue(left);
++    if (Double.isNaN(ld)) {
+         return false;
+     }
+-
+-    /**
+-     * Learn whether any element returned from an Iterator matches a given value.
+-     * @param it Iterator
+-     * @param value to look for
+-     * @return whether a match was found
+-     */
+-
+-    /**
+-     * Learn whether there is an intersection between two Iterators.
+-     * @param lit left Iterator
+-     * @param rit right Iterator
+-     * @return whether a match was found
+-     */
+-    private boolean findMatch(Iterator lit, Iterator rit) {
+-        HashSet left = new HashSet();
+-        while (lit.hasNext()) {
+-            left.add(lit.next());
+-        }
+-        while (rit.hasNext()) {
+-            if (containsMatch(left.iterator(), rit.next())) {
+-                return true;
+-            }
+-        }
++    double rd = InfoSetUtil.doubleValue(right);
++    if (Double.isNaN(rd)) {
+         return false;
+     }
+-
++    return evaluateCompare(ld == rd ? 0 : ld < rd ? -1 : 1);
+ }
+\ No newline at end of file

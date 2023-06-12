@@ -1,0 +1,17 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/jsontype/impl/ClassNameIdResolver.java b/src/main/java/com/fasterxml/jackson/databind/jsontype/impl/ClassNameIdResolver.java
+index 112c00b5c..a1dda5c31 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/jsontype/impl/ClassNameIdResolver.java
++++ b/src/main/java/com/fasterxml/jackson/databind/jsontype/impl/ClassNameIdResolver.java
+@@ -44,6 +44,12 @@ public class ClassNameIdResolver
+ 
+     protected JavaType _typeFromId(String id, DatabindContext ctxt) throws IOException
+     {
++        // [databind#1883]: if we have a factory, need to use it
++        final JavaType base = _baseType;
++        if (base instanceof ResolvedType) {
++            TypeFactory tf = ctxt.getTypeFactory();
++            return tf.constructFromCanonical(id);
++        }
+         /* 30-Jan-2010, tatu: Most ids are basic class names; so let's first
+          *    check if any generics info is added; and only then ask factory
+          *    to do translation when necessary

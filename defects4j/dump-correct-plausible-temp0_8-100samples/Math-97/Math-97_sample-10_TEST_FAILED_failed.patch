@@ -1,0 +1,31 @@
+diff --git a/src/java/org/apache/commons/math/analysis/BrentSolver.java b/src/java/org/apache/commons/math/analysis/BrentSolver.java
+index 8dab47503..77b3d208f 100644
+--- a/src/java/org/apache/commons/math/analysis/BrentSolver.java
++++ b/src/java/org/apache/commons/math/analysis/BrentSolver.java
+@@ -124,18 +124,21 @@ public class BrentSolver extends UnivariateRealSolverImpl {
+      */
+     public double solve(double min, double max) throws MaxIterationsExceededException, 
+         FunctionEvaluationException {
+-        
+         clearResult();
+         verifyInterval(min, max);
+-        
+         double ret = Double.NaN;
+-        
+         double yMin = f.value(min);
+         double yMax = f.value(max);
+-
+         // Verify bracketing
+         double sign = yMin * yMax;
+-        if (sign >= 0) {
++        if (sign == 0) {
++            if(yMin == 0){
++                ret = min;
++            }else{
++                ret = max;
++            }
++            return ret;
++        } else if (sign > 0) {
+             // check if either value is close to a zero
+                 // neither value is close to zero and min and max do not bracket root.
+                 throw new IllegalArgumentException

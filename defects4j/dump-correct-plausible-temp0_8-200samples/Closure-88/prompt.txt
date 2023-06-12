@@ -1,0 +1,72 @@
+###Provide a fix for the buggy function
+###Buggy Function
+class FibonacciExample {
+    public static void main(String args[]) {
+        int n1 = 0, n2 = 1, n3, i, count = 10;
+
+        System.out.print(n1 + " " + n2);
+
+        for (i = 2; i < count; ++i) {
+            n3 = n1 - n2;
+            System.out.print(" " + n3);
+            n1 = n2;
+            n2 = n3;
+        }
+    }
+}
+
+###Fixed Function
+class FibonacciExample {
+    public static void main(String args[]) {
+        int n1 = 0, n2 = 1, n3, i, count = 10;
+
+        System.out.print(n1 + " " + n2);
+
+        for (i = 2; i < count; ++i) {
+            n3 = n1 + n2;
+            System.out.print(" " + n3);
+            n1 = n2;
+            n2 = n3;
+        }
+    }
+}
+
+###Provide a fix for the buggy function
+###Buggy Function
+private static boolean isReduceableFunctionExpression(Node n) {
+  return NodeUtil.isFunctionExpression(n);
+}
+###Fixed Function
+private static boolean isReduceableFunctionExpression(Node n) {
+  return NodeUtil.isFunctionExpression(n)
+      && !NodeUtil.isGetOrSetKey(n.getParent());
+}
+###Provide a fix for the buggy function
+###Buggy Function
+  private VariableLiveness isVariableReadBeforeKill(
+      Node n, String variable) {
+    if (NodeUtil.isName(n) && variable.equals(n.getString())) {
+      if (NodeUtil.isLhs(n, n.getParent())) {
+        // The expression to which the assignment is made is evaluated before
+        // the RHS is evaluated (normal left to right evaluation) but the KILL
+        // occurs after the RHS is evaluated.
+        return VariableLiveness.KILL;
+      } else {
+        return VariableLiveness.READ;
+      }
+    }
+
+    // Expressions are evaluated left-right, depth first.
+    for (Node child = n.getFirstChild();
+        child != null; child = child.getNext()) {
+      if (!ControlFlowGraph.isEnteringNewCfgNode(child)) { // Not a FUNCTION
+        VariableLiveness state = isVariableReadBeforeKill(child, variable);
+        if (state != VariableLiveness.MAYBE_LIVE) {
+          return state;
+        }
+      }
+    }
+    return VariableLiveness.MAYBE_LIVE;
+  }
+
+###Fixed Function

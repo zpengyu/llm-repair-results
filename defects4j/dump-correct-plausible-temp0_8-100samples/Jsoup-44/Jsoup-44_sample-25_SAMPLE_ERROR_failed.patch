@@ -1,0 +1,66 @@
+diff --git a/src/main/java/org/jsoup/parser/TreeBuilder.java b/src/main/java/org/jsoup/parser/TreeBuilder.java
+index f4faad4..96b1eba 100644
+--- a/src/main/java/org/jsoup/parser/TreeBuilder.java
++++ b/src/main/java/org/jsoup/parser/TreeBuilder.java
+@@ -33,11 +30,9 @@ abstract class TreeBuilder {
+         stack = new ArrayList<Element>(32);
+         this.baseUri = baseUri;
+     }
+-
+-    Document parse(String input, String baseUri) {
++    public Document parse(String input, String baseUri) {
+         return parse(input, baseUri, ParseErrorList.noTracking());
+     }
+-
+     Document parse(String input, String baseUri, ParseErrorList errors) {
+         initialiseParse(input, baseUri, errors);
+         runParser();
+@@ -54,24 +47,38 @@ abstract class TreeBuilder {
+                 break;
+         }
+     }
+-
+     protected abstract boolean process(Token token);
+-
++    protected boolean process(Token token, boolean inRoot) {
++        switch (token.type) {
++            case Comment:
++                insert(token.asComment());
++                break;
++            case Doctype:
++                doctype(token.asDoctype());
++                break;
++            case StartTag:
++                return startTag(token.asStartTag(), inRoot);
++            case EndTag:
++                return endTag(token.asEndTag());
++            case Character:
++                insert(token.asCharacter());
++                break;
++            case EOF: // should not happen
++                break;
++        }
++        return true;
++    }
+     protected boolean processStartTag(String name) {
+-        return process(start.reset().name(name));
++        return process(start.reset().name(name), true);
+     }
+-
+-    public boolean processStartTag(String name, Attributes attrs) {
++    protected boolean processStartTag(String name, Attributes attrs) {
+         start.reset();
+         start.nameAttr(name, attrs);
+-        return process(start);
++        return process(start, true);
+     }
+-
+     protected boolean processEndTag(String name) {
+-        return process(end.reset().name(name));
++        return process(end.reset().name(name), true);
+     }
+-
+-
+     protected Element currentElement() {
+         int size = stack.size();
+         return size > 0 ? stack.get(size-1) : null;

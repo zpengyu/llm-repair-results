@@ -1,0 +1,13 @@
+    public Period normalizedStandard(PeriodType type) {
+        type = DateTimeUtils.getPeriodType(type);
+        long millis = getMillis();  // no overflow can happen, even with Integer.MAX_VALUEs
+        int[] values = ISOChronology.getInstanceUTC().get(this, millis);
+        Period result = new Period(0, type, ISOChronology.getInstanceUTC());
+        int index = 0;
+        int len = type.size();
+        while (index < len) {
+            result = result.withField(type.getFieldType(index), values[index]);
+            index++;
+        }
+        return result;
+    }

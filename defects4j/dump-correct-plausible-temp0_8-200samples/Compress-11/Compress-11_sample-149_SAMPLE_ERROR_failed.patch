@@ -1,0 +1,21 @@
+diff --git a/src/main/java/org/apache/commons/compress/archivers/ArchiveStreamFactory.java b/src/main/java/org/apache/commons/compress/archivers/ArchiveStreamFactory.java
+index e2847a61..62685cb4 100644
+--- a/src/main/java/org/apache/commons/compress/archivers/ArchiveStreamFactory.java
++++ b/src/main/java/org/apache/commons/compress/archivers/ArchiveStreamFactory.java
+@@ -249,7 +245,14 @@ public class ArchiveStreamFactory {
+         } catch (IOException e) {
+             throw new ArchiveException("Could not use reset and mark operations.", e);
+         }
+-
+         throw new ArchiveException("No Archiver found for the stream signature");
+     }
+-}
++    if (ZipArchiveInputStream.matches(signature, signatureLength)) {
++        return new ZipArchiveInputStream(in);
++    } else if (JarArchiveInputStream.matches(signature, signatureLength)) {
++        return new JarArchiveInputStream(in);
++    } else if (ArArchiveInputStream.matches(signature, signatureLength)) {
++        return new ArArchiveInputStream(in);
++    } else if (CpioArchiveInputStream.matches(signature, signatureLength)) {
++        return new CpioArchiveInputStream(in);
++    }}

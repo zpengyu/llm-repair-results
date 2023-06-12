@@ -1,0 +1,25 @@
+diff --git a/src/com/google/javascript/jscomp/InlineFunctions.java b/src/com/google/javascript/jscomp/InlineFunctions.java
+index 50f6bac0..4bd872c0 100644
+--- a/src/com/google/javascript/jscomp/InlineFunctions.java
++++ b/src/com/google/javascript/jscomp/InlineFunctions.java
+@@ -778,14 +778,15 @@ class InlineFunctions implements SpecializationAwareCompilerPass {
+       Node child = node.getFirstChild();
+       if (child.getType() == Token.NAME) {
+         changed.add(child.getString());
++      } else {
++        findCalledFunctions(child, changed);
++      }
++    } else {
++      for (Node c = node.getFirstChild(); c != null; c = c.getNext()) {
++        findCalledFunctions(c, changed);
+       }
+-    }
+-
+-    for (Node c = node.getFirstChild(); c != null; c = c.getNext()) {
+-      findCalledFunctions(c, changed);
+     }
+   }
+-
+   /**
+    * For any call-site that needs it, prepare the call-site for inlining
+    * by rewriting the containing expression.

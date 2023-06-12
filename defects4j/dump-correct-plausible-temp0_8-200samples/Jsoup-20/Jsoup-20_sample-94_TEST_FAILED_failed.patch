@@ -1,0 +1,17 @@
+diff --git a/src/main/java/org/jsoup/helper/DataUtil.java b/src/main/java/org/jsoup/helper/DataUtil.java
+index 4bdf4fe..3554055 100644
+--- a/src/main/java/org/jsoup/helper/DataUtil.java
++++ b/src/main/java/org/jsoup/helper/DataUtil.java
+@@ -75,9 +75,9 @@ public class DataUtil {
+         Document doc = null;
+         if (charsetName == null) { // determine from meta. safe parse as UTF-8
+             // look for <meta http-equiv="Content-Type" content="text/html;charset=gb2312"> or HTML5 <meta charset="gb2312">
+-            docData = Charset.forName(defaultCharset).decode(byteData).toString();
+-            doc = parser.parseInput(docData, baseUri);
+-            Element meta = doc.select("meta[http-equiv=content-type], meta[charset]").first();
++            docData = defaultCharset != null ? Charset.forName(defaultCharset).decode(byteData).toString() : null;
++            doc = docData != null ? parser.parseInput(docData, baseUri) : null;
++            Element meta = doc != null ? doc.select("meta[http-equiv=content-type], meta[charset]").first() : null;
+             if (meta != null) { // if not found, will keep utf-8 as best attempt
+                 String foundCharset = meta.hasAttr("http-equiv") ? getCharsetFromContentType(meta.attr("content")) : meta.attr("charset");
+                 if (foundCharset != null && foundCharset.length() != 0 && !foundCharset.equals(defaultCharset)) { // need to re-decode

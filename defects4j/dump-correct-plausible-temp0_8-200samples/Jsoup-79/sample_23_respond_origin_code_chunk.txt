@@ -1,0 +1,85 @@
+abstract class LeafNode extends Node {
+
+    Attributes attributes = null;
+    String baseUri;
+    String coreValue;
+
+    protected final boolean hasAttributes() {
+        return attributes != null;
+    }
+
+    @Override
+    public final Attributes attributes() {
+        ensureAttributes();
+        return attributes;
+    }
+
+    private void ensureAttributes() {
+        if (!hasAttributes()) {
+            attributes = new Attributes();
+        }
+    }
+
+    String coreValue() {
+        return coreValue;
+    }
+
+    void coreValue(String value) {
+        coreValue = value;
+    }
+
+    @Override
+    public String attr(String key) {
+        ensureAttributes();
+        return attributes.hasKey(key) ? attributes.get(key) : baseUri;
+    }
+
+    @Override
+    public Node attr(String key, String value) {
+        ensureAttributes();
+        attributes.put(key, value);
+        return this;
+    }
+
+    @Override
+    public boolean hasAttr(String key) {
+        ensureAttributes();
+        return attributes.hasKey(key);
+    }
+
+    @Override
+    public Node removeAttr(String key) {
+        ensureAttributes();
+        attributes.remove(key);
+        return this;
+    }
+
+    @Override
+    public String absUrl(String key) {
+        ensureAttributes();
+        Validate.notEmpty(key);
+        if (!hasAttr(key))
+            return "";
+        return attributes.absUrl(key);
+    }
+
+    @Override
+    public String baseUri() {
+        return baseUri;
+    }
+
+    @Override
+    protected void doSetBaseUri(String baseUri) {
+        this.baseUri = baseUri;
+    }
+
+    @Override
+    public int childNodeSize() {
+        return 0;
+    }
+
+    @Override
+    protected List<Node> ensureChildNodes() {
+        throw new UnsupportedOperationException("Leaf Nodes do not have child nodes.");
+    }
+}

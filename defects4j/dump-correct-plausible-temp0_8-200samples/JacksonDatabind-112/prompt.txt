@@ -1,0 +1,101 @@
+###Provide a fix for the buggy function
+###Buggy Function
+class FibonacciExample {
+    public static void main(String args[]) {
+        int n1 = 0, n2 = 1, n3, i, count = 10;
+
+        System.out.print(n1 + " " + n2);
+
+        for (i = 2; i < count; ++i) {
+            n3 = n1 - n2;
+            System.out.print(" " + n3);
+            n1 = n2;
+            n2 = n3;
+        }
+    }
+}
+
+###Fixed Function
+class FibonacciExample {
+    public static void main(String args[]) {
+        int n1 = 0, n2 = 1, n3, i, count = 10;
+
+        System.out.print(n1 + " " + n2);
+
+        for (i = 2; i < count; ++i) {
+            n3 = n1 + n2;
+            System.out.print(" " + n3);
+            n1 = n2;
+            n2 = n3;
+        }
+    }
+}
+
+###Provide a fix for the buggy function
+###Buggy Function
+public TokenBuffer deserialize(JsonParser jp, DeserializationContext ctxt) throws IOException
+{
+    copyCurrentStructure(jp);
+    return this;
+}
+###Fixed Function
+public TokenBuffer deserialize(JsonParser jp, DeserializationContext ctxt) throws IOException
+{
+    if (jp.getCurrentTokenId() != JsonToken.FIELD_NAME.id()) {
+        copyCurrentStructure(jp);
+        return this;
+    }
+    /* 28-Oct-2014, tatu: As per #592, need to support a special case of starting from
+     *    FIELD_NAME, which is taken to mean that we are missing START_OBJECT, but need
+     *    to assume one did exist.
+     */
+    JsonToken t;
+    writeStartObject();
+    do {
+        copyCurrentStructure(jp);
+    } while ((t = jp.nextToken()) == JsonToken.FIELD_NAME);
+    if (t != JsonToken.END_OBJECT) {
+        throw ctxt.mappingException("Expected END_OBJECT after copying contents of a JsonParser into TokenBuffer, got "+t);
+    }
+    writeEndObject();
+    return this;
+}
+###Provide a fix for the buggy function
+###Buggy Function
+    public JsonDeserializer<?> createContextual(DeserializationContext ctxt,
+            BeanProperty property) throws JsonMappingException
+    {
+        // May need to resolve types for delegate-based creators:
+        JsonDeserializer<Object> delegate = null;
+        if (_valueInstantiator != null) {
+            // [databind#2324]: check both array-delegating and delegating
+            AnnotatedWithParams delegateCreator = _valueInstantiator.getDelegateCreator();
+            if (delegateCreator != null) {
+                JavaType delegateType = _valueInstantiator.getDelegateType(ctxt.getConfig());
+                delegate = findDeserializer(ctxt, delegateType, property);
+            }
+        }
+        JsonDeserializer<?> valueDeser = _valueDeserializer;
+        final JavaType valueType = _containerType.getContentType();
+        if (valueDeser == null) {
+            // [databind#125]: May have a content converter
+            valueDeser = findConvertingContentDeserializer(ctxt, property, valueDeser);
+            if (valueDeser == null) {
+            // And we may also need to get deserializer for String
+                valueDeser = ctxt.findContextualValueDeserializer(valueType, property);
+            }
+        } else { // if directly assigned, probably not yet contextual, so:
+            valueDeser = ctxt.handleSecondaryContextualization(valueDeser, property, valueType);
+        }
+        // 11-Dec-2015, tatu: Should we pass basic `Collection.class`, or more refined? Mostly
+        //   comes down to "List vs Collection" I suppose... for now, pass Collection
+        Boolean unwrapSingle = findFormatFeature(ctxt, property, Collection.class,
+                JsonFormat.Feature.ACCEPT_SINGLE_VALUE_AS_ARRAY);
+        NullValueProvider nuller = findContentNullProvider(ctxt, property, valueDeser);
+        if (isDefaultDeserializer(valueDeser)) {
+            valueDeser = null;
+        }
+        return withResolved(delegate, valueDeser, nuller, unwrapSingle);
+    }
+
+###Fixed Function

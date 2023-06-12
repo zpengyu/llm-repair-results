@@ -1,0 +1,23 @@
+diff --git a/src/main/java/org/apache/commons/math3/ode/AbstractIntegrator.java b/src/main/java/org/apache/commons/math3/ode/AbstractIntegrator.java
+index d91085010..f9e7ddd6c 100644
+--- a/src/main/java/org/apache/commons/math3/ode/AbstractIntegrator.java
++++ b/src/main/java/org/apache/commons/math3/ode/AbstractIntegrator.java
+@@ -367,12 +353,13 @@ public abstract class AbstractIntegrator implements FirstOrderIntegrator {
+                     System.arraycopy(eventY, 0, y, 0, y.length);
+                     computeDerivatives(eventT, y, yDot);
+                     resetOccurred = true;
+-                    for (final EventState remaining : occuringEvents) {
+-                        remaining.stepAccepted(eventT, eventY);
+-                    }
+-                    return eventT;
++                } else {
++                    // use the interpolator to evaluate the derivatives at the event time
++                    System.arraycopy(interpolator.getInterpolatedDerivatives(), 0, yDot, 0, y0.length);
++                }
++                for (final EventState remaining : occuringEvents) {
++                    remaining.stepAccepted(eventT, eventY);
+                 }
+-
+                 // prepare handling of the remaining part of the step
+                 previousT = eventT;
+                 interpolator.setSoftPreviousTime(eventT);

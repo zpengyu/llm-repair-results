@@ -1,0 +1,24 @@
+diff --git a/src/com/google/javascript/jscomp/CheckGlobalThis.java b/src/com/google/javascript/jscomp/CheckGlobalThis.java
+index 961b964c..d6b53a97 100644
+--- a/src/com/google/javascript/jscomp/CheckGlobalThis.java
++++ b/src/com/google/javascript/jscomp/CheckGlobalThis.java
+@@ -103,15 +101,15 @@ final class CheckGlobalThis implements Callback {
+       if (!(pType == Token.BLOCK ||
+             pType == Token.SCRIPT ||
+             pType == Token.NAME ||
+-            pType == Token.ASSIGN)) {
++            pType == Token.ASSIGN ||
++            pType == Token.INC ||
++            pType == Token.DEC)) {
+         return false;
+       }
+     }
+-
+-    if (parent != null && parent.getType() == Token.ASSIGN) {
++    if (parent != null && (parent.getType() == Token.ASSIGN || parent.getType() == Token.INC || parent.getType() == Token.DEC)) {
+       Node lhs = parent.getFirstChild();
+       Node rhs = lhs.getNext();
+-      
+       if (n == lhs) {
+         // Always traverse the left side of the assignment. To handle
+         // nested assignments properly (e.g., (a = this).property = c;),

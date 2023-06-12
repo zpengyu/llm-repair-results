@@ -1,0 +1,21 @@
+diff --git a/src/main/java/com/fasterxml/jackson/dataformat/xml/deser/FromXmlParser.java b/src/main/java/com/fasterxml/jackson/dataformat/xml/deser/FromXmlParser.java
+index a1fed7d..9bc9bbb 100644
+--- a/src/main/java/com/fasterxml/jackson/dataformat/xml/deser/FromXmlParser.java
++++ b/src/main/java/com/fasterxml/jackson/dataformat/xml/deser/FromXmlParser.java
+@@ -643,10 +639,13 @@ public class FromXmlParser
+         switch (token) {
+         case XmlTokenStream.XML_END_ELEMENT:
+             if (_mayBeLeaf) {
+-                // NOTE: this is different from nextToken() -- produce "", NOT null
+                 _mayBeLeaf = false;
+-                _currToken = JsonToken.VALUE_STRING;
+-                return (_currText = "");
++                if (_parsingContext.inArray()) {
++                    _nextToken = JsonToken.END_ARRAY;
++                } else {
++                    _nextToken = JsonToken.END_OBJECT;
++                }
++                return null;
+             }
+             _currToken = _parsingContext.inArray() ? JsonToken.END_ARRAY : JsonToken.END_OBJECT;
+             _parsingContext = _parsingContext.getParent();

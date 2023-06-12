@@ -1,0 +1,55 @@
+diff --git a/src/java/org/apache/commons/cli/PosixParser.java b/src/java/org/apache/commons/cli/PosixParser.java
+index 8c84520..30abc17 100644
+--- a/src/java/org/apache/commons/cli/PosixParser.java
++++ b/src/java/org/apache/commons/cli/PosixParser.java
+@@ -281,31 +281,26 @@ public class PosixParser extends Parser {
+      */
+     protected void burstToken(String token, boolean stopAtNonOption)
+     {
+-        for (int i = 1; i < token.length(); i++)
+-        {
+-            String ch = String.valueOf(token.charAt(i));
+-
+-            if (options.hasOption(ch))
+-            {
+-                tokens.add("-" + ch);
+-                currentOption = options.getOption(ch);
+-
+-                if (currentOption.hasArg() && (token.length() != (i + 1)))
+-                {
+-                    tokens.add(token.substring(i + 1));
+-
++        if (token.startsWith("--")) {
++            process(token);
++        } else if (token.startsWith("-")) {
++            for (int i = 1; i < token.length(); i++) {
++                String ch = String.valueOf(token.charAt(i));
++                if (options.hasOption(ch)) {
++                    tokens.add("-" + ch);
++                    currentOption = options.getOption(ch);
++                    if (currentOption.hasArg() && (token.length() != (i + 1))) {
++                        tokens.add(token.substring(i + 1));
++                        break;
++                    }
++                } else if (stopAtNonOption) {
++                    process(token.substring(i));
++                } else {
++                    tokens.add(token);
+                     break;
+                 }
+             }
+-            else if (stopAtNonOption)
+-            {
+-                process(token.substring(i));
+-            }
+-            else
+-            {
+-                tokens.add(token);
+-                break;
+-            }
++        } else {
++            process(token);
+         }
+-    }
+-}
++    }}

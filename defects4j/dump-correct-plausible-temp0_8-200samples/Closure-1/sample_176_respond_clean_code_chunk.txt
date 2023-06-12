@@ -1,0 +1,27 @@
+    private void removeUnreferencedFunctionArgs(Scope fnScope) {
+      Node function = fnScope.getRootNode();
+      Node argList = getFunctionArgList(function);
+      boolean modifyCallers = modifyCallSites
+          && callSiteOptimizer.canModifyCallers(function);
+      if (!modifyCallers) {
+        // Strip unreferenced args off the end of the function declaration.
+        Node lastArg;
+        while ((lastArg = argList.getLastChild()) != null) {
+          Var var = fnScope.getVar(lastArg.getString());
+          if (!referenced.contains(var)) {
+            argList.removeChild(lastArg);
+            compiler.reportCodeChange();
+          } else {
+            break;
+          }
+        }
+      } else {
+        callSiteOptimizer.optimize(fnScope, referenced);
+      }
+    }
+  }
+  /** @return Whether the given node is a named function expression. */
+  private static boolean isFunctionExpression(Node n) {
+    return NodeUtil.isFunction(n) && n.hasChildren()
+        && n.getFirstChild().isName();
+  }

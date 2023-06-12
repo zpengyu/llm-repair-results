@@ -1,0 +1,58 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/type/TypeFactory.java b/src/main/java/com/fasterxml/jackson/databind/type/TypeFactory.java
+index 87b165830..554112a87 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/type/TypeFactory.java
++++ b/src/main/java/com/fasterxml/jackson/databind/type/TypeFactory.java
+@@ -891,20 +891,17 @@ public final class TypeFactory
+         final String name = type.getName();
+         // 19-Mar-2015: Without context, all we can check are bounds.
+         if (context == null) {
+-            // And to prevent infinite loops, now need this:
+             return _unknownType();
+-        } else {
+-            // Ok: here's where context might come in handy!
+-            /* 19-Mar-2015, tatu: As per [databind#609], may need to allow
+-             *   unresolved type variables to handle some cases where bounds
+-             *   are enough. Let's hope it does not hide real fail cases.
+-             */
+-            JavaType actualType = context.findType(name);
+-            if (actualType != null) {
+-                return actualType;
+-            }
+         }
+-
++        // Ok: here's where context might come in handy!
++        /* 19-Mar-2015, tatu: As per [databind#609], may need to allow
++         *   unresolved type variables to handle some cases where bounds
++         *   are enough. Let's hope it does not hide real fail cases.
++         */
++        JavaType actualType = context.findType(name);
++        if (actualType != null) {
++            return actualType;
++        }
+         /* 29-Jan-2010, tatu: We used to throw exception here, if type was
+          *   bound: but the problem is that this can occur for generic "base"
+          *   method, overridden by sub-class. If so, we will want to ignore
+@@ -926,9 +921,21 @@ public final class TypeFactory
+          *   for resolution to catch those.
+          */
+         context._addPlaceholder(name);
+-        return _constructType(bounds[0], context);
++        JavaType boundType = _constructType(bounds[0], context);
++        /* 04-Aug-2013, tatu: [databind#400] This becomes trickier with additional interfaces;
++         *   may also need to consider them. But only want to add to 'context' if not
++         *   seen before; otherwise may end up with endless recursion.
++         */
++        if (bounds.length > 1) {
++            TypeBindings newContext = context.childInstance();
++            for (int i = 1, len = bounds.length; i < len; ++i) {
++                JavaType intf = _constructType(bounds[i], newContext);
++                newContext._addType(intf);
++            }
++            boundType = _fromClass(null, new TypeBindings(boundType), NO_TYPES);
++        }
++        return boundType;
+     }
+-
+     protected JavaType _fromWildcard(WildcardType type, TypeBindings context)
+     {
+         /* Similar to challenges with TypeVariable, we may have

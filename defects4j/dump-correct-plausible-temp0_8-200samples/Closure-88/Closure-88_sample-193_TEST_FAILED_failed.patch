@@ -1,0 +1,37 @@
+diff --git a/src/com/google/javascript/jscomp/DeadAssignmentsElimination.java b/src/com/google/javascript/jscomp/DeadAssignmentsElimination.java
+index 19b8b6bd..c5d8d0eb 100644
+--- a/src/com/google/javascript/jscomp/DeadAssignmentsElimination.java
++++ b/src/com/google/javascript/jscomp/DeadAssignmentsElimination.java
+@@ -323,16 +323,17 @@ class DeadAssignmentsElimination extends AbstractPostOrderCallback implements
+   private VariableLiveness isVariableReadBeforeKill(
+       Node n, String variable) {
+     if (NodeUtil.isName(n) && variable.equals(n.getString())) {
+-      if (NodeUtil.isLhs(n, n.getParent())) {
+-        // The expression to which the assignment is made is evaluated before
+-        // the RHS is evaluated (normal left to right evaluation) but the KILL
+-        // occurs after the RHS is evaluated.
+-        return VariableLiveness.KILL;
+-      } else {
+-        return VariableLiveness.READ;
++      // Expressions are evaluated left-right, depth first.
++      for (Node child = n.getFirstChild();
++          child != null; child = child.getNext()) {
++        if (child.getType() != Token.ASSIGN) {
++          // The expression to which the assignment is made is evaluated before
++          // the RHS is evaluated (normal left to right evaluation) but the KILL
++          // occurs after the RHS is evaluated.
++          return VariableLiveness.KILL;
++        }
+       }
+     }
+-
+     // Expressions are evaluated left-right, depth first.
+     for (Node child = n.getFirstChild();
+         child != null; child = child.getNext()) {
+@@ -344,5 +345,4 @@ class DeadAssignmentsElimination extends AbstractPostOrderCallback implements
+       }
+     }
+     return VariableLiveness.MAYBE_LIVE;
+-  }
+-}
++  }}

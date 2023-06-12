@@ -1,0 +1,50 @@
+diff --git a/src/main/java/org/apache/commons/math3/optimization/univariate/BrentOptimizer.java b/src/main/java/org/apache/commons/math3/optimization/univariate/BrentOptimizer.java
+index 6905f1ac9..3abd9f911 100644
+--- a/src/main/java/org/apache/commons/math3/optimization/univariate/BrentOptimizer.java
++++ b/src/main/java/org/apache/commons/math3/optimization/univariate/BrentOptimizer.java
+@@ -108,28 +108,17 @@ public class BrentOptimizer extends BaseAbstractUnivariateOptimizer {
+     @Override
+     protected UnivariatePointValuePair doOptimize() {
+         final boolean isMinim = getGoalType() == GoalType.MINIMIZE;
+-        final double lo = getMin();
+-        final double mid = getStartValue();
+-        final double hi = getMax();
+-
++        double min = getMin();
++        double max = getMax();
+         // Optional additional convergence criteria.
+         final ConvergenceChecker<UnivariatePointValuePair> checker
+             = getConvergenceChecker();
+-
+-        double a;
+-        double b;
+-        if (lo < hi) {
+-            a = lo;
+-            b = hi;
+-        } else {
+-            a = hi;
+-            b = lo;
+-        }
+-
+-        double x = mid;
+-        double v = x;
+-        double w = x;
+-        double d = 0;
++        double a = min;
++        double b = max;
++        double t = a + GOLDEN_SECTION * (b - a);
++        double x = t;
++        double v = t;
++        double w = t;
+         double e = 0;
+         double fx = computeObjectiveValue(x);
+         if (!isMinim) {
+@@ -147,7 +134,7 @@ public class BrentOptimizer extends BaseAbstractUnivariateOptimizer {
+             final double m = 0.5 * (a + b);
+             final double tol1 = relativeThreshold * FastMath.abs(x) + absoluteThreshold;
+             final double tol2 = 2 * tol1;
+-
++            // Check for convergence on the interval [a, b].
+             // Default stopping criterion.
+             final boolean stop = FastMath.abs(x - m) <= tol2 - 0.5 * (b - a);
+             if (!stop) {

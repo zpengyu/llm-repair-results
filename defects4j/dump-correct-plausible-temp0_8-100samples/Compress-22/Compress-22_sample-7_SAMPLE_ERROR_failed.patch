@@ -1,0 +1,32 @@
+diff --git a/src/main/java/org/apache/commons/compress/compressors/bzip2/BZip2CompressorInputStream.java b/src/main/java/org/apache/commons/compress/compressors/bzip2/BZip2CompressorInputStream.java
+index bfedfd0b..a95061c2 100644
+--- a/src/main/java/org/apache/commons/compress/compressors/bzip2/BZip2CompressorInputStream.java
++++ b/src/main/java/org/apache/commons/compress/compressors/bzip2/BZip2CompressorInputStream.java
+@@ -195,18 +195,21 @@ public class BZip2CompressorInputStream extends CompressorInputStream implements
+         this.nInUse = nInUseShadow;
+     }
+ 
+-    private int read0() throws IOException {
+-        final int retChar = this.currentChar;
++  private int read0() throws IOException {
++        final int retChar;
+         switch (currentState) {
+         case EOF:
+             return -1;
+-
+         case START_BLOCK_STATE:
+-            throw new IllegalStateException();
+-
++            retChar = currentChar = getChar();
++            if (retChar < 0x100) {
++                currentState = RAND_PART_B_STATE;
++            } else {
++                currentState = NO_RAND_PART_B_STATE;
++            }
++            break;
+         case RAND_PART_A_STATE:
+             throw new IllegalStateException();
+-
+         case RAND_PART_B_STATE:
+             setupRandPartB();
+             break;

@@ -1,0 +1,36 @@
+diff --git a/src/main/java/org/apache/commons/lang3/time/FastDateParser.java b/src/main/java/org/apache/commons/lang3/time/FastDateParser.java
+index 24fa134a..5aab4f56 100644
+--- a/src/main/java/org/apache/commons/lang3/time/FastDateParser.java
++++ b/src/main/java/org/apache/commons/lang3/time/FastDateParser.java
+@@ -113,20 +113,16 @@ public class FastDateParser implements DateParser, Serializable {
+      * This is called from constructor and from readObject (de-serialization)
+      */
+     private void init() {
+-        thisYear= Calendar.getInstance(timeZone, locale).get(Calendar.YEAR);
+-
++        thisYear= Calendar.getInstance().get(Calendar.YEAR);
+         nameValues= new ConcurrentHashMap<Integer, KeyValue[]>();
+-
+         StringBuilder regex= new StringBuilder();
+         List<Strategy> collector = new ArrayList<Strategy>();
+-
+         Matcher patternMatcher= formatPattern.matcher(pattern);
+         if(!patternMatcher.lookingAt()) {
+             throw new IllegalArgumentException("Invalid pattern");
+         }
+-
+         currentFormatField= patternMatcher.group();
+-        Strategy currentStrategy= getStrategy(currentFormatField);
++        Strategy currentStrategy= getStrategy(currentFormatField, locale);
+         for(;;) {
+             patternMatcher.region(patternMatcher.end(), patternMatcher.regionEnd());
+             if(!patternMatcher.lookingAt()) {
+@@ -134,7 +130,7 @@ public class FastDateParser implements DateParser, Serializable {
+                 break;
+             }
+             String nextFormatField= patternMatcher.group();
+-            nextStrategy = getStrategy(nextFormatField);
++            nextStrategy = getStrategy(nextFormatField, locale);
+             if(currentStrategy.addRegex(this, regex)) {
+                 collector.add(currentStrategy);
+             }

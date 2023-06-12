@@ -1,0 +1,38 @@
+diff --git a/src/main/java/org/apache/commons/compress/utils/BitInputStream.java b/src/main/java/org/apache/commons/compress/utils/BitInputStream.java
+index 4086c8b5..ff6a24a1 100644
+--- a/src/main/java/org/apache/commons/compress/utils/BitInputStream.java
++++ b/src/main/java/org/apache/commons/compress/utils/BitInputStream.java
+@@ -85,26 +85,16 @@ public class BitInputStream implements Closeable {
+         while (bitsCachedSize < count) {
+             final long nextByte = in.read();
+             if (nextByte < 0) {
++                if (bitsCachedSize > 0) {
++                    throw new IllegalStateException("cannot return partial value");
++                }
+                 return nextByte;
+             }
+-            if (byteOrder == ByteOrder.LITTLE_ENDIAN) {
+-                bitsCached |= (nextByte << bitsCachedSize);
+-            } else {
+-                bitsCached <<= 8;
+-                bitsCached |= nextByte;
+-            }
++            bitsCached |= (nextByte << bitsCachedSize);
+             bitsCachedSize += 8;
+         }
+-            // bitsCachedSize >= 57 and left-shifting it 8 bits would cause an overflow
+-
+-        final long bitsOut;
+-            if (byteOrder == ByteOrder.LITTLE_ENDIAN) {
+-                bitsOut = (bitsCached & MASKS[count]);
+-                bitsCached >>>= count;
+-            } else {
+-                bitsOut = (bitsCached >> (bitsCachedSize - count)) & MASKS[count];
+-            }
++            final long bitsOut = bitsCached & MASKS[count];
++            bitsCached >>>= count;
+             bitsCachedSize -= count;
+         return bitsOut;
+-    }
+-}
++    }}

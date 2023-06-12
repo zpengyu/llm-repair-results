@@ -1,0 +1,31 @@
+diff --git a/src/com/google/javascript/jscomp/CheckGlobalThis.java b/src/com/google/javascript/jscomp/CheckGlobalThis.java
+index d6770e15..58ff3626 100644
+--- a/src/com/google/javascript/jscomp/CheckGlobalThis.java
++++ b/src/com/google/javascript/jscomp/CheckGlobalThis.java
+@@ -141,10 +135,24 @@ final class CheckGlobalThis implements Callback {
+         }
+       }
+     }
+-
++    else if (parent != null && parent.getType() == Token.CATCH) {
++        // Don't traverse the left side of the catch clause (lhs).
++        // To handle nested catches properly (e.g.,
++        // try {
++        //   throw new Error('foo');
++        // } catch (e) {
++        //   try {
++        //     throw e;
++        //   } catch (f) {
++        //     throw f;
++        //   }
++        // }), assignLhsChild should not be overridden.
++        if (assignLhsChild == null) {
++          assignLhsChild = n;
++        }
++    }
+     return true;
+   }
+-
+   public void visit(NodeTraversal t, Node n, Node parent) {
+     if (n.getType() == Token.THIS && shouldReportThis(n, parent)) {
+       compiler.report(t.makeError(n, level, GLOBAL_THIS));

@@ -1,0 +1,35 @@
+diff --git a/src/main/java/org/jsoup/helper/DataUtil.java b/src/main/java/org/jsoup/helper/DataUtil.java
+index aa82f00..b243d43 100644
+--- a/src/main/java/org/jsoup/helper/DataUtil.java
++++ b/src/main/java/org/jsoup/helper/DataUtil.java
+@@ -78,7 +78,7 @@ public class DataUtil {
+         Document doc = null;
+         if (charsetName == null) { // determine from meta. safe parse as UTF-8
+             // look for <meta http-equiv="Content-Type" content="text/html;charset=gb2312"> or HTML5 <meta charset="gb2312">
+-            docData = Charset.forName(defaultCharset).decode(byteData).toString();
++            docData = Charset.forName("UTF-8").decode(byteData).toString();
+             doc = parser.parseInput(docData, baseUri);
+             Element meta = doc.select("meta[http-equiv=content-type], meta[charset]").first();
+             if (meta != null) { // if not found, will keep utf-8 as best attempt
+@@ -97,8 +97,7 @@ public class DataUtil {
+                 } else {
+                     foundCharset = meta.attr("charset");
+                 }
+-
+-                if (foundCharset != null && foundCharset.length() != 0 && !foundCharset.equals(defaultCharset)) { // need to re-decode
++                if (foundCharset != null && foundCharset.length() != 0 && !foundCharset.equals("UTF-8")) { // need to re-decode
+                     foundCharset = foundCharset.trim().replaceAll("[\"']", "");
+                     charsetName = foundCharset;
+                     byteData.rewind();
+@@ -113,9 +112,9 @@ public class DataUtil {
+         // UTF-8 BOM indicator. takes precedence over everything else. rarely used. re-decodes incase above decoded incorrectly
+         if (docData.length() > 0 && docData.charAt(0) == 65279) {
+             byteData.rewind();
+-            docData = Charset.forName(defaultCharset).decode(byteData).toString();
++            docData = Charset.forName("UTF-8").decode(byteData).toString();
+             docData = docData.substring(1);
+-            charsetName = defaultCharset;
++            charsetName = "UTF-8";
+         }
+         if (doc == null) {
+             doc = parser.parseInput(docData, baseUri);

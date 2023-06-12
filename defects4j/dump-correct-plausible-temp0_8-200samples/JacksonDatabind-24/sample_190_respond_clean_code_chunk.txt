@@ -1,0 +1,20 @@
+    public BaseSettings withDateFormat(DateFormat df) {
+        if (_dateFormat == df) {
+            return this;
+        }
+        TimeZone tz = (df == null) ? _timeZone : df.getTimeZone();
+        DateFormat newDateFormat = null;
+        try {
+            newDateFormat = (DateFormat) df.clone();
+        } catch (CloneNotSupportedException e) {
+            // this shouldn't happen
+            e.printStackTrace();
+        }
+        if (newDateFormat == null) {
+            throw new IllegalStateException("Could not clone date format instance");
+        }
+        newDateFormat.setTimeZone(tz);
+        return new BaseSettings(_classIntrospector, _annotationIntrospector, _visibilityChecker, _propertyNamingStrategy, _typeFactory,
+                _typeResolverBuilder, newDateFormat, _handlerInstantiator, _locale,
+                tz, _defaultBase64);
+    }

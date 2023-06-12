@@ -1,0 +1,15 @@
+diff --git a/src/org/mockito/internal/creation/bytebuddy/ByteBuddyMockMaker.java b/src/org/mockito/internal/creation/bytebuddy/ByteBuddyMockMaker.java
+index ddaada2f1..74364ba54 100644
+--- a/src/org/mockito/internal/creation/bytebuddy/ByteBuddyMockMaker.java
++++ b/src/org/mockito/internal/creation/bytebuddy/ByteBuddyMockMaker.java
+@@ -34,7 +34,9 @@ public class ByteBuddyMockMaker implements MockMaker {
+             mockInstance = classInstantiator.instantiate(mockedProxyType);
+             MockMethodInterceptor.MockAccess mockAccess = (MockMethodInterceptor.MockAccess) mockInstance;
+             mockAccess.setMockitoInterceptor(new MockMethodInterceptor(asInternalMockHandler(handler), settings));
+-
++			for (final ArgumentMatcher<?> matcher : settings.getArgumentMatchers()) {
++				handler.getArgumentMatcherStorage().reportMatcher(matcher);
++			}
+             return ensureMockIsAssignableToMockedType(settings, mockInstance);
+         } catch (ClassCastException cce) {
+             throw new MockitoException(join(

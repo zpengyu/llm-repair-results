@@ -1,0 +1,12 @@
+  public static Vector3D crossProduct(final Vector3D v1, final Vector3D v2) {
+      // compute rho as an 8 bits approximation of v1.v2 / v2.v2
+      double v2v2 = v2.dotProduct(v2);
+      double v2v2rho = (FastMath.ulp(v2v2) * 0x100) / v2v2;
+      double v1v2rho = v1.dotProduct(v2) * v2v2rho;
+      double rho = (v1v2rho * 0x10000) >> 16;
+      double v3x = v1.x - rho * v2.x;
+      double v3y = v1.y - rho * v2.y;
+      double v3z = v1.z - rho * v2.z;
+      // compute cross product from v3 and v2 instead of v1 and v2
+      return new Vector3D(v3y * v2.z - v3z * v2.y, v3z * v2.x - v3x * v2.z, v3x * v2.y - v3y * v2.x);
+  }

@@ -1,0 +1,142 @@
+diff --git a/src/main/java/com/fasterxml/jackson/core/util/JsonParserSequence.java b/src/main/java/com/fasterxml/jackson/core/util/JsonParserSequence.java
+index bed27f2b..cce2ecba 100644
+--- a/src/main/java/com/fasterxml/jackson/core/util/JsonParserSequence.java
++++ b/src/main/java/com/fasterxml/jackson/core/util/JsonParserSequence.java
+@@ -13,8 +13,7 @@ import com.fasterxml.jackson.core.*;
+  * Fairly simple use of {@link JsonParserDelegate}: only need
+  * to override {@link #nextToken} to handle transition
+  */
+-public class JsonParserSequence extends JsonParserDelegate
+-{
++public class JsonParserSequence extends JsonParserDelegate {
+     /**
+      * Parsers other than the first one (which is initially assigned
+      * as delegate)
+@@ -32,15 +29,27 @@ public class JsonParserSequence extends JsonParserDelegate
+      *
+      * @since 2.8
+      */
+-
++    protected boolean _hasToken;
++    /**
++     * Flag used to indicate that `JsonParser.nextToken()` should not be called,
++     * due to parser already pointing to a token.
++     *
++     * @since 2.8
++     */
++    protected JsonToken _firstToken;
++    /**
++     * Flag used to indicate that `JsonParser.nextToken()` should not be called,
++     * due to parser already pointing to a token.
++     *
++     * @since 2.8
++     */
++    protected JsonParser _firstParser;
+     /*
+      *******************************************************
+      * Construction
+      *******************************************************
+      */
+-
+-    protected JsonParserSequence(JsonParser[] parsers)
+-    {
++    protected JsonParserSequence(JsonParser[] parsers) {
+         super(parsers[0]);
+         _parsers = parsers;
+         _nextParser = 1;
+@@ -55,8 +63,7 @@ public class JsonParserSequence extends JsonParserDelegate
+      * within sequences. This is done to minimize delegation depth,
+      * ideally only having just a single level of delegation.
+      */
+-    public static JsonParserSequence createFlattened(JsonParser first, JsonParser second)
+-    {
++    public static JsonParserSequence createFlattened(JsonParser first, JsonParser second) {
+         if (!(first instanceof JsonParserSequence || second instanceof JsonParserSequence)) {
+             // simple:
+             return new JsonParserSequence(new JsonParser[] { first, second });
+@@ -74,11 +81,9 @@ public class JsonParserSequence extends JsonParserDelegate
+         }
+         return new JsonParserSequence(p.toArray(new JsonParser[p.size()]));
+     }
+-
+     @SuppressWarnings("resource")
+-    protected void addFlattenedActiveParsers(List<JsonParser> result)
+-    {
+-        for (int i = _nextParser-1, len = _parsers.length; i < len; ++i) {
++    protected void addFlattenedActiveParsers(List<JsonParser> result) {
++        for (int i = _nextParser - 1, len = _parsers.length; i < len; ++i) {
+             JsonParser p = _parsers[i];
+             if (p instanceof JsonParserSequence) {
+                 ((JsonParserSequence) p).addFlattenedActiveParsers(result);
+@@ -94,20 +98,54 @@ public class JsonParserSequence extends JsonParserDelegate
+      * delegation does not work
+      *******************************************************
+      */
+-    
+     @Override
+     public void close() throws IOException {
+-        do { delegate.close(); } while (switchToNext());
++        do {
++            delegate.close();
++        } while (switchToNext());
+     }
+-
+     @Override
+-    public JsonToken nextToken() throws IOException, JsonParseException
+-    {
++    public JsonToken nextToken() throws IOException, JsonParseException {
++        // First, let's see if we already have an available token:
++        JsonToken t = (_hasToken) ? _firstToken : ((_firstParser != null) ? _firstParser.nextToken() : null);
++        if (t != null) {
++            // If so, need to clear up state now
++            _hasToken = false;
++            _firstToken = null;
++            _firstParser = null;
++            return t;
++        }
++        // Otherwise, delegate
++        return nextToken1();
++    }
++    @Override
++    public String nextFieldName() throws IOException, JsonParseException {
++        // First, let's see if we already have an available token:
++        JsonToken t = (_hasToken) ? _firstToken : ((_firstParser != null) ? _firstParser.nextToken() : null);
++        if (t == JsonToken.FIELD_NAME) {
++            // If so, need to clear up state now
++            _hasToken = false;
++            _firstToken = null;
++            _firstParser = null;
++            return delegate.currentName();
++        }
++        // Otherwise, delegate
++        return nextToken1();
++    }
++    /**
++     * Method called in corner cases where all is not well with the world;
++     * and we need to fall back to doing things via delegate
++     */
++    private JsonToken nextToken1() throws IOException, JsonParseException {
+         JsonToken t = delegate.nextToken();
+-        if (t != null) return t;
++        if (t != null) {
++            return t;
++        }
+         while (switchToNext()) {
+             t = delegate.nextToken();
+-            if (t != null) return t;
++            if (t != null) {
++                return t;
++            }
+         }
+         return null;
+     }
+@@ -141,8 +175,7 @@ public class JsonParserSequence extends JsonParserDelegate
+      *
+      * @return True if switch succeeded; false otherwise
+      */
+-    protected boolean switchToNext()
+-    {
++    protected boolean switchToNext() {
+         if (_nextParser >= _parsers.length) {
+             return false;
+         }

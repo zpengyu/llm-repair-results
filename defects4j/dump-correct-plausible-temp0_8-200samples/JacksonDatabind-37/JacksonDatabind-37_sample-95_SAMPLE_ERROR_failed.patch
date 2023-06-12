@@ -1,0 +1,46 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/type/SimpleType.java b/src/main/java/com/fasterxml/jackson/databind/type/SimpleType.java
+index 0fda4d76f..2e6f240c9 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/type/SimpleType.java
++++ b/src/main/java/com/fasterxml/jackson/databind/type/SimpleType.java
+@@ -119,23 +119,32 @@ public class SimpleType // note: until 2.6 was final
+     @Override
+     protected JavaType _narrow(Class<?> subclass)
+     {
+-        if (_class == subclass) {
++        // 15-Jan-2016, tatu: ... but there are few special cases to consider.
++        // One is that if we have type handler that is not compatible, we
++        // must apply it first
++        Object h = _valueHandler;
++        // 15-Jan-2016, tatu: [databind#1290] And another is that if we have a
++        //   concrete class, we should NOT replace it with a more specific
++        //   subtype; but we should merge new information into existing type.
++        if (subclass == _class) {
+             return this;
+         }
+-        // Should we check that there is a sub-class relationship?
+-        // 15-Jan-2016, tatu: Almost yes, but there are some complications with
+-        //    placeholder values, so no.
+-        /*
+         if (!_class.isAssignableFrom(subclass)) {
+             throw new IllegalArgumentException("Class "+subclass.getName()+" not sub-type of "
+                     +_class.getName());
+         }
+-        */
+-        // 15-Jan-2015, tatu: Not correct; should really re-resolve...
++        // or, if the handler is not compatible, apply it first:
++        if (h == null) {
++            h = _findRemappedTypeHandler(subclass);
++        } else if (!_class.isAssignableFrom(h.getClass())) {
++            // 23-Oct-2015, tatu: But NOT if type handler is a "passthrough" for target type
++            if (!_class.equals(TypeFactory.rawClass(h.getClass()))) {
++                h = _findRemappedTypeHandler(subclass);
++            }
++        }
+         return new SimpleType(subclass, _bindings, _superClass, _superInterfaces,
+-                _valueHandler, _typeHandler, _asStatic);
++                h, _typeHandler, _asStatic);
+     }
+-
+     @Override
+     public JavaType withContentType(JavaType contentType) {
+         throw new IllegalArgumentException("Simple types have no content types; can not call withContentType()");

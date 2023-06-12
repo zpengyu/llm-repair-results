@@ -1,0 +1,30 @@
+diff --git a/src/com/google/javascript/jscomp/DisambiguateProperties.java b/src/com/google/javascript/jscomp/DisambiguateProperties.java
+index 96c66201..ff8b0a0d 100644
+--- a/src/com/google/javascript/jscomp/DisambiguateProperties.java
++++ b/src/com/google/javascript/jscomp/DisambiguateProperties.java
+@@ -509,9 +507,24 @@ class DisambiguateProperties<T> implements CompilerPass {
+                 (type == null ? "null" : type.toString()), n.toString(), ""));
+           }
+         }
++        if (child.isGetterDef() || child.isSetterDef()){
++          name += ".!#" + child.getType();
++          type = typeSystem.getType(getScope(), n, name);
++          prop = getProperty(name);
++          if (!prop.scheduleRenaming(child,
++                                     processProperty(t, prop, type, null))) {
++            // TODO(user): It doesn't look like the user can do much in this
++            // case right now.
++            if (propertiesToErrorFor.containsKey(name)) {
++              compiler.report(JSError.make(
++                  t.getSourceName(), child, propertiesToErrorFor.get(name),
++                  Warnings.INVALIDATION, name,
++                  (type == null ? "null" : type.toString()), n.toString(), ""));
++            }
++          }
++        }
+       }
+     }
+-
+     private void printErrorLocations(List<String> errors, JSType t) {
+       if (!t.isObject() || t.isAllType()) {
+         return;

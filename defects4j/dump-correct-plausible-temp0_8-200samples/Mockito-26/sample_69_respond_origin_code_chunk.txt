@@ -1,0 +1,63 @@
+public class Primitives {
+    public static <T> Class<T> primitiveTypeOf(Class<T> clazz) {
+        if(clazz.isPrimitive()) {
+            return clazz;
+        }
+        return (Class<T>) primitiveTypes.get(clazz);
+    }
+
+    public static boolean isPrimitiveWrapper(Class<?> type) {
+        return wrapperReturnValues.containsKey(type);
+    }
+
+    public static <T> T primitiveWrapperOf(Class<T> type) {
+        return (T) wrapperReturnValues.get(type);
+    }
+
+    public static <T> T primitiveValueOrNullFor(Class<T> primitiveType) {
+        return (T) primitiveValues.get(primitiveType);
+    }
+    private static Map<Class<?>, Class<?>> wrapperTypes = new HashMap<Class<?>, Class<?>>();
+    private static Map<Class<?>, Class<?>> primitiveTypes = new HashMap<Class<?>, Class<?>>();
+    private static Map<Class<?>, Object> wrapperReturnValues = new HashMap<Class<?>, Object>();
+    private static Map<Class<?>, Object> primitiveValues = new HashMap<Class<?>, Object>();
+
+    static {
+        primitiveTypes.put(Boolean.class, Boolean.TYPE);
+        primitiveTypes.put(Character.class, Character.TYPE);
+        primitiveTypes.put(Byte.class, Byte.TYPE);
+        primitiveTypes.put(Short.class, Short.TYPE);
+        primitiveTypes.put(Integer.class, Integer.TYPE);
+        primitiveTypes.put(Long.class, Long.TYPE);
+        primitiveTypes.put(Float.class, Float.TYPE);
+        primitiveTypes.put(Double.class, Double.TYPE);
+
+        for(Map.Entry<Class<?>, Class<?>> entry : primitiveTypes.entrySet()) {
+            wrapperTypes.put(entry.getValue(), entry.getKey());
+            wrapperReturnValues.put(entry.getKey(), Primitives.defaultValue(entry.getValue()));
+            primitiveValues.put(entry.getValue(), Primitives.defaultValue(entry.getValue()));
+        }
+    }
+
+    private static <T> T defaultValue(Class<T> type) {
+        if (type == Boolean.TYPE) {
+            return (T) Boolean.FALSE;
+        } else if (type == Character.TYPE) {
+            return (T) Character.valueOf((char) 0);
+        } else if (type == Byte.TYPE) {
+            return (T) Byte.valueOf((byte) 0);
+        } else if (type == Short.TYPE) {
+            return (T) Short.valueOf((short) 0);
+        } else if (type == Integer.TYPE) {
+            return (T) Integer.valueOf(0);
+        } else if (type == Long.TYPE) {
+            return (T) Long.valueOf(0L);
+        } else if (type == Float.TYPE) {
+            return (T) Float.valueOf(0f);
+        } else if (type == Double.TYPE) {
+            return (T) Double.valueOf(0d);
+        } else {
+            return null;
+        }
+    }
+}

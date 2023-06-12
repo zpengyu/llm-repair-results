@@ -1,0 +1,33 @@
+diff --git a/src/main/java/org/jsoup/helper/DataUtil.java b/src/main/java/org/jsoup/helper/DataUtil.java
+index 4bdf4fe..a79d9db 100644
+--- a/src/main/java/org/jsoup/helper/DataUtil.java
++++ b/src/main/java/org/jsoup/helper/DataUtil.java
+@@ -89,19 +89,26 @@ public class DataUtil {
+             }
+         } else { // specified by content type header (or by user on file load)
+             Validate.notEmpty(charsetName, "Must set charset arg to character set of file to parse. Set to null to attempt to detect from HTML");
++            byteData.rewind(); //re-adjust position of Buffer
+             docData = Charset.forName(charsetName).decode(byteData).toString();
+         }
+         if (doc == null) {
+             // there are times where there is a spurious byte-order-mark at the start of the text. Shouldn't be present
+             // in utf-8. If after decoding, there is a BOM, strip it; otherwise will cause the parser to go straight
+             // into head mode
+-
++            docData = stripBOM(docData);
+             doc = parser.parseInput(docData, baseUri);
+             doc.outputSettings().charset(charsetName);
+         }
+         return doc;
+     }
+-
++    private static String stripBOM(String docData) {
++        if (docData.length() > 0 && docData.charAt(0) == '\uFEFF') {
++            return docData.substring(1);
++        } else {
++            return docData;
++        }
++    }
+     static ByteBuffer readToByteBuffer(InputStream inStream) throws IOException {
+         byte[] buffer = new byte[bufferSize];
+         ByteArrayOutputStream outStream = new ByteArrayOutputStream(bufferSize);

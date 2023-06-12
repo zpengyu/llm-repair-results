@@ -1,0 +1,102 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/deser/std/StringArrayDeserializer.java b/src/main/java/com/fasterxml/jackson/databind/deser/std/StringArrayDeserializer.java
+index f8cb03e1c..06c35f85f 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/deser/std/StringArrayDeserializer.java
++++ b/src/main/java/com/fasterxml/jackson/databind/deser/std/StringArrayDeserializer.java
+@@ -50,60 +45,46 @@ public final class StringArrayDeserializer
+         if (_elementDeserializer != null) {
+             return _deserializeCustom(jp, ctxt);
+         }
+-
+-        final ObjectBuffer buffer = ctxt.leaseObjectBuffer();
+-        Object[] chunk = buffer.resetAndStart();
+-        
+-        int ix = 0;
+-        JsonToken t;
+-        
+-        while ((t = jp.nextToken()) != JsonToken.END_ARRAY) {
+-            // Ok: no need to convert Strings, but must recognize nulls
++        ArrayList<String> l = new ArrayList<String>(16);
++        while (true) {
++            JsonToken t = jp.nextToken();
++            if (t == JsonToken.END_ARRAY) {
++                break;
++            }
+             String value;
+-            if (t == JsonToken.VALUE_STRING) {
+-                value = jp.getText();
+-            } else if (t == JsonToken.VALUE_NULL) {
++            if (t == JsonToken.VALUE_NULL) {
+                 value = _elementDeserializer.getNullValue();
+             } else {
+-                value = _parseString(jp, ctxt);
+-            }
+-            if (ix >= chunk.length) {
+-                chunk = buffer.appendCompletedChunk(chunk);
+-                ix = 0;
++                value = jp.getValueAsString();
+             }
+-            chunk[ix++] = value;
++            l.add(value);
+         }
+-        String[] result = buffer.completeAndClearBuffer(chunk, ix, String.class);
+-        ctxt.returnObjectBuffer(buffer);
++        String[] result = l.toArray(new String[l.size()]);
+         return result;
+     }
+-
+     /**
+      * Offlined version used when we do not use the default deserialization method.
+      */
+     protected final String[] _deserializeCustom(JsonParser jp, DeserializationContext ctxt) throws IOException
+     {
+-        final ObjectBuffer buffer = ctxt.leaseObjectBuffer();
+-        Object[] chunk = buffer.resetAndStart();
++        ArrayList<String> l = new ArrayList<String>(16);
+         final JsonDeserializer<String> deser = _elementDeserializer;
+-        
+-        int ix = 0;
+-        JsonToken t;
+-
+-        while ((t = jp.nextToken()) != JsonToken.END_ARRAY) {
+-            // Ok: no need to convert Strings, but must recognize nulls
+-            String value = (t == JsonToken.VALUE_NULL) ? null : deser.deserialize(jp, ctxt);
+-            if (ix >= chunk.length) {
+-                chunk = buffer.appendCompletedChunk(chunk);
+-                ix = 0;
++        while (true) {
++            JsonToken t = jp.nextToken();
++            if (t == JsonToken.END_ARRAY) {
++                break;
++            }
++            String value;
++            if (t == JsonToken.VALUE_NULL) {
++                value = deser.getNullValue();
++            } else {
++                value = deser.deserialize(jp, ctxt);
+             }
+-            chunk[ix++] = value;
++            l.add(value);
+         }
+-        String[] result = buffer.completeAndClearBuffer(chunk, ix, String.class);
+-        ctxt.returnObjectBuffer(buffer);
++        String[] result = l.toArray(new String[l.size()]);
+         return result;
+     }
+-    
+     @Override
+     public Object deserializeWithType(JsonParser jp, DeserializationContext ctxt, TypeDeserializer typeDeserializer) throws IOException {
+         return typeDeserializer.deserializeTypedFromArray(jp, ctxt);
+@@ -123,9 +103,11 @@ public final class StringArrayDeserializer
+             }
+             throw ctxt.mappingException(_valueClass);
+         }
+-        return new String[] { (jp.getCurrentToken() == JsonToken.VALUE_NULL) ? null : _parseString(jp, ctxt) };
++        if (jp.getCurrentToken() == JsonToken.VALUE_NULL) {
++            return new String[] { null };
++        }
++        return new String[] { jp.getValueAsString() };
+     }
+-
+     /**
+      * Contextualization is needed to see whether we can "inline" deserialization
+      * of String values, or if we have to use separate value deserializer.

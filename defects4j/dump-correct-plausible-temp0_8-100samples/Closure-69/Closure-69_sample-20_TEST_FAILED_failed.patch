@@ -1,0 +1,23 @@
+diff --git a/src/com/google/javascript/jscomp/TypeCheck.java b/src/com/google/javascript/jscomp/TypeCheck.java
+index 6030d48d..587531be 100644
+--- a/src/com/google/javascript/jscomp/TypeCheck.java
++++ b/src/com/google/javascript/jscomp/TypeCheck.java
+@@ -1569,15 +1565,13 @@ public class TypeCheck implements NodeTraversal.Callback, CompilerPass {
+       // in an extern.
+       if (functionType.isConstructor() &&
+           !functionType.isNativeObjectType() &&
+-          (functionType.getReturnType().isUnknownType() ||
+-           functionType.getReturnType().isVoidType() ||
+-           !isExtern)) {
++          !functionType.getReturnType().isUnknownType() &&
++          !functionType.getReturnType().isVoidType() &&
++          !isExtern) {
+         report(t, n, CONSTRUCTOR_NOT_CALLABLE, childType.toString());
+       }
+-
+       // Functions with explcit 'this' types must be called in a GETPROP
+       // or GETELEM.
+-
+       visitParameterList(t, n, functionType);
+       ensureTyped(t, n, functionType.getReturnType());
+     } else {

@@ -1,0 +1,22 @@
+diff --git a/src/com/google/javascript/jscomp/TypedScopeCreator.java b/src/com/google/javascript/jscomp/TypedScopeCreator.java
+index 0185298f..a747a3e2 100644
+--- a/src/com/google/javascript/jscomp/TypedScopeCreator.java
++++ b/src/com/google/javascript/jscomp/TypedScopeCreator.java
+@@ -1705,9 +1700,16 @@ final class TypedScopeCreator implements ScopeCreator {
+           }
+         }
+       }
++      // If this name is referenced by a function in the current scope,
++      // then we assume it's not inferred.
++      if (scope.getRootNode().getFirstChild().isFunction()) {
++        if (n.getParent().isFunction()) {
++          return !getEscapedQualifiedNames(
++              scope.getRootNode().getFirstChild()).contains(qName);
++        }
++      }
+       return inferred;
+     }
+-
+     private boolean isConstantSymbol(JSDocInfo info, Node node) {
+       if (info != null && info.isConstant()) {
+         return true;

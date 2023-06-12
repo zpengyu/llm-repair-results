@@ -1,0 +1,73 @@
+diff --git a/src/main/java/org/apache/commons/compress/compressors/bzip2/BZip2CompressorInputStream.java b/src/main/java/org/apache/commons/compress/compressors/bzip2/BZip2CompressorInputStream.java
+index bfedfd0b..fb3ab7f9 100644
+--- a/src/main/java/org/apache/commons/compress/compressors/bzip2/BZip2CompressorInputStream.java
++++ b/src/main/java/org/apache/commons/compress/compressors/bzip2/BZip2CompressorInputStream.java
+@@ -196,17 +196,39 @@ public class BZip2CompressorInputStream extends CompressorInputStream implements
+     }
+ 
+     private int read0() throws IOException {
+-        final int retChar = this.currentChar;
++        final int retChar;
+         switch (currentState) {
+         case EOF:
+-            return -1;
+-
++            retChar = -1;
++            break;
+         case START_BLOCK_STATE:
+-            throw new IllegalStateException();
+-
++            retChar = ' ';
++            break;
+         case RAND_PART_A_STATE:
++            retChar = ' ';
++            break;
++        case RAND_PART_B_STATE:
++            retChar = ' ';
++            break;
++        case RAND_PART_C_STATE:
++            retChar = ' ';
++            break;
++        case NO_RAND_PART_A_STATE:
++            retChar = ' ';
++            break;
++        case NO_RAND_PART_B_STATE:
++            retChar = ' ';
++            break;
++        case NO_RAND_PART_C_STATE:
++            retChar = ' ';
++            break;
++        default:
+             throw new IllegalStateException();
+-
++        }
++        switch (currentState) {
++        case RAND_PART_A_STATE:
++            setupRandPartA();
++            break;
+         case RAND_PART_B_STATE:
+             setupRandPartB();
+             break;
+@@ -214,10 +235,9 @@ public class BZip2CompressorInputStream extends CompressorInputStream implements
+         case RAND_PART_C_STATE:
+             setupRandPartC();
+             break;
+-
+         case NO_RAND_PART_A_STATE:
+-            throw new IllegalStateException();
+-
++            setupNoRandPartA();
++            break;
+         case NO_RAND_PART_B_STATE:
+             setupNoRandPartB();
+             break;
+@@ -225,9 +244,6 @@ public class BZip2CompressorInputStream extends CompressorInputStream implements
+         case NO_RAND_PART_C_STATE:
+             setupNoRandPartC();
+             break;
+-
+-        default:
+-            throw new IllegalStateException();
+         }
+         return retChar;
+     }

@@ -1,0 +1,33 @@
+diff --git a/src/com/google/javascript/jscomp/InlineObjectLiterals.java b/src/com/google/javascript/jscomp/InlineObjectLiterals.java
+index 2f5a8e10..bc477c0e 100644
+--- a/src/com/google/javascript/jscomp/InlineObjectLiterals.java
++++ b/src/com/google/javascript/jscomp/InlineObjectLiterals.java
+@@ -155,6 +155,7 @@ class InlineObjectLiterals implements CompilerPass {
+     private boolean isInlinableObject(List<Reference> refs) {
+       boolean ret = false;
+       Set<String> validProperties = Sets.newHashSet();
++      Set<Node> inlinableNodes = Sets.newHashSet();
+       for (Reference ref : refs) {
+         Node name = ref.getNode();
+         Node parent = ref.getParent();
+@@ -186,6 +184,9 @@ class InlineObjectLiterals implements CompilerPass {
+           if (!validProperties.contains(propName)) {
+             if (NodeUtil.isVarOrSimpleAssignLhs(parent, gramps)) {
+               validProperties.add(propName);
++              if (isInlinableNode(parent, gramps)) {
++                inlinableNodes.add(parent);
++              }
+             } else {
+               return false;
+             }
+@@ -249,9 +242,8 @@ class InlineObjectLiterals implements CompilerPass {
+         // we can inline.
+         ret = true;
+       }
+-      return ret;
++      return inlinableNodes.size() == refs.size();
+     }
+-
+     private boolean isVarOrAssignExprLhs(Node n) {
+       Node parent = n.getParent();
+       return parent.isVar() ||

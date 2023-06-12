@@ -1,0 +1,26 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/jsontype/impl/TypeDeserializerBase.java b/src/main/java/com/fasterxml/jackson/databind/jsontype/impl/TypeDeserializerBase.java
+index 339362e1e..206e6486e 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/jsontype/impl/TypeDeserializerBase.java
++++ b/src/main/java/com/fasterxml/jackson/databind/jsontype/impl/TypeDeserializerBase.java
+@@ -142,11 +142,6 @@ public abstract class TypeDeserializerBase
+     {
+         JsonDeserializer<Object> deser = _deserializers.get(typeId);
+         if (deser == null) {
+-            /* As per [Databind#305], need to provide contextual info. But for
+-             * backwards compatibility, let's start by only supporting this
+-             * for base class, not via interface. Later on we can add this
+-             * to the interface, assuming deprecation at base class helps.
+-             */
+             JavaType type = _idResolver.typeFromId(ctxt, typeId);
+             if (type == null) {
+                 // As per [JACKSON-614], use the default impl if no type id available:
+@@ -181,7 +176,9 @@ public abstract class TypeDeserializerBase
+                     //   generic type with custom type resolvers. If so, should try to retain them.
+                     //  Whether this is sufficient to avoid problems remains to be seen, but for
+                     //  now it should improve things.
++                    if (type.hasRawClass(_baseType.getRawClass())) {
+                         type = ctxt.getTypeFactory().constructSpecializedType(_baseType, type.getRawClass());
++                    }
+                 }
+                 deser = ctxt.findContextualValueDeserializer(type, _property);
+             }

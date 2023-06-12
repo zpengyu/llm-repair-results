@@ -1,0 +1,35 @@
+diff --git a/src/com/google/javascript/jscomp/ProcessClosurePrimitives.java b/src/com/google/javascript/jscomp/ProcessClosurePrimitives.java
+index d1d12a3c..29def03f 100644
+--- a/src/com/google/javascript/jscomp/ProcessClosurePrimitives.java
++++ b/src/com/google/javascript/jscomp/ProcessClosurePrimitives.java
+@@ -797,8 +795,17 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback
+                 providedNames.get(namespace.substring(0, indexOfDot));
+             Preconditions.checkNotNull(parentName);
+             Preconditions.checkNotNull(parentName.replacementNode);
+-            parentName.replacementNode.getParent().addChildAfter(
+-                replacementNode, parentName.replacementNode);
++            Node replacementParent = parentName.replacementNode.getParent();
++            Node insertionLocation = parentName.replacementNode;
++            while (insertionLocation.getNext() != null &&
++                   isWhitespaceOrEmptyBlock(insertionLocation.getNext())) {
++              insertionLocation = insertionLocation.getNext();
++            }
++            if (insertionLocation.getNext() != null) {
++              replacementParent.addChildAfter(replacementNode, insertionLocation);
++            } else {
++              replacementParent.addChildToBack(replacementNode);
++            }
+           }
+         }
+         if (explicitNode != null) {
+@@ -807,7 +814,9 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback
+         compiler.reportCodeChange();
+       }
+     }
+-
++    private boolean isWhitespaceOrEmptyBlock(Node n) {
++      return n.isEmpty() || n.isBlock() || n.isScript() || n.isModuleBody();
++    }
+     /**
+      * Create the declaration node for this name, without inserting it
+      * into the AST.

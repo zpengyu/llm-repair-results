@@ -1,0 +1,26 @@
+diff --git a/src/main/java/org/jsoup/nodes/FormElement.java b/src/main/java/org/jsoup/nodes/FormElement.java
+index baffcf1..1c57d63 100644
+--- a/src/main/java/org/jsoup/nodes/FormElement.java
++++ b/src/main/java/org/jsoup/nodes/FormElement.java
+@@ -59,12 +54,18 @@ public class FormElement extends Element {
+         Validate.notEmpty(action, "Could not determine a form action URL for submit. Ensure you set a base URI when parsing.");
+         Connection.Method method = attr("method").toUpperCase().equals("POST") ?
+                 Connection.Method.POST : Connection.Method.GET;
+-
+-        return Jsoup.connect(action)
++        Connection conn = Jsoup.connect(action)
+                 .data(formData())
+                 .method(method);
++        if (tagName().equals("form")) {
++            String enctype = attr("enctype");
++            if ("multipart/form-data".equalsIgnoreCase(enctype))
++                conn.header("Content-Type", "multipart/form-data");
++            else if ("application/x-www-form-urlencoded".equalsIgnoreCase(enctype))
++                conn.header("Content-Type", "application/x-www-form-urlencoded");
++        }
++        return conn;
+     }
+-
+     /**
+      * Get the data that this form submits. The returned list is a copy of the data, and changes to the contents of the
+      * list will not be reflected in the DOM.

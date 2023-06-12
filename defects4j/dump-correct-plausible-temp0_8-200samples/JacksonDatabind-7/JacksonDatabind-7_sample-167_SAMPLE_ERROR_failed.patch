@@ -1,0 +1,21 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/util/TokenBuffer.java b/src/main/java/com/fasterxml/jackson/databind/util/TokenBuffer.java
+index c700587c8..1f6abd319 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/util/TokenBuffer.java
++++ b/src/main/java/com/fasterxml/jackson/databind/util/TokenBuffer.java
+@@ -407,9 +407,14 @@ public class TokenBuffer
+          *    FIELD_NAME, which is taken to mean that we are missing START_OBJECT, but need
+          *    to assume one did exist.
+          */
+-        return this;
++        JsonToken t = jp.getCurrentToken();
++        if (t == JsonToken.FIELD_NAME) {
++            return this;
++        }
++        throw ctxt.wrongTokenException(jp, handledType(), JsonToken.START_OBJECT,
++                "Current token not START_OBJECT (needed to unwrap root name '%s'), but %s",
++                _valueTypeDeserializer.getValueType(ctxt), t);
+     }
+-
+     @Override
+     @SuppressWarnings("resource")
+     public String toString()

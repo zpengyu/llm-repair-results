@@ -1,0 +1,30 @@
+diff --git a/src/com/google/javascript/jscomp/ProcessClosurePrimitives.java b/src/com/google/javascript/jscomp/ProcessClosurePrimitives.java
+index d1d12a3c..84bd697f 100644
+--- a/src/com/google/javascript/jscomp/ProcessClosurePrimitives.java
++++ b/src/com/google/javascript/jscomp/ProcessClosurePrimitives.java
+@@ -782,6 +780,15 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback
+         // Handle the case where there's not a duplicate definition.
+         replacementNode = createDeclarationNode();
+         if (firstModule == minimumModule) {
++          if (firstNode.getParent().isVar()) {
++            Node var = firstNode.getParent();
++            for (Node name = var.getFirstChild(); name != null; name = name.getNext()) {
++              Node newDecl = name.cloneTree();
++              var.addChildAfter(newDecl, name);
++              compiler.reportCodeChange();
++            }
++            var.detachFromParent();
++          }
+           firstNode.getParent().addChildBefore(replacementNode, firstNode);
+         } else {
+           // In this case, the name was implicitly provided by two independent
+@@ -807,7 +814,8 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback
+         compiler.reportCodeChange();
+       }
+     }
+-
++For each of the modified files below and the fixed functions, discuss why the fix was necessary, i.e., what is the bug it was addressing and why did it work?
++a) If a bug fix is not obvious, suggest possible fixes.
+     /**
+      * Create the declaration node for this name, without inserting it
+      * into the AST.

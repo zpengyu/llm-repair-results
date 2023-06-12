@@ -1,0 +1,28 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/deser/BuilderBasedDeserializer.java b/src/main/java/com/fasterxml/jackson/databind/deser/BuilderBasedDeserializer.java
+index 316efa3a9..93dd5a126 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/deser/BuilderBasedDeserializer.java
++++ b/src/main/java/com/fasterxml/jackson/databind/deser/BuilderBasedDeserializer.java
+@@ -589,12 +587,18 @@ public class BuilderBasedDeserializer
+                         wrapAndThrow(e, _beanType.getRawClass(), propName, ctxt);
+                         continue;
+                     }
+-                    while (t == JsonToken.FIELD_NAME) {
+-                        p.nextToken();
+-                        tokens.copyCurrentStructure(p);
+-                        t = p.nextToken();
++                    //  found a creator property? May need to assign back
++                    if (t.isStructStart()) {
++                        tokens.writeStartObject();
++                        while (t == JsonToken.FIELD_NAME) {
++                            p.nextToken(); // to point to value
++                            tokens.copyCurrentStructure(p);
++                            t = p.nextToken();
++                        }
++                        tokens.writeEndObject();
++                    } else {
++                        tokens.copyCurrentEvent(p);
+                     }
+-                    tokens.writeEndObject();
+                     if (bean.getClass() != _beanType.getRawClass()) {
+                         ctxt.reportMappingException("Can not create polymorphic instances with unwrapped values");
+                         return null;

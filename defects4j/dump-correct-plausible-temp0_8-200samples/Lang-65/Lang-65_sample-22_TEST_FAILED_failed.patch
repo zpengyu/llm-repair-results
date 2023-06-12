@@ -1,0 +1,62 @@
+diff --git a/src/java/org/apache/commons/lang/time/DateUtils.java b/src/java/org/apache/commons/lang/time/DateUtils.java
+index 324dd037..aef91e13 100644
+--- a/src/java/org/apache/commons/lang/time/DateUtils.java
++++ b/src/java/org/apache/commons/lang/time/DateUtils.java
+@@ -627,17 +625,36 @@ public class DateUtils {
+         //
+         // Manually truncate milliseconds, seconds and minutes, rather than using
+         // Calendar methods.
+-
+-
++        Date date = val.getTime();
++        long time = date.getTime();
++        boolean done = false;
+         // truncate milliseconds
+-
++        int millisecs = val.get(Calendar.MILLISECOND);
++        if (!round || millisecs < 500) {
++            time = time - millisecs;
++        }
++        if (field == Calendar.MILLISECOND) {
++            done = true;
++        }
+         // truncate seconds
+-
++        int seconds = val.get(Calendar.SECOND);
++        if (!done && (!round || seconds < 30)) {
++            time = time - (seconds * 1000L);
++        }
++        if (field == Calendar.SECOND) {
++            done = true;
++        }
+         // truncate minutes
+-
++        int minutes = val.get(Calendar.MINUTE);
++        if (!done && (!round || minutes < 30)) {
++            time = time - (minutes * 60000L);
++        }
+         // reset time
++        if (date.getTime() != time) {
++            date.setTime(time);
++            val.setTime(date);
++        }
+         // ----------------- Fix for LANG-59 ----------------------- END ----------------
+-
+         boolean roundUp = false;
+         for (int i = 0; i < fields.length; i++) {
+             for (int j = 0; j < fields[i].length; j++) {
+@@ -706,12 +723,12 @@ public class DateUtils {
+                 roundUp = offset > ((max - min) / 2);
+             }
+             //We need to remove this field
++            if (offset != 0) {
+                 val.set(fields[i][0], val.get(fields[i][0]) - offset);
++            }
+         }
+         throw new IllegalArgumentException("The field " + field + " is not supported");
+-
+     }
+-
+     //-----------------------------------------------------------------------
+     /**
+      * <p>This constructs an <code>Iterator</code> over each day in a date

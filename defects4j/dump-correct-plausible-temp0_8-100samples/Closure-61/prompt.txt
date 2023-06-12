@@ -1,0 +1,98 @@
+###Provide a fix for the buggy function
+###Buggy Function
+class FibonacciExample {
+    public static void main(String args[]) {
+        int n1 = 0, n2 = 1, n3, i, count = 10;
+
+        System.out.print(n1 + " " + n2);
+
+        for (i = 2; i < count; ++i) {
+            n3 = n1 - n2;
+            System.out.print(" " + n3);
+            n1 = n2;
+            n2 = n3;
+        }
+    }
+}
+
+###Fixed Function
+class FibonacciExample {
+    public static void main(String args[]) {
+        int n1 = 0, n2 = 1, n3, i, count = 10;
+
+        System.out.print(n1 + " " + n2);
+
+        for (i = 2; i < count; ++i) {
+            n3 = n1 + n2;
+            System.out.print(" " + n3);
+            n1 = n2;
+            n2 = n3;
+        }
+    }
+}
+
+###Provide a fix for the buggy function
+###Buggy Function
+private static boolean isReduceableFunctionExpression(Node n) {
+  return NodeUtil.isFunctionExpression(n);
+}
+###Fixed Function
+private static boolean isReduceableFunctionExpression(Node n) {
+  return NodeUtil.isFunctionExpression(n)
+      && !NodeUtil.isGetOrSetKey(n.getParent());
+}
+###Provide a fix for the buggy function
+###Buggy Function
+  static boolean functionCallHasSideEffects(
+      Node callNode, @Nullable AbstractCompiler compiler) {
+    if (callNode.getType() != Token.CALL) {
+      throw new IllegalStateException(
+          "Expected CALL node, got " + Token.name(callNode.getType()));
+    }
+
+    if (callNode.isNoSideEffectsCall()) {
+      return false;
+    }
+
+    Node nameNode = callNode.getFirstChild();
+
+    // Built-in functions with no side effects.
+    if (nameNode.getType() == Token.NAME) {
+      String name = nameNode.getString();
+      if (BUILTIN_FUNCTIONS_WITHOUT_SIDEEFFECTS.contains(name)) {
+        return false;
+      }
+    } else if (nameNode.getType() == Token.GETPROP) {
+      if (callNode.hasOneChild()
+          && OBJECT_METHODS_WITHOUT_SIDEEFFECTS.contains(
+                nameNode.getLastChild().getString())) {
+        return false;
+      }
+
+      if (callNode.isOnlyModifiesThisCall()
+          && evaluatesToLocalValue(nameNode.getFirstChild())) {
+        return false;
+      }
+
+      // Functions in the "Math" namespace have no side effects.
+
+      if (compiler != null && !compiler.hasRegExpGlobalReferences()) {
+        if (nameNode.getFirstChild().getType() == Token.REGEXP
+            && REGEXP_METHODS.contains(nameNode.getLastChild().getString())) {
+          return false;
+        } else if (nameNode.getFirstChild().getType() == Token.STRING
+            && STRING_REGEXP_METHODS.contains(
+                nameNode.getLastChild().getString())) {
+          Node param = nameNode.getNext();
+          if (param != null &&
+              (param.getType() == Token.STRING
+                  || param.getType() == Token.REGEXP))
+          return false;
+        }
+      }
+    }
+
+    return true;
+  }
+
+###Fixed Function

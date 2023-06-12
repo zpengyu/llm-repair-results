@@ -1,0 +1,48 @@
+diff --git a/src/com/google/javascript/jscomp/Compiler.java b/src/com/google/javascript/jscomp/Compiler.java
+index e0dc0d38..1fc328f0 100644
+--- a/src/com/google/javascript/jscomp/Compiler.java
++++ b/src/com/google/javascript/jscomp/Compiler.java
+@@ -1297,7 +1286,7 @@ public class Compiler extends AbstractCompiler {
+         try {
+           inputs =
+               (moduleGraph == null ? new JSModuleGraph(modules) : moduleGraph)
+-              .manageDependencies(options.dependencyOptions, inputs);
++                  .manageDependencies(options.dependencyOptions, inputs);
+           staleInputs = true;
+         } catch (CircularDependencyException e) {
+           report(JSError.make(
+@@ -1348,10 +1329,13 @@ public class Compiler extends AbstractCompiler {
+                   input.getName(), options.devMode != DevMode.OFF);
+           NodeTraversal.traverse(this, n, sia);
+         }
+-
++        if (isHoistedExternsRoot(n)) {
++          // If we've already hoisted this externs root, don't add it again.
++          // See b/52613704.
++          continue;
++        }
+         jsRoot.addChildToBack(n);
+       }
+-
+       if (hasErrors()) {
+         return null;
+       }
+@@ -1360,7 +1344,17 @@ public class Compiler extends AbstractCompiler {
+       stopTracer(tracer, "parseInputs");
+     }
+   }
+-
++  /**
++   * Determines whether the given node is an externs root that has been hoisted by
++   * hoistExterns.
++   * @see #hoistExterns
++   */
++  private static boolean isHoistedExternsRoot(Node n) {
++    return n.getType() == Token.SCRIPT
++        && n.getProp(Node.EXTERNS_ROOT) == Boolean.TRUE;
++  }
++```
++```
+   /**
+    * Hoists inputs with the @externs annotation into the externs list.
+    */

@@ -1,0 +1,44 @@
+diff --git a/src/com/google/javascript/jscomp/TypeCheck.java b/src/com/google/javascript/jscomp/TypeCheck.java
+index 6030d48d..d51bb357 100644
+--- a/src/com/google/javascript/jscomp/TypeCheck.java
++++ b/src/com/google/javascript/jscomp/TypeCheck.java
+@@ -1541,10 +1541,9 @@ public class TypeCheck implements NodeTraversal.Callback, CompilerPass {
+    * scope chain to use in name lookups as well as error reporting.
+    * @param n The node being visited.
+    */
+-  private void visitCall(NodeTraversal t, Node n) {
++private void visitCall(NodeTraversal t, Node n) {
+     Node child = n.getFirstChild();
+     JSType childType = getJSType(child).restrictByNotNullOrUndefined();
+-
+     if (!childType.canBeCalled()) {
+       report(t, n, NOT_CALLABLE, childType.toString());
+       ensureTyped(t, n);
+@@ -1574,10 +1570,23 @@ public class TypeCheck implements NodeTraversal.Callback, CompilerPass {
+            !isExtern)) {
+         report(t, n, CONSTRUCTOR_NOT_CALLABLE, childType.toString());
+       }
+-
+-      // Functions with explcit 'this' types must be called in a GETPROP
+-      // or GETELEM.
+-
++      if (functionType.isConstructor()) {
++        // Functions with explicit 'this' types must be called in a GETPROP
++        // or GETELEM.
++        Node parent = n.getParent();
++        if (parent.isGetProp() || parent.isGetElem()) {
++          Node receiver = parent.getFirstChild();
++          FunctionType ctorType = (FunctionType) getJSType(receiver);
++          JSType thisType = ctorType.getTypeOfThis();
++          if (!thisType.isUnknownType() &&
++              !thisType.isEquivalentTo(
++                  functionType.getTypeOfThis())) {
++            report(t, n, CONSTRUCTOR_EXPECTED_THIS_TYPE,
++                thisType.toString(),
++                functionType.getTypeOfThis().toString());
++          }
++        }
++      }
+       visitParameterList(t, n, functionType);
+       ensureTyped(t, n, functionType.getReturnType());
+     } else {

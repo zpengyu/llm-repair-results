@@ -1,0 +1,44 @@
+diff --git a/src/java/org/apache/commons/lang/time/DurationFormatUtils.java b/src/java/org/apache/commons/lang/time/DurationFormatUtils.java
+index 8ced282e..15753c5f 100644
+--- a/src/java/org/apache/commons/lang/time/DurationFormatUtils.java
++++ b/src/java/org/apache/commons/lang/time/DurationFormatUtils.java
+@@ -259,9 +259,7 @@ public class DurationFormatUtils {
+      * @param timezone the millis are defined in
+      * @return the time as a String
+      */
+-    public static String formatPeriod(long startMillis, long endMillis, String format, boolean padWithZeros, 
+-            TimeZone timezone) {
+-
++    public static String formatPeriod(long startMillis, long endMillis, String format, boolean padWithZeros, TimeZone timezone) {
+         long millis = endMillis - startMillis;
+         if (millis < 28 * DateUtils.MILLIS_PER_DAY) {
+             return formatDuration(millis, format, padWithZeros);
+@@ -303,12 +297,12 @@ public class DurationFormatUtils {
+             days -= 1;
+         }
+         while (days < 0) {
+-            days += 31;
+-//days += 31; // TODO: Need tests to show this is bad and the new code is good.
+-// HEN: It's a tricky subject. Jan 15th to March 10th. If I count days-first it is
+-// 1 month and 26 days, but if I count month-first then it is 1 month and 23 days.
+-// Also it's contextual - if asked for no M in the format then I should probably
+-// be doing no calculating here.
++            //days += 31; // TODO: Need tests to show this is bad and the new code is good.
++            // HEN: It's a tricky subject. Jan 15th to March 10th. If I count days-first it is 
++            // 1 month and 26 days, but if I count month-first then it is 1 month and 23 days.
++            // Also it's contextual - if asked for no M in the format then I should probably 
++            // be doing no calculating here.
++            days += getDaysInMonth(months, years);
+             months -= 1;
+         }
+         while (months < 0) {
+@@ -337,7 +330,8 @@ public class DurationFormatUtils {
+             }
+         }
+         if (!Token.containsTokenWithValue(tokens, M)) {
+-            days += end.get(Calendar.DAY_OF_YEAR) - start.get(Calendar.DAY_OF_YEAR);
++            //days += end.get(Calendar.DAY_OF_YEAR) - start.get(Calendar.DAY_OF_YEAR);
++            days += getDaysInMonth(months, years);
+             months = 0;
+         }
+         if (!Token.containsTokenWithValue(tokens, d)) {

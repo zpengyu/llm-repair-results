@@ -1,0 +1,39 @@
+ protected void processProperties(final Properties properties)
+    {
+        if (properties == null)
+        {
+            return;
+        }
+
+        for (final Enumeration e = properties.propertyNames(); e.hasMoreElements();)
+        {
+            final String option = e.nextElement().toString();
+
+            if (!cmd.hasOption(option))
+            {
+                final Option opt = options.getOption(option);
+
+                // get the value from the properties instance
+                final String value = properties.getProperty(option);
+
+                if (opt.hasArg())
+                {
+                    if (opt.getValues() == null || opt.getValues().length == 0)
+                    {
+                        opt.addValueForProcessing(value);
+                    }
+                }
+                else if (!("yes".equalsIgnoreCase(value)
+                        || "true".equalsIgnoreCase(value)
+                        || "1".equalsIgnoreCase(value)))
+                {
+                    // if the value is not yes, true or 1 then don't add the
+                    // option to the CommandLine
+                    break;
+                }
+
+                cmd.addOption(opt);
+            }
+        }
+    }
+

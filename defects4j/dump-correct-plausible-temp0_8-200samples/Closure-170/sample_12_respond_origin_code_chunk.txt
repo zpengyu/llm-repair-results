@@ -1,0 +1,28 @@
+private void getNumUseInUseCfgNode(final Node cfgNode) {
+  numUsesWithinCfgNode = 0;
+  AbstractCfgNodeTraversalCallback gatherCb =
+      new AbstractCfgNodeTraversalCallback() {
+
+    @Override
+    public void visit(NodeTraversal t, Node n, Node parent) {
+      if (n.isName() && n.getString().equals(varName)) {
+        if (NodeUtil.isLValue(n) && (parent.isAssign() || parent.isVar())
+            && parent.getFirstChild() == n) {
+          // Don't count lhs of top-level assignment chain
+          return;
+        } else if (parent.isFunction()
+            || parent.isGetterDef()
+            || parent.isSetterDef()) {
+          // Don't count variable references that are
+          // inside a variable's getter or setter.
+          return;
+        }
+        numUsesWithinCfgNode++;
+      }
+    }
+
+  };
+
+  NodeTraversal.traverse(compiler, cfgNode, gatherCb);
+}
+

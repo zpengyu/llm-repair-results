@@ -1,0 +1,41 @@
+diff --git a/src/com/google/javascript/jscomp/parsing/IRFactory.java b/src/com/google/javascript/jscomp/parsing/IRFactory.java
+index 32a15610..cc24672c 100644
+--- a/src/com/google/javascript/jscomp/parsing/IRFactory.java
++++ b/src/com/google/javascript/jscomp/parsing/IRFactory.java
+@@ -560,7 +557,35 @@ public class IRFactory {
+       node.addChildToBack(bodyNode);
+      return node;
+     }
+-
++  // Parse the function's directives. This takes care of
++  //   "use strict"
++  //   "use asm"
++  // directives.
++  private void parseDirectives(Node n) {
++    Node body = n.getFirstChild();
++    if (!body.isBlock()) {
++      return;
++    }
++    // For now, just parse "use strict".
++    Node statement = body.getFirstChild();
++    if (statement == null) {
++      return;
++    }
++    if (!statement.isExprResult()) {
++      return;
++    }
++    Node firstExpr = statement.getFirstChild();
++    if (!firstExpr.isString()) {
++      return;
++    }
++    String directive = firstExpr.getString();
++    if (!"use strict".equals(directive)) {
++      return;
++    }
++    // Remove the 'use strict' directive from the AST.
++    body.removeChild(statement);
++    // TODO(johnlenz): parse and apply "use asm"
++  }
+     @Override
+     Node processIfStatement(IfStatement statementNode) {
+       Node node = newNode(Token.IF);

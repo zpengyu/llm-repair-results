@@ -1,0 +1,29 @@
+diff --git a/src/org/mockito/internal/stubbing/answers/AnswersValidator.java b/src/org/mockito/internal/stubbing/answers/AnswersValidator.java
+index 5d8057846..bc4ce261e 100644
+--- a/src/org/mockito/internal/stubbing/answers/AnswersValidator.java
++++ b/src/org/mockito/internal/stubbing/answers/AnswersValidator.java
+@@ -24,10 +20,21 @@ public class AnswersValidator {
+         if (answer instanceof DoesNothing) {
+             validateDoNothing((DoesNothing) answer, invocation);
+         }
+-        
++        if (answer instanceof ReturnsCustomValue) {
++            validateCustomValue((ReturnsCustomValue) answer, invocation);
++        }
++    }
++    private void validateCustomValue(ReturnsCustomValue answer, Invocation invocation) {
++        if (invocation.isVoid()) {
++            reporter.cannotStubVoidMethodWithAReturnValue();
++        }
++        if (answer.getValue() == null) {
++            return;
++        }
++        if (!invocation.isValidReturnType(answer.getValue().getClass())) {
++            reporter.wrongTypeOfReturnValue(invocation.printMethodReturnType(), answer.printReturnType(), invocation.getMethodName());
++        }
+     }
+-
+-
+     private void validateDoNothing(DoesNothing answer, Invocation invocation) {
+         if (!invocation.isVoid()) {
+             reporter.onlyVoidMethodsCanBeSetToDoNothing();

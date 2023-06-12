@@ -1,0 +1,25 @@
+diff --git a/src/org/mockito/internal/stubbing/defaultanswers/ReturnsDeepStubs.java b/src/org/mockito/internal/stubbing/defaultanswers/ReturnsDeepStubs.java
+index 6fa773f53..9471608f2 100644
+--- a/src/org/mockito/internal/stubbing/defaultanswers/ReturnsDeepStubs.java
++++ b/src/org/mockito/internal/stubbing/defaultanswers/ReturnsDeepStubs.java
+@@ -74,14 +65,13 @@ public class ReturnsDeepStubs implements Answer<Object>, Serializable {
+      * @param returnTypeGenericMetadata The metadata to use to create the new mock.
+      * @return The mock
+      */
+-
+-
+-
+-
++    private <T> T createMockWithGenerics(GenericMetadataSupport returnTypeGenericMetadata) {
++        return org.mockito.Mockito.mock((Class<T>) returnTypeGenericMetadata.rawType(), returnTypeGenericMetadata);
++    }
+     private Object recordDeepStubMock(InvocationOnMock invocation, InvocationContainerImpl container) {
+-        Class<?> clz = invocation.getMethod().getReturnType();
+-        final Object mock = org.mockito.Mockito.mock(clz, this);
+-
++        GenericMetadataSupport returnTypeGenericMetadata =
++                actualParameterizedType(invocation.getMock()).resolveGenericReturnType(invocation.getMethod());
++        final Object mock = createMockWithGenerics(returnTypeGenericMetadata);
+         container.addAnswer(new Answer<Object>() {
+             public Object answer(InvocationOnMock invocation) throws Throwable {
+                 return mock;

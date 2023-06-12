@@ -1,0 +1,40 @@
+diff --git a/src/com/google/javascript/jscomp/CodeConsumer.java b/src/com/google/javascript/jscomp/CodeConsumer.java
+index 47ecfb1d..53d4784b 100644
+--- a/src/com/google/javascript/jscomp/CodeConsumer.java
++++ b/src/com/google/javascript/jscomp/CodeConsumer.java
+@@ -241,26 +241,18 @@ abstract class CodeConsumer {
+     // This is not pretty printing. This is to prevent misparsing of x- -4 as
+     // x--4 (which is a syntax error).
+     char prev = getLastChar();
+-    boolean negativeZero = isNegativeZero(x);
+     if (x < 0 && prev == '-') {
+       add(" ");
+     }
+-
+-    if ((long) x == x && !negativeZero) {
+-      long value = (long) x;
+-      long mantissa = value;
+-      int exp = 0;
+-      if (Math.abs(x) >= 100) {
+-        while (mantissa / 10 * Math.pow(10, exp + 1) == value) {
+-          mantissa /= 10;
+-          exp++;
+-        }
+-      }
+-      if (exp > 2) {
+-        add(Long.toString(mantissa) + "E" + Integer.toString(exp));
+-      } else {
+-        add(Long.toString(value));
+-      }
++    if (Double.isNaN(x)) {
++      add("NaN");
++    } else if (x == Double.POSITIVE_INFINITY) {
++      add("Infinity");
++    } else if (x == Double.NEGATIVE_INFINITY) {
++      add("-Infinity");
++    } else if (x == 0 && 1 / x == Double.NEGATIVE_INFINITY) {
++      // -0
++      add("-0");
+     } else {
+       add(String.valueOf(x));
+     }

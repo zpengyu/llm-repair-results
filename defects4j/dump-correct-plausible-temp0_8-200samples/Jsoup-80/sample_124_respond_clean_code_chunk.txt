@@ -1,0 +1,13 @@
+    void insert(Token.Comment commentToken) {
+        if (commentToken.bogus) { // xml declarations are emitted as bogus comments (which is right for html, but not xml)
+            if (commentToken.getData().length() > 1 && (commentToken.getData().startsWith("!") || commentToken.getData().startsWith("?"))) {
+                Document doc = Jsoup.parse("<" + commentToken.getData().substring(1, commentToken.getData().length() -1) + ">", baseUri, Parser.xmlParser());
+                Element el = doc.child(0);
+                XmlDeclaration xmlDeclaration = new XmlDeclaration(settings.normalizeTag(el.tagName()), commentToken.getData().startsWith("!"));
+                xmlDeclaration.attributes().addAll(el.attributes());
+                insertNode(xmlDeclaration);
+                return;
+            }
+        }
+        insertNode(new Comment(commentToken.getData()));
+    }

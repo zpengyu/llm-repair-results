@@ -1,0 +1,41 @@
+diff --git a/src/main/java/org/jsoup/helper/DataUtil.java b/src/main/java/org/jsoup/helper/DataUtil.java
+index bbbd8fb..185c855 100644
+--- a/src/main/java/org/jsoup/helper/DataUtil.java
++++ b/src/main/java/org/jsoup/helper/DataUtil.java
+@@ -90,7 +90,7 @@ public final class DataUtil {
+         }
+     }
+ 
+-    static Document parseInputStream(InputStream input, String charsetName, String baseUri, Parser parser) throws IOException  {
++    static Document parseInputStream(InputStream input, String charsetName, String baseUri, Parser parser) throws IOException {
+         if (input == null) // empty body
+             return new Document(baseUri);
+         input = ConstrainableInputStream.wrap(input, bufferSize, 0);
+@@ -148,8 +142,27 @@ public final class DataUtil {
+             if (charsetName == null)
+                 charsetName = defaultCharset;
+             BufferedReader reader = new BufferedReader(new InputStreamReader(input, charsetName), bufferSize);
++            if (!fullyRead) {
++                // read up to end or last tag
++                StringBuilder sb = new StringBuilder();
++                String line = "";
++                boolean ok = false;
++                while (true) {
++                    line = reader.readLine();
++                    if (line == null || line.contains("</")) {
++                        ok = true;
++                        break;
++                    } else {
++                        sb.append(line);
++                    }
++                }
++                if (!ok)
++                    throw new IOException("Incomplete document");
++                doc = parser.parseInput(sb.toString(), baseUri);
++            } else {
+                 doc = parser.parseInput(reader, baseUri);
+                 // io exception when parsing (not seen before because reading the stream as we go)
++            }
+             doc.outputSettings().charset(charsetName);
+         }
+         input.close();

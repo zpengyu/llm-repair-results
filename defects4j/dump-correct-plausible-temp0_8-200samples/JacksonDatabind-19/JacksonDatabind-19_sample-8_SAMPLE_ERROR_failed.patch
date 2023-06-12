@@ -1,0 +1,17 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/type/TypeFactory.java b/src/main/java/com/fasterxml/jackson/databind/type/TypeFactory.java
+index 6aeb747d2..0eb1e4e59 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/type/TypeFactory.java
++++ b/src/main/java/com/fasterxml/jackson/databind/type/TypeFactory.java
+@@ -1025,6 +1025,12 @@ public final class TypeFactory
+         }
+         // but exactly 2 types if any found
+         if (typeParams.length != 2) {
++            if (typeParams.length == 1 && _jdk7Helper != null) {
++                JavaType type = _jdk7Helper.constructSpecializedType(MapType.construct(rawClass, typeParams[0], _unknownType()), rawClass);
++                if (type != null) {
++                    return type;
++                }
++            }
+             throw new IllegalArgumentException("Strange Map type "+rawClass.getName()+": can not determine type parameters");
+         }
+         return MapType.construct(rawClass, typeParams[0], typeParams[1]);

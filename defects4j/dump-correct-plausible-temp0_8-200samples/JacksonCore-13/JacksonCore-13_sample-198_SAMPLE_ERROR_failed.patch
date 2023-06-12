@@ -1,0 +1,37 @@
+diff --git a/src/main/java/com/fasterxml/jackson/core/json/JsonGeneratorImpl.java b/src/main/java/com/fasterxml/jackson/core/json/JsonGeneratorImpl.java
+index 81b90fed..5492d851 100644
+--- a/src/main/java/com/fasterxml/jackson/core/json/JsonGeneratorImpl.java
++++ b/src/main/java/com/fasterxml/jackson/core/json/JsonGeneratorImpl.java
+@@ -90,8 +80,7 @@ public abstract class JsonGeneratorImpl extends GeneratorBase
+      *
+      * @since 2.7
+      */
+-    protected boolean _cfgUnqNames;
+-
++    protected boolean _cfgUnqNames = !Feature.QUOTE_FIELD_NAMES.defaultState();
+     /*
+     /**********************************************************
+     /* Life-cycle
+@@ -106,9 +94,7 @@ public abstract class JsonGeneratorImpl extends GeneratorBase
+             // inlined `setHighestNonEscapedChar()`
+             _maximumNonEscapedChar = 127;
+         }
+-        _cfgUnqNames = !Feature.QUOTE_FIELD_NAMES.enabledIn(features);
+     }
+-
+     /*
+     /**********************************************************
+     /* Overridden configuration methods
+@@ -128,9 +111,10 @@ public abstract class JsonGeneratorImpl extends GeneratorBase
+     @Override
+     protected void _checkStdFeatureChanges(int newFeatureFlags, int changedFeatures) {
+         super._checkStdFeatureChanges(newFeatureFlags, changedFeatures);
+-        _cfgUnqNames = !Feature.QUOTE_FIELD_NAMES.enabledIn(newFeatureFlags);
++        if (Feature.QUOTE_FIELD_NAMES.enabledIn(changedFeatures)) {
++            _cfgUnqNames = !Feature.QUOTE_FIELD_NAMES.enabledIn(newFeatureFlags);
++        }
+     }
+-
+     @Override
+     public JsonGenerator setHighestNonEscapedChar(int charCode) {
+         _maximumNonEscapedChar = (charCode < 0) ? 0 : charCode;

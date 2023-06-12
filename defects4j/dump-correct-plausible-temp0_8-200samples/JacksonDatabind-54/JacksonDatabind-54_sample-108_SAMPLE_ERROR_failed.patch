@@ -1,0 +1,81 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/ser/PropertyBuilder.java b/src/main/java/com/fasterxml/jackson/databind/ser/PropertyBuilder.java
+index 9a9d91ebf..58feaef7c 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/ser/PropertyBuilder.java
++++ b/src/main/java/com/fasterxml/jackson/databind/ser/PropertyBuilder.java
+@@ -92,11 +91,19 @@ public class PropertyBuilder
+             }
+             serializationType = serializationType.withContentTypeHandler(contentTypeSer);
+             ct = serializationType.getContentType();
++            // Also: if type is final, can not make it "container", so:
++            if (ct.isFinal()) {
++                throw JsonMappingException.from(prov,
++                        "Problem trying to create BeanPropertyWriter for property '"
++                                +propDef.getName()+"' (of type "+_beanDesc.getType()
++                                +"); serialization type "+serializationType
++                                +" has final content type ("+ct.getRawClass().getName()+")");
++            }
+         }
+-        
+-        Object valueToSuppress = null;
++        // 12-Jul-2016, tatu: [databind#1256] Need to make sure we consider type refinement
++        JavaType actualType = (serializationType == null) ? declaredType : serializationType;
++        JsonSerializer<Object> jsonSerializer = ser;
+         boolean suppressNulls = false;
+-
+         JsonInclude.Value inclV = _defaultInclusion.withOverrides(propDef.findInclusion());
+         JsonInclude.Include inclusion = inclV.getValueInclusion();
+         if (inclusion == JsonInclude.Include.USE_DEFAULTS) { // should not occur but...
+@@ -114,32 +119,24 @@ public class PropertyBuilder
+             //    static definition. Sigh.
+             // First: case of class specifying it; try to find POJO property defaults
+             if (_defaultInclusion.getValueInclusion() == JsonInclude.Include.NON_DEFAULT) {
+-                valueToSuppress = getPropertyDefaultValue(propDef.getName(), am, actualType);
+-            } else {
+-                valueToSuppress = getDefaultValue(actualType);
+-            }
+-            if (valueToSuppress == null) {
+-                suppressNulls = true;
++                jsonSerializer = nonDefaultSerializer(actualType, ser);
+             } else {
+-                if (valueToSuppress.getClass().isArray()) {
+-                    valueToSuppress = ArrayBuilders.getArrayComparator(valueToSuppress);
+-                }
++                jsonSerializer = nonDefaultSerializer(actualType, ser);
+             }
+-
+             break;
+         case NON_ABSENT: // new with 2.6, to support Guava/JDK8 Optionals
+             // always suppress nulls
+             suppressNulls = true;
+             // and for referential types, also "empty", which in their case means "absent"
+             if (declaredType.isReferenceType()) {
+-                valueToSuppress = BeanPropertyWriter.MARKER_FOR_EMPTY;
++                jsonSerializer = nonAbsentSerializer(actualType, ser);
+             }
+             break;
+         case NON_EMPTY:
+             // always suppress nulls
+             suppressNulls = true;
+             // but possibly also 'empty' values:
+-            valueToSuppress = BeanPropertyWriter.MARKER_FOR_EMPTY;
++            jsonSerializer = nonEmptySerializer(actualType, ser);
+             break;
+         case NON_NULL:
+             suppressNulls = true;
+@@ -149,14 +146,13 @@ public class PropertyBuilder
+             // we may still want to suppress empty collections, as per [JACKSON-254]:
+             if (declaredType.isContainerType()
+                     && !_config.isEnabled(SerializationFeature.WRITE_EMPTY_JSON_ARRAYS)) {
+-                valueToSuppress = BeanPropertyWriter.MARKER_FOR_EMPTY;
++                jsonSerializer = nonEmptySerializer(actualType, ser);
+             }
+             break;
+         }
+         BeanPropertyWriter bpw = new BeanPropertyWriter(propDef,
+                 am, _beanDesc.getClassAnnotations(), declaredType,
+-                ser, typeSer, serializationType, suppressNulls, valueToSuppress);
+-
++                jsonSerializer, typeSer, serializationType, suppressNulls, null);
+         // How about custom null serializer?
+         Object serDef = _annotationIntrospector.findNullSerializer(am);
+         if (serDef != null) {

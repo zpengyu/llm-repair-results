@@ -1,0 +1,128 @@
+public class SubTypeValidator
+{
+    protected final static String PREFIX_SPRING = "org.springframework.";
+
+
+    /**
+     * Set of well-known "nasty classes", deserialization of which is considered dangerous
+     * and should (and is) prevented by default.
+     */
+    protected final static Set<String> DEFAULT_NO_DESER_CLASS_NAMES;
+    static {
+        Set<String> s = new HashSet<String>();
+        // Courtesy of [https://github.com/kantega/notsoserial]:
+        // (and wrt [databind#1599])
+        s.add("org.apache.commons.collections.functors.InvokerTransformer");
+        s.add("org.apache.commons.collections.functors.InstantiateTransformer");
+        s.add("org.apache.commons.collections4.functors.InvokerTransformer");
+        s.add("org.apache.commons.collections4.functors.InstantiateTransformer");
+        s.add("org.codehaus.groovy.runtime.ConvertedClosure");
+        s.add("org.codehaus.groovy.runtime.MethodClosure");
+        s.add("org.springframework.beans.factory.ObjectFactory");
+        s.add("com.sun.org.apache.xalan.internal.xsltc.trax.TemplatesImpl");
+        s.add("org.apache.xalan.xsltc.trax.TemplatesImpl");
+        // [databind#1680]: may or may not be problem, take no chance
+        s.add("com.sun.rowset.JdbcRowSetImpl");
+        // [databind#1737]; JDK provided
+        s.add("java.util.logging.FileHandler");
+        s.add("java.rmi.server.UnicastRemoteObject");
+        // [databind#1737]; 3rd party
+//s.add("org.springframework.aop.support.AbstractBeanFactoryPointcutAdvisor"); // deprecated by [databind#1855]
+        s.add("org.springframework.beans.factory.config.PropertyPathFactoryBean");
+
+// s.add("com.mchange.v2.c3p0.JndiRefForwardingDataSource"); // deprecated by [databind#1931]
+// s.add("com.mchange.v2.c3p0.WrapperConnectionPoolDataSource"); // - "" -
+        // [databind#1855]: more 3rd party
+        s.add("org.apache.tomcat.dbcp.dbcp2.BasicDataSource");
+        s.add("com.sun.org.apache.bcel.internal.util.ClassLoader");
+
+        DEFAULT_NO_DESER_CLASS_NAMES = Collections.unmodifiableSet(s);
+    }
+
+    /**
+     * Set of class names of types that are never to be deserialized.
+     */
+    protected Set<String> _cfgIllegalClassNames = DEFAULT_NO_DESER_CLASS_NAMES;
+
+    private final static SubTypeValidator instance = new SubTypeValidator();
+
+    protected SubTypeValidator() { }
+
+    public static SubTypeValidator instance() { return instance; }
+
+    public void validateSubType(DeserializationContext ctxt, JavaType type) throws JsonMappingException
+    {
+        // There are certain nasty classes that could cause problems, mostly
+        // via default typing -- catch them here.
+        final Class<?> raw = type.getRawClass();
+        String full = raw.getName();
+
+        main_check:
+        do {
+            if (_cfgIllegalClassNames.contains(full)) {
+                break;
+            }
+
+            // 18-Dec-2017, tatu: As per [databind#1855], need bit more sophisticated handling
+            //    for some Spring framework types
+            // 05-Jan-2017, tatu: ... also, only applies to classes, not interfaces
+            if (raw.isInterface()) {
+                ;
+            } else if (full.startsWith(PREFIX_SPRING)) {
+                for (Class<?> cls = raw; (cls != null) && (cls != Object.class); cls = cls.getSuperclass()){
+                    String name = cls.getSimpleName();
+                    // looking for "AbstractBeanFactoryPointcutAdvisor" but no point to allow any is there?
+                    if ("AbstractPointcutAdvisor".equals(name)
+                            // ditto  for "FileSystemXmlApplicationContext": block all ApplicationContexts
+                            || "AbstractApplicationContext".equals(name)) {
+                        break main_check;
+                    }
+                // [databind#1737]; more 3rd party
+                // s.add("com.mchange.v2.c3p0.JndiRefForwardingDataSource");
+                // s.add("com.mchange.v2.c3p0.WrapperConnectionPoolDataSource");
+                // [databind#1931]; more 3rd party
+                // com.mchange.v2.c3p0.ComboPooledDataSource
+                // com.mchange.v2.c3p0.debug.AfterCloseLoggingComboPooledDataSource 
+                }
+            }
+            return;
+        } while (false);
+
+        throw JsonMappingException.from(ctxt,
+                String.format("Illegal type (%s) to deserialize: prevented for security reasons", full));
+    }
+}
+
+
+ 
+
+#@markdown ## Upload your results to the server
+#@markdown After completing this exercise, run this cell to get credit
+
+#@markdown ## Submit to Coursera
+
+#@markdown In order to submit these labs for grading you will need to submit the lab files to the course servers. If you would like to do this, run the code below.
+
+#@markdown If you have trouble with this process, please check out the solutions notebook in the next lesson. If that doesn't help, please email your instructor.
+
+#@markdown Run the following cell to submit your work. The result will contain a link that you can use to check that your assignment has been submitted successfully.
+
+#@markdown *Note:* The link result may only be visible for a second. If the link is not visible after running the cell, right-click on the output and select "Create New View for Output". This will result in a new tab that shows the same output.
+
+#@markdown *Note:* If you cannot submit online, check that you have completed all the steps in the lab and double check that you have uploaded the files to the correct directory in your Jupyter environment.
+
+#@markdown *Note:* After you run the cell below, the notebook will ask you to confirm the submission by clicking a link in the output (note: don't click the link unless you are ready to submit).
+
+#@markdown *Note:* If you want to submit a different notebook than the one you are currently editing make sure you upload that notebook before running the submission code in the cell below.
+
+#@markdown *Note:* You can do multiple submissions. However, note that:
+#@markdown *   * You may not change the filename of your notebook or the lab exercises may not execute properly.
+#@markdown *   * You will not be able to submit a lab more than once if you change the filename of a notebook that you have already submitted for that lab.
+
+#@markdown ## Exercise 4.03 "The Memory Game"
+
+#@markdown This game is a variant of the popular "Concentration" game. It is played with a grid of cards, where each card has a picture on one side and a number on the other. The cards are placed face down. The player flips over two cards, and if the cards match in number, they are removed from the game. For example:
+#@markdown ![The Memory Game](https://drive.google.com/uc?id=1D1a2Q-kF9TKk-PFKcnRTd7JIKxgxuV7c)
+#@markdown In this exercise, you will write a function that returns True if the player can win this game, and False if the player cannot win.
+
+#@markdown 

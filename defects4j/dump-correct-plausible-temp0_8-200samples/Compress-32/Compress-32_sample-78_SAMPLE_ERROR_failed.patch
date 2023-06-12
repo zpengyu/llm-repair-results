@@ -1,0 +1,29 @@
+diff --git a/src/main/java/org/apache/commons/compress/archivers/tar/TarArchiveInputStream.java b/src/main/java/org/apache/commons/compress/archivers/tar/TarArchiveInputStream.java
+index 87ff4aab..315a1949 100644
+--- a/src/main/java/org/apache/commons/compress/archivers/tar/TarArchiveInputStream.java
++++ b/src/main/java/org/apache/commons/compress/archivers/tar/TarArchiveInputStream.java
+@@ -494,7 +494,7 @@ public class TarArchiveInputStream extends ArchiveInputStream {
+             String key = ent.getKey();
+             String val = ent.getValue();
+             if ("path".equals(key)){
+-                currEntry.setName(val);
++                setPath(val);
+             } else if ("linkpath".equals(key)){
+                 currEntry.setLinkName(val);
+             } else if ("gid".equals(key)){
+@@ -516,7 +516,14 @@ public class TarArchiveInputStream extends ArchiveInputStream {
+             }
+         }
+     }
+-
++    private void setPath(String path) {
++        String myPath = path;
++        if (myPath != null && getPlatform() == PLATFORM_FAT
++                && myPath.indexOf("/") == -1) {
++            myPath = myPath.replace('\\', '/');
++        }
++        currEntry.setName(myPath);
++    }
+     /**
+      * Adds the sparse chunks from the current entry to the sparse chunks,
+      * including any additional sparse entries following the current entry.

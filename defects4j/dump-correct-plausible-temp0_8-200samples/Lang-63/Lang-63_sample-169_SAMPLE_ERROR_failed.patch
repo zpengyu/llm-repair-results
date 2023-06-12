@@ -1,0 +1,44 @@
+diff --git a/src/java/org/apache/commons/lang/time/DurationFormatUtils.java b/src/java/org/apache/commons/lang/time/DurationFormatUtils.java
+index 8ced282e..172179a7 100644
+--- a/src/java/org/apache/commons/lang/time/DurationFormatUtils.java
++++ b/src/java/org/apache/commons/lang/time/DurationFormatUtils.java
+@@ -260,22 +260,18 @@ public class DurationFormatUtils {
+      * @return the time as a String
+      */
+     public static String formatPeriod(long startMillis, long endMillis, String format, boolean padWithZeros, 
+-            TimeZone timezone) {
+-
++            TimeZone timezone, Locale locale) {
+         long millis = endMillis - startMillis;
+         if (millis < 28 * DateUtils.MILLIS_PER_DAY) {
+             return formatDuration(millis, format, padWithZeros);
+         }
+-
+         Token[] tokens = lexx(format);
+-
+         // timezones get funky around 0, so normalizing everything to GMT 
+         // stops the hours being off
+-        Calendar start = Calendar.getInstance(timezone);
++        Calendar start = Calendar.getInstance(timezone, locale);
+         start.setTime(new Date(startMillis));
+-        Calendar end = Calendar.getInstance(timezone);
++        Calendar end = Calendar.getInstance(timezone, locale);
+         end.setTime(new Date(endMillis));
+-
+         // initial estimates
+         int milliseconds = end.get(Calendar.MILLISECOND) - start.get(Calendar.MILLISECOND);
+         int seconds = end.get(Calendar.SECOND) - start.get(Calendar.SECOND);
+@@ -303,12 +298,7 @@ public class DurationFormatUtils {
+             days -= 1;
+         }
+         while (days < 0) {
+-            days += 31;
+-//days += 31; // TODO: Need tests to show this is bad and the new code is good.
+-// HEN: It's a tricky subject. Jan 15th to March 10th. If I count days-first it is
+-// 1 month and 26 days, but if I count month-first then it is 1 month and 23 days.
+-// Also it's contextual - if asked for no M in the format then I should probably
+-// be doing no calculating here.
++            days += start.getActualMaximum(Calendar.DAY_OF_MONTH);
+             months -= 1;
+         }
+         while (months < 0) {

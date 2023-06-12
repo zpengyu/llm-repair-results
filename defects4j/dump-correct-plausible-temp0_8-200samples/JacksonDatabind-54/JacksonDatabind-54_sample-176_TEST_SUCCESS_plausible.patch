@@ -1,0 +1,38 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/ser/PropertyBuilder.java b/src/main/java/com/fasterxml/jackson/databind/ser/PropertyBuilder.java
+index 9a9d91ebf..d9728abea 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/ser/PropertyBuilder.java
++++ b/src/main/java/com/fasterxml/jackson/databind/ser/PropertyBuilder.java
+@@ -102,10 +99,13 @@ public class PropertyBuilder
+         if (inclusion == JsonInclude.Include.USE_DEFAULTS) { // should not occur but...
+             inclusion = JsonInclude.Include.ALWAYS;
+         }
+-
+         // 12-Jul-2016, tatu: [databind#1256] Need to make sure we consider type refinement
+         JavaType actualType = (serializationType == null) ? declaredType : serializationType;
+-        
++        // [databind#1256]: a bit trickier, too. However:
++        // (a) can not use serialization type for POJO properties, as we do for fields
++        // (b) but can for containers, should make difference between 'empty' and 'non-empty'
++        // NOTE: for "always", this should not matter but does not hurt much either
++        JavaType typeToSuppress = (serializationType == null) ? declaredType : serializationType;
+         switch (inclusion) {
+         case NON_DEFAULT:
+             // 11-Nov-2015, tatu: This is tricky because semantics differ between cases,
+@@ -131,7 +130,7 @@ public class PropertyBuilder
+             // always suppress nulls
+             suppressNulls = true;
+             // and for referential types, also "empty", which in their case means "absent"
+-            if (declaredType.isReferenceType()) {
++            if (typeToSuppress.isReferenceType()) {
+                 valueToSuppress = BeanPropertyWriter.MARKER_FOR_EMPTY;
+             }
+             break;
+@@ -147,7 +146,7 @@ public class PropertyBuilder
+         case ALWAYS: // default
+         default:
+             // we may still want to suppress empty collections, as per [JACKSON-254]:
+-            if (declaredType.isContainerType()
++            if (typeToSuppress.isContainerType()
+                     && !_config.isEnabled(SerializationFeature.WRITE_EMPTY_JSON_ARRAYS)) {
+                 valueToSuppress = BeanPropertyWriter.MARKER_FOR_EMPTY;
+             }

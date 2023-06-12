@@ -1,0 +1,27 @@
+diff --git a/src/main/java/org/apache/commons/compress/archivers/ArchiveStreamFactory.java b/src/main/java/org/apache/commons/compress/archivers/ArchiveStreamFactory.java
+index 57b411d0..ee817c98 100644
+--- a/src/main/java/org/apache/commons/compress/archivers/ArchiveStreamFactory.java
++++ b/src/main/java/org/apache/commons/compress/archivers/ArchiveStreamFactory.java
+@@ -241,8 +237,11 @@ public class ArchiveStreamFactory {
+                 try {
+                     TarArchiveInputStream tais = new TarArchiveInputStream(new ByteArrayInputStream(tarheader));
+                     // COMPRESS-191 - verify the header checksum
+-                    tais.getNextEntry();
+-                        return new TarArchiveInputStream(in);
++                    TarArchiveEntry nextEntry = tais.getNextTarEntry();
++                    if (nextEntry != null && !nextEntry.isCheckSumOK()) {
++                        throw new IOException("Header checksum error");
++                    }
++                    return new TarArchiveInputStream(in);
+                 } catch (Exception e) { // NOPMD
+                     // can generate IllegalArgumentException as well
+                     // as IOException
+@@ -253,7 +252,5 @@ public class ArchiveStreamFactory {
+         } catch (IOException e) {
+             throw new ArchiveException("Could not use reset and mark operations.", e);
+         }
+-
+         throw new ArchiveException("No Archiver found for the stream signature");
+-    }
+-}
++    }}

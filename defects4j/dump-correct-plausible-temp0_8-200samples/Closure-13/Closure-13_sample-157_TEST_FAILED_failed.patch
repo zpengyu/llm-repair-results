@@ -1,0 +1,40 @@
+diff --git a/src/com/google/javascript/jscomp/PeepholeOptimizationsPass.java b/src/com/google/javascript/jscomp/PeepholeOptimizationsPass.java
+index 7eda511e..8bc00b1d 100644
+--- a/src/com/google/javascript/jscomp/PeepholeOptimizationsPass.java
++++ b/src/com/google/javascript/jscomp/PeepholeOptimizationsPass.java
+@@ -118,25 +118,29 @@ class PeepholeOptimizationsPass
+     if (!shouldVisit(node)) {
+       return;
+     }
+-
++    boolean mustRetraverse = false;
+     int visits = 0;
+     do {
+       Node c = node.getFirstChild();
+       while(c != null) {
+         traverse(c);
+         Node next = c.getNext();
++        if (mustRetraverse || c.getParent() == null) {
++          // The AST was modified.
++          // Retraverse immediately.
++          c = node.getFirstChild();
++          mustRetraverse = false;
++          continue;
++        }
+         c = next;
+       }
+-
+       visit(node);
+       visits++;
+-
++      mustRetraverse = shouldRetraverse(node);
+       Preconditions.checkState(visits < 10000, "too many interations");
+-    } while (shouldRetraverse(node));
+-
++    } while (mustRetraverse);
+     exitNode(node);
+   }
+-
+   private boolean shouldRetraverse(Node node) {
+     if (node.getParent() != null && node.isFunction() || node.isScript()) {
+       ScopeState state = traversalState.peek();

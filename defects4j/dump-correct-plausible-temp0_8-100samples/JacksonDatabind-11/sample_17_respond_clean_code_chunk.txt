@@ -1,0 +1,38 @@
+    protected JavaType _fromVariable(TypeVariable<?> type, TypeBindings context)
+    {
+        final String name = type.getName();
+        // 19-Mar-2015: Without context, all we can check are bounds.
+        if (context == null) {
+            // And to prevent infinite loops, now need this:
+            return _unknownType();
+        } else {
+            // Ok: here's where context might come in handy!
+            /* 19-Mar-2015, tatu: As per [databind#609], may need to allow
+             *   unresolved type variables to handle some cases where bounds
+             *   are enough. Let's hope it does not hide real fail cases.
+             */
+            JavaType actualType = context.findType(name);
+            if (actualType != null) {
+                return actualType;
+            }
+        }
+        JavaType[] pt = _resolveVariableViaBounds(type, context);
+        if (pt == null) {
+            // Ok, unknown? Better add placeholders to try to resolve at end
+            context._addPlaceholder(name);
+            return _unknownType();
+        }
+        // There are two main cases for the variable itself:
+        // (a) it has just one bound; or
+        // (b) it has 2 or more bounds (in which case bounds must be interfaces)
+        if (pt.length == 1) {
+            return pt[0];
+        }
+        // 21-Dec-2013, tatu: Alas, due to limitations of type handling in
+        //   Java, we have to choose one of the bound types for the "unknown"
+        //   type. For example, for "T extends Enum<T> & MyInterface" we MUST
+        //   return type for either Enum OR MyInterface, not something generic.
+        //   And if nothing else, let's follow lead of JDK and use the first
+        //   bound in this case.
+        return pt[0];
+    }

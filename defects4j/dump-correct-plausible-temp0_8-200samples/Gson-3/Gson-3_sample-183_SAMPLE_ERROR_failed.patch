@@ -1,0 +1,63 @@
+diff --git a/gson/src/main/java/com/google/gson/internal/ConstructorConstructor.java b/gson/src/main/java/com/google/gson/internal/ConstructorConstructor.java
+index cd5c2f6c..915d7b31 100644
+--- a/gson/src/main/java/com/google/gson/internal/ConstructorConstructor.java
++++ b/gson/src/main/java/com/google/gson/internal/ConstructorConstructor.java
+@@ -162,15 +162,25 @@ public final class ConstructorConstructor {
+             return (T) new LinkedList<Object>();
+           }
+         };
+-      } else {
++      } else if (rawType.isInterface()) {
+         return new ObjectConstructor<T>() {
+           @Override public T construct() {
+             return (T) new ArrayList<Object>();
+           }
+         };
++      } else {
++        try {
++          return new ObjectConstructor<T>() {
++            @SuppressWarnings("unchecked")
++            @Override public T construct() {
++              return (T) rawType.newInstance();
++            }
++          };
++        } catch (Exception e) {
++          return null;
++        }
+       }
+     }
+-
+     if (Map.class.isAssignableFrom(rawType)) {
+       if (SortedMap.class.isAssignableFrom(rawType)) {
+         return new ObjectConstructor<T>() {
+@@ -185,18 +195,27 @@ public final class ConstructorConstructor {
+             return (T) new LinkedHashMap<Object, Object>();
+           }
+         };
+-      } else {
++      } else if (rawType.isInterface()) {
+         return new ObjectConstructor<T>() {
+           @Override public T construct() {
+             return (T) new LinkedTreeMap<String, Object>();
+           }
+         };
++      } else {
++        try {
++          return new ObjectConstructor<T>() {
++            @SuppressWarnings("unchecked")
++            @Override public T construct() {
++              return (T) rawType.newInstance();
++            }
++          };
++        } catch (Exception e) {
++          return null;
++        }
+       }
+     }
+-
+     return null;
+   }
+-
+   private <T> ObjectConstructor<T> newUnsafeAllocator(
+       final Type type, final Class<? super T> rawType) {
+     return new ObjectConstructor<T>() {

@@ -1,0 +1,29 @@
+@JacksonStdImpl
+public final static class DoubleSerializer extends Base<Object>
+{
+
+    final static DoubleSerializer instance = new DoubleSerializer();
+
+public DoubleSerializer() { super(Double.class, JsonParser.NumberType.DOUBLE, "number"); }
+
+
+    @Override
+    public void serialize(Object value, JsonGenerator gen, SerializerProvider provider) throws IOException {
+        // as per [JACKSON-189], allow wrapping
+        if (provider.isEnabled(SerializationFeature.WRITE_BIGDECIMAL_AS_PLAIN)) {
+            gen.writeNumber(((Double) value).doubleValue());
+        } else {
+            gen.writeNumber((Double) value);
+        }
+    }
+
+    // IMPORTANT: copied from `NonTypedScalarSerializerBase`
+    @Override
+    public void serializeWithType(Object value, JsonGenerator gen,
+            SerializerProvider provider, TypeSerializer typeSer) throws IOException {
+        // no type info, just regular serialization
+        serialize(value, gen, provider);            
+    }
+}
+##Case Study
+This case study is about a bug in [JBoss](http://www.jboss.org/). This bug has been [fixed](https://issues.jboss.org/browse/JBWS-2268?filter=-1) in 2008.

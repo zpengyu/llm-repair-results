@@ -1,0 +1,31 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/deser/std/CollectionDeserializer.java b/src/main/java/com/fasterxml/jackson/databind/deser/std/CollectionDeserializer.java
+index af4270610..97f39e13e 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/deser/std/CollectionDeserializer.java
++++ b/src/main/java/com/fasterxml/jackson/databind/deser/std/CollectionDeserializer.java
+@@ -204,9 +203,24 @@ public class CollectionDeserializer
+         if (valueTypeDeser != null) {
+             valueTypeDeser = valueTypeDeser.forProperty(property);
+         }
+-        return withResolved(delegateDeser, valueDeser, valueTypeDeser, unwrapSingle);
++        CollectionDeserializer deser = withResolved(delegateDeser, valueDeser, valueTypeDeser, unwrapSingle);
++        if (property != null) {
++            AnnotationIntrospector intr = ctxt.getAnnotationIntrospector();
++            AnnotatedMember member = property.getMember();
++            if (member != null) {
++                Object supp = intr.findDeserializationContentConverter(member);
++                if (supp != null) {
++                    Converter<Object,Object> conv = ctxt.converterInstance(member, supp);
++                    JavaType delegateType = conv.getInputType(ctxt.getTypeFactory());
++                    if (!delegateType.hasRawClass(vt.getRawClass())) {
++                        return new CollectionDeserializer(delegateType, deser,
++                                valueDeser, valueTypeDeser);
++                    }
++                }
++            }
++        }
++        return deser;
+     }
+-
+     /*
+     /**********************************************************
+     /* ContainerDeserializerBase API

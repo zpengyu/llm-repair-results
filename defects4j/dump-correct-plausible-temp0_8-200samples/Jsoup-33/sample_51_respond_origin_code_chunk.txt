@@ -1,0 +1,28 @@
+
+public Element insert(Token.StartTag startTag) {
+        // handle empty unknown tags
+        // when the spec expects an empty tag, will directly hit insertEmpty, so won't generate this fake end tag.
+        if (startTag.isSelfClosing()) {
+            Element el = insertEmpty(startTag);
+            stack.add(el);
+            tokeniser.emit(new Token.EndTag(el.tagName()));  // ensure we get out of whatever state we are in. emitted for yielded processing
+            return el;
+        }
+
+        // named entity, or numeric character reference
+        String name = startTag.normalName();
+        if (startTag.attributes != null && startTag.attributes.size() > 0) {
+            Attributes attributes = startTag.attributes;
+            if (attributes.hasKey("name") && Tag.valueOf(name).isKnownTag() &&
+                    attributes.hasKey("value") && !startTag.selfClosing) {
+                insert(new DataNode(startTag.toString(), baseUri));
+                tokeniser.transition(TokeniserState.Rcdata);
+                tokeniser.emit(startTag);
+                return currentElement();
+            }
+        }
+
+        Element el = new Element(Tag.valueOf(startTag.name(), settings), baseUri, startTag.attributes);
+        insert(el);
+        return el;
+    }

@@ -1,0 +1,22 @@
+diff --git a/src/main/java/com/fasterxml/jackson/core/json/async/NonBlockingJsonParser.java b/src/main/java/com/fasterxml/jackson/core/json/async/NonBlockingJsonParser.java
+index feec6483..eeb5173a 100644
+--- a/src/main/java/com/fasterxml/jackson/core/json/async/NonBlockingJsonParser.java
++++ b/src/main/java/com/fasterxml/jackson/core/json/async/NonBlockingJsonParser.java
+@@ -89,14 +89,14 @@ public class NonBlockingJsonParser
+     {
+         // Must not have remaining input
+         if (_inputPtr < _inputEnd) {
+-            _reportError("Still have %d undecoded bytes, should not call 'feedInput'", _inputEnd - _inputPtr);
++            throw new IllegalStateException("Still have " + (_inputEnd - _inputPtr) + " undecoded bytes, should not call 'feedInput'");
+         }
+         if (end < start) {
+-            _reportError("Input end (%d) may not be before start (%d)", end, start);
++            throw new IllegalArgumentException("Input end ("+end+") may not be before start ("+start+")");
+         }
+         // and shouldn't have been marked as end-of-input
+         if (_endOfInput) {
+-            _reportError("Already closed, can not feed more input");
++            throw new IllegalStateException("Already closed, can not feed more input");
+         }
+         // Time to update pointers first
+         _currInputProcessed += _origBufferLen;

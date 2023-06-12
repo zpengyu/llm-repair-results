@@ -1,0 +1,21 @@
+diff --git a/src/com/google/javascript/jscomp/InlineObjectLiterals.java b/src/com/google/javascript/jscomp/InlineObjectLiterals.java
+index a26b500d..a723f19c 100644
+--- a/src/com/google/javascript/jscomp/InlineObjectLiterals.java
++++ b/src/com/google/javascript/jscomp/InlineObjectLiterals.java
+@@ -178,9 +176,14 @@ class InlineObjectLiterals implements CompilerPass {
+           // We short-circuit this problem by bailing out if we see a reference
+           // to a property that isn't defined on the object literal. This
+           // isn't a perfect algorithm, but it should catch most cases.
+-          continue;
++          //
++          // If the object literal is being defined inside a loop, it's
++          // possible that the property is being defined on the object literal
++          // inside the loop. In this case, we don't want to bail.
++          if (!ref.isAssignedValueInLoop()) {
++            continue;
++          }
+         }
+-
+         // Only rewrite VAR declarations or simple assignment statements
+         if (!isVarOrAssignExprLhs(name)) {
+            return false;

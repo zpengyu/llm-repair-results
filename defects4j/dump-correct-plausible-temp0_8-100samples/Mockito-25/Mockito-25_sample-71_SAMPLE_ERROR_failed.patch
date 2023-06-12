@@ -1,0 +1,33 @@
+diff --git a/src/org/mockito/internal/stubbing/defaultanswers/ReturnsDeepStubs.java b/src/org/mockito/internal/stubbing/defaultanswers/ReturnsDeepStubs.java
+index 6fa773f53..8b54f54f3 100644
+--- a/src/org/mockito/internal/stubbing/defaultanswers/ReturnsDeepStubs.java
++++ b/src/org/mockito/internal/stubbing/defaultanswers/ReturnsDeepStubs.java
+@@ -49,10 +45,12 @@ public class ReturnsDeepStubs implements Answer<Object>, Serializable {
+         if (!new MockCreationValidator().isTypeMockable(rawType)) {
+             return delegate.returnValueFor(rawType);
+         }
+-
+-        return getMock(invocation);
++        Object originalMock = getMock(invocation);
++        if(originalMock == null) {
++        	return recordDeepStubMock(invocation, container);
++        }
++        return originalMock;
+     }
+-
+     private Object getMock(InvocationOnMock invocation) throws Throwable {
+     	InternalMockHandler<Object> handler = new MockUtil().getMockHandler(invocation.getMock());
+     	InvocationContainerImpl container = (InvocationContainerImpl) handler.getInvocationContainer();
+@@ -63,11 +60,9 @@ public class ReturnsDeepStubs implements Answer<Object>, Serializable {
+     			return stubbedInvocationMatcher.answer(invocation);
+     		}
+ 		}
+-
+         // deep stub
+-        return recordDeepStubMock(invocation, container);
++        return null;
+     }
+-
+     /**
+      * Creates a mock using the Generics Metadata.
+      *

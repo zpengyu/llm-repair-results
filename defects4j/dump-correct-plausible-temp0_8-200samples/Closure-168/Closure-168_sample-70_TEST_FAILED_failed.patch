@@ -1,0 +1,37 @@
+diff --git a/src/com/google/javascript/jscomp/TypedScopeCreator.java b/src/com/google/javascript/jscomp/TypedScopeCreator.java
+index 5e7bfa3f..cd2d1792 100644
+--- a/src/com/google/javascript/jscomp/TypedScopeCreator.java
++++ b/src/com/google/javascript/jscomp/TypedScopeCreator.java
+@@ -1984,7 +1984,8 @@ final class TypedScopeCreator implements ScopeCreator {
+       }
+     }
+ 
+-    @Override public void visit(NodeTraversal t, Node n, Node parent) {
++    @Override
++    public void visit(NodeTraversal t, Node n, Node parent) {
+       if (t.inGlobalScope()) {
+         return;
+       }
+@@ -2035,8 +2032,20 @@ final class TypedScopeCreator implements ScopeCreator {
+           }
+         }
+       }
+-    }
+-  }
++      else if (n.isGetProp() && n.getFirstChild().isThis() &&
++        NodeUtil.isLValue(n)) {
++        String name = n.getLastChild().getString();
++        Scope scope = t.getScope();
++        Var var = scope.getVar(name);
++        if (var != null) {
++          Scope ownerScope = var.getScope();
++          if (scope != ownerScope && ownerScope.isLocal()) {
++            data.get(ownerScope.getRootNode())
++                .recordEscapedQualifiedName(n.getQualifiedName());
++          }
++        }
++      }
++    }  }
+ 
+   private AstFunctionContents getFunctionAnalysisResults(@Nullable Node n) {
+     if (n == null) {

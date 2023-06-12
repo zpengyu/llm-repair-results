@@ -1,0 +1,32 @@
+diff --git a/src/java/org/apache/commons/codec/binary/Base64.java b/src/java/org/apache/commons/codec/binary/Base64.java
+index b5895635..74865caa 100644
+--- a/src/java/org/apache/commons/codec/binary/Base64.java
++++ b/src/java/org/apache/commons/codec/binary/Base64.java
+@@ -583,17 +582,16 @@ public class Base64 implements BinaryEncoder, BinaryDecoder {
+         // EOF (-1) and first time '=' character is encountered in stream.
+         // This approach makes the '=' padding characters completely optional.
+         if (eof && modulus != 0) {
+-
+-            x = x << 6;
+-            switch (modulus) {
+-                case 2 :
+-                    x = x << 6;
+-                    buffer[pos++] = (byte) ((x >> 16) & MASK_8BITS);
+-                    break;
+-                case 3 :
+-                    buffer[pos++] = (byte) ((x >> 16) & MASK_8BITS);
+-                    buffer[pos++] = (byte) ((x >> 8) & MASK_8BITS);
+-                    break;
++            // We have some padding characters.
++            if (modulus == 3) {
++                // One additional padding character
++                x = x << 6;
++                buffer[pos++] = (byte) ((x >> 16) & MASK_8BITS);
++                buffer[pos++] = (byte) ((x >> 8) & MASK_8BITS);
++            } else if (modulus == 2) {
++                // Two additional padding characters
++                x = x << 12;
++                buffer[pos++] = (byte) ((x >> 16) & MASK_8BITS);
+             }
+         }
+     }

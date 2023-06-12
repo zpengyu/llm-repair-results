@@ -1,0 +1,109 @@
+diff --git a/src/java/org/apache/commons/cli/GnuParser.java b/src/java/org/apache/commons/cli/GnuParser.java
+index 14a9cc0..514db9c 100644
+--- a/src/java/org/apache/commons/cli/GnuParser.java
++++ b/src/java/org/apache/commons/cli/GnuParser.java
+@@ -49,29 +49,45 @@ public class GnuParser extends Parser {
+      * flattening when a non option has been encountered
+      * @return a String array of the flattened arguments
+      */
+-    protected String[] flatten(Options options, String[] arguments, boolean stopAtNonOption)
++protected String[] flatten(Options options, String[] arguments, boolean stopAtNonOption)
++{
++    List tokens = new ArrayList();
++    boolean eatTheRest = false;
++    for (int i = 0; i < arguments.length; i++)
+     {
+-        List tokens = new ArrayList();
+-
+-        boolean eatTheRest = false;
+-
+-        for (int i = 0; i < arguments.length; i++)
++        String arg = arguments[i];
++        if ("--".equals(arg))
+         {
+-            String arg = arguments[i];
+-
+-            if ("--".equals(arg))
+-            {
+-                eatTheRest = true;
+-                tokens.add("--");
+-            }
+-            else if ("-".equals(arg))
++            eatTheRest = true;
++            tokens.add("--");
++        }
++        else if ("-".equals(arg))
++        {
++            tokens.add("-");
++        }
++        else if (arg.startsWith("-"))
++        {
++            if (arg.startsWith("--"))
+             {
+-                tokens.add("-");
++                // the format is --foo=value or -foo=value
++                if (arg.indexOf('=') != -1 && options.hasOption(arg.substring(0, arg.indexOf('='))))
++                {
++                    tokens.add(arg.substring(0, arg.indexOf('='))); // --foo
++                    tokens.add(arg.substring(arg.indexOf('=') + 1)); // value
++                }
++                else if (options.hasOption(arg))
++                {
++                    tokens.add(arg);
++                }
++                else
++                {
++                    eatTheRest = stopAtNonOption;
++                    tokens.add(arg);
++                }
+             }
+-            else if (arg.startsWith("-"))
++            else
+             {
+                 String opt = Util.stripLeadingHyphens(arg);
+-
+                 if (options.hasOption(opt))
+                 {
+                     tokens.add(arg);
+@@ -80,8 +96,7 @@ public class GnuParser extends Parser {
+                 {
+                     if (options.hasOption(arg.substring(0, 2)))
+                     {
+-                        // the format is --foo=value or -foo=value
+-                        // the format is a special properties option (-Dproperty=value)
++                        // the format is -foo=value
+                         tokens.add(arg.substring(0, 2)); // -D
+                         tokens.add(arg.substring(2)); // property=value
+                     }
+@@ -92,20 +107,18 @@ public class GnuParser extends Parser {
+                     }
+                 }
+             }
+-            else
+-            {
+-                tokens.add(arg);
+-            }
+-
+-            if (eatTheRest)
++        }
++        else
++        {
++            tokens.add(arg);
++        }
++        if (eatTheRest)
++        {
++            for (i++; i < arguments.length; i++)
+             {
+-                for (i++; i < arguments.length; i++)
+-                {
+-                    tokens.add(arguments[i]);
+-                }
++                tokens.add(arguments[i]);
+             }
+         }
+-
+-        return (String[]) tokens.toArray(new String[tokens.size()]);
+     }
+-}
++    return (String[]) tokens.toArray(new String[tokens.size()]);
++}}

@@ -1,0 +1,20 @@
+diff --git a/src/com/google/javascript/jscomp/InlineObjectLiterals.java b/src/com/google/javascript/jscomp/InlineObjectLiterals.java
+index 2f5a8e10..34128b6a 100644
+--- a/src/com/google/javascript/jscomp/InlineObjectLiterals.java
++++ b/src/com/google/javascript/jscomp/InlineObjectLiterals.java
+@@ -186,6 +183,15 @@ class InlineObjectLiterals implements CompilerPass {
+           if (!validProperties.contains(propName)) {
+             if (NodeUtil.isVarOrSimpleAssignLhs(parent, gramps)) {
+               validProperties.add(propName);
++            } else if (NodeUtil.isDelete(gramps)) {
++              // Handle the case where a property is deleted, the property
++              // access is the first child of the delete
++              if (gramps.getFirstChild() == parent) {
++                // Deleting the object
++                return false;
++              } else {
++                // Deleting one of the properties on the object
++              }
+             } else {
+               return false;
+             }

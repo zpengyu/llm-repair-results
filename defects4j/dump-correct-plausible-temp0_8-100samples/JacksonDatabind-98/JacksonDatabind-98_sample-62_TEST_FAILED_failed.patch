@@ -1,0 +1,33 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/deser/impl/ExternalTypeHandler.java b/src/main/java/com/fasterxml/jackson/databind/deser/impl/ExternalTypeHandler.java
+index b0797059f..da24247c3 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/deser/impl/ExternalTypeHandler.java
++++ b/src/main/java/com/fasterxml/jackson/databind/deser/impl/ExternalTypeHandler.java
+@@ -259,12 +259,14 @@ public class ExternalTypeHandler
+         // first things first: deserialize all data buffered:
+         final int len = _properties.length;
+         Object[] values = new Object[len];
+-        for (int i = 0; i < len; ++i) {
++        int i = 0;
++        while (i < len) {
+             String typeId = _typeIds[i];
+             final ExtTypedProperty extProp = _properties[i];
+             if (typeId == null) {
+                 // let's allow missing both type and property (may already have been set, too)
+                 if (_tokens[i] == null) {
++                    ++i;
+                     continue;
+                 }
+                 // but not just one
+@@ -298,10 +298,11 @@ public class ExternalTypeHandler
+                     buffer.assignParameter(typeProp, typeId);
+                 }
+             }
++            ++i;
+         }
+         Object bean = creator.build(ctxt, buffer);
+         // third: assign non-creator properties
+-        for (int i = 0; i < len; ++i) {
++        for (i = 0; i < len; ++i) {
+             SettableBeanProperty prop = _properties[i].getProperty();
+             if (prop.getCreatorIndex() < 0) {
+                 prop.set(bean, values[i]);

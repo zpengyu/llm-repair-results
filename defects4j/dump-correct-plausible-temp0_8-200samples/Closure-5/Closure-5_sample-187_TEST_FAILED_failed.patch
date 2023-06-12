@@ -1,0 +1,38 @@
+diff --git a/src/com/google/javascript/jscomp/InlineObjectLiterals.java b/src/com/google/javascript/jscomp/InlineObjectLiterals.java
+index 2f5a8e10..d6856cc8 100644
+--- a/src/com/google/javascript/jscomp/InlineObjectLiterals.java
++++ b/src/com/google/javascript/jscomp/InlineObjectLiterals.java
+@@ -155,6 +155,7 @@ class InlineObjectLiterals implements CompilerPass {
+     private boolean isInlinableObject(List<Reference> refs) {
+       boolean ret = false;
+       Set<String> validProperties = Sets.newHashSet();
++      Set<String> maybeValidProperties = Sets.newHashSet();
+       for (Reference ref : refs) {
+         Node name = ref.getNode();
+         Node parent = ref.getParent();
+@@ -183,9 +181,10 @@ class InlineObjectLiterals implements CompilerPass {
+           // to a property that isn't defined on the object literal. This
+           // isn't a perfect algorithm, but it should catch most cases.
+           String propName = parent.getLastChild().getString();
+-          if (!validProperties.contains(propName)) {
++          if (!validProperties.contains(propName)
++              && !maybeValidProperties.contains(propName)) {
+             if (NodeUtil.isVarOrSimpleAssignLhs(parent, gramps)) {
+-              validProperties.add(propName);
++              maybeValidProperties.add(propName);
+             } else {
+               return false;
+             }
+@@ -224,9 +219,9 @@ class InlineObjectLiterals implements CompilerPass {
+             // ES5 get/set not supported.
+             return false;
+           }
+-
+-          validProperties.add(child.getString());
+-
++          String propName = child.getString();
++          validProperties.add(propName);
++          maybeValidProperties.add(propName);
+           Node childVal = child.getFirstChild();
+           // Check if childVal is the parent of any of the passed in
+           // references, as that is how self-referential assignments

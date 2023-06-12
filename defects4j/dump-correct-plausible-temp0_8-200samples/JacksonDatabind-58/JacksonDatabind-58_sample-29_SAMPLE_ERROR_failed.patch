@@ -1,0 +1,59 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/deser/BeanDeserializerFactory.java b/src/main/java/com/fasterxml/jackson/databind/deser/BeanDeserializerFactory.java
+index bc8e6736f..a613c89ed 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/deser/BeanDeserializerFactory.java
++++ b/src/main/java/com/fasterxml/jackson/databind/deser/BeanDeserializerFactory.java
+@@ -707,12 +707,53 @@ public class BeanDeserializerFactory
+     {
+         // need to ensure method is callable (for non-public)
+         AnnotatedMember mutator = propDef.getNonConstructorMutator();
+-
++        if (mutator == null) {
++            // 25-Jul-2016, tatu: Allow delegation
++            if (_valueInstantiator.canCreateFromObjectWith()) {
++                final AnnotatedMethod factory = _valueInstantiator.getFactoryMethod();
++                if (factory != null) {
++                    final Class<?> rawReturnType = factory.getRawReturnType();
++                    final Class<?> rawDelegateType;
++                    if (factory.getParameterCount() == 1) {
++                        rawDelegateType = factory.getRawParameterType(0);
++                    } else {
++                        rawDelegateType = null;
++                    }
++                    final Type returnType = _valueInstantiator.getGenericCreationType();
++                    final Type delegateType;
++                    if (returnType instanceof ParameterizedType) {
++                        delegateType = ((ParameterizedType) returnType).getActualTypeArguments()[0];
++                    } else if (returnType instanceof Class) {
++                        delegateType = ((Class<?>) returnType).getTypeParameters()[0];
++                    } else {
++                        delegateType = null;
++                    }
++                    if (rawReturnType != null && rawDelegateType != null && returnType != null && delegateType != null) {
++                        final JavaType factoryReturnType = ctxt.constructType(returnType);
++                        final JavaType delegateParamType = ctxt.constructType(delegateType);
++                        if (factoryReturnType.hasRawClass(rawReturnType) && delegateParamType.hasRawClass(rawDelegateType)) {
++                            final AnnotationIntrospector ai = ctxt.getAnnotationIntrospector();
++                            if (ai != null && ai.findUnwrappingNameTransformer(factory) == null) {
++                                final NameTransformer unwrapper = NameTransformer.simpleTransformer(factory.getName(),
++                                        factoryReturnType.getRawClass(), rawReturnType);
++                                return constructCreatorProperty(ctxt, beanDesc, propDef, propType0, unwrapper);
++                            }
++                        }
++                    }
++                }
++            }
++            return null;
++        }
+         if (ctxt.canOverrideAccessModifiers()) {
+             // [databind#877]: explicitly prevent forced access to `cause` of `Throwable`;
+             // never needed and attempts may cause problems on some platforms.
+             // !!! NOTE: should be handled better for 2.8 and later
++            if (!ctxt.isEnabled(MapperFeature.OVERRIDE_PUBLIC_ACCESS_MODIFIERS)
++                    || (mutator instanceof AnnotatedMethod
++                        && Throwable.class.isAssignableFrom(((AnnotatedMethod) mutator).getDeclaringClass())
++                        && "initCause".equals(((AnnotatedMethod) mutator).getName()))) {
+                 mutator.fixAccess(ctxt.isEnabled(MapperFeature.OVERRIDE_PUBLIC_ACCESS_MODIFIERS));
++            }
+         }
+         // note: this works since we know there's exactly one argument for methods
+         BeanProperty.Std property = new BeanProperty.Std(propDef.getFullName(),

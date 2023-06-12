@@ -1,0 +1,33 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/type/ResolvedRecursiveType.java b/src/main/java/com/fasterxml/jackson/databind/type/ResolvedRecursiveType.java
+index 7b8c69af7..c2af5c19a 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/type/ResolvedRecursiveType.java
++++ b/src/main/java/com/fasterxml/jackson/databind/type/ResolvedRecursiveType.java
+@@ -99,16 +82,18 @@ public class ResolvedRecursiveType extends TypeBase
+         }
+         return sb.toString();
+     }
+-
+     @Override
+     public boolean equals(Object o) {
+-        if (o == this) return true;
+-        if (o == null) return false;
+-        // Do NOT ever match unresolved references
+-        if (_referencedType == null) {
+-            return false;
+-        }
+-        return (o.getClass() == getClass()
+-                && _referencedType.equals(((ResolvedRecursiveType) o).getSelfReferencedType()));
++        if (this == o) return true;
++        if (o == null || getClass() != o.getClass()) return false;
++        ResolvedRecursiveType that = (ResolvedRecursiveType) o;
++        // do not compare _referencedType since it might be not initialized or even null
++        return _class == that._class &&
++                _hashCode == that._hashCode &&
++                _asStatic == that._asStatic &&
++                Objects.equals(_typeBindings, that._typeBindings) &&
++                Objects.equals(_superClass, that._superClass) &&
++                Arrays.equals(_superInterfaces, that._superInterfaces) &&
++                Arrays.equals(_superInterfaces, that._superInterfaces);
+     }
+ }
+\ No newline at end of file

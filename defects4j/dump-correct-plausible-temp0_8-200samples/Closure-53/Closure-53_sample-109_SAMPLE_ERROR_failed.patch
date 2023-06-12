@@ -1,0 +1,71 @@
+diff --git a/src/com/google/javascript/jscomp/InlineObjectLiterals.java b/src/com/google/javascript/jscomp/InlineObjectLiterals.java
+index 5b8fedb1..2fa0b502 100644
+--- a/src/com/google/javascript/jscomp/InlineObjectLiterals.java
++++ b/src/com/google/javascript/jscomp/InlineObjectLiterals.java
+@@ -326,12 +325,13 @@ class InlineObjectLiterals implements CompilerPass {
+                    Node.newString(Token.NAME, varmap.get(var)),
+                    NodeUtil.newUndefinedNode(null)));
+       }
+-
+       Node replacement;
+-        // All assignments evaluate to true, so make sure that the
+-        // expr statement evaluates to true in case it matters.
+-        nodes.add(new Node(Token.TRUE));
+-
++      if (ref.isLValue()) {
++        if (nodes.isEmpty()) {
++          // All assignments evaluate to true, so make sure that the
++          // expr statement evaluates to true in case it matters.
++          nodes.add(new Node(Token.TRUE));
++        }
+         // Join these using COMMA.  A COMMA node must have 2 children, so we
+         // create a tree. In the tree the first child be the COMMA to match
+         // the parser, otherwise tree equality tests fail.
+@@ -347,18 +347,40 @@ class InlineObjectLiterals implements CompilerPass {
+         }
+         cur.addChildToFront(nodes.get(i));
+         cur.addChildToFront(nodes.get(i + 1));
+-
++      } else {
++        // Join these using comma operator.
++        if (nodes.isEmpty()) {
++          replacement = null;
++        } else {
++          replacement = new Node(Token.COMMA);
++          Node cur = replacement;
++          for (Node n : Lists.reverse(nodes)) {
++            cur.addChildToFront(n);
++            Node t = new Node(Token.COMMA);
++            cur.addChildToFront(t);
++            cur = t;
++          }
++        }
++      }
+       Node replace = ref.getParent();
+-      replacement.copyInformationFromForTree(replace);
+-
++      if (replacement != null) {
++        replacement.copyInformationFromForTree(replace);
++      }
+       if (replace.getType() == Token.VAR) {
+-        replace.getParent().replaceChild(
+-            replace, NodeUtil.newExpr(replacement));
++        if (replacement != null) {
++          replace.getParent().replaceChild(
++              replace, NodeUtil.newExpr(replacement));
++        } else {
++          replace.getParent().removeChild(replace);
++        }
+       } else {
+-        replace.getParent().replaceChild(replace, replacement);
++        if (replacement != null) {
++          replace.getParent().replaceChild(replace, replacement);
++        } else {
++          replace.getParent().removeChild(replace);
++        }
+       }
+     }
+-
+     /**
+      * Splits up the object literal into individual variables, and
+      * updates all uses.

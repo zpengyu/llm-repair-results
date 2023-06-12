@@ -1,0 +1,54 @@
+    public void remove(SettableBeanProperty propToRm)
+    {
+        String key = getPropertyName(propToRm);
+        int len = _hashArea.length;
+        int pos = _findFromObjectId(key);
+        if ((pos >> 1) >= len) {
+            throw new NoSuchElementException("No entry '"+propToRm.getName()+"' found, can't remove");
+        }
+        int foundPos = pos;
+        for (;;) {
+            int ix = pos >> 1;
+            int val = _hashArea[ix+ix];
+            if (val == 0) {
+                throw new NoSuchElementException("No entry '"+propToRm.getName()+"' found, can't remove");
+            }
+            if (val == key.hashCode()) {
+                pos = ix;
+                break;
+            }
+            // continue from previous position, may have wrapped
+            pos = ((pos >> 1) + (len >> 1)) & (len - 1);
+        }
+        int left = pos;
+        int right = pos+1;
+        if (_hashArea[left] != 0) {
+            while (left > 0) {
+                --left;
+                if (_hashArea[left] == 0) {
+                    break;
+                }
+            }
+        }
+        if (_hashArea[right] != 0) {
+            while (right < len) {
+                if (_hashArea[right] == 0) {
+                    break;
+                }
+                ++right;
+            }
+        }
+        int count = right - left - 1;
+        System.arraycopy(_hashArea, right, _hashArea, left + 1, count);
+        _hashArea[left] = 0;
+        _hashArea[left+1] = null;
+        int index = foundPos & (len >> 1);
+        _propsInOrder[index] = null;
+        if (count > 0) {
+            count = (len >> 1) - count;
+            System.arraycopy(_propsInOrder, right, _propsInOrder, left + 1, count);
+            Arrays.fill(_propsInOrder, left + 1 + count, len >> 1, null);
+        } else {
+            Arrays.fill(_propsInOrder, left + 1, len >> 1, null);
+        }
+    }

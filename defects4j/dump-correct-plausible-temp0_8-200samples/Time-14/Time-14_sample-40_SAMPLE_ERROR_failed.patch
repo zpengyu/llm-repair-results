@@ -1,0 +1,51 @@
+diff --git a/src/main/java/org/joda/time/chrono/BasicMonthOfYearDateTimeField.java b/src/main/java/org/joda/time/chrono/BasicMonthOfYearDateTimeField.java
+index 98e6912c..f121cbd7 100644
+--- a/src/main/java/org/joda/time/chrono/BasicMonthOfYearDateTimeField.java
++++ b/src/main/java/org/joda/time/chrono/BasicMonthOfYearDateTimeField.java
+@@ -200,25 +200,29 @@ class BasicMonthOfYearDateTimeField extends ImpreciseDateTimeField {
+     }
+ 
+     //-----------------------------------------------------------------------
+-    public int[] add(ReadablePartial partial, int fieldIndex, int[] values, int valueToAdd) {
+-        // overridden as superclass algorithm can't handle
+-        // 2004-02-29 + 48 months -> 2008-02-29 type dates
+-        if (valueToAdd == 0) {
+-            return values;
+-        }
+-            // month is largest field and being added to, such as month-day
+-        if (DateTimeUtils.isContiguous(partial)) {
+-            long instant = 0L;
+-            for (int i = 0, isize = partial.size(); i < isize; i++) {
+-                instant = partial.getFieldType(i).getField(iChronology).set(instant, values[i]);
+-            }
+-            instant = add(instant, valueToAdd);
+-            return iChronology.get(partial, instant);
+-        } else {
+-            return super.add(partial, fieldIndex, values, valueToAdd);
++public int[] add(ReadablePartial partial, int fieldIndex, int[] values, int valueToAdd) {
++    // overridden as superclass algorithm can't handle
++    // 2004-02-29 + 48 months -> 2008-02-29 type dates
++    if (valueToAdd == 0) {
++        return values;
++    }
++        // month is largest field and being added to, such as month-day
++    if (DateTimeUtils.isContiguous(partial)) {
++        long instant = 0L;
++        for (int i = 0, isize = partial.size(); i < isize; i++) {
++            instant = partial.getFieldType(i).getField(iChronology).set(instant, values[i]);
+         }
++        instant = add(instant, valueToAdd);
++        return iChronology.get(partial, instant);
++    } else if (this == iDurationField) {
++        return super.add(partial, fieldIndex, values, valueToAdd);
++    } else {
++        int[] newValues = new int[values.length];
++        System.arraycopy(values, 0, newValues, 0, values.length);
++        newValues[fieldIndex] = getWrappedField().get(add(get(partial.getChronology().set(partial, 0), 0), valueToAdd));
++        return newValues;
+     }
+-
++}
+     //-----------------------------------------------------------------------
+     /**
+      * Add to the Month component of the specified time instant

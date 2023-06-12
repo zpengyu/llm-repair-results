@@ -1,0 +1,94 @@
+diff --git a/src/com/google/javascript/jscomp/TypeValidator.java b/src/com/google/javascript/jscomp/TypeValidator.java
+index c6d25483..66dbe688 100644
+--- a/src/com/google/javascript/jscomp/TypeValidator.java
++++ b/src/com/google/javascript/jscomp/TypeValidator.java
+@@ -721,61 +721,36 @@ class TypeValidator {
+    * @param dereference If true, the type of the node will be dereferenced
+    *     to an Object type, if possible.
+    */
+-  String getReadableJSTypeName(Node n, boolean dereference) {
+-
+-    // The best type name is the actual type name.
+-
+-    // If we're analyzing a GETPROP, the property may be inherited by the
+-    // prototype chain. So climb the prototype chain and find out where
+-    // the property was originally defined.
+-    if (n.isGetProp()) {
+-      ObjectType objectType = getJSType(n.getFirstChild()).dereference();
+-      if (objectType != null) {
+-        String propName = n.getLastChild().getString();
+-        if (objectType.getConstructor() != null &&
+-            objectType.getConstructor().isInterface()) {
+-          objectType = FunctionType.getTopDefiningInterface(
+-              objectType, propName);
+-        } else {
+-          // classes
+-          while (objectType != null && !objectType.hasOwnProperty(propName)) {
+-            objectType = objectType.getImplicitPrototype();
+-          }
+-        }
+-
+-        // Don't show complex function names or anonymous types.
+-        // Instead, try to get a human-readable type name.
+-        if (objectType != null &&
+-            (objectType.getConstructor() != null ||
+-             objectType.isFunctionPrototypeType())) {
+-          return objectType.toString() + "." + propName;
+-        }
+-      }
+-    }
+-
+-    JSType type = getJSType(n);
+-    if (dereference) {
+-      ObjectType dereferenced = type.dereference();
+-      if (dereferenced != null) {
+-        type = dereferenced;
+-      }
+-    }
+-    if (type.isFunctionPrototypeType() ||
+-        (type.toObjectType() != null &&
+-         type.toObjectType().getConstructor() != null)) {
+-      return type.toString();
+-    }
+-    String qualifiedName = n.getQualifiedName();
+-    if (qualifiedName != null) {
+-      return qualifiedName;
+-    } else if (type.isFunctionType()) {
+-      // Don't show complex function names.
+-      return "function";
+-    } else {
+-      return type.toString();
++public void testStringObjectConversionForRoot() {
++    String[] propertyNames = new String[] {
++        "a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n"};
++    JSModule[] modules =
++        new JSModule[] {
++            new JSModule("m1"),
++            new JSModule("m2"),
++            new JSModule("m3"),
++            new JSModule("m4"),
++            new JSModule("m5")};
++    modules[1].addDependency(modules[0]);
++    modules[2].addDependency(modules[1]);
++    modules[3].addDependency(modules[1]);
++    modules[4].addDependency(modules[2]);
++    modules[4].addDependency(modules[3]);
++    int i = 0;
++    for (String name : propertyNames) {
++      i++;
++      modules[i % modules.length].add(
++          SourceFile.fromCode(name, "var " + name + " = {};"));
++    }
++    GlobalNamespace globalNamespace = new GlobalNamespace(compiler, modules);
++    ReferenceCollectingCallback callback =
++        new ReferenceCollectingCallback(compiler, globalNamespace);
++    callback.process(null, globalNamespace.getRoot().getScope());
++    for (String name : propertyNames) {
++      assertEquals(name,
++          callback.getReferences(name).iterator().next().getSourceName());
+     }
+   }
+-
+   /**
+    * This method gets the JSType from the Node argument and verifies that it is
+    * present.

@@ -1,0 +1,32 @@
+diff --git a/src/main/java/org/jsoup/parser/XmlTreeBuilder.java b/src/main/java/org/jsoup/parser/XmlTreeBuilder.java
+index 06ef739..2300710 100644
+--- a/src/main/java/org/jsoup/parser/XmlTreeBuilder.java
++++ b/src/main/java/org/jsoup/parser/XmlTreeBuilder.java
+@@ -116,25 +116,18 @@ public class XmlTreeBuilder extends TreeBuilder {
+     private void popStackToClose(Token.EndTag endTag) {
+         String elName = endTag.name();
+         Element firstFound = null;
+-
++        // we should pop up the stack first before removing element from it
+         for (int pos = stack.size() -1; pos >= 0; pos--) {
+             Element next = stack.get(pos);
+             if (next.nodeName().equals(elName)) {
+                 firstFound = next;
+                 break;
+             }
++            stack.remove(pos);
+         }
+         if (firstFound == null)
+             return; // not found, skip
+-
+-        for (int pos = stack.size() -1; pos >= 0; pos--) {
+-            Element next = stack.get(pos);
+-            stack.remove(pos);
+-            if (next == firstFound)
+-                break;
+-        }
+     }
+-
+     List<Node> parseFragment(String inputFragment, String baseUri, ParseErrorList errors, ParseSettings settings) {
+         initialiseParse(new StringReader(inputFragment), baseUri, errors, settings);
+         runParser();

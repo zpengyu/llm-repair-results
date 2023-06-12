@@ -1,0 +1,18 @@
+diff --git a/src/com/google/javascript/jscomp/PrepareAst.java b/src/com/google/javascript/jscomp/PrepareAst.java
+index 0791c7e6..2c2bb14f 100644
+--- a/src/com/google/javascript/jscomp/PrepareAst.java
++++ b/src/com/google/javascript/jscomp/PrepareAst.java
+@@ -161,9 +160,11 @@ class PrepareAst implements CompilerPass {
+       // Keep track of of the "this" context of a call.  A call without an
+       // explicit "this" is a free call.
+       Node first = n.getFirstChild();
+-
+       // ignore cast nodes.
+-
++      Node next = first.getNext();
++      if (next != null && NodeUtil.isGet(next)) {
++        first = next;
++      }
+       if (!NodeUtil.isGet(first)) {
+         n.putBooleanProp(Node.FREE_CALL, true);
+       }

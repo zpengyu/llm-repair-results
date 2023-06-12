@@ -1,0 +1,49 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/deser/impl/ExternalTypeHandler.java b/src/main/java/com/fasterxml/jackson/databind/deser/impl/ExternalTypeHandler.java
+index b0797059f..5efd2a67b 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/deser/impl/ExternalTypeHandler.java
++++ b/src/main/java/com/fasterxml/jackson/databind/deser/impl/ExternalTypeHandler.java
+@@ -295,7 +293,7 @@ public class ExternalTypeHandler
+                 if ((typeProp != null) && (typeProp.getCreatorIndex() >= 0)) {
+                     // 31-May-2018, tatu: [databind#1328] if id is NOT plain `String`, need to
+                     //    apply deserializer... fun fun.
+-                    buffer.assignParameter(typeProp, typeId);
++                    buffer.assignParameter(typeProp, _deserializeWith(p, ctxt, typeProp, typeId));
+                 }
+             }
+         }
+@@ -309,7 +307,34 @@ public class ExternalTypeHandler
+         }
+         return bean;
+     }
+-
++    private Object _deserialize(JsonParser p, DeserializationContext ctxt, int index, String typeId)
++        throws IOException
++    {
++        TokenBuffer buf = (TokenBuffer) _tokens[index];
++        if (buf != null) {
++            // 05-Oct-2017, tatu: [databind#1799] Need to avoid passing base64 binary data
++            //    as textual, or it will get quoted
++            final JsonParser p2 = buf.asParser();
++            final JsonToken t = p2.nextToken();
++            if (t == JsonToken.VALUE_EMBEDDED_OBJECT) {
++                return p2.getEmbeddedObject();
++            }
++            p2.nextToken(); // to skip initial START_OBJECT
++            JsonDeserializer<Object> deser = _findDeserializer(ctxt, typeId);
++            final Object value = deser.deserialize(p2, ctxt);
++            p2.nextToken(); // to skip END_OBJECT
++            // 13-Sep-2016, tatu: As per [databind#1262], need to allow END_ARRAY to be
++            //    passed through (for "wrapped" handling)
++            if (p2.nextToken() != null) {
++                ctxt.reportWrongTokenException(p2, JsonToken.END_ARRAY,
++                        "expected closing END_ARRAY after type information and deserialized value");
++            }
++            return value;
++        }
++        // 25-Sep-2020, tatu: [databind#2903] Should we indicate we'd like to "wrap"?
++        //    Should we always do so? At very least, let's document this...
++        return _valueInstantiator.createUsingDelegate(ctxt, _deserializeWith(p, ctxt, _properties[index], typeId));
++    }
+     @SuppressWarnings("resource")
+     protected final Object _deserialize(JsonParser p, DeserializationContext ctxt,
+             int index, String typeId) throws IOException

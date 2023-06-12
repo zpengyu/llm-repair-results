@@ -1,0 +1,38 @@
+    public static Locale toLocale(final String str) {
+        if (str == null) {
+            return null;
+        }
+        if (str.isEmpty()) {
+            throw new IllegalArgumentException("Invalid locale format: " + str);
+        }
+        if (str.startsWith("_")) {
+            throw new IllegalArgumentException("Invalid locale format: " + str);
+        }
+        final int sep = str.indexOf('_');
+        if (sep < 0) {
+            return new Locale(str);
+        } else {
+            final String language = str.substring(0, sep);
+            if (language.isEmpty()) {
+                throw new IllegalArgumentException("Invalid locale format: " + str);
+            }
+            final int sep2 = str.indexOf('_', sep + 1);
+            if (sep2 < 0) {
+                final String country = str.substring(sep+1);
+                if (country.isEmpty()) {
+                    throw new IllegalArgumentException("Invalid locale format: " + str);
+                }
+                return new Locale(language, country);
+            } else {
+                final String country = str.substring(sep+1, sep2);
+                if (country.isEmpty()) {
+                    throw new IllegalArgumentException("Invalid locale format: " + str);
+                }
+                final String variant = str.substring(sep2+1);
+                if (variant.isEmpty() && sep2 + 1 == str.length()) {
+                    return new Locale(language, country);
+                }
+                return new Locale(language, country, variant);
+            }
+        }
+    }

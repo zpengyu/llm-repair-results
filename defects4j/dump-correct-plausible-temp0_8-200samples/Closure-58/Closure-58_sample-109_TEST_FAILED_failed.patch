@@ -1,0 +1,19 @@
+diff --git a/src/com/google/javascript/jscomp/LiveVariablesAnalysis.java b/src/com/google/javascript/jscomp/LiveVariablesAnalysis.java
+index 94e813d8..fd956eb5 100644
+--- a/src/com/google/javascript/jscomp/LiveVariablesAnalysis.java
++++ b/src/com/google/javascript/jscomp/LiveVariablesAnalysis.java
+@@ -241,7 +234,13 @@ class LiveVariablesAnalysis extends
+           addToSetIfLocal(n, gen);
+         }
+         return;
+-
++      case Token.INC:
++      case Token.DEC:
++        if (!conditional) {
++          addToSetIfLocal(n.getFirstChild(), kill);
++        }
++        addToSetIfLocal(n.getFirstChild(), gen);
++        return;
+       default:
+         if (NodeUtil.isAssignmentOp(n) && NodeUtil.isName(n.getFirstChild())) {
+           Node lhs = n.getFirstChild();

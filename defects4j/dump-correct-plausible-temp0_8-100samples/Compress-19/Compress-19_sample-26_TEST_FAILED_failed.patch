@@ -1,0 +1,24 @@
+diff --git a/src/main/java/org/apache/commons/compress/archivers/zip/Zip64ExtendedInformationExtraField.java b/src/main/java/org/apache/commons/compress/archivers/zip/Zip64ExtendedInformationExtraField.java
+index 430232a7..4108286c 100644
+--- a/src/main/java/org/apache/commons/compress/archivers/zip/Zip64ExtendedInformationExtraField.java
++++ b/src/main/java/org/apache/commons/compress/archivers/zip/Zip64ExtendedInformationExtraField.java
+@@ -270,13 +270,15 @@ public class Zip64ExtendedInformationExtraField implements ZipExtraField {
+                 offset += DWORD;
+             }
+             if (hasCompressedSize) {
+-                compressedSize = new ZipEightByteInteger(rawCentralDirectoryData,
+-                                                         offset);
++                if (hasUncompressedSize) {
++                    compressedSize = new ZipEightByteInteger(rawCentralDirectoryData, offset);
++                } else {
++                    size = new ZipEightByteInteger(rawCentralDirectoryData, offset);
++                }
+                 offset += DWORD;
+             }
+             if (hasRelativeHeaderOffset) {
+-                relativeHeaderOffset =
+-                    new ZipEightByteInteger(rawCentralDirectoryData, offset);
++                relativeHeaderOffset = new ZipEightByteInteger(rawCentralDirectoryData, offset);
+                 offset += DWORD;
+             }
+             if (hasDiskStart) {

@@ -1,0 +1,28 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/type/SimpleType.java b/src/main/java/com/fasterxml/jackson/databind/type/SimpleType.java
+index 0fda4d76f..eff4cf48f 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/type/SimpleType.java
++++ b/src/main/java/com/fasterxml/jackson/databind/type/SimpleType.java
+@@ -131,6 +131,23 @@ public class SimpleType // note: until 2.6 was final
+                     +_class.getName());
+         }
+         */
++        if (_class == PlaceholderForType.class) {
++            // 16-Jan-2016, tatu: As per [databind#1379], may need to reconfigure for given
++            //    subclass. But we do not have access to `TypeBindings` at this point, so
++            //    we need to work around that.
++            /*
++            JavaType superType = _baseType.forcedNarrowBy(_class.getSuperclass());
++            return superType._narrow(subclass);
++            */
++            Class<?> sc = _class.getSuperclass();
++            if (sc == subclass) {
++                return _baseType;
++            }
++            if (sc != null) {
++                JavaType superType = _baseType.forcedNarrowBy(sc);
++                return superType._narrow(subclass);
++            }
++        }
+         // 15-Jan-2015, tatu: Not correct; should really re-resolve...
+         return new SimpleType(subclass, _bindings, _superClass, _superInterfaces,
+                 _valueHandler, _typeHandler, _asStatic);

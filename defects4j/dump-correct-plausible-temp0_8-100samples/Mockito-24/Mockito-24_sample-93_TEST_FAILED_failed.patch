@@ -1,0 +1,49 @@
+diff --git a/src/org/mockito/internal/stubbing/defaultanswers/ReturnsEmptyValues.java b/src/org/mockito/internal/stubbing/defaultanswers/ReturnsEmptyValues.java
+index 820c09ceb..a55d68345 100644
+--- a/src/org/mockito/internal/stubbing/defaultanswers/ReturnsEmptyValues.java
++++ b/src/org/mockito/internal/stubbing/defaultanswers/ReturnsEmptyValues.java
+@@ -60,26 +60,24 @@ public class ReturnsEmptyValues implements Answer<Object>, Serializable {
+     /* (non-Javadoc)
+      * @see org.mockito.stubbing.Answer#answer(org.mockito.invocation.InvocationOnMock)
+      */
+-    public Object answer(InvocationOnMock invocation) {
+-        if (methodsGuru.isToString(invocation.getMethod())) {
+-            Object mock = invocation.getMock();
+-            MockName name = mockUtil.getMockName(mock);
+-            if (name.isDefault()) {
+-                return "Mock for " + mockUtil.getMockSettings(mock).getTypeToMock().getSimpleName() + ", hashCode: " + mock.hashCode();
+-            } else {
+-                return name.toString();
+-            }
+-        } else if (methodsGuru.isCompareToMethod(invocation.getMethod())) {
+-            //see issue 184.
+-            //mocks by default should return 0 if references are the same, otherwise some other value because they are not the same. Hence we return 1 (anything but 0 is good).
+-            //Only for compareTo() method by the Comparable interface
+-            return 1;
+-        }
+-
+-        Class<?> returnType = invocation.getMethod().getReturnType();
+-        return returnValueFor(returnType);
+-    }
+-    
++	public Object answer(InvocationOnMock invocation) {
++	    if (methodsGuru.isToString(invocation.getMethod())) {
++	        Object mock = invocation.getMock();
++	        MockName name = mockUtil.getMockName(mock);
++	        if (name.isDefault()) {
++	            return "Mock for " + mockUtil.getMockSettings(mock).getTypeToMock().getSimpleName() + ", hashCode: " + mock.hashCode();
++	        } else {
++	            return name.toString();
++	        }
++	    } else if (methodsGuru.isCompareToMethod(invocation.getMethod())) {
++	        //see issue 184.
++	        //mocks by default should return 0 if references are the same, otherwise some other value because they are not the same. Hence we return 1 (anything but 0 is good).
++	        //Only for compareTo() method by the Comparable interface
++	        return 0;
++	    }
++	    Class<?> returnType = invocation.getMethod().getReturnType();
++	    return returnValueFor(returnType);
++	}    
+     Object returnValueFor(Class<?> type) {
+         if (Primitives.isPrimitiveOrWrapper(type)) {
+             return Primitives.defaultValueForPrimitiveOrWrapper(type);

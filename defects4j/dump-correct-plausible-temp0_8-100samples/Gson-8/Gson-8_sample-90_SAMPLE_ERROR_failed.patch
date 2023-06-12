@@ -1,0 +1,33 @@
+diff --git a/gson/src/main/java/com/google/gson/internal/UnsafeAllocator.java b/gson/src/main/java/com/google/gson/internal/UnsafeAllocator.java
+index a72d3d10..c1381d06 100644
+--- a/gson/src/main/java/com/google/gson/internal/UnsafeAllocator.java
++++ b/gson/src/main/java/com/google/gson/internal/UnsafeAllocator.java
+@@ -107,4 +102,27 @@ public abstract class UnsafeAllocator {
+    * throw an {@link java.lang.UnsupportedOperationException}
+    * @param c instance of the class to be checked
+    */
++  public static void checkClass(Class<?> c) {
++    if (!Modifier.isPublic(c.getModifiers())) {
++      throw new UnsupportedOperationException("Class " + c + " has non-public modifiers");
++    }
++    if (c.isArray()) {
++      throw new UnsupportedOperationException("Class " + c + " is an array. Cannot instantiate it.");
++    }
++    if (c.isPrimitive()) {
++      throw new UnsupportedOperationException("Class " + c + " is primitive. Cannot instantiate it.");
++    }
++    if (c == Enum.class) {
++      throw new UnsupportedOperationException("Class " + c + " is an Enum. Cannot instantiate it.");
++    }
++    if (c == Object.class) {
++      throw new UnsupportedOperationException("Class " + c + " is Object class. Cannot instantiate it.");
++    }
++    if (Modifier.isInterface(c.getModifiers())) {
++      throw new UnsupportedOperationException("Class " + c + " is an interface. Cannot instantiate it.");
++    }
++    if (Modifier.isAbstract(c.getModifiers())) {
++      throw new UnsupportedOperationException("Class " + c + " is an abstract class. Cannot instantiate it.");
++    }
++  }
+ }
+\ No newline at end of file

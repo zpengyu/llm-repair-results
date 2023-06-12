@@ -1,0 +1,102 @@
+###Provide a fix for the buggy function
+###Buggy Function
+class FibonacciExample {
+    public static void main(String args[]) {
+        int n1 = 0, n2 = 1, n3, i, count = 10;
+
+        System.out.print(n1 + " " + n2);
+
+        for (i = 2; i < count; ++i) {
+            n3 = n1 - n2;
+            System.out.print(" " + n3);
+            n1 = n2;
+            n2 = n3;
+        }
+    }
+}
+
+###Fixed Function
+class FibonacciExample {
+    public static void main(String args[]) {
+        int n1 = 0, n2 = 1, n3, i, count = 10;
+
+        System.out.print(n1 + " " + n2);
+
+        for (i = 2; i < count; ++i) {
+            n3 = n1 + n2;
+            System.out.print(" " + n3);
+            n1 = n2;
+            n2 = n3;
+        }
+    }
+}
+
+###Provide a fix for the buggy function
+###Buggy Function
+protected BasePeriod(long duration) {
+    this(duration, null, null);
+    // bug [3264409]
+}
+###Fixed Function
+protected BasePeriod(long duration) {
+    super();
+    // bug [3264409]
+    iType = PeriodType.time();
+    int[] values = ISOChronology.getInstanceUTC().get(this, duration);
+    iType = PeriodType.standard();
+    iValues = new int[8];
+    System.arraycopy(values, 0, iValues, 4, 4);
+}
+###Provide a fix for the buggy function
+###Buggy Function
+    public Partial with(DateTimeFieldType fieldType, int value) {
+        if (fieldType == null) {
+            throw new IllegalArgumentException("The field type must not be null");
+        }
+        int index = indexOf(fieldType);
+        if (index == -1) {
+            DateTimeFieldType[] newTypes = new DateTimeFieldType[iTypes.length + 1];
+            int[] newValues = new int[newTypes.length];
+            
+            // find correct insertion point to keep largest-smallest order
+            int i = 0;
+            DurationField unitField = fieldType.getDurationType().getField(iChronology);
+            if (unitField.isSupported()) {
+                for (; i < iTypes.length; i++) {
+                    DateTimeFieldType loopType = iTypes[i];
+                    DurationField loopUnitField = loopType.getDurationType().getField(iChronology);
+                    if (loopUnitField.isSupported()) {
+                        int compare = unitField.compareTo(loopUnitField);
+                        if (compare > 0) {
+                            break;
+                        } else if (compare == 0) {
+                            DurationField rangeField = fieldType.getRangeDurationType().getField(iChronology);
+                            DurationField loopRangeField = loopType.getRangeDurationType().getField(iChronology);
+                            if (rangeField.compareTo(loopRangeField) > 0) {
+                                break;
+                            }
+                        }
+                    }
+                }
+            }
+            System.arraycopy(iTypes, 0, newTypes, 0, i);
+            System.arraycopy(iValues, 0, newValues, 0, i);
+            newTypes[i] = fieldType;
+            newValues[i] = value;
+            System.arraycopy(iTypes, i, newTypes, i + 1, newTypes.length - i - 1);
+            System.arraycopy(iValues, i, newValues, i + 1, newValues.length - i - 1);
+            // use public constructor to ensure full validation
+            // this isn't overly efficient, but is safe
+            Partial newPartial = new Partial(iChronology, newTypes, newValues);
+            iChronology.validate(newPartial, newValues);
+            return newPartial;
+        }
+        if (value == getValue(index)) {
+            return this;
+        }
+        int[] newValues = getValues();
+        newValues = getField(index).set(this, index, newValues, value);
+        return new Partial(this, newValues);
+    }
+
+###Fixed Function

@@ -1,0 +1,27 @@
+diff --git a/src/main/java/org/jsoup/parser/Parser.java b/src/main/java/org/jsoup/parser/Parser.java
+index 8cc01d2..2c6e8c3 100644
+--- a/src/main/java/org/jsoup/parser/Parser.java
++++ b/src/main/java/org/jsoup/parser/Parser.java
+@@ -162,8 +155,21 @@ public class Parser {
+                 doc.setBaseUri(href); // set on the doc so doc.createElement(Tag) will get updated base
+             }
+         }
++        if (child.tagName().equals("meta")) {
++            String equiv = child.absUrl("http-equiv");
++            if (equiv.length() != 0 && equiv.toLowerCase().equals("content-type")) {
++                String content = child.absUrl("content");
++                if (content.length() != 0) {
++                    // Extract the character set from the meta tag
++                    content = content.toLowerCase();
++                    int charsetStart = content.indexOf("charset=");
++                    if (charsetStart != -1) {
++                        charset = content.substring(charsetStart+8).trim();
++                    }
++                }
++            }
++        }
+     }
+-
+     private Attribute parseAttribute() {
+         tq.consumeWhitespace();
+         String key = tq.consumeAttributeKey();

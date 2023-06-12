@@ -1,0 +1,77 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/deser/impl/BeanPropertyMap.java b/src/main/java/com/fasterxml/jackson/databind/deser/impl/BeanPropertyMap.java
+index aeaa0dc42..f47762848 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/deser/impl/BeanPropertyMap.java
++++ b/src/main/java/com/fasterxml/jackson/databind/deser/impl/BeanPropertyMap.java
+@@ -425,33 +425,49 @@ System.err.println("And new propr #"+slot+" '"+key+"'");
+      */
+     public void remove(SettableBeanProperty propToRm)
+     {
+-        ArrayList<SettableBeanProperty> props = new ArrayList<SettableBeanProperty>(_size);
+-        String key = getPropertyName(propToRm);
+-        boolean found = false;
+-
+-        for (int i = 1, end = _hashArea.length; i < end; i += 2) {
+-            SettableBeanProperty prop = (SettableBeanProperty) _hashArea[i];
+-            if (prop == null) {
+-                continue;
++        // first, check we have entry matching property
++        int ix = _findIndexInHash(propToRm.getName());
++        if (ix < 0) {
++            throw new NoSuchElementException("No entry '"+propToRm.getName()+"' found, can't remove");
++        }
++        // remove from ordered list
++        int ixInOrder = _findFromOrdered(propToRm);
++        int end = _propsInOrder.length;
++        if (ixInOrder == end-1) { // easy case
++            _propsInOrder[ixInOrder] = null;
++        } else {
++            // need to shift some entries
++            System.arraycopy(_propsInOrder, ixInOrder+1, _propsInOrder, ixInOrder, end-ixInOrder);
++            _propsInOrder[end-1] = null;
++        }
++        // and then recalculate hash
++        _hashSize--;
++        // and now need to remove from hash area, by replacing it with `null`
++        _hashArea[ix] = null;
++        // and we may need to shift following entries as well
++        int i = (ix>>1);
++        int end2 = _hashArea.length;
++        while (true) {
++            i += 2;
++            if (i >= end2) {
++                break;
+             }
+-            if (!found) {
+-                // 09-Jan-2017, tatu: Important: must check name slot and NOT property name,
+-                //   as only former is lower-case in case-insensitive case
+-                found = key.equals(prop.getName());
+-                if (found) {
+-                    // need to leave a hole here
+-                    _propsInOrder[_findFromOrdered(prop)] = null;
+-                    continue;
+-                }
++            Object key = _hashArea[i];
++            if (key == null) {
++                break;
+             }
+-            props.add(prop);
+-        }
+-        if (!found) {
+-            throw new NoSuchElementException("No entry '"+propToRm.getName()+"' found, can't remove");
++            int index = (key.hashCode() & Integer.MAX_VALUE) % _hashMask;
++            if (index != ix) {
++                break;
++            }
++            // do need to rehash
++            ix = index;
++            _hashArea[ix] = key;
++            _hashArea[ix+1] = _hashArea[i+1];
++            _hashArea[i] = null;
++            _hashArea[i+1] = null;
+         }
+-        init(props);
+     }
+-
+     /**
+      * Convenience method that tries to find property with given name, and
+      * if it is found, call {@link SettableBeanProperty#deserializeAndSet}

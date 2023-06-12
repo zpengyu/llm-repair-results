@@ -1,0 +1,29 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/deser/BeanDeserializer.java b/src/main/java/com/fasterxml/jackson/databind/deser/BeanDeserializer.java
+index cd54e7788..8996170bb 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/deser/BeanDeserializer.java
++++ b/src/main/java/com/fasterxml/jackson/databind/deser/BeanDeserializer.java
+@@ -846,13 +844,20 @@ public class BeanDeserializer
+                 buffer.bufferAnyProperty(_anySetter, propName, _anySetter.deserialize(p, ctxt));
+             }
+         }
+-
+         // We hit END_OBJECT; resolve the pieces:
+         try {
+-            return ext.complete(p, ctxt, buffer, creator);
++            Object bean = ext.complete(p, ctxt, buffer, creator);
++            if (bean == null) {
++                return bean;
++            }
++            // 08-Sep-2015, tatu: This may or may not be necessary, but it seems like a good idea,
++            //   so let's do it. Why? Well, if we had encountered further tokens that contained
++            //   properties, those properties would have been skipped. But there might be some
++            //   more. However, if we are just beginning with root value and this is all that
++            //   exists, we can call it a day (as per [databind#939]).
++            return _deserialize(p, ctxt, bean);
+         } catch (Exception e) {
+             wrapInstantiationProblem(e, ctxt);
+             return null; // never gets here
+         }
+-    }
+-}
++    }}

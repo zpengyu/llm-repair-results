@@ -1,0 +1,22 @@
+diff --git a/src/com/google/javascript/jscomp/CheckAccessControls.java b/src/com/google/javascript/jscomp/CheckAccessControls.java
+index c4ecc477..331d9afd 100644
+--- a/src/com/google/javascript/jscomp/CheckAccessControls.java
++++ b/src/com/google/javascript/jscomp/CheckAccessControls.java
+@@ -498,7 +492,16 @@ class CheckAccessControls implements ScopedCallback, HotSwapCompilerPass {
+       }
+     }
+   }
+-
++private boolean isValidPrivateConstructorAccess(Node parent) {
++    if (parent.getType() == Token.CALL
++        && (parent.getParent().getType() == Token.NEW
++            || parent.getParent().getType() == Token.NAME
++            || parent.getParent().getType() == Token.THIS)) {
++      return true;
++    }
++    return false;
++  }
++  }
+   /**
+    * Whether the given access of a private constructor is legal.
+    *

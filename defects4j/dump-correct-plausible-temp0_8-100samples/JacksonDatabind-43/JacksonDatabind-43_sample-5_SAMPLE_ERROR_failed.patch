@@ -1,0 +1,27 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/deser/impl/ObjectIdValueProperty.java b/src/main/java/com/fasterxml/jackson/databind/deser/impl/ObjectIdValueProperty.java
+index d4ca3f544..fcd23b507 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/deser/impl/ObjectIdValueProperty.java
++++ b/src/main/java/com/fasterxml/jackson/databind/deser/impl/ObjectIdValueProperty.java
+@@ -73,7 +73,7 @@ public final class ObjectIdValueProperty
+ 
+     @Override
+     public Object deserializeSetAndReturn(JsonParser p,
+-		DeserializationContext ctxt, Object instance) throws IOException
++    		DeserializationContext ctxt, Object instance) throws IOException
+     {
+         Object id = _valueDeserializer.deserialize(p, ctxt);
+         /* 02-Apr-2015, tatu: Actually, as per [databind#742], let it be;
+@@ -90,6 +90,13 @@ public final class ObjectIdValueProperty
+         // also: may need to set a property value as well
+         SettableBeanProperty idProp = _objectIdReader.idProperty;
+         if (idProp != null) {
++            // 24-Mar-2015, tatu: Here is problem, in that we MUST NOT call setter if value is null
++            //    and for ArrayList, that's not something we can check; so let's assume this will
++            //    become a common enough problem to handle separately:
++            if (instance instanceof List) {
++                ((List<Object>) instance).add(id);
++                return instance;
++            }
+             return idProp.setAndReturn(instance, id);
+         }
+         return instance;

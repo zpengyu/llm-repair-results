@@ -1,0 +1,22 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/node/POJONode.java b/src/main/java/com/fasterxml/jackson/databind/node/POJONode.java
+index d1452fc54..b8f4c66f1 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/node/POJONode.java
++++ b/src/main/java/com/fasterxml/jackson/databind/node/POJONode.java
+@@ -111,10 +111,15 @@ public class POJONode
+         } else {
+             // 25-May-2018, tatu: [databind#1991] do not call via generator but through context;
+             //    this to preserve contextual information
+-            gen.writeObject(_value);
++            if (!(_value instanceof Map)) {
++                ctxt.defaultSerializeValue(gen, _value);
++            } else {
++                // 18-Oct-2017, tatu: [databind#1880] Need to filter out illegal entries
++                //    (`null`-s, empty `Map`s and such) in Maps.
++                ctxt.defaultSerializeValue(gen, _value);
++            }
+         }
+     }
+-
+     /*
+     /**********************************************************
+     /* Extended API

@@ -1,0 +1,24 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/cfg/BaseSettings.java b/src/main/java/com/fasterxml/jackson/databind/cfg/BaseSettings.java
+index 789f0cf1d..b8578fc61 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/cfg/BaseSettings.java
++++ b/src/main/java/com/fasterxml/jackson/databind/cfg/BaseSettings.java
+@@ -228,15 +228,16 @@ public final class BaseSettings
+     }
+     
+     public BaseSettings withDateFormat(DateFormat df) {
++        if (df != null && _timeZone != null) {
++            df = new StdDateFormat(df, _timeZone, _locale);
++        }
+         if (_dateFormat == df) {
+             return this;
+         }
+-        TimeZone tz = (df == null) ? _timeZone : df.getTimeZone();
+         return new BaseSettings(_classIntrospector, _annotationIntrospector, _visibilityChecker, _propertyNamingStrategy, _typeFactory,
+                 _typeResolverBuilder, df, _handlerInstantiator, _locale,
+-                tz, _defaultBase64);
++                _timeZone, _defaultBase64);
+     }
+-
+     public BaseSettings withHandlerInstantiator(HandlerInstantiator hi) {
+         if (_handlerInstantiator == hi) {
+             return this;

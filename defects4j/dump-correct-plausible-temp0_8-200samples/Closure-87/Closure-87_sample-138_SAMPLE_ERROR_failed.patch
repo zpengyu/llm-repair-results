@@ -1,0 +1,40 @@
+diff --git a/src/com/google/javascript/jscomp/PeepholeSubstituteAlternateSyntax.java b/src/com/google/javascript/jscomp/PeepholeSubstituteAlternateSyntax.java
+index 17a02960..b699a087 100644
+--- a/src/com/google/javascript/jscomp/PeepholeSubstituteAlternateSyntax.java
++++ b/src/com/google/javascript/jscomp/PeepholeSubstituteAlternateSyntax.java
+@@ -526,17 +526,30 @@ public class PeepholeSubstituteAlternateSyntax
+           // http://code.google.com/p/closure-compiler/issues/detail?id=291
+           // We try to detect this case, and not fold EXPR_RESULTs
+           // into other expressions.
+-
+             // We only have to worry about methods with an implicit 'this'
+             // param, or this doesn't happen.
+-
+-          return NodeUtil.isExpressionNode(maybeExpr);
++        if (NodeUtil.isExpressionNode(maybeExpr) &&
++            !this.isExpressionResultUsed(maybeExpr)) {
++              return true;
++            }
+       }
+     }
+-
+     return false;
+   }
+-
++  private boolean isExpressionResultUsed(Node n) {
++    Node parent = n.getParent();
++    switch(parent.getType()) {
++      case Token.FUNCTION:
++        return isExpressionResultUsed(parent.getParent());
++      case Token.CALL:
++        return !parent.getFirstChild().getNext().getNext().isEmpty();
++      case Token.COMMA:
++      case Token.EXPR_RESULT:
++        return true;
++      default:
++        return false;
++    }
++  }
+   /**
+    * @return The expression node.
+    */

@@ -1,0 +1,30 @@
+diff --git a/src/main/java/org/joda/time/DateTimeZone.java b/src/main/java/org/joda/time/DateTimeZone.java
+index 17672725..1425faa8 100644
+--- a/src/main/java/org/joda/time/DateTimeZone.java
++++ b/src/main/java/org/joda/time/DateTimeZone.java
+@@ -893,18 +893,16 @@ public abstract class DateTimeZone implements Serializable {
+                 // on or after the transition
+                 long nextLocal = nextTransition(instantAdjusted);
+                 long nextAdjusted = nextTransition(instantLocal - offsetAdjusted);
+-                if (nextLocal != nextAdjusted) {
++                // if on same side of DST gap, then just use the offset
++                if (nextLocal == nextAdjusted) {
+                     return offsetLocal;
+                 }
+-            }
+-        } else if (offsetLocal > 0) {
+-            long prev = previousTransition(instantAdjusted);
+-            if (prev < instantAdjusted) {
+-                int offsetPrev = getOffset(prev);
+-                int diff = offsetPrev - offsetLocal;
+-                if (instantAdjusted - prev <= diff) {
+-                    return offsetPrev;
++                // otherwise, if in DST gap then use adjusted offset
++                if (nextLocal < nextAdjusted) {
++                    return offsetAdjusted;
+                 }
++                // otherwise, not in DST gap, so use local offset
++                return offsetLocal;
+             }
+         }
+         return offsetAdjusted;

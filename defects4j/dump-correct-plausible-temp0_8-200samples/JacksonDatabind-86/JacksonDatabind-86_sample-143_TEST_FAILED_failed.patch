@@ -1,0 +1,57 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/type/ResolvedRecursiveType.java b/src/main/java/com/fasterxml/jackson/databind/type/ResolvedRecursiveType.java
+index 7b8c69af7..da0fed101 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/type/ResolvedRecursiveType.java
++++ b/src/main/java/com/fasterxml/jackson/databind/type/ResolvedRecursiveType.java
+@@ -108,7 +90,49 @@ public class ResolvedRecursiveType extends TypeBase
+         if (_referencedType == null) {
+             return false;
+         }
+-        return (o.getClass() == getClass()
+-                && _referencedType.equals(((ResolvedRecursiveType) o).getSelfReferencedType()));
++        if(o.getClass() != getClass()){
++            return false;
++        }
++        //As per the old version here was only one condition to check
++        //return _referencedType.equals(((ResolvedRecursiveType) o).getSelfReferencedType());
++        //This is the fix to this bug
++        //As this bug occured when there was a recursive type in the object
++        //Ex. 1
++        // class A { 
++        //   int x;
++        //   B b; //recursive call will be made because of this
++        // }
++        // class B {
++        //   String y;
++        //   A a; //recursive call will be made because of this
++        // }
++        //Ex. 2
++        // class A {
++        //   int x;
++        //   A a; //recursive call will be made because of this
++        // }
++        //Now lets see how the object will be created
++        // a1 = new A()   b1 = new B()
++        //       |         |
++        //       +---------+    
++        // a1.x=1, a1.b=b1, b1.y="s", b1.a=a1
++        //So as we can see that the reference is already set for both the objects
++        //So in this case the if condition will be true and the else block will be left
++        // and thus the bug occurs.
++        //We want to compare the values of the objects so we will use the else block.
++        //So now lets do the comparison of the objects
++        //Lets compare A and B 
++        // a1.equals(b1)
++        //a1 and b1 are different type of objects so the if condition will be checked which is not true so else block will be executed
++        // Now in else block first thing is to check the reference
++        // If the reference is not null then we will compare the values
++        // if the reference is null then it will return false
++        // Now this is the place where the bug is occured
++        // Here in this case the reference is null but we will get true as the result because of this bug
++        // we need to do the else case only if the reference is not null.
++        ResolvedRecursiveType other = (ResolvedRecursiveType) o;
++        return (other.getSelfReferencedType() == null) 
++            ? false 
++            : _referencedType.equals(other.getSelfReferencedType());
+     }
+ }
+\ No newline at end of file

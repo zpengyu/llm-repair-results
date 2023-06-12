@@ -1,0 +1,32 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/jsontype/impl/SubTypeValidator.java b/src/main/java/com/fasterxml/jackson/databind/jsontype/impl/SubTypeValidator.java
+index fe9cba8d4..0c07bd7dc 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/jsontype/impl/SubTypeValidator.java
++++ b/src/main/java/com/fasterxml/jackson/databind/jsontype/impl/SubTypeValidator.java
+@@ -76,11 +75,15 @@ public class SubTypeValidator
+             if (_cfgIllegalClassNames.contains(full)) {
+                 break;
+             }
+-
++            // 21-Jun-2018, tatu: Hacked 3.0.0 to include "HashMap" in blacklist, which
++            //    is silly but let's skip it for now
++            if (raw == HashMap.class) {
++                break;
++            }
+             // 18-Dec-2017, tatu: As per [databind#1855], need bit more sophisticated handling
+             //    for some Spring framework types
+             // 05-Jan-2017, tatu: ... also, only applies to classes, not interfaces
+-            if (full.startsWith(PREFIX_STRING)) {
++            if (full.startsWith(PREFIX_STRING) && !raw.isInterface()) {
+                 for (Class<?> cls = raw; cls != Object.class; cls = cls.getSuperclass()) {
+                     String name = cls.getSimpleName();
+                     // looking for "AbstractBeanFactoryPointcutAdvisor" but no point to allow any is there?
+@@ -93,8 +96,6 @@ public class SubTypeValidator
+             }
+             return;
+         } while (false);
+-
+         throw JsonMappingException.from(ctxt,
+                 String.format("Illegal type (%s) to deserialize: prevented for security reasons", full));
+-    }
+-}
++    }}

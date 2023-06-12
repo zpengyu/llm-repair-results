@@ -1,0 +1,16 @@
+diff --git a/src/main/java/com/fasterxml/jackson/core/json/async/NonBlockingJsonParser.java b/src/main/java/com/fasterxml/jackson/core/json/async/NonBlockingJsonParser.java
+index feec6483..d52fd029 100644
+--- a/src/main/java/com/fasterxml/jackson/core/json/async/NonBlockingJsonParser.java
++++ b/src/main/java/com/fasterxml/jackson/core/json/async/NonBlockingJsonParser.java
+@@ -89,7 +89,10 @@ public class NonBlockingJsonParser
+     {
+         // Must not have remaining input
+         if (_inputPtr < _inputEnd) {
+-            _reportError("Still have %d undecoded bytes, should not call 'feedInput'", _inputEnd - _inputPtr);
++            // Just to let it be possible to call this method again, without
++            // exception
++            _currInputProcessed -= (_inputEnd - _inputPtr);
++            _inputEnd = _inputPtr;
+         }
+         if (end < start) {
+             _reportError("Input end (%d) may not be before start (%d)", end, start);

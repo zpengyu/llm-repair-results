@@ -1,0 +1,32 @@
+  private void traverse(Node node) {
+    // The goal here is to avoid retraversing
+    // the entire AST to catch newly created opportunities.
+    // So we track whether a "unit of code" has changed,
+    // and revisit immediately.
+    boolean shouldVisit = shouldVisit(node);
+
+    int visits = 0;
+    do {
+      if (shouldVisit) {
+        Node c = node.getFirstChild();
+        while(c != null) {
+          traverse(c);
+          Node next = c.getNext();
+          c = next;
+        }
+
+        visit(node);
+        visits++;
+
+        Preconditions.checkState(visits < 10000, "too many interations");
+      } else {
+        // shouldVisit is false, but we still need to traverse the children
+        for (Node c = node.getFirstChild(); c != null; c = c.getNext()) {
+          traverse(c);
+        }
+      }
+    } while (shouldRetraverse(node));
+
+    exitNode(node);
+  }
+

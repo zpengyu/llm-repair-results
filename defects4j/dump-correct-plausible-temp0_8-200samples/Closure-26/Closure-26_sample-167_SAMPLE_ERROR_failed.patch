@@ -1,0 +1,56 @@
+diff --git a/src/com/google/javascript/jscomp/ProcessCommonJSModules.java b/src/com/google/javascript/jscomp/ProcessCommonJSModules.java
+index f516e584..4b2936bf 100644
+--- a/src/com/google/javascript/jscomp/ProcessCommonJSModules.java
++++ b/src/com/google/javascript/jscomp/ProcessCommonJSModules.java
+@@ -121,30 +121,6 @@ public class ProcessCommonJSModules implements CompilerPass {
+   /**
+    * Visits require, every "script" and special module.exports assignments.
+    */
+-  private class ProcessCommonJsModulesCallback extends
+-      AbstractPostOrderCallback {
+-
+-    private int scriptNodeCount = 0;
+-
+-    @Override
+-    public void visit(NodeTraversal t, Node n, Node parent) {
+-      if (n.isCall() && n.getChildCount() == 2 &&
+-          "require".equals(n.getFirstChild().getQualifiedName()) &&
+-          n.getChildAtIndex(1).isString()) {
+-        visitRequireCall(t, n, parent);
+-      }
+-
+-      if (n.isScript()) {
+-        scriptNodeCount++;
+-        visitScript(t, n);
+-      }
+-
+-      if (n.isGetProp() &&
+-          "module.exports".equals(n.getQualifiedName())) {
+-        visitModuleExports(n);
+-      }
+-    }
+-
+     /**
+      * Visit require calls. Emit corresponding goog.require and rewrite require
+      * to be a direct reference to name of require module.
+@@ -226,20 +195,7 @@ public class ProcessCommonJSModules implements CompilerPass {
+       exports.putProp(Node.ORIGINALNAME_PROP, "exports");
+       exports.setString("module$exports");
+     }
+-
+-    /**
+-     * Returns next script node in parents.
+-     */
+-    private Node getCurrentScriptNode(Node n) {
+-      while (true) {
+-        if (n.isScript()) {
+-          return n;
+-        }
+-        n = n.getParent();
+-      }
+-    }
+   }
+-
+   /**
+    * Traverses a node tree and appends a suffix to all global variable names.
+    */

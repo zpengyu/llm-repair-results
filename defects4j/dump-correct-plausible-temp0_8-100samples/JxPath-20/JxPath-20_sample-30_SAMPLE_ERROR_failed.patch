@@ -1,0 +1,99 @@
+diff --git a/src/java/org/apache/commons/jxpath/ri/compiler/CoreOperationRelationalExpression.java b/src/java/org/apache/commons/jxpath/ri/compiler/CoreOperationRelationalExpression.java
+index cd4ceac..eea8b3f 100644
+--- a/src/java/org/apache/commons/jxpath/ri/compiler/CoreOperationRelationalExpression.java
++++ b/src/java/org/apache/commons/jxpath/ri/compiler/CoreOperationRelationalExpression.java
+@@ -41,12 +40,13 @@ public abstract class CoreOperationRelationalExpression extends CoreOperation {
+     protected CoreOperationRelationalExpression(Expression[] args) {
+         super(args);
+     }
+-
+     public final Object computeValue(EvalContext context) {
+-        return compute(args[0].compute(context), args[1].compute(context))
+-                ? Boolean.TRUE : Boolean.FALSE;
++        Object result = compute(args[0].compute(context), args[1].compute(context));
++        if (result == null) {
++            return null;
++        }
++        return (Boolean) result ? Boolean.TRUE : Boolean.FALSE;
+     }
+-
+     protected final int getPrecedence() {
+         return RELATIONAL_EXPR_PRECEDENCE;
+     }
+@@ -60,18 +58,16 @@ public abstract class CoreOperationRelationalExpression extends CoreOperation {
+      * @param compare result of comparison to evaluate
+      * @return ultimate operation success/failure
+      */
+-    protected abstract boolean evaluateCompare(int compare);
+-
++    protected abstract Boolean evaluateCompare(int compare);
+     /**
+      * Compare left to right.
+      * @param left left operand
+      * @param right right operand
+      * @return operation success/failure
+      */
+-    private boolean compute(Object left, Object right) {
++    private Boolean compute(Object left, Object right) {
+         left = reduce(left);
+         right = reduce(right);
+-
+         if (left instanceof InitialContext) {
+             ((InitialContext) left).reset();
+         }
+@@ -89,11 +85,11 @@ public abstract class CoreOperationRelationalExpression extends CoreOperation {
+         }
+         double ld = InfoSetUtil.doubleValue(left);
+         if (Double.isNaN(ld)) {
+-            return false;
++            return null;
+         }
+         double rd = InfoSetUtil.doubleValue(right);
+         if (Double.isNaN(rd)) {
+-            return false;
++            return null;
+         }
+         return evaluateCompare(ld == rd ? 0 : ld < rd ? -1 : 1);
+     }
+@@ -119,16 +113,15 @@ public abstract class CoreOperationRelationalExpression extends CoreOperation {
+      * @param value to look for
+      * @return whether a match was found
+      */
+-    private boolean containsMatch(Iterator it, Object value) {
++    private Boolean containsMatch(Iterator it, Object value) {
+         while (it.hasNext()) {
+             Object element = it.next();
+             if (compute(element, value)) {
+-                return true;
++                return Boolean.TRUE;
+             }
+         }
+-        return false;
++        return Boolean.FALSE;
+     }
+-
+     /**
+      * Learn whether any element returned from an Iterator matches a given value.
+      * @param it Iterator
+@@ -142,17 +134,16 @@ public abstract class CoreOperationRelationalExpression extends CoreOperation {
+      * @param rit right Iterator
+      * @return whether a match was found
+      */
+-    private boolean findMatch(Iterator lit, Iterator rit) {
++    private Boolean findMatch(Iterator lit, Iterator rit) {
+         HashSet left = new HashSet();
+         while (lit.hasNext()) {
+             left.add(lit.next());
+         }
+         while (rit.hasNext()) {
+             if (containsMatch(left.iterator(), rit.next())) {
+-                return true;
++                return Boolean.TRUE;
+             }
+         }
+-        return false;
++        return Boolean.FALSE;
+     }
+-
+ }
+\ No newline at end of file

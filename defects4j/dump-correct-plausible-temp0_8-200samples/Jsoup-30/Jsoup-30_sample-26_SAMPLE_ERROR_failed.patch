@@ -1,0 +1,41 @@
+diff --git a/src/main/java/org/jsoup/safety/Cleaner.java b/src/main/java/org/jsoup/safety/Cleaner.java
+index c6879b1..6415e4b 100644
+--- a/src/main/java/org/jsoup/safety/Cleaner.java
++++ b/src/main/java/org/jsoup/safety/Cleaner.java
+@@ -112,10 +98,13 @@ public class Cleaner {
+         }
+         Attributes enforcedAttrs = whitelist.getEnforcedAttributes(sourceTag);
+         destAttrs.addAll(enforcedAttrs);
+-
++        // strip out any non-abs URLs (only needed for a elements)
++        if (sourceTag.equals("a")) {
++            String url = destAttrs.hasKeyIgnoreCase("abs:href") ? destAttrs.getIgnoreCase("abs:href") : destAttrs.getIgnoreCase("href");
++            destAttrs.put("href", absUrl(url));
++        }
+         return new ElementMeta(dest, numDiscarded);
+     }
+-
+     private static class ElementMeta {
+         Element el;
+         int numAttribsDiscarded;
+@@ -125,5 +113,18 @@ public class Cleaner {
+             this.numAttribsDiscarded = numAttribsDiscarded;
+         }
+     }
+-
++    private static String absUrl(String url) {
++        if (url.startsWith("?"))
++            return url;
++        // "//foo.com" -- @import "//foo.com"
++        if (url.startsWith("//"))
++            return url;
++        if (url.startsWith("data:") || url.startsWith("javascript:"))
++            return url;
++        if (url.indexOf(':') > 0)
++            return url;
++        if (url.startsWith("/"))
++            return url;
++        return url;
++    }
+ }
+\ No newline at end of file

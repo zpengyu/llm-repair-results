@@ -1,0 +1,23 @@
+/**
+     * {@inheritDoc}
+     *
+     * @return the number of bytes skipped, or the remainder of the byte array if the number of bytes skipped is less than the length of the byte array
+     * @throws IllegalArgumentException if the provided skip length is negative
+     */
+    @Override
+    public long skip(final long n) throws IOException {
+        if (n < 0) {
+            throw new IllegalArgumentException("negative skip length");
+        }
+        final int chunk = doEncode ? baseNCodec.getMaxEncodedSize(SKIP_BUFFER_SIZE) : SKIP_BUFFER_SIZE;
+        final byte[] skipBuffer = new byte[chunk];
+        long remaining = n;
+        while (remaining > 0) {
+            final int skipped = read(skipBuffer, 0, (int) Math.min(remaining, chunk));
+            if (skipped == EOF) {
+                break;
+            }
+            remaining -= skipped;
+        }
+        return n - remaining;
+    }

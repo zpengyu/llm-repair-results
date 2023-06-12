@@ -1,0 +1,51 @@
+diff --git a/src/com/google/javascript/jscomp/TypedScopeCreator.java b/src/com/google/javascript/jscomp/TypedScopeCreator.java
+index 051f5c8e..13777148 100644
+--- a/src/com/google/javascript/jscomp/TypedScopeCreator.java
++++ b/src/com/google/javascript/jscomp/TypedScopeCreator.java
+@@ -1440,31 +1440,23 @@ final class TypedScopeCreator implements ScopeCreator {
+      * @param n The node being visited.
+      * @param parent The parent of n
+      */
+-    @Override public void visit(NodeTraversal t, Node n, Node parent) {
+-      if (n == scope.getRootNode()) return;
+-
+-      if (n.getType() == Token.LP && parent == scope.getRootNode()) {
+-        handleFunctionInputs(parent);
+-        return;
+-      }
+-
+-      attachLiteralTypes(n);
+-      switch (n.getType()) {
+-        case Token.FUNCTION:
+-          if (parent.getType() == Token.NAME) {
+-            return;
+-          }
+-          defineDeclaredFunction(n, parent);
+-          break;
+-        case Token.CATCH:
+-          defineCatch(n, parent);
+-          break;
+-        case Token.VAR:
+-          defineVar(n, parent);
+-          break;
++private void defineDeclaredFunction(Node n, Node parent) {
++    String fnName = n.getFirstChild().getString();
++    if (NodeUtil.isFunctionExpression(n)) {
++      if (parent.getType() == Token.NAME) {
++        maybeAssignType(fnName,
++            registry.createNamedType(parent.getString()));
++      } else if (parent.getType() == Token.ASSIGN) {
++        Node left = parent.getFirstChild();
++        if (left.isName()) {
++          maybeAssignType(left.getString(),
++              registry.createNamedType(fnName));
++        }
+       }
++    } else {
++      maybeAssignType(fnName, registry.createFunctionType(n));
+     }
+-
++  }
+     /** Handle bleeding functions and function parameters. */
+     private void handleFunctionInputs(Node fnNode) {
+       // Handle bleeding functions.

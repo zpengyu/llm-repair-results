@@ -1,0 +1,79 @@
+diff --git a/src/main/java/org/jsoup/nodes/LeafNode.java b/src/main/java/org/jsoup/nodes/LeafNode.java
+index 0e068b5..f26501d 100644
+--- a/src/main/java/org/jsoup/nodes/LeafNode.java
++++ b/src/main/java/org/jsoup/nodes/LeafNode.java
+@@ -5,9 +5,9 @@ import org.jsoup.helper.Validate;
+ import java.util.List;
+ 
+ abstract class LeafNode extends Node {
+-
++    private static final EmptyAttributes EmptyAttributes = new EmptyAttributes();
++    private static final EmptyString EmptyString = "";
+     Object value; // either a string value, or an attribute map (in the rare case multiple attributes are set)
+-
+     protected final boolean hasAttributes() {
+         return value instanceof Attributes;
+     }
+@@ -23,15 +21,17 @@ abstract class LeafNode extends Node {
+             Object coreValue = value;
+             Attributes attributes = new Attributes();
+             value = attributes;
+-            if (coreValue != null)
++            if (coreValue != null) {
+                 attributes.put(nodeName(), (String) coreValue);
++            }
+         }
+     }
+-
+     String coreValue() {
++        if (value instanceof String) {
++            return (String) value;
++        }
+         return attr(nodeName());
+     }
+-
+     void coreValue(String value) {
+         attr(nodeName(), value);
+     }
+@@ -44,10 +43,11 @@ abstract class LeafNode extends Node {
+         }
+         return super.attr(key);
+     }
+-
+     @Override
+     public Node attr(String key, String value) {
++        Validate.notNull(key);
+         if (!hasAttributes() && key.equals(nodeName())) {
++            Validate.notNull(value);
+             this.value = value;
+         } else {
+             ensureAttributes();
+@@ -93,4 +86,27 @@ abstract class LeafNode extends Node {
+     protected List<Node> ensureChildNodes() {
+         throw new UnsupportedOperationException("Leaf Nodes do not have child nodes.");
+     }
++    static class EmptyAttributes extends Attributes {
++        static final long serialVersionUID = -1;
++        @Override
++        public void put(String key, String value) {
++            throw new UnsupportedOperationException("Can't add to EmptyAttributes");
++        }
++        @Override
++        public void remove(String key) {
++            throw new UnsupportedOperationException("Can't remove from EmptyAttributes");
++        }
++        @Override
++        public void addAll(Attributes source) {
++            throw new UnsupportedOperationException("Can't add to EmptyAttributes");
++        }
++        @Override
++        public void addAll(Map<String, String> source) {
++            throw new UnsupportedOperationException("Can't add to EmptyAttributes");
++        }
++        @Override
++        public String toString() {
++            return "";
++        }
++    }
+ }
+\ No newline at end of file

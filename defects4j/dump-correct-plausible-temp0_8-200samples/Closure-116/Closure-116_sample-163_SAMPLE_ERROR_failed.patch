@@ -1,0 +1,115 @@
+diff --git a/src/com/google/javascript/jscomp/FunctionInjector.java b/src/com/google/javascript/jscomp/FunctionInjector.java
+index c17b3cb3..424f7504 100644
+--- a/src/com/google/javascript/jscomp/FunctionInjector.java
++++ b/src/com/google/javascript/jscomp/FunctionInjector.java
+@@ -691,63 +691,63 @@ class FunctionInjector {
+     if (!isDirectCallNodeReplacementPossible(fnNode)) {
+       return CanInlineResult.NO;
+     }
+-
+     Node block = fnNode.getLastChild();
+-
+-
++    // The actual parameters.
+     // CALL NODE: [ NAME, ARG1, ARG2, ... ]
+     Node cArg = callNode.getFirstChild().getNext();
+-
+-    // Functions called via 'call' and 'apply' have a this-object as
+-    // the first parameter, but this is not part of the called function's
+-    // parameter list.
+-    if (!callNode.getFirstChild().isName()) {
+-      if (NodeUtil.isFunctionObjectCall(callNode)) {
+-        // TODO(johnlenz): Support replace this with a value.
+-        if (cArg == null || !cArg.isThis()) {
+-          return CanInlineResult.NO;
+-        }
+-        cArg = cArg.getNext();
+-      } else {
+-        // ".apply" call should be filtered before this.
+-        Preconditions.checkState(!NodeUtil.isFunctionObjectApply(callNode));
+-      }
+-    }
+-
++    // The formal parameters.
+     // FUNCTION NODE -> LP NODE: [ ARG1, ARG2, ... ]
+     Node fnParam = NodeUtil.getFunctionParameters(fnNode).getFirstChild();
+-    while (cArg != null || fnParam != null) {
+-      // For each named parameter check if a mutable argument use more than one.
+-      if (fnParam != null) {
+-        if (cArg != null) {
+-
+-          // Check for arguments that are evaluated more than once.
+-          // Note: Unlike block inlining, there it is not possible that a
+-          // parameter reference will be in a loop.
+-          if (NodeUtil.mayEffectMutableState(cArg, compiler)
+-              && NodeUtil.getNameReferenceCount(
+-                  block, fnParam.getString()) > 1) {
+-            return CanInlineResult.NO;
+-          }
+-        }
+-
+-        // Move to the next name.
+-        fnParam = fnParam.getNext();
++    // Create a temporary scope for the inlined function arguments.
++    Node fnCall = callNode.getParent();
++    Node fnCallParent = fnCall.getParent();
++    Node scopeRoot = fnCall;
++    Scope fnCallScope = scope.getScopeRoot().getParent();
++    if (NodeUtil.createsBlockScope(fnCallParent)) {
++      scopeRoot = fnCallParent;
++      fnCallScope = scope.getScopeRoot();
++    }
++    Node argName = IR.name("arguments").srcref(callNode);
++    fnCallScope.addSymbol(ARGUMENTS, argName);
++    fnCall.addChildAfter(argName, callNode);
++    fnCall.addChildAfter(IR.exprResult(IR.objectlit()).srcref(callNode), argName);
++    // The list of all names in the function.
++    Set<String> allNames = new HashSet<>();
++    NodeUtil.getAllVarNames(block, allNames);
++    // The list of parameter names in the function.
++    Set<String> paramNames = new HashSet<>();
++    if (fnParam != null) {
++      NodeUtil.getFunctionParameters(fnNode).putBooleanProp(Node.FREE_CALL, true);
++      paramNames.add(fnParam.getString());
++      fnParam = fnParam.getNext();
++    }
++    // For each named parameter check if a mutable argument use more than one.
++    while (fnParam != null) {
++      paramNames.add(fnParam.getString());
++      if (NodeUtil.mayBeModified(fnParam, block, true)) {
++        return CanInlineResult.NO;
+       }
+-
+-      // For every call argument check for side-effects, even if there
+-      // isn't a named parameter to match.
+-      if (cArg != null) {
+-        if (NodeUtil.mayHaveSideEffects(cArg, compiler)) {
+-          return CanInlineResult.NO;
+-        }
+-        cArg = cArg.getNext();
++      fnParam = fnParam.getNext();
++    }
++    // For each unnamed parameter check if a mutable argument use more than one.
++    while (cArg != null) {
++      paramNames.add(ARGUMENTS);
++      if (NodeUtil.mayBeModified(cArg, block, true)) {
++        return CanInlineResult.NO;
++      }
++      cArg = cArg.getNext();
++    }
++    // For each name in the function check if a mutable name is used more than once.
++    for (String name : allNames) {
++      if (NodeUtil.mayBeModified(name, block, true)
++          && paramNames.contains(name)
++          && NodeUtil.getNameReferenceCount(
++              block, name) > 1) {
++        return CanInlineResult.NO;
+       }
+     }
+-
+     return CanInlineResult.YES;
+   }
+-
+   /**
+    * Determine if inlining the function is likely to reduce the code size.
+    * @param namesToAlias

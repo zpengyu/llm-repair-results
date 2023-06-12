@@ -1,0 +1,27 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/deser/BuilderBasedDeserializer.java b/src/main/java/com/fasterxml/jackson/databind/deser/BuilderBasedDeserializer.java
+index 316efa3a9..c0ce8ab5c 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/deser/BuilderBasedDeserializer.java
++++ b/src/main/java/com/fasterxml/jackson/databind/deser/BuilderBasedDeserializer.java
+@@ -633,9 +630,21 @@ public class BuilderBasedDeserializer
+         } catch (Exception e) {
+             return wrapInstantiationProblem(e, ctxt);
+         }
++        if (t == JsonToken.END_OBJECT) {
++            return _unwrappedPropertyHandler.processUnwrapped(p, ctxt, bean, tokens);
++        }
++        tokens.writeEndObject();
++        // but if not, we still want to skip trailing FIELD_NAMEs
++        while (t == JsonToken.FIELD_NAME) {
++            p.nextToken();
++            tokens.copyCurrentStructure(p);
++            t = p.nextToken();
++        }
++        if (t != JsonToken.END_OBJECT) {
++            throw ctxt.mappingException("Unwrapped object missing Object.end_object to demarcate end of value");
++        }
+         return _unwrappedPropertyHandler.processUnwrapped(p, ctxt, bean, tokens);
+     }
+-
+     /*
+     /**********************************************************
+     /* Handling for cases where we have property/-ies with

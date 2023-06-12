@@ -1,0 +1,45 @@
+diff --git a/src/main/java/org/jsoup/nodes/LeafNode.java b/src/main/java/org/jsoup/nodes/LeafNode.java
+index 0e068b5..30a7709 100644
+--- a/src/main/java/org/jsoup/nodes/LeafNode.java
++++ b/src/main/java/org/jsoup/nodes/LeafNode.java
+@@ -5,9 +5,10 @@ import org.jsoup.helper.Validate;
+ import java.util.List;
+ 
+ abstract class LeafNode extends Node {
+-
++    private static final String AbsUrl = "abs:";
++    private static final String RelUrl = "rel:";
++    private static final String EmptryString = "";
+     Object value; // either a string value, or an attribute map (in the rare case multiple attributes are set)
+-
+     protected final boolean hasAttributes() {
+         return value instanceof Attributes;
+     }
+@@ -44,9 +40,9 @@ abstract class LeafNode extends Node {
+         }
+         return super.attr(key);
+     }
+-
+     @Override
+     public Node attr(String key, String value) {
++        Validate.notEmpty(value);
+         if (!hasAttributes() && key.equals(nodeName())) {
+             this.value = value;
+         } else {
+@@ -71,9 +64,14 @@ abstract class LeafNode extends Node {
+     @Override
+     public String absUrl(String key) {
+         ensureAttributes();
+-        return super.absUrl(key);
++        String attr = attr(key);
++        if (attr.startsWith(AbsUrl)) {
++            attr = attr.substring(AbsUrl.length());
++        } else if (attr.startsWith(RelUrl)) {
++            attr = UrlUtil.resolve(baseUri(), attr.substring(RelUrl.length()));
++        }
++        return attr;
+     }
+-
+     @Override
+     public String baseUri() {
+         return hasParent() ? parent().baseUri() : "";

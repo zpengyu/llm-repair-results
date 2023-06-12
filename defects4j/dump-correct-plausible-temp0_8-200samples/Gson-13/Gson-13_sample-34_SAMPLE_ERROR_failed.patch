@@ -1,0 +1,59 @@
+diff --git a/gson/src/main/java/com/google/gson/stream/JsonReader.java b/gson/src/main/java/com/google/gson/stream/JsonReader.java
+index 4541941d..4aaff50f 100644
+--- a/gson/src/main/java/com/google/gson/stream/JsonReader.java
++++ b/gson/src/main/java/com/google/gson/stream/JsonReader.java
+@@ -736,11 +727,53 @@ public class JsonReader implements Closeable {
+         || last == NUMBER_CHAR_EXP_DIGIT) {
+       peekedNumberLength = i;
+       return peeked = PEEKED_NUMBER;
++    } else {
++      if (last != NUMBER_CHAR_NONE) {
++        return PEEKED_NONE;
++      }
++      pos += i;
++      peeked = peekKeyword();
++      return peeked;
++    }
++  }
++  private int peekKeyword() throws IOException {
++    String keyword;
++    String keywordUpper;
++    int peeking;
++    char c = buffer[pos];
++    if (c == 't' || c == 'T') {
++      keyword = "true";
++      keywordUpper = "TRUE";
++      peeking = PEEKED_TRUE;
++    } else if (c == 'f' || c == 'F') {
++      keyword = "false";
++      keywordUpper = "FALSE";
++      peeking = PEEKED_FALSE;
++    } else if (c == 'n' || c == 'N') {
++      keyword = "null";
++      keywordUpper = "NULL";
++      peeking = PEEKED_NULL;
+     } else {
+       return PEEKED_NONE;
+     }
++    // Confirm that chars [1..length) match the keyword.
++    int length = keyword.length();
++    for (int i = 1; i < length; i++) {
++      if (pos + i >= limit && !fillBuffer(i + 1)) {
++        return PEEKED_NONE;
++      }
++      c = buffer[pos + i];
++      if (c != keyword.charAt(i) && c != keywordUpper.charAt(i)) {
++        return PEEKED_NONE;
++      }
++    }
++    if ((pos + length < limit || fillBuffer(length + 1))
++        && isLiteral(buffer[pos + length])) {
++      return PEEKED_NONE; // Don't match trues, falsey or nullsoft!
++    }
++    pos += length;
++    return peeked = peeking;
+   }
+-
+   private boolean isLiteral(char c) throws IOException {
+     switch (c) {
+     case '/':

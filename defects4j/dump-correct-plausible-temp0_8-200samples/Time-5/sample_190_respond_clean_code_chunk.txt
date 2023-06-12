@@ -1,0 +1,45 @@
+    public Period normalizedStandard(PeriodType type) {
+        type = DateTimeUtils.getPeriodType(type);
+        int index = type.size();
+        int[] values = new int[index];
+        long millis = getMillis();  // no overflow can happen, even with Integer.MAX_VALUEs
+        if (index > 0) {
+            if (index > 1) {
+                values[1] = millis / DateTimeConstants.MILLIS_PER_SECOND;
+                millis = millis % DateTimeConstants.MILLIS_PER_SECOND;
+            }
+            if (index > 2) {
+                values[2] = millis / DateTimeConstants.MILLIS_PER_MINUTE;
+                millis = millis % DateTimeConstants.MILLIS_PER_MINUTE;
+            }
+            if (index > 3) {
+                values[3] = millis / DateTimeConstants.MILLIS_PER_HOUR;
+                millis = millis % DateTimeConstants.MILLIS_PER_HOUR;
+            }
+            if (index > 4) {
+                values[4] = millis / DateTimeConstants.MILLIS_PER_DAY;
+                millis = millis % DateTimeConstants.MILLIS_PER_DAY;
+            }
+        }
+        // milliseconds already added above
+        int weeks = getWeeks();
+        if (index > 5) {
+            values[5] = weeks % 4;
+            weeks = weeks / 4;
+            values[0] = weeks;
+        }
+        Period result = new Period(0L, type, ISOChronology.getInstanceUTC());
+        int years = getYears();
+        int months = getMonths();
+        if (years != 0 || months != 0) {
+            years = FieldUtils.safeAdd(years, months / 12);
+            months = months % 12;
+            if (years != 0) {
+                result = result.withYears(years);
+            }
+            if (months != 0) {
+                result = result.withMonths(months);
+            }
+        }
+        return result;
+    }

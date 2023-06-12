@@ -1,0 +1,40 @@
+diff --git a/src/java/org/apache/commons/jxpath/ri/compiler/CoreOperationRelationalExpression.java b/src/java/org/apache/commons/jxpath/ri/compiler/CoreOperationRelationalExpression.java
+index cd4ceac..5bb05ce 100644
+--- a/src/java/org/apache/commons/jxpath/ri/compiler/CoreOperationRelationalExpression.java
++++ b/src/java/org/apache/commons/jxpath/ri/compiler/CoreOperationRelationalExpression.java
+@@ -32,8 +32,7 @@ import org.apache.commons.jxpath.ri.axes.SelfContext;
+  * @author Matt Benson
+  * @version $Revision$ $Date$
+  */
+-public abstract class CoreOperationRelationalExpression extends CoreOperation {
+-
++protected abstract class CoreOperationRelationalExpression extends CoreOperation {
+     /**
+      * Create a new CoreOperationRelationalExpression.
+      * @param args arguments
+@@ -71,12 +65,11 @@ public abstract class CoreOperationRelationalExpression extends CoreOperation {
+     private boolean compute(Object left, Object right) {
+         left = reduce(left);
+         right = reduce(right);
+-
+-        if (left instanceof InitialContext) {
+-            ((InitialContext) left).reset();
++        if (left instanceof SelfContext) {
++            ((SelfContext) left).reset();
+         }
+-        if (right instanceof InitialContext) {
+-            ((InitialContext) right).reset();
++        if (right instanceof SelfContext) {
++            ((SelfContext) right).reset();
+         }
+         if (left instanceof Iterator && right instanceof Iterator) {
+             return findMatch((Iterator) left, (Iterator) right);
+@@ -105,7 +97,7 @@ public abstract class CoreOperationRelationalExpression extends CoreOperation {
+      */
+     private Object reduce(Object o) {
+         if (o instanceof SelfContext) {
+-            o = ((EvalContext) o).getSingleNodePointer();
++            o = ((SelfContext) o).getSingleNodePointer();
+         }
+         if (o instanceof Collection) {
+             o = ((Collection) o).iterator();

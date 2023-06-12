@@ -1,0 +1,110 @@
+diff --git a/src/main/java/org/apache/commons/lang3/LocaleUtils.java b/src/main/java/org/apache/commons/lang3/LocaleUtils.java
+index 57c074cd..49433961 100644
+--- a/src/main/java/org/apache/commons/lang3/LocaleUtils.java
++++ b/src/main/java/org/apache/commons/lang3/LocaleUtils.java
+@@ -89,44 +89,76 @@ public class LocaleUtils {
+         if (str == null) {
+             return null;
+         }
+-        final int len = str.length();
+-        if (len < 2) {
++        if (str.isEmpty()) {
++            return new Locale("");
++        }
++        if (str.contains("#")) {
+             throw new IllegalArgumentException("Invalid locale format: " + str);
+         }
+-        final char ch0 = str.charAt(0);
+-            final char ch1 = str.charAt(1);
+-            if (!Character.isLowerCase(ch0) || !Character.isLowerCase(ch1)) {
++        final String[] split = str.split("_", -1);
++        final int len = split.length;
++        switch(len) {
++            case 1:
++                if (isAllLowerCase(split[0])) {
++                    return new Locale(split[0]);
++                }
++                if (isAllUpperCase(split[0])) {
++                    return new Locale("", split[0]);
++                }
+                 throw new IllegalArgumentException("Invalid locale format: " + str);
+-            }
+-            if (len == 2) {
+-                return new Locale(str);
+-            }
+-            if (len < 5) {
++            case 2:
++                if (isAllLowerCase(split[0])) {
++                    if (isAllUpperCase(split[1])) {
++                        return new Locale(split[0], split[1]);
++                    }
++                    throw new IllegalArgumentException("Invalid locale format: " + str);
++                }
++                if (isAllUpperCase(split[0])) {
++                    if (isAllLowerCase(split[1])) {
++                        return new Locale("", split[0], split[1]);
++                    }
++                    throw new IllegalArgumentException("Invalid locale format: " + str);
++                }
+                 throw new IllegalArgumentException("Invalid locale format: " + str);
+-            }
+-            if (str.charAt(2) != '_') {
++            case 3:
++                if (isAllLowerCase(split[0]) && split[1].length() == 0 && isAllUpperCase(split[2])) {
++                    return new Locale(split[0], split[2]);
++                }
++                if (split[0].length() == 0 && isAllUpperCase(split[1]) && isAllLowerCase(split[2])) {
++                    return new Locale("", split[1], split[2]);
++                }
+                 throw new IllegalArgumentException("Invalid locale format: " + str);
+-            }
+-            final char ch3 = str.charAt(3);
+-            if (ch3 == '_') {
+-                return new Locale(str.substring(0, 2), "", str.substring(4));
+-            }
+-            final char ch4 = str.charAt(4);
+-            if (!Character.isUpperCase(ch3) || !Character.isUpperCase(ch4)) {
+-                throw new IllegalArgumentException("Invalid locale format: " + str);
+-            }
+-            if (len == 5) {
+-                return new Locale(str.substring(0, 2), str.substring(3, 5));
+-            }
+-            if (len < 7) {
++            default:
+                 throw new IllegalArgumentException("Invalid locale format: " + str);
++        }
++    }
++    private static boolean isAllLowerCase(final String value) {
++        for (int i = 0; i < value.length(); ++i) {
++            final char c = value.charAt(i);
++            if (isAsciiAlphaUpper(c)) {
++                return false;
+             }
+-            if (str.charAt(5) != '_') {
+-                throw new IllegalArgumentException("Invalid locale format: " + str);
++        }
++        return true;
++    }
++    private static boolean isAllUpperCase(final String value) {
++        for (int i = 0; i < value.length(); ++i) {
++            final char c = value.charAt(i);
++            if (isAsciiAlphaLower(c)) {
++                return false;
+             }
+-            return new Locale(str.substring(0, 2), str.substring(3, 5), str.substring(6));
++        }
++        return true;
++    }
++    private static boolean isAsciiAlpha(final char c) {
++        return (c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z');
++    }
++    private static boolean isAsciiAlphaUpper(final char c) {
++        return c >= 'A' && c <= 'Z';
++    }
++    private static boolean isAsciiAlphaLower(final char c) {
++        return c >= 'a' && c <= 'z';
+     }
+-
+     //-----------------------------------------------------------------------
+     /**
+      * <p>Obtains the list of locales to search through when performing

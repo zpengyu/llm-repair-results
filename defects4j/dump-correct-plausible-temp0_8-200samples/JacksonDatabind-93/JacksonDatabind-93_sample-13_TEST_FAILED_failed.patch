@@ -1,0 +1,34 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/jsontype/impl/SubTypeValidator.java b/src/main/java/com/fasterxml/jackson/databind/jsontype/impl/SubTypeValidator.java
+index fe9cba8d4..1dec110dc 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/jsontype/impl/SubTypeValidator.java
++++ b/src/main/java/com/fasterxml/jackson/databind/jsontype/impl/SubTypeValidator.java
+@@ -76,10 +75,8 @@ public class SubTypeValidator
+             if (_cfgIllegalClassNames.contains(full)) {
+                 break;
+             }
+-
+-            // 18-Dec-2017, tatu: As per [databind#1855], need bit more sophisticated handling
++            // 04-Jan-2017, tatu: As per [databind#1855], need bit more sophisticated handling
+             //    for some Spring framework types
+-            // 05-Jan-2017, tatu: ... also, only applies to classes, not interfaces
+             if (full.startsWith(PREFIX_STRING)) {
+                 for (Class<?> cls = raw; cls != Object.class; cls = cls.getSuperclass()) {
+                     String name = cls.getSimpleName();
+@@ -89,12 +86,14 @@ public class SubTypeValidator
+                             || "AbstractApplicationContext".equals(name)) {
+                         break main_check;
+                     }
++                    // as per [databind#1855], also need to block "MappingJackson2HttpMessageConverter"
++                    if ("MappingJackson2HttpMessageConverter".equals(name)) {
++                        break main_check;
++                    }
+                 }
+             }
+             return;
+         } while (false);
+-
+         throw JsonMappingException.from(ctxt,
+                 String.format("Illegal type (%s) to deserialize: prevented for security reasons", full));
+-    }
+-}
++    }}

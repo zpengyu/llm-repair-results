@@ -1,0 +1,46 @@
+diff --git a/src/main/java/org/apache/commons/math/optimization/direct/MultiDirectional.java b/src/main/java/org/apache/commons/math/optimization/direct/MultiDirectional.java
+index 2fa8c34bf..cde079d09 100644
+--- a/src/main/java/org/apache/commons/math/optimization/direct/MultiDirectional.java
++++ b/src/main/java/org/apache/commons/math/optimization/direct/MultiDirectional.java
+@@ -79,25 +74,27 @@ public class MultiDirectional extends DirectSearchOptimizer {
+                 if (comparator.compare(reflected, expanded) <= 0) {
+                     // accept the reflected simplex
+                     simplex = reflectedSimplex;
++                } else {
++                    // accept the expanded simplex
++                    simplex = reflectedSimplex;
+                 }
+-
+-                return;
+-
+-            }
+-
+-            // compute the contracted simplex
+-            final RealPointValuePair contracted = evaluateNewSimplex(original, gamma, comparator);
+-            if (comparator.compare(contracted, best) < 0) {
+-                // accept the contracted simplex
+-
+-            // check convergence
+                 return;
++            } else {
++                // perform an inside contraction step
++                final RealPointValuePair contracted = evaluateNewSimplex(original, gamma, comparator);
++                if (comparator.compare(contracted, best) <= 0) {
++                    // accept the contracted simplex
++                    simplex = reflectedSimplex;
++                }
++                // perform an outside contraction step
++                final RealPointValuePair outsideContracted = evaluateNewSimplex(original, ro, comparator);
++                if (comparator.compare(outsideContracted, best) <= 0) {
++                    // accept the outside contracted simplex
++                    simplex = reflectedSimplex;
++                }
+             }
+-
+         }
+-
+     }
+-
+     /** Compute and evaluate a new simplex.
+      * @param original original simplex (to be preserved)
+      * @param coeff linear coefficient

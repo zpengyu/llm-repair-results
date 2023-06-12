@@ -1,0 +1,21 @@
+    public void visit(NodeTraversal t, Node n, Node parent) {
+      if (n.isCall()) {
+        Node target = n.getFirstChild();
+        // TODO(johnlenz): add this to the coding convention
+        // so we can remove goog.reflect.sinkValue as well.
+        if (target.isName() && target.getString().equals(PROTECTOR_FN)) {
+          Node expr = n.getLastChild();
+          if (expr.isFunction()) {
+            // TODO(johnlenz): remove this case, as it is only here to
+            // handle the legacy goog.reflect.sinkValue(function() {}) case.
+            // The compiler should just be able to remove the no-op call and the
+            // call itself should be optimized away by other peephole passes.
+            parent.replaceChild(n, expr);
+          } else {
+            n.detachChildren();
+            parent.replaceChild(n, expr);
+          }
+        }
+      }
+    }
+  }

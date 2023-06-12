@@ -1,0 +1,68 @@
+diff --git a/src/com/google/javascript/jscomp/NodeUtil.java b/src/com/google/javascript/jscomp/NodeUtil.java
+index 933d4ffa..1dfd5ae8 100644
+--- a/src/com/google/javascript/jscomp/NodeUtil.java
++++ b/src/com/google/javascript/jscomp/NodeUtil.java
+@@ -2435,10 +2435,10 @@ public final class NodeUtil {
+       case Token.AND:
+       case Token.OR:
+         return evaluatesToLocalValue(value.getFirstChild(), locals)
+-           && evaluatesToLocalValue(value.getLastChild(), locals);
++            && evaluatesToLocalValue(value.getLastChild(), locals);
+       case Token.HOOK:
+         return evaluatesToLocalValue(value.getFirstChild().getNext(), locals)
+-           && evaluatesToLocalValue(value.getLastChild(), locals);
++            && evaluatesToLocalValue(value.getLastChild(), locals);
+       case Token.INC:
+       case Token.DEC:
+         if (value.getBooleanProp(Node.INCRDECR_PROP)) {
+@@ -2469,19 +2469,41 @@ public final class NodeUtil {
+       case Token.OBJECTLIT:
+         // Literals objects with non-literal children are allowed.
+         return true;
++      case Token.ADD:
++      case Token.BITAND:
++      case Token.BITNOT:
++      case Token.BITOR:
++      case Token.BITXOR:
++      case Token.DIV:
++      case Token.EQ:
++      case Token.GE:
++      case Token.GT:
+       case Token.IN:
+-        // TODO(johnlenz): should IN operator be included in #isSimpleOperator?
+-        return true;
+-      default:
++      case Token.LE:
++      case Token.LSH:
++      case Token.LT:
++      case Token.MOD:
++      case Token.MUL:
++      case Token.NE:
++      case Token.RSH:
++      case Token.SHEQ:
++      case Token.SHNE:
++      case Token.SUB:
++      case Token.URSH:
+         // Other op force a local value:
+         //  x = '' + g (x is now an local string)
+         //  x -= g (x is now an local number)
+-        if (isAssignmentOp(value)
+-            || isSimpleOperator(value)
+-            || isImmutableValue(value)) {
+-          return true;
+-        }
+-
++        return true;
++      case Token.INSTANCEOF:
++      case Token.TYPEOF:
++      case Token.VOID:
++      case Token.NOT:
++      case Token.BITNOT:
++      case Token.POS:
++      case Token.NEG:
++        // These operators affect the type of the value.
++        return evaluatesToLocalValue(value.getFirstChild(), locals);
++      default:
+         throw new IllegalStateException(
+             "Unexpected expression node" + value +
+             "\n parent:" + value.getParent());

@@ -1,0 +1,36 @@
+diff --git a/src/main/java/org/apache/commons/compress/archivers/tar/TarUtils.java b/src/main/java/org/apache/commons/compress/archivers/tar/TarUtils.java
+index 121012d0..0fee4f5d 100644
+--- a/src/main/java/org/apache/commons/compress/archivers/tar/TarUtils.java
++++ b/src/main/java/org/apache/commons/compress/archivers/tar/TarUtils.java
+@@ -96,8 +92,7 @@ public class TarUtils {
+         if (trailer == 0 || trailer == ' '){
+             end--;
+         }
+-
+-        for ( ;start < end; start++) {
++        if (start < end) {
+             final byte currentByte = buffer[start];
+             // CheckStyle:MagicNumber OFF
+             if (currentByte < '0' || currentByte > '7'){
+@@ -106,11 +101,19 @@ public class TarUtils {
+             }
+             result = (result << 3) + (currentByte - '0'); // convert from ASCII
+             // CheckStyle:MagicNumber ON
++            for ( start++; start < end; start++) {
++                final byte nextByte = buffer[start];
++                // CheckStyle:MagicNumber OFF
++                if (nextByte < '0' || nextByte > '7'){
++                    throw new IllegalArgumentException(
++                            exceptionMessage(buffer, offset, length, start, currentByte));
++                }
++                result = (result << 3) + (nextByte - '0'); // convert from ASCII
++                // CheckStyle:MagicNumber ON
++            }
+         }
+-
+         return result;
+     }
+-
+     /** 
+      * Compute the value contained in a byte buffer.  If the most
+      * significant bit of the first byte in the buffer is set, this

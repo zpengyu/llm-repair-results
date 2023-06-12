@@ -1,0 +1,101 @@
+###Provide a fix for the buggy function
+###Buggy Function
+class FibonacciExample {
+    public static void main(String args[]) {
+        int n1 = 0, n2 = 1, n3, i, count = 10;
+
+        System.out.print(n1 + " " + n2);
+
+        for (i = 2; i < count; ++i) {
+            n3 = n1 - n2;
+            System.out.print(" " + n3);
+            n1 = n2;
+            n2 = n3;
+        }
+    }
+}
+
+###Fixed Function
+class FibonacciExample {
+    public static void main(String args[]) {
+        int n1 = 0, n2 = 1, n3, i, count = 10;
+
+        System.out.print(n1 + " " + n2);
+
+        for (i = 2; i < count; ++i) {
+            n3 = n1 + n2;
+            System.out.print(" " + n3);
+            n1 = n2;
+            n2 = n3;
+        }
+    }
+}
+
+###Provide a fix for the buggy function
+###Buggy Function
+protected BasePeriod(long duration) {
+    this(duration, null, null);
+    // bug [3264409]
+}
+###Fixed Function
+protected BasePeriod(long duration) {
+    super();
+    // bug [3264409]
+    iType = PeriodType.time();
+    int[] values = ISOChronology.getInstanceUTC().get(this, duration);
+    iType = PeriodType.standard();
+    iValues = new int[8];
+    System.arraycopy(values, 0, iValues, 4, 4);
+}
+###Provide a fix for the buggy function
+###Buggy Function
+    public long computeMillis(boolean resetFields, String text) {
+        SavedField[] savedFields = iSavedFields;
+        int count = iSavedFieldsCount;
+        if (iSavedFieldsShared) {
+            iSavedFields = savedFields = (SavedField[])iSavedFields.clone();
+            iSavedFieldsShared = false;
+        }
+        sort(savedFields, count);
+        if (count > 0) {
+            // alter base year for parsing if first field is month or day
+            DurationField months = DurationFieldType.months().getField(iChrono);
+            DurationField days = DurationFieldType.days().getField(iChrono);
+            DurationField first = savedFields[0].iField.getDurationField();
+            if (compareReverse(first, months) >= 0 && compareReverse(first, days) <= 0) {
+                saveField(DateTimeFieldType.year(), iDefaultYear);
+                return computeMillis(resetFields, text);
+            }
+        }
+
+        long millis = iMillis;
+        try {
+            for (int i = 0; i < count; i++) {
+                millis = savedFields[i].set(millis, resetFields);
+            }
+        } catch (IllegalFieldValueException e) {
+            if (text != null) {
+                e.prependMessage("Cannot parse \"" + text + '"');
+            }
+            throw e;
+        }
+        
+        if (iZone == null) {
+            millis -= iOffset;
+        } else {
+            int offset = iZone.getOffsetFromLocal(millis);
+            millis -= offset;
+            if (offset != iZone.getOffset(millis)) {
+                String message =
+                    "Illegal instant due to time zone offset transition (" + iZone + ')';
+                if (text != null) {
+                    message = "Cannot parse \"" + text + "\": " + message;
+                }
+                throw new IllegalArgumentException(message);
+            }
+        }
+        
+        return millis;
+    }
+
+###Fixed Function

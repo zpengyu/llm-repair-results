@@ -1,0 +1,77 @@
+diff --git a/src/main/java/org/apache/commons/codec/binary/BaseNCodecInputStream.java b/src/main/java/org/apache/commons/codec/binary/BaseNCodecInputStream.java
+index 78f4d67e..52f576ff 100644
+--- a/src/main/java/org/apache/commons/codec/binary/BaseNCodecInputStream.java
++++ b/src/main/java/org/apache/commons/codec/binary/BaseNCodecInputStream.java
+@@ -139,20 +131,61 @@ public class BaseNCodecInputStream extends FilterInputStream {
+      *
+      * @throws IllegalArgumentException if the provided skip length is negative
+      */
+-
+-        // skip in chunks of 512 bytes
+-
+-
++    @Override
++    public long skip(long n) throws IOException {
++        if (n < 0) {
++            throw new IllegalArgumentException("Negative skip length");
++        }
++        final int chunk = 512;
++        long remaining = n;
++        byte[] skipBuffer = new byte[chunk];
++        int nr;
++        if (n <= 0) {
++            return 0;
++        }
++        while (remaining > 0) {
++            nr = read(skipBuffer, 0, (int) Math.min(chunk, remaining));
++            if (nr < 0) {
++                break;
++            }
++            remaining -= nr;
++        }
++        return n - remaining;
++    }
+     /**
+      * {@inheritDoc}
+      *
+      * @return <code>0</code> if the {@link InputStream} has reached <code>EOF</code>,
+      * <code>1</code> otherwise
+      */
+-        // Note: the logic is similar to the InflaterInputStream:
+-        //       as long as we have not reached EOF, indicate that there is more
+-        //       data available. As we do not know for sure how much data is left,
+-        //       just return 1 as a safe guess.
+-
+-        // use the EOF flag of the underlying codec instance
++    @Override
++    public int available() throws IOException {
++        if (baseNCodec.hasData()) {
++            return 1;
++        }
++        return in.available();
++    }
++    /**
++     * {@inheritDoc}
++     *
++     * @return <code>false</code>
++     */
++    @Override
++    public boolean markSupported() {
++        return false; // not an easy job to support marks
++    }
++    /**
++     * {@inheritDoc}
++     */
++    @Override
++    public void mark(int readAheadLimit) {
++        throw new UnsupportedOperationException();
++    }
++    /**
++     * {@inheritDoc}
++     */
++    @Override
++    public void reset() throws IOException {
++        throw new IOException("mark/reset not supported");
++    }
+ }
+\ No newline at end of file

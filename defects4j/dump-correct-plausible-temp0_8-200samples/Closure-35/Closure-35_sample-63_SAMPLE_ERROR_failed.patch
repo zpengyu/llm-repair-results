@@ -1,0 +1,43 @@
+diff --git a/src/com/google/javascript/jscomp/TypeInference.java b/src/com/google/javascript/jscomp/TypeInference.java
+index ab353933..4e3057c5 100644
+--- a/src/com/google/javascript/jscomp/TypeInference.java
++++ b/src/com/google/javascript/jscomp/TypeInference.java
+@@ -1110,27 +1110,21 @@ class TypeInference
+    * If we give the anonymous object an inferred property of (number|undefined),
+    * then this code will type-check appropriately.
+    */
+-  private void inferPropertyTypesToMatchConstraint(
+-      JSType type, JSType constraint) {
++private void inferPropertyTypesToMatchConstraint(JSType type, JSType constraint) {
+     if (type == null || constraint == null) {
+       return;
+     }
+-
+-    ObjectType constraintObj =
+-        ObjectType.cast(constraint.restrictByNotNullOrUndefined());
+-    if (constraintObj != null && constraintObj.isRecordType()) {
+-      ObjectType objType = ObjectType.cast(type.restrictByNotNullOrUndefined());
+-      if (objType != null) {
+-        for (String prop : constraintObj.getOwnPropertyNames()) {
+-          JSType propType = constraintObj.getPropertyType(prop);
+-          if (!objType.isPropertyTypeDeclared(prop)) {
+-            JSType typeToInfer = propType;
+-            if (!objType.hasProperty(prop)) {
+-              typeToInfer =
+-                  getNativeType(VOID_TYPE).getLeastSupertype(propType);
+-            }
+-            objType.defineInferredProperty(prop, typeToInfer, null);
++    ObjectType constraintObj = constraint.restrictByNotNullOrUndefined();
++    ObjectType objType = type.restrictByNotNullOrUndefined();
++    if (constraintObj != null && objType != null) {
++      for (String prop : constraintObj.getOwnPropertyNames()) {
++        JSType propType = constraintObj.getPropertyType(prop);
++        if (!objType.isPropertyTypeDeclared(prop)) {
++          JSType typeToInfer = propType;
++          if (!objType.hasProperty(prop)) {
++            typeToInfer = getNativeType(VOID_TYPE).getLeastSupertype(propType);
+           }
++          objType.defineInferredProperty(prop, typeToInfer, null);
+         }
+       }
+     }

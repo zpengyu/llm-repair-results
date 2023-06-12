@@ -1,0 +1,46 @@
+diff --git a/src/main/java/org/apache/commons/compress/archivers/zip/ZipArchiveInputStream.java b/src/main/java/org/apache/commons/compress/archivers/zip/ZipArchiveInputStream.java
+index 5d4c0a82..b21a1141 100644
+--- a/src/main/java/org/apache/commons/compress/archivers/zip/ZipArchiveInputStream.java
++++ b/src/main/java/org/apache/commons/compress/archivers/zip/ZipArchiveInputStream.java
+@@ -284,28 +273,24 @@ public ZipArchiveEntry getNextZipEntry() throws IOException {
+         } else {
+             off += 3 * WORD;
+         }
+-
+-        final int fileNameLen = ZipShort.getValue(LFH_BUF, off);
+-
++        int fileNameLen = ZipShort.getValue(LFH_BUF, off);
+         off += SHORT;
+-
+-        final int extraLen = ZipShort.getValue(LFH_BUF, off);
++        int extraLen = ZipShort.getValue(LFH_BUF, off);
+         off += SHORT;
+-
+-        final byte[] fileName = new byte[fileNameLen];
+-        readFully(fileName);
+-        current.entry.setName(entryEncoding.decode(fileName), fileName);
+-
+-        final byte[] extraData = new byte[extraLen];
+-        readFully(extraData);
+-        current.entry.setExtra(extraData);
+-
++        if (fileNameLen > 0) {
++            final byte[] fileName = new byte[fileNameLen];
++            readFully(fileName);
++            current.entry.setName(entryEncoding.decode(fileName), fileName);
++        }
++        if (extraLen > 0) {
++            final byte[] extraData = new byte[extraLen];
++            readFully(extraData);
++            current.entry.setExtra(extraData);
++        }
+         if (!hasUTF8Flag && useUnicodeExtraFields) {
+-            ZipUtil.setNameAndCommentFromExtraFields(current.entry, fileName, null);
++            ZipUtil.setNameAndCommentFromExtraFields(current.entry, current.entry.getName().getBytes(), null);
+         }
+-
+         processZip64Extra(size, cSize);
+-
+         if (current.entry.getCompressedSize() != ArchiveEntry.SIZE_UNKNOWN) {
+             if (current.entry.getMethod() == ZipMethod.UNSHRINKING.getCode()) {
+                 current.in = new UnshrinkingInputStream(new BoundedInputStream(in, current.entry.getCompressedSize()));

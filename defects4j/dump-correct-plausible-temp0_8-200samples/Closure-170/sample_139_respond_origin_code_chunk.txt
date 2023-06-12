@@ -1,0 +1,25 @@
+    private void getNumUseInUseCfgNode(final Node cfgNode) {
+
+      numUsesWithinCfgNode = 0;
+      AbstractCfgNodeTraversalCallback gatherCb =
+          new AbstractCfgNodeTraversalCallback() {
+
+        @Override
+        public void visit(NodeTraversal t, Node n, Node parent) {
+          if (n.isName() && n.getString().equals(varName) &&
+              // Don't count lhs of assignments.
+              !NodeUtil.isAssignmentOp(parent) &&
+              // Don't count var definition.
+              parent.getType() != Token.VAR &&
+              // Don't count GETPROP assignments.
+              // TODO(johnlenz): This should be handled more directly.
+              !(parent.isAssign() && parent.getFirstChild() == n)) {
+              numUsesWithinCfgNode++;
+          }
+        }
+
+      };
+
+      NodeTraversal.traverse(compiler, cfgNode, gatherCb);
+    }
+

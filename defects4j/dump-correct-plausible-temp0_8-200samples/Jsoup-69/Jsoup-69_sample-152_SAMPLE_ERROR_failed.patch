@@ -1,0 +1,17 @@
+diff --git a/src/main/java/org/jsoup/nodes/FormElement.java b/src/main/java/org/jsoup/nodes/FormElement.java
+index baffcf1..ad0172b 100644
+--- a/src/main/java/org/jsoup/nodes/FormElement.java
++++ b/src/main/java/org/jsoup/nodes/FormElement.java
+@@ -99,6 +90,12 @@ public class FormElement extends Element {
+                     final String val = el.val().length() >  0 ? el.val() : "on";
+                     data.add(HttpConnection.KeyVal.create(name, val));
+                 }
++            } else if ("submit".equalsIgnoreCase(type)) {
++                // submit fields do not submit their values. Only submit the value of the first submit button in the form
++                if (!formSubmitted) {
++                    data.add(HttpConnection.KeyVal.create(name, el.val()));
++                    formSubmitted = true;
++                }
+             } else {
+                 data.add(HttpConnection.KeyVal.create(name, el.val()));
+             }

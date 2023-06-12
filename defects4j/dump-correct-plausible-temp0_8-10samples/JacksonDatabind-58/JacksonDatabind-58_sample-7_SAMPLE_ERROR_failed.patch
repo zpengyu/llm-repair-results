@@ -1,0 +1,25 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/deser/BeanDeserializerFactory.java b/src/main/java/com/fasterxml/jackson/databind/deser/BeanDeserializerFactory.java
+index bc8e6736f..5e63d9495 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/deser/BeanDeserializerFactory.java
++++ b/src/main/java/com/fasterxml/jackson/databind/deser/BeanDeserializerFactory.java
+@@ -748,9 +746,19 @@ public class BeanDeserializerFactory
+         if(objectIdInfo != null){
+             prop.setObjectIdInfo(objectIdInfo);
+         }
++        if (prop instanceof SettableAnyProperty) {
++            // 30-Aug-2012, tatu: As per [databind#36], need to link managed- and back-reference
++            SettableAnyProperty anyProp = (SettableAnyProperty) prop;
++            String refName = anyProp.getManagedReferenceName();
++            if (refName != null) {
++                if (objectIdInfo == null || !refName.equals(objectIdInfo.getGeneratorType().getName())) {
++                    throw new IllegalArgumentException("Trying to link managed reference '"+refName+"' for property '"+anyProp.getName()+"' without corresponding ObjectIdInfo");
++                }
++                anyProp.setManagedReferenceName(refName);
++            }
++        }
+         return prop;
+     }
+-
+     /**
+      * Method that will construct a regular bean property setter using
+      * the given setter method.

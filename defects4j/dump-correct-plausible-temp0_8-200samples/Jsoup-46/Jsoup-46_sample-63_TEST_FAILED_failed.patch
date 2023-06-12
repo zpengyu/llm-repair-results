@@ -1,0 +1,53 @@
+diff --git a/src/main/java/org/jsoup/nodes/Entities.java b/src/main/java/org/jsoup/nodes/Entities.java
+index 32cc3af..451725c 100644
+--- a/src/main/java/org/jsoup/nodes/Entities.java
++++ b/src/main/java/org/jsoup/nodes/Entities.java
+@@ -86,17 +85,18 @@ public class Entities {
+         final CoreCharset coreCharset = CoreCharset.byName(encoder.charset().name());
+         final Map<Character, String> map = escapeMode.getMap();
+         final int length = string.length();
+-
+-        int codePoint;
+-        for (int offset = 0; offset < length; offset += Character.charCount(codePoint)) {
+-            codePoint = string.codePointAt(offset);
+-
++        for (int offset = 0; offset < length; ) {
++            final int codepoint = string.codePointAt(offset);
++            final int codePoint = string.codePointAt(offset);
+             if (normaliseWhite) {
+-                if (StringUtil.isWhitespace(codePoint)) {
+-                    if ((stripLeadingWhite && !reachedNonWhite) || lastWasWhite)
++                if (StringUtil.isWhitespace(codepoint)) {
++                    if ((stripLeadingWhite && !reachedNonWhite) || lastWasWhite) {
++                        offset += Character.charCount(codepoint);
+                         continue;
++                    }
+                     accum.append(' ');
+                     lastWasWhite = true;
++                    offset += Character.charCount(codepoint);
+                     continue;
+                 } else {
+                     lastWasWhite = false;
+@@ -141,18 +141,18 @@ public class Entities {
+                         else if (map.containsKey(c))
+                             accum.append('&').append(map.get(c)).append(';');
+                         else
+-                            accum.append("&#x").append(Integer.toHexString(codePoint)).append(';');
++                            accum.append("&#x").append(Integer.toHexString(codepoint)).append(';');
+                 }
+             } else {
+-                final String c = new String(Character.toChars(codePoint));
++                final String c = new String(Character.toChars(codepoint));
+                 if (encoder.canEncode(c)) // uses fallback encoder for simplicity
+                     accum.append(c);
+                 else
+-                    accum.append("&#x").append(Integer.toHexString(codePoint)).append(';');
++                    accum.append("&#x").append(Integer.toHexString(codepoint)).append(';');
+             }
++            offset += Character.charCount(codepoint);
+         }
+     }
+-
+     static String unescape(String string) {
+         return unescape(string, false);
+     }

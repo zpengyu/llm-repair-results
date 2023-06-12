@@ -1,0 +1,52 @@
+diff --git a/src/org/mockito/internal/stubbing/answers/AnswersValidator.java b/src/org/mockito/internal/stubbing/answers/AnswersValidator.java
+index 5d8057846..6cc34c4d4 100644
+--- a/src/org/mockito/internal/stubbing/answers/AnswersValidator.java
++++ b/src/org/mockito/internal/stubbing/answers/AnswersValidator.java
+@@ -24,26 +20,20 @@ public class AnswersValidator {
+         if (answer instanceof DoesNothing) {
+             validateDoNothing((DoesNothing) answer, invocation);
+         }
+-        
+     }
+-
+-
+     private void validateDoNothing(DoesNothing answer, Invocation invocation) {
+-        if (!invocation.isVoid()) {
++        if (invocation.getMethod().getReturnType() != void.class) {
+             reporter.onlyVoidMethodsCanBeSetToDoNothing();
+         }
+     }
+-
+     private void validateReturnValue(Returns answer, Invocation invocation) {
+-        if (invocation.isVoid()) {
++        if (invocation.getMethod().getReturnType() == void.class) {
+             reporter.cannotStubVoidMethodWithAReturnValue();
+         }
+-        
+-        if (answer.returnsNull() && invocation.returnsPrimitive()) {
++        if (answer.returnsNull() && invocation.getMethod().getReturnType().isPrimitive()) {
+             reporter.wrongTypeOfReturnValue(invocation.printMethodReturnType(), "null", invocation.getMethodName());
+         } 
+-
+-        if (!answer.returnsNull() && !invocation.isValidReturnType(answer.getReturnType())) {
++        if (!answer.returnsNull() && !invocation.getMethod().getReturnType().isAssignableFrom(answer.getReturnType())) {
+             reporter.wrongTypeOfReturnValue(invocation.printMethodReturnType(), answer.printReturnType(), invocation.getMethodName());
+         }
+     }
+@@ -57,8 +45,14 @@ public class AnswersValidator {
+         if (throwable instanceof RuntimeException || throwable instanceof Error) {
+             return;
+         }
+-        
+-        if (!invocation.isValidException(throwable)) {
++        boolean found = false;
++        for (Class<?> exceptionClass : invocation.getMethod().getExceptionTypes()) {
++			if (exceptionClass.isAssignableFrom(throwable.getClass())) {
++				found = true;
++				break;
++			}
++		}
++        if (!found) {
+             reporter.checkedExceptionInvalid(throwable);
+         }
+     }

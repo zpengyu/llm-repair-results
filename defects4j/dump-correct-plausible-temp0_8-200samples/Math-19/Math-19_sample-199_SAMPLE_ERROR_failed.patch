@@ -1,0 +1,19 @@
+diff --git a/src/main/java/org/apache/commons/math3/optimization/direct/CMAESOptimizer.java b/src/main/java/org/apache/commons/math3/optimization/direct/CMAESOptimizer.java
+index 140e9d4f9..0eac9d11c 100644
+--- a/src/main/java/org/apache/commons/math3/optimization/direct/CMAESOptimizer.java
++++ b/src/main/java/org/apache/commons/math3/optimization/direct/CMAESOptimizer.java
+@@ -535,8 +533,13 @@ public class CMAESOptimizer
+                 boundaries = new double[2][];
+                 boundaries[0] = lB;
+                 boundaries[1] = uB;
+-
+                 // Abort early if the normalization will overflow (cf. "encode" method).
++                for (int i = 0; i < lB.length; i++) {
++                    final double difference = uB[i] - lB[i];
++                    if (FastMath.abs(difference) > Double.MAX_VALUE / (2 * getDimension())) {
++                        throw new MathArithmeticException();
++                    }
++                }
+             }
+         } else {
+             // Convert API to internal handling of boundaries.

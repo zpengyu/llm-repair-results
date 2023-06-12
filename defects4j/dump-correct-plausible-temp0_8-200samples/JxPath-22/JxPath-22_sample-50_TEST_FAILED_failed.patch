@@ -1,0 +1,20 @@
+diff --git a/src/java/org/apache/commons/jxpath/ri/model/dom/DOMNodePointer.java b/src/java/org/apache/commons/jxpath/ri/model/dom/DOMNodePointer.java
+index 9524259..40c84f1 100644
+--- a/src/java/org/apache/commons/jxpath/ri/model/dom/DOMNodePointer.java
++++ b/src/java/org/apache/commons/jxpath/ri/model/dom/DOMNodePointer.java
+@@ -688,6 +685,15 @@ public class DOMNodePointer extends NodePointer {
+                     if (attr != null) {
+                         return attr.getValue();
+                     }
++                } else if (aNode.getNodeType() == Node.ENTITY_NODE) {
++                    // fix for bug# 71537: The namespace was not resolved
++                    // correctly for external DTDs with an entity
++                    NamedNodeMap map = aNode.getAttributes();
++                    for (int i = 0; i < map.getLength(); i++) {
++                        if (((Attr) map.item(i)).getName().equals(qname)) {
++                            return ((Attr) map.item(i)).getValue();
++                        }
++                    }
+                 }
+                 aNode = aNode.getParentNode();
+             }

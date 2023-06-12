@@ -1,0 +1,35 @@
+diff --git a/src/java/org/apache/commons/lang/text/ExtendedMessageFormat.java b/src/java/org/apache/commons/lang/text/ExtendedMessageFormat.java
+index c63fbf6d..73c98e2a 100644
+--- a/src/java/org/apache/commons/lang/text/ExtendedMessageFormat.java
++++ b/src/java/org/apache/commons/lang/text/ExtendedMessageFormat.java
+@@ -419,11 +419,17 @@ public class ExtendedMessageFormat extends MessageFormat {
+         int start = pos.getIndex();
+         char[] c = pattern.toCharArray();
+         if (escapingOn && c[start] == QUOTE) {
+-            return appendTo == null ? null : appendTo.append(QUOTE);
++            if (appendTo == null) {
++                return null;
++            }
++            return appendTo.append(QUOTE);
+         }
+         int lastHold = start;
+         for (int i = pos.getIndex(); i < pattern.length(); i++) {
+             if (escapingOn && pattern.substring(i).startsWith(ESCAPED_QUOTE)) {
++                if (appendTo == null) {
++                    return null;
++                }
+                 appendTo.append(c, lastHold, pos.getIndex() - lastHold).append(
+                         QUOTE);
+                 pos.setIndex(i + ESCAPED_QUOTE.length());
+@@ -433,7 +439,10 @@ public class ExtendedMessageFormat extends MessageFormat {
+             switch (c[pos.getIndex()]) {
+             case QUOTE:
+                 next(pos);
+-                return appendTo == null ? null : appendTo.append(c, lastHold,
++                if (appendTo == null) {
++                    return null;
++                }
++                return appendTo.append(c, lastHold,
+                         pos.getIndex() - lastHold);
+             default:
+                 next(pos);

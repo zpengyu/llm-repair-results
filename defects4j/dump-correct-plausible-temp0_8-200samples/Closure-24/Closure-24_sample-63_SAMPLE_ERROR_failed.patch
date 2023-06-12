@@ -1,0 +1,21 @@
+diff --git a/src/com/google/javascript/jscomp/ScopedAliases.java b/src/com/google/javascript/jscomp/ScopedAliases.java
+index 0470cda2..a0222b40 100644
+--- a/src/com/google/javascript/jscomp/ScopedAliases.java
++++ b/src/com/google/javascript/jscomp/ScopedAliases.java
+@@ -278,11 +278,12 @@ class ScopedAliases implements HotSwapCompilerPass {
+         if (parent.isVar()) {
+           if (n.hasChildren() && n.getFirstChild().isQualifiedName()) {
+           String name = n.getString();
+-          Var aliasVar = scope.getVar(name);
+-          aliases.put(name, aliasVar);
+-
+           String qualifiedName =
+-              aliasVar.getInitialValue().getQualifiedName();
++              name;
++          if (scope.isDeclared(name, false)) {
++            qualifiedName = scope.getVar(name).getInitialValue().getQualifiedName();
++          }
++          aliases.put(name, qualifiedName);
+           transformation.addAlias(name, qualifiedName);
+           // Bleeding functions already get a BAD_PARAMETERS error, so just
+           // do nothing.

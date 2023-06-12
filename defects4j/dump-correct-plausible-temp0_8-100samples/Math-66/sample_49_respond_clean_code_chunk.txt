@@ -1,0 +1,68 @@
+import org.apache.commons.math3.analysis.UnivariateFunction;
+import org.apache.commons.math3.analysis.function.Identity;
+import org.apache.commons.math3.analysis.solvers.BracketedUnivariateSolver;
+import org.apache.commons.math3.analysis.solvers.UnivariateSolver;
+import org.apache.commons.math3.exception.TooManyEvaluationsException;
+public class BrentOptimizer extends AbstractUnivariateOptimizer {
+    /** Default absolute accuracy. */
+    private static final double DEFAULT_ABSOLUTE_ACCURACY = 1e-6;
+    /** Solver absolute accuracy. */
+    private final double absoluteAccuracy;
+    /**
+     * Construct a solver.
+     */
+    public BrentOptimizer() {
+        this(DEFAULT_ABSOLUTE_ACCURACY);
+    }
+    /**
+     * Construct a solver.
+     *
+     * @param absoluteAccuracy Maximum absolute error.
+     */
+    public BrentOptimizer(final double absoluteAccuracy) {
+        this.absoluteAccuracy = absoluteAccuracy;
+    }
+    /**
+     * Get the absolute accuracy.
+     *
+     * @return the accuracy.
+     */
+    public double getAbsoluteAccuracy() {
+        return absoluteAccuracy;
+    }
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected double doOptimize()
+        throws TooManyEvaluationsException,
+               org.apache.commons.math3.exception.NumberIsTooLargeException {
+        final double min = getMin();
+        final double max = getMax();
+        final double initial = getStartValue();
+        final double functionValueAccuracy = getFunctionValueAccuracy();
+        verifySequence(min, initial, max);
+        final UnivariateFunction func = new UnivariateFunction() {
+            public double value(double x) {
+                incrementEvaluationCount();
+                return computeObjectiveValue(x);
+            }
+        };
+        BracketedUnivariateSolver<UnivariateFunction> bracketing =
+            new BracketingNthOrderBrentSolver(getRelativeAccuracy(),
+                                              getAbsoluteAccuracy(),
+                                              getFunctionValueAccuracy());
+        final double x;
+        if (initial < min || initial > max) {
+            // find an initial bracketing
+            final double[] bracket = bracketing.bracket(func, initial, min, max);
+            x = bracketing.solve(getMaxEvaluations(), func, bracket[0], bracket[1], bracket[2]);
+        } else {
+            // use the specified interval and initial value
+            UnivariateSolver solver = new BrentSolver(functionValueAccuracy);
+            x = solver.solve(getMaxEvaluations(), func, min, max, initial);
+        }
+        setResult(x, computeObjectiveValue(x));
+        return x;
+    }
+}

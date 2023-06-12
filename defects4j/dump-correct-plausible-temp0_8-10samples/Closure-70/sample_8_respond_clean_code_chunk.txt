@@ -1,0 +1,20 @@
+    private void declareArguments(Node functionNode) {
+      Node astParameters = functionNode.getFirstChild().getNext();
+      Node body = astParameters.getNext();
+      FunctionType functionType = (FunctionType) functionNode.getJSType();
+      if (functionType != null) {
+        Node jsDocParameters = functionType.getParametersNode();
+        if (jsDocParameters != null) {
+          int astParameterIndex = 0;
+          for (Node jsDocParameter : jsDocParameters.children()) {
+            // NodeUtil.getFunctionParameters always creates a parameter node
+            // for a function, so there is always an AST parameter node
+            // corresponding to each JSDoc parameter node.
+            Node astParameter = astParameters.getChildAtIndex(astParameterIndex);
+            defineSlot(astParameter, functionNode, jsDocParameter.getJSType(),
+                       true);
+            ++astParameterIndex;
+          }
+        }
+      }
+    } // end declareArguments

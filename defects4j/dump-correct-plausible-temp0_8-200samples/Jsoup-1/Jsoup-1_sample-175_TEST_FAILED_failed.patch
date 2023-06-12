@@ -1,0 +1,24 @@
+diff --git a/src/main/java/org/jsoup/nodes/Document.java b/src/main/java/org/jsoup/nodes/Document.java
+index 7022584..4f6c1a7 100644
+--- a/src/main/java/org/jsoup/nodes/Document.java
++++ b/src/main/java/org/jsoup/nodes/Document.java
+@@ -111,6 +111,8 @@ public class Document extends Element {
+ 
+     // does not recurse.
+     private void normalise(Element element) {
++        // Move any text nodes that are not children of the body element to be children of the body element,
++        // so that when pretty printing, newlines can be determined by the parser.
+         List<Node> toMove = new ArrayList<Node>();
+         for (Node node: element.childNodes) {
+             if (node instanceof TextNode) {
+@@ -119,10 +121,8 @@ public class Document extends Element {
+                     toMove.add(tn);
+             }
+         }
+-
+         for (Node node: toMove) {
+             element.removeChild(node);
+-            body().appendChild(new TextNode(" ", ""));
+             body().appendChild(node);
+         }
+     }

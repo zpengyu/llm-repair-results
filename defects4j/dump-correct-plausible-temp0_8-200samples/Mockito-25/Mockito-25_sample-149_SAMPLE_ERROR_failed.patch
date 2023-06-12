@@ -1,0 +1,39 @@
+diff --git a/src/org/mockito/internal/stubbing/defaultanswers/ReturnsDeepStubs.java b/src/org/mockito/internal/stubbing/defaultanswers/ReturnsDeepStubs.java
+index 6fa773f53..8872d7091 100644
+--- a/src/org/mockito/internal/stubbing/defaultanswers/ReturnsDeepStubs.java
++++ b/src/org/mockito/internal/stubbing/defaultanswers/ReturnsDeepStubs.java
+@@ -74,23 +65,24 @@ public class ReturnsDeepStubs implements Answer<Object>, Serializable {
+      * @param returnTypeGenericMetadata The metadata to use to create the new mock.
+      * @return The mock
+      */
+-
+-
+-
+-
+     private Object recordDeepStubMock(InvocationOnMock invocation, InvocationContainerImpl container) {
+-        Class<?> clz = invocation.getMethod().getReturnType();
+-        final Object mock = org.mockito.Mockito.mock(clz, this);
+-
+-        container.addAnswer(new Answer<Object>() {
++    	Class<?> clz = invocation.getMethod().getReturnType();
++    	Object mock = createNewMock(clz, container);
++    	container.addAnswer(new Answer<Object>() {
+             public Object answer(InvocationOnMock invocation) throws Throwable {
+                 return mock;
+             }
+         }, false);
+-
+         return mock;
+     }
+-
++    protected Object createNewMock(Class<?> clz, InvocationContainerImpl container) {
++    	GenericMetadataSupport genericMetadata = findGenericMetadataSupportFor(clz, container);
++    	return org.mockito.Mockito.mock(clz, genericMetadata.getMockSettings().defaultAnswer(this));
++    }
++    protected GenericMetadataSupport findGenericMetadataSupportFor(Class<?> clz, InvocationContainerImpl container) {
++    	List<Class<?>> typeArguments = container.getTypeArgumentsFor(clz);
++        return GenericMetadataSupport.inferFrom(typeArguments.toArray(new Type[typeArguments.size()]));
++    }
+     protected GenericMetadataSupport actualParameterizedType(Object mock) {
+         CreationSettings mockSettings = (CreationSettings) new MockUtil().getMockHandler(mock).getMockSettings();
+         return GenericMetadataSupport.inferFrom(mockSettings.getTypeToMock());

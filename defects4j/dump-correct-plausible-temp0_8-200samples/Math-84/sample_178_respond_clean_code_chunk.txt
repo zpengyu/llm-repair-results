@@ -1,0 +1,55 @@
+    protected void iterateSimplex(final Comparator<RealPointValuePair> comparator)
+        throws FunctionEvaluationException, OptimizationException, IllegalArgumentException {
+        while (true) {
+            incrementIterationsCounter();
+            // save the original vertex
+            final RealPointValuePair[] original = simplex;
+            final RealPointValuePair best = original[0];
+            // perform a reflection step
+            final RealPointValuePair reflected = evaluateNewSimplex(original, 1.0, comparator);
+            if (comparator.compare(reflected, best) < 0) {
+                // compute the expanded simplex
+                final RealPointValuePair[] reflectedSimplex = simplex;
+                final RealPointValuePair expanded = evaluateNewSimplex(original, khi, comparator);
+                if (comparator.compare(best, expanded) <= 0 &&
+                    comparator.compare(reflected, expanded) <= 0) {
+                    // accept the expanded simplex
+                    simplex = reflectedSimplex;
+                    return;
+                }
+                if (comparator.compare(best, reflected) <= 0) {
+                    // accept the reflected simplex
+                    simplex = reflectedSimplex;
+                    return;
+                }
+                // shrink the simplex from the best point
+                for (int i = 1; i < simplex.length; ++i) {
+                    for (int j = 0; j < simplex[i].getPoint().length; ++j) {
+                        final double[] v = simplex[i].getPointRef();
+                        v[j] = best.getPoint(j) + sigma * (v[j] - best.getPoint(j));
+                    }
+                }
+                // evaluate the shrunk simplex
+                evaluate(simplex);
+                sort(simplex, comparator);
+                return;
+            }
+            // compute the contracted simplex
+            final RealPointValuePair contracted = evaluateNewSimplex(original, gamma, comparator);
+            if (comparator.compare(contracted, best) < 0) {
+                // accept the contracted simplex
+            // check convergence
+                return;
+            }
+            // shrink the simplex from the best point
+            for (int i = 1; i < simplex.length; ++i) {
+                for (int j = 0; j < simplex[i].getPoint().length; ++j) {
+                    final double[] v = simplex[i].getPointRef();
+                    v[j] = best.getPoint(j) + sigma * (v[j] - best.getPoint(j));
+                }
+            }
+            // evaluate the shrunk simplex
+            evaluate(simplex);
+            sort(simplex, comparator);
+        }
+    }

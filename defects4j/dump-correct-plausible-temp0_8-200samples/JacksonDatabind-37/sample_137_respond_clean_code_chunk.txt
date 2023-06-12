@@ -1,0 +1,23 @@
+   protected JavaType _narrow(Class<?> subclass)
+    {
+        if (_class == subclass) {
+            return this;
+        }
+        // Should we check that there is a sub-class relationship?
+        // 15-Jan-2016, tatu: Almost yes, but there are some complications with
+        //    placeholder values, so no.
+        /*
+        if (!_class.isAssignableFrom(subclass)) {
+            throw new IllegalArgumentException("Class "+subclass.getName()+" not sub-type of "
+                    +_class.getName());
+        }
+        */
+        // 15-Jan-2015, tatu: Not correct; should really re-resolve...
+        // 30-May-2017, tatu: I think this should actually work, but for
+        //   some reason, it does not. So for now, use a sub-type that
+        //   does the re-resolution. Note that if/when we change to not
+        //   re-resolve, bit above should be enabled.
+        //return new SimpleType(subclass, _bindings, _superClass, _superInterfaces,
+        //        _valueHandler, _typeHandler, _asStatic);
+        return ((SimpleType) forcedNarrowBy(_class, subclass)).withHandlersFrom(this);
+    }

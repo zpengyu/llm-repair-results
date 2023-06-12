@@ -1,0 +1,30 @@
+diff --git a/src/java/org/apache/commons/cli2/option/GroupImpl.java b/src/java/org/apache/commons/cli2/option/GroupImpl.java
+index 27640c1..d6088b9 100644
+--- a/src/java/org/apache/commons/cli2/option/GroupImpl.java
++++ b/src/java/org/apache/commons/cli2/option/GroupImpl.java
+@@ -273,14 +265,23 @@ public class GroupImpl
+         if (present < minimum) {
+             throw new OptionException(this, ResourceConstants.MISSING_OPTION);
+         }
+-
+         // validate each anonymous argument
++        int anonymousPresent = 0;
+         for (final Iterator i = anonymous.iterator(); i.hasNext();) {
+             final Option option = (Option) i.next();
+             option.validate(commandLine);
++            if (commandLine.hasOption(option)) {
++              anonymousPresent += 1;
++            }
++        }
++        if (anonymousPresent > maximum) {
++            throw new OptionException(this, ResourceConstants.UNEXPECTED_TOKEN,
++                                      unexpected.getPreferredName());
++        }
++        if (anonymousPresent < minimum) {
++            throw new OptionException(this, ResourceConstants.MISSING_OPTION);
+         }
+     }
+-
+     public String getPreferredName() {
+         return name;
+     }

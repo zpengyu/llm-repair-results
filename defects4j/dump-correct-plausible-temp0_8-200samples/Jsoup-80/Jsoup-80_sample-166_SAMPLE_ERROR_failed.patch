@@ -1,0 +1,17 @@
+diff --git a/src/main/java/org/jsoup/parser/XmlTreeBuilder.java b/src/main/java/org/jsoup/parser/XmlTreeBuilder.java
+index 24141a4..e372bb0 100644
+--- a/src/main/java/org/jsoup/parser/XmlTreeBuilder.java
++++ b/src/main/java/org/jsoup/parser/XmlTreeBuilder.java
+@@ -89,7 +89,11 @@ public class XmlTreeBuilder extends TreeBuilder {
+             if (data.length() > 1 && (data.startsWith("!") || data.startsWith("?"))) {
+                 Document doc = Jsoup.parse("<" + data.substring(1, data.length() -1) + ">", baseUri, Parser.xmlParser());
+                     Element el = doc.child(0);
+-                    insert = new XmlDeclaration(settings.normalizeTag(el.tagName()), data.startsWith("!"));
++                    if(data.startsWith("!")) {
++                        insert = new XmlDeclaration(settings.normalizeTag(el.tagName()), true);
++                    }else {
++                        insert = new ProcessingInstruction(settings.normalizeTag(el.tagName()));
++                    }
+                     insert.attributes().addAll(el.attributes());
+             }
+         }

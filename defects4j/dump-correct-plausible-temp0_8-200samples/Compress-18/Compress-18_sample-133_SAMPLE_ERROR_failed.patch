@@ -1,0 +1,53 @@
+diff --git a/src/main/java/org/apache/commons/compress/archivers/tar/TarArchiveOutputStream.java b/src/main/java/org/apache/commons/compress/archivers/tar/TarArchiveOutputStream.java
+index da6bbfde..d6c327b5 100644
+--- a/src/main/java/org/apache/commons/compress/archivers/tar/TarArchiveOutputStream.java
++++ b/src/main/java/org/apache/commons/compress/archivers/tar/TarArchiveOutputStream.java
+@@ -454,15 +454,10 @@ public class TarArchiveOutputStream extends ArchiveOutputStream {
+     void writePaxHeaders(String entryName,
+                          Map<String, String> headers) throws IOException {
+         String name = "./PaxHeaders.X/" + stripTo7Bits(entryName);
+-            // TarEntry's constructor would think this is a directory
+-            // and not allow any data to be written
+-        if (name.length() >= TarConstants.NAMELEN) {
+-            name = name.substring(0, TarConstants.NAMELEN - 1);
+-        }
+         TarArchiveEntry pex = new TarArchiveEntry(name,
+                                                   TarConstants.LF_PAX_EXTENDED_HEADER_LC);
+-
+-        StringWriter w = new StringWriter();
++        int bufferSize = 512;
++        ByteArrayOutputStream out = new ByteArrayOutputStream(bufferSize);
+         for (Map.Entry<String, String> h : headers.entrySet()) {
+             String key = h.getKey();
+             String value = h.getValue();
+@@ -481,15 +476,25 @@ public class TarArchiveOutputStream extends ArchiveOutputStream {
+                 line = len + " " + key + "=" + value + "\n";
+                 actualLength = line.getBytes(CharsetNames.UTF_8).length;
+             }
+-            w.write(line);
++            out.write(line.getBytes(CharsetNames.UTF_8));
++            if (out.size() > bufferSize) {
++                // The entry is too big for one block.
++                // Continue in the next entry.
++                pex.setSize(out.size());
++                putArchiveEntry(pex);
++                out.writeTo(this);
++                closeArchiveEntry();
++                name += "/PaxHeaders.X." + entryName.hashCode();
++                pex = new TarArchiveEntry(name,
++                                          TarConstants.LF_PAX_EXTENDED_HEADER_LC);
++                out = new ByteArrayOutputStream(bufferSize);
++            }
+         }
+-        byte[] data = w.toString().getBytes(CharsetNames.UTF_8);
+-        pex.setSize(data.length);
++        pex.setSize(out.size());
+         putArchiveEntry(pex);
+-        write(data);
++        out.writeTo(this);
+         closeArchiveEntry();
+     }
+-
+     private String stripTo7Bits(String name) {
+         final int length = name.length();
+         StringBuffer result = new StringBuffer(length);

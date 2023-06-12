@@ -1,0 +1,24 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/deser/std/StringCollectionDeserializer.java b/src/main/java/com/fasterxml/jackson/databind/deser/std/StringCollectionDeserializer.java
+index 42c6f0491..c8ea6eaad 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/deser/std/StringCollectionDeserializer.java
++++ b/src/main/java/com/fasterxml/jackson/databind/deser/std/StringCollectionDeserializer.java
+@@ -111,16 +111,15 @@ public final class StringCollectionDeserializer
+             }
+         }
+         JsonDeserializer<?> valueDeser = _valueDeserializer;
+-        final JavaType valueType = _containerType.getContentType();
+         if (valueDeser == null) {
+             // [databind#125]: May have a content converter
+             valueDeser = findConvertingContentDeserializer(ctxt, property, valueDeser);
+             if (valueDeser == null) {
+-            // And we may also need to get deserializer for String
+-                valueDeser = ctxt.findContextualValueDeserializer(valueType, property);
++                // And we may also need to get deserializer for String
++                valueDeser = ctxt.findContextualValueDeserializer(_containerType.getContentType(), property);
+             }
+         } else { // if directly assigned, probably not yet contextual, so:
+-            valueDeser = ctxt.handleSecondaryContextualization(valueDeser, property, valueType);
++            valueDeser = ctxt.handleSecondaryContextualization(valueDeser, property, _containerType.getContentType());
+         }
+         // 11-Dec-2015, tatu: Should we pass basic `Collection.class`, or more refined? Mostly
+         //   comes down to "List vs Collection" I suppose... for now, pass Collection

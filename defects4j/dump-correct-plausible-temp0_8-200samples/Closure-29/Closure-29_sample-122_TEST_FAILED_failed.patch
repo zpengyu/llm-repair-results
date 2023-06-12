@@ -1,0 +1,29 @@
+diff --git a/src/com/google/javascript/jscomp/InlineObjectLiterals.java b/src/com/google/javascript/jscomp/InlineObjectLiterals.java
+index a26b500d..7f987630 100644
+--- a/src/com/google/javascript/jscomp/InlineObjectLiterals.java
++++ b/src/com/google/javascript/jscomp/InlineObjectLiterals.java
+@@ -180,12 +178,10 @@ class InlineObjectLiterals implements CompilerPass {
+           // isn't a perfect algorithm, but it should catch most cases.
+           continue;
+         }
+-
+         // Only rewrite VAR declarations or simple assignment statements
+-        if (!isVarOrAssignExprLhs(name)) {
+-           return false;
++        if (!parent.isVar()) {
++          return false;
+         }
+-
+         Node val = ref.getAssignedValue();
+         if (val == null) {
+           // A var with no assignment.
+@@ -196,8 +191,7 @@ class InlineObjectLiterals implements CompilerPass {
+         if (!val.isObjectLit()) {
+           return false;
+         }
+-
+-        // Make sure that the value is not self-refential. IOW,
++        // Make sure that the value is not self-referential. IOW,
+         // disallow things like x = {b: x.a}.
+         //
+         // TODO: Only exclude unorderable self-referential

@@ -1,0 +1,29 @@
+diff --git a/gson/src/main/java/com/google/gson/internal/bind/TypeAdapters.java b/gson/src/main/java/com/google/gson/internal/bind/TypeAdapters.java
+index 2364c717..53ee390a 100644
+--- a/gson/src/main/java/com/google/gson/internal/bind/TypeAdapters.java
++++ b/gson/src/main/java/com/google/gson/internal/bind/TypeAdapters.java
+@@ -907,14 +907,17 @@ public final class TypeAdapters {
+           }
+ 
+           @Override public T1 read(JsonReader in) throws IOException {
+-            T1 result = typeAdapter.read(in);
+-            if (result != null && !requestedType.isInstance(result)) {
+-              throw new JsonSyntaxException("Expected a " + requestedType.getName()
+-                  + " but was " + result.getClass().getName());
++            if (requestedType.isAssignableFrom(typeAdapter.getClass())) {
++              T1 result = typeAdapter.read(in);
++              if (result != null && !requestedType.isInstance(result)) {
++                throw new JsonSyntaxException("Expected a " + requestedType.getName()
++                    + " but was " + result.getClass().getName());
++              }
++              return result;
+             }
+-            return result;
+-          }
+-        };
++            throw new JsonSyntaxException("Expected a " + requestedType.getName()
++                + " but was " + typeAdapter.getClass().getName());
++          }        };
+       }
+       @Override public String toString() {
+         return "Factory[typeHierarchy=" + clazz.getName() + ",adapter=" + typeAdapter + "]";

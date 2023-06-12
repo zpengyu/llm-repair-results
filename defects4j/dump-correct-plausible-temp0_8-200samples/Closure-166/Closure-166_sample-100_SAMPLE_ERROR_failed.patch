@@ -1,0 +1,19 @@
+diff --git a/src/com/google/javascript/rhino/jstype/PrototypeObjectType.java b/src/com/google/javascript/rhino/jstype/PrototypeObjectType.java
+index 07a3d799..f12bd4fb 100644
+--- a/src/com/google/javascript/rhino/jstype/PrototypeObjectType.java
++++ b/src/com/google/javascript/rhino/jstype/PrototypeObjectType.java
+@@ -570,9 +569,13 @@ class PrototypeObjectType extends ObjectType {
+     // properties on this object.
+     if (constraint.isRecordType()) {
+       matchRecordTypeConstraint(constraint.toObjectType());
++    } else if (constraint.isEnumType()) {
++      // If the constraint is an enum, then it may be the case that the
++      // object literal is a restricted form of the enum. We want to
++      // update the object literal with the additional enum values.
++      matchEnumTypeConstraint(constraint.toMaybeEnumType());
+     }
+   }
+-
+   public void matchRecordTypeConstraint(ObjectType constraintObj) {
+     for (String prop : constraintObj.getOwnPropertyNames()) {
+       JSType propType = constraintObj.getPropertyType(prop);

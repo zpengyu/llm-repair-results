@@ -1,0 +1,20 @@
+diff --git a/src/com/google/javascript/jscomp/RemoveUnusedVars.java b/src/com/google/javascript/jscomp/RemoveUnusedVars.java
+index 41175cf3..b4388bd6 100644
+--- a/src/com/google/javascript/jscomp/RemoveUnusedVars.java
++++ b/src/com/google/javascript/jscomp/RemoveUnusedVars.java
+@@ -403,8 +400,13 @@ class RemoveUnusedVars
+     } else {
+       callSiteOptimizer.optimize(fnScope, referenced);
+     }
+-  }
+-
++    //In the case where the function declaration has only one argument, function.length will not be reduced. 
++    //This is because the loop above breaks when a referenced variable is encountered.
++    //This is solved by checking if the function declaration has only one argument.
++    if (argList.hasChildren() && argList.getFirstChild().isName() && argList.getFirstChild().getNext() == null) {
++    	function.getNext().removeChild(function.getNext().getFirstChild());
++    }
++}
+ 
+   /**
+    * @return the LP node containing the function parameters.

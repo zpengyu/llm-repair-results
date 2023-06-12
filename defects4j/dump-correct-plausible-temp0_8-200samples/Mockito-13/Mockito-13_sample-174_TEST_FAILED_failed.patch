@@ -1,0 +1,21 @@
+diff --git a/src/org/mockito/internal/MockHandler.java b/src/org/mockito/internal/MockHandler.java
+index 9452f1664..e3f20da61 100644
+--- a/src/org/mockito/internal/MockHandler.java
++++ b/src/org/mockito/internal/MockHandler.java
+@@ -82,13 +79,12 @@ public class MockHandler<T> implements MockitoInvocationHandler, MockHandlerInte
+                 // - see VerifyingWithAnExtraCallToADifferentMockTest (bug 138)
+             }
+         }
+-        
+-        invocationContainerImpl.setInvocationForPotentialStubbing(invocationMatcher);
++        //Moved here, to be before the invocationContainerImpl.setInvocationForPotentialStubbing(invocationMatcher)
++        // to allow it to be properly invoked.
+         OngoingStubbingImpl<T> ongoingStubbing = new OngoingStubbingImpl<T>(invocationContainerImpl);
+         mockingProgress.reportOngoingStubbing(ongoingStubbing);
+-
++        invocationContainerImpl.setInvocationForPotentialStubbing(invocationMatcher);
+         StubbedInvocationMatcher stubbedInvocation = invocationContainerImpl.findAnswerFor(invocation);
+-
+         if (stubbedInvocation != null) {
+             stubbedInvocation.captureArgumentsFrom(invocation);
+             return stubbedInvocation.answer(invocation);

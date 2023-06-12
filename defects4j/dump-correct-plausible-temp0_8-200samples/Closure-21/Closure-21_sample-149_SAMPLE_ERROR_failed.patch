@@ -1,0 +1,26 @@
+diff --git a/src/com/google/javascript/jscomp/CheckSideEffects.java b/src/com/google/javascript/jscomp/CheckSideEffects.java
+index d4bd9842..62773849 100644
+--- a/src/com/google/javascript/jscomp/CheckSideEffects.java
++++ b/src/com/google/javascript/jscomp/CheckSideEffects.java
+@@ -204,10 +204,18 @@ final class CheckSideEffects extends AbstractPostOrderCallback
+         // so we can remove goog.reflect.sinkValue as well.
+         if (target.isName() && target.getString().equals(PROTECTOR_FN)) {
+           Node expr = n.getLastChild();
+-          n.detachChildren();
+-          parent.replaceChild(n, expr);
++          if (expr.isFunction()) {
++            // TODO(johnlenz): remove this case, as it is only here to
++            // handle the legacy goog.reflect.sinkValue(function() {}) case.
++            // The compiler should just be able to remove the no-op call and the
++            // call itself should be optimized away by other peephole passes.
++            parent.replaceChild(n, expr);
++          } else {
++            n.detachChildren();
++            parent.replaceChild(n, expr);
++          }
+         }
+       }
+     }
+-  }
++  }  }
+ }

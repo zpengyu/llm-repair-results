@@ -1,0 +1,35 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/jsontype/impl/TypeDeserializerBase.java b/src/main/java/com/fasterxml/jackson/databind/jsontype/impl/TypeDeserializerBase.java
+index 339362e1e..1c59adf40 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/jsontype/impl/TypeDeserializerBase.java
++++ b/src/main/java/com/fasterxml/jackson/databind/jsontype/impl/TypeDeserializerBase.java
+@@ -154,11 +154,16 @@ public abstract class TypeDeserializerBase
+                 if (deser == null) {
+                     // 10-May-2016, tatu: We may get some help...
+                     JavaType actual = _handleUnknownTypeId(ctxt, typeId, _idResolver, _baseType);
+-                    if (actual == null) { // what should this be taken to mean?
+-                        // TODO: try to figure out something better
+-                        return null;
++                    if (actual == null) {
++                        /* 10-May-2016, tatu: ... and we may also get a (potentially contextual)
++                         *    default if resolver is so inclined.
++                         */
++                        actual = _idResolver.defaultImpl(ctxt.getConfig(), _baseType);
++                        if (actual == null) { // what should this be taken to mean?
++                            // TODO: try to figure out something better
++                            return null;
++                        }
+                     }
+-                    // ... would this actually work?
+                     deser = ctxt.findContextualValueDeserializer(actual, _property);
+                 }
+             } else {
+@@ -181,7 +186,9 @@ public abstract class TypeDeserializerBase
+                     //   generic type with custom type resolvers. If so, should try to retain them.
+                     //  Whether this is sufficient to avoid problems remains to be seen, but for
+                     //  now it should improve things.
++                    if (_baseType.hasRawClass(type.getRawClass())) {
+                         type = ctxt.getTypeFactory().constructSpecializedType(_baseType, type.getRawClass());
++                    }
+                 }
+                 deser = ctxt.findContextualValueDeserializer(type, _property);
+             }

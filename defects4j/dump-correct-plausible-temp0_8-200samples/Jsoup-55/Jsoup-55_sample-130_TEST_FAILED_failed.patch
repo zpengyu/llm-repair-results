@@ -1,0 +1,24 @@
+diff --git a/src/main/java/org/jsoup/parser/TokeniserState.java b/src/main/java/org/jsoup/parser/TokeniserState.java
+index 9eac7f0..c4654ee 100644
+--- a/src/main/java/org/jsoup/parser/TokeniserState.java
++++ b/src/main/java/org/jsoup/parser/TokeniserState.java
+@@ -1588,12 +1588,17 @@ enum TokeniserState {
+     },
+     CdataSection {
+         void read(Tokeniser t, CharacterReader r) {
++            if (r.containsIgnoreCase("]]>")) {
++                // look for ]]>
++                t.advanceTransition(Rcdata);
++                return;
++            }
++            // todo: handle CDATA sections, which look like this: <![CDATA[ ... ]]>
+             String data = r.consumeTo("]]>");
+             t.emit(data);
+             r.matchConsume("]]>");
+             t.transition(Data);
+-        }
+-    };
++        }    };
+ 
+ 
+     abstract void read(Tokeniser t, CharacterReader r);

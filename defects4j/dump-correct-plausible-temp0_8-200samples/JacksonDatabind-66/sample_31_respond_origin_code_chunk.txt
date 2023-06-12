@@ -1,0 +1,27 @@
+        public final Object deserializeKey(String key, DeserializationContext ctxt)
+            throws IOException
+        {
+            if (key == null) { // is this even legal call?
+                return null;
+            }
+            try {
+                // Ugh... should not have to give parser which may or may not be correct one...
+                JsonParser p = ctxt.getParser();
+                TokenBuffer tb = p instanceof TokenBuffer ? (TokenBuffer) p : null;
+                if (tb != null) {
+                    tb.writeFieldName(key);
+                    JsonParser p2 = tb.asParser(p);
+                    p2.nextToken();
+                    Object result = _delegate.deserialize(p2, ctxt);
+                    p.clearCurrentToken(); // to let GC do its work
+                    return result;
+                }
+                Object result = _delegate.deserialize(ctxt.getParser(), ctxt);
+                if (result != null) {
+                    return result;
+                }
+                return ctxt.handleWeirdKey(_keyClass, key, "not a valid representation");
+            } catch (Exception re) {
+                return ctxt.handleWeirdKey(_keyClass, key, "not a valid representation: %s", re.getMessage());
+            }
+        }

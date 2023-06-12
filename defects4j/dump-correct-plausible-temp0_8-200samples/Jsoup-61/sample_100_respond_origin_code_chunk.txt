@@ -1,0 +1,36 @@
+    public boolean hasClass(String className) {
+        final String classAttr = attributes.get("class");
+        if (classAttr == null || classAttr.length() == 0) {
+            return false;
+        }
+
+        // scan for whitespace and compare regions (no arraylist or string allocs)
+        final int wantLen = className.length();
+        boolean inClass = false;
+        int start = 0;
+        for (int i = 0; i < classAttr.length(); i++) {
+            char c = classAttr.charAt(i);
+            if (Character.isWhitespace(c)) {
+                if (inClass) {
+                    // white space ends a class name, compare it with the requested one, ignore case
+                    if (i - start == wantLen && classAttr.regionMatches(true, start, className, 0, wantLen)) {
+                        return true;
+                    }
+                    inClass = false;
+                }
+            } else {
+                if (!inClass) {
+                    // we're in a class name: keep the start of the substring
+                    inClass = true;
+                    start = i;
+                }
+            }
+        }
+
+        // check the last entry
+        if (inClass && classAttr.length() - start == wantLen) {
+            return classAttr.regionMatches(true, start, className, 0, wantLen);
+        }
+        return false;
+    }
+## <a id='Data_Preparation'><span style="font-family:times,serif; font-size:20px;">Data Preparation</span></a>

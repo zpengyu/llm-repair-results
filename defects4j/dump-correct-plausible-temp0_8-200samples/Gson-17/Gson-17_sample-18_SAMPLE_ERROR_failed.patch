@@ -1,0 +1,39 @@
+diff --git a/gson/src/main/java/com/google/gson/DefaultDateTypeAdapter.java b/gson/src/main/java/com/google/gson/DefaultDateTypeAdapter.java
+index 70c30e14..e28970df 100644
+--- a/gson/src/main/java/com/google/gson/DefaultDateTypeAdapter.java
++++ b/gson/src/main/java/com/google/gson/DefaultDateTypeAdapter.java
+@@ -99,19 +99,23 @@ final class DefaultDateTypeAdapter extends TypeAdapter<Date> {
+     if (in.peek() != JsonToken.STRING) {
+       throw new JsonParseException("The date should be a string value");
+     }
+-    Date date = deserializeToDate(in.nextString());
+-    if (dateType == Date.class) {
+-      return date;
+-    } else if (dateType == Timestamp.class) {
+-      return new Timestamp(date.getTime());
+-    } else if (dateType == java.sql.Date.class) {
+-      return new java.sql.Date(date.getTime());
+-    } else {
+-      // This must never happen: dateType is guarded in the primary constructor
+-      throw new AssertionError();
++    String nextString = in.nextString();
++    try {
++      Date date = deserializeToDate(nextString);
++      if (dateType == Date.class) {
++        return date;
++      } else if (dateType == Timestamp.class) {
++        return new Timestamp(date.getTime());
++      } else if (dateType == java.sql.Date.class) {
++        return new java.sql.Date(date.getTime());
++      } else {
++        // This must never happen: dateType is guarded in the primary constructor
++        throw new AssertionError();
++      }
++    } catch (ParseException e) {
++      throw new JsonSyntaxException(nextString, e);
+     }
+   }
+-
+   private Date deserializeToDate(String s) {
+     synchronized (localFormat) {
+       try {

@@ -1,0 +1,36 @@
+diff --git a/src/main/java/org/joda/time/DateTimeZone.java b/src/main/java/org/joda/time/DateTimeZone.java
+index f7e3d277..5eef9423 100644
+--- a/src/main/java/org/joda/time/DateTimeZone.java
++++ b/src/main/java/org/joda/time/DateTimeZone.java
+@@ -555,7 +555,7 @@ public abstract class DateTimeZone implements Serializable {
+      * @param id  the old style id
+      * @return the new style id, null if not found
+      */
+-    private static synchronized String getConvertedId(String id) {
++private static synchronized String getConvertedId(String id) {
+         Map<String, String> map = cZoneIdConversion;
+         if (map == null) {
+             // Backwards compatibility with TimeZone.
+@@ -594,9 +594,20 @@ public abstract class DateTimeZone implements Serializable {
+             map.put("NST", "Pacific/Auckland");
+             cZoneIdConversion = map;
+         }
+-        return map.get(id);
++        String result = map.get(id);
++        if (result == null) {
++            if (id != null && id.length() == 6 &&
++                Character.isDigit(id.charAt(0)) &&
++                Character.isDigit(id.charAt(1)) &&
++                id.charAt(2) == ':' &&
++                Character.isDigit(id.charAt(3)) &&
++                Character.isDigit(id.charAt(4)) &&
++                Character.isDigit(id.charAt(5))) {
++                result = "GMT" + id;
++            }
++        }
++        return result;
+     }
+-
+     private static int parseOffset(String str) {
+         // Can't use a real chronology if called during class
+         // initialization. Offset parser doesn't need it anyhow.

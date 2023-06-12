@@ -1,0 +1,23 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/jsontype/impl/AsPropertyTypeDeserializer.java b/src/main/java/com/fasterxml/jackson/databind/jsontype/impl/AsPropertyTypeDeserializer.java
+index 8bad30e7c..6cd9a0e40 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/jsontype/impl/AsPropertyTypeDeserializer.java
++++ b/src/main/java/com/fasterxml/jackson/databind/jsontype/impl/AsPropertyTypeDeserializer.java
+@@ -139,9 +139,16 @@ public class AsPropertyTypeDeserializer extends AsArrayTypeDeserializer
+         if (deser != null) {
+             if (tb != null) {
+                 tb.writeEndObject();
+-                p = tb.asParser(p);
++                JsonParser bufParser = tb.asParser(p);
+                 // must move to point to the first token:
+-                p.nextToken();
++                bufParser.nextToken();
++                Object value = deser.deserialize(bufParser, ctxt);
++                // Need to consume the last token too...
++                if (bufParser.nextToken() != JsonToken.END_OBJECT) {
++                    throw ctxt.wrongTokenException(bufParser, JsonToken.END_OBJECT,
++                            "expected closing END_OBJECT after type information and deserialized value");
++                }
++                return value;
+             }
+             return deser.deserialize(p, ctxt);
+         }

@@ -1,0 +1,26 @@
+diff --git a/src/main/java/org/jsoup/nodes/Entities.java b/src/main/java/org/jsoup/nodes/Entities.java
+index 1fadc57..0493e01 100644
+--- a/src/main/java/org/jsoup/nodes/Entities.java
++++ b/src/main/java/org/jsoup/nodes/Entities.java
+@@ -43,9 +43,11 @@ public class Entities {
+     }
+ 
+     static String unescape(String string) {
++        return unescape(string, false);
++    }
++    static String unescape(String string, boolean strict) {
+         if (!string.contains("&"))
+             return string;
+-
+         Matcher m = unescapePattern.matcher(string); // &(#(x|X)?([0-9a-fA-F]+)|[a-zA-Z]+);?
+         StringBuffer accum = new StringBuffer(string.length()); // pity matcher can't use stringbuilder, avoid syncs
+         // todo: replace m.appendReplacement with own impl, so StringBuilder and quoteReplacement not required
+@@ -68,6 +68,8 @@ public class Entities {
+             if (charval != -1 || charval > 0xFFFF) { // out of range
+                 String c = Character.toString((char) charval);
+                 m.appendReplacement(accum, c);
++            } else if (strict) {
++                throw new IllegalArgumentException("Illegal character found in string [" + string + "]");
+             } else {
+                 m.appendReplacement(accum, m.group(0));
+             }

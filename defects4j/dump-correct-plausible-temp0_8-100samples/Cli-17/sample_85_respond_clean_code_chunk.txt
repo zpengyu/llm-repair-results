@@ -1,0 +1,57 @@
+    protected void burstToken(String token, boolean stopAtNonOption)
+    {
+        if (stopAtNonOption)
+        {
+            process(token.substring(1));
+        }
+        else
+        {
+            tokens.add(token);
+        }
+    }
+    public void parse(String[] arguments) throws ParseException
+    {
+        boolean eatTheRest = false;
+        for (currentIndex = 0; currentIndex < arguments.length; currentIndex++)
+        {
+            String arg = arguments[currentIndex];
+            if ("--".equals(arg))
+            {
+                eatTheRest = true;
+            }
+            else if ("-".equals(arg))
+            {
+                if (stopAtNonOption)
+                {
+                    eatTheRest = true;
+                }
+                else
+                {
+                    tokens.add(arg);
+                }
+            }
+            else if (arg.startsWith("-"))
+            {
+                if (stopAtNonOption && !options.hasOption(arg))
+                {
+                    eatTheRest = true;
+                    tokens.add(arg);
+                }
+                else
+                {
+                    burstToken(arg, stopAtNonOption);
+                }
+            }
+            else
+            {
+                tokens.add(arg);
+            }
+            if (eatTheRest)
+            {
+                for (currentIndex = currentIndex + 1; currentIndex < arguments.length; currentIndex++)
+                {
+                    tokens.add(arguments[currentIndex]);
+                }
+            }
+        }
+    }

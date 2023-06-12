@@ -1,0 +1,33 @@
+    public Period normalizedStandard(PeriodType type) {
+        type = DateTimeUtils.getPeriodType(type);
+        long millis = getMillis();  // no overflow can happen, even with Integer.MAX_VALUEs
+        int seconds = getSeconds();  // no overflow can happen, even with Integer.MAX_VALUEs
+        int minutes = getMinutes();  // no overflow can happen, even with Integer.MAX_VALUEs
+        int hours = getHours();  // no overflow can happen, even with Integer.MAX_VALUEs
+        int days = getDays();  // no overflow can happen, even with Integer.MAX_VALUEs
+        int weeks = getWeeks();  // no overflow can happen, even with Integer.MAX_VALUEs
+        // add days to millis
+        millis += (((long) days) * ((long) DateTimeConstants.MILLIS_PER_DAY));
+        // add weeks to millis
+        millis += (((long) weeks) * ((long) DateTimeConstants.MILLIS_PER_WEEK));
+        // add hours to millis
+        millis += (((long) hours) * ((long) DateTimeConstants.MILLIS_PER_HOUR));
+        // add minutes to millis
+        millis += (((long) minutes) * ((long) DateTimeConstants.MILLIS_PER_MINUTE));
+        // add seconds to millis
+        millis += (((long) seconds) * ((long) DateTimeConstants.MILLIS_PER_SECOND));
+        Period result = new Period(millis, type, ISOChronology.getInstanceUTC());
+        int years = getYears();
+        int months = getMonths();
+        if (years != 0 || months != 0) {
+            years = FieldUtils.safeAdd(years, months / 12);
+            months = months % 12;
+            if (years != 0) {
+                result = result.withYears(years);
+            }
+            if (months != 0) {
+                result = result.withMonths(months);
+            }
+        }
+        return result;
+    }

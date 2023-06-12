@@ -1,0 +1,21 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/AnnotationIntrospector.java b/src/main/java/com/fasterxml/jackson/databind/AnnotationIntrospector.java
+index 624a1fd7e..43562e884 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/AnnotationIntrospector.java
++++ b/src/main/java/com/fasterxml/jackson/databind/AnnotationIntrospector.java
+@@ -816,7 +813,16 @@ public abstract class AnnotationIntrospector
+                 try {
+                     // 11-Oct-2015, tatu: For deser, we call `TypeFactory.constructSpecializedType()`,
+                     //   may be needed here too in future?
++                    // 16-Dec-2015, tatu: With support for typing, we must take care to NOT override
++                    //    statically typed references
++                    if (type.isReferenceType() && type.isTypeOrSubTypeOf(serClass)) {
++                        // 16-Dec-2015, tatu: This is ambiguous as-is.  Should we error out, or just
++                        //    assume there is no change, i.e. content type is non-null?
++                        //    For now let's assume latter.
++                        ;
++                    } else {
+                         type = tf.constructGeneralizedType(type, serClass);
++                    }
+                 } catch (IllegalArgumentException iae) {
+                     throw new JsonMappingException(null,
+                             String.format("Failed to widen type %s with annotation (value %s), from '%s': %s",

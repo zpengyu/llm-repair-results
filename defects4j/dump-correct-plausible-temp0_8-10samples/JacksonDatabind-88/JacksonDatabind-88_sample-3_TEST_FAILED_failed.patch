@@ -1,0 +1,27 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/jsontype/impl/ClassNameIdResolver.java b/src/main/java/com/fasterxml/jackson/databind/jsontype/impl/ClassNameIdResolver.java
+index 112c00b5c..40c153d07 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/jsontype/impl/ClassNameIdResolver.java
++++ b/src/main/java/com/fasterxml/jackson/databind/jsontype/impl/ClassNameIdResolver.java
+@@ -56,6 +56,9 @@ public class ClassNameIdResolver
+             //    security issues.
+             JavaType t = tf.constructFromCanonical(id);
+                 // Probably cleaner to have a method in `TypeFactory` but can't add in patch
++            if (!_baseType.hasRawClass(t.getRawClass())) {
++                throw new IllegalArgumentException("Invalid type id '"+id+"' (for id type 'Id.class'): class it maps to not compatible with [simple type, class "+_baseType.getRawClass().getName()+"]");
++            }
+             return t;
+         }
+         Class<?> cls;
+@@ -74,9 +77,11 @@ public class ClassNameIdResolver
+         } catch (Exception e) {
+             throw new IllegalArgumentException("Invalid type id '"+id+"' (for id type 'Id.class'): "+e.getMessage(), e);
+         }
++        if (!_baseType.hasRawClass(cls)) {
++            throw new IllegalArgumentException("Invalid type id '"+id+"' (for id type 'Id.class'): class it maps to not compatible with [simple type, class "+_baseType.getRawClass().getName()+"]");
++        }
+         return tf.constructSpecializedType(_baseType, cls);
+     }    
+-    
+     /*
+     /**********************************************************
+     /* Internal methods

@@ -1,0 +1,42 @@
+diff --git a/src/main/java/org/apache/commons/compress/archivers/tar/TarArchiveOutputStream.java b/src/main/java/org/apache/commons/compress/archivers/tar/TarArchiveOutputStream.java
+index da6bbfde..09993fa7 100644
+--- a/src/main/java/org/apache/commons/compress/archivers/tar/TarArchiveOutputStream.java
++++ b/src/main/java/org/apache/commons/compress/archivers/tar/TarArchiveOutputStream.java
+@@ -451,18 +451,17 @@ public class TarArchiveOutputStream extends ArchiveOutputStream {
+      * Writes a PAX extended header with the given map as contents.
+      * @since 1.4
+      */
+-    void writePaxHeaders(String entryName,
+-                         Map<String, String> headers) throws IOException {
++    void writePaxHeaders(String entryName, Map<String, String> headers) throws IOException {
+         String name = "./PaxHeaders.X/" + stripTo7Bits(entryName);
+-            // TarEntry's constructor would think this is a directory
+-            // and not allow any data to be written
++        // TarEntry's constructor would think this is a directory
++        // and not allow any data to be written
+         if (name.length() >= TarConstants.NAMELEN) {
+             name = name.substring(0, TarConstants.NAMELEN - 1);
+         }
+         TarArchiveEntry pex = new TarArchiveEntry(name,
+                                                   TarConstants.LF_PAX_EXTENDED_HEADER_LC);
+-
+-        StringWriter w = new StringWriter();
++        ByteArrayOutputStream byteStream = new ByteArrayOutputStream();
++        OutputStreamWriter writer = new OutputStreamWriter(byteStream, CharsetNames.UTF_8);
+         for (Map.Entry<String, String> h : headers.entrySet()) {
+             String key = h.getKey();
+             String value = h.getValue();
+@@ -481,9 +480,11 @@ public class TarArchiveOutputStream extends ArchiveOutputStream {
+                 line = len + " " + key + "=" + value + "\n";
+                 actualLength = line.getBytes(CharsetNames.UTF_8).length;
+             }
+-            w.write(line);
++            writer.write(line);
+         }
+-        byte[] data = w.toString().getBytes(CharsetNames.UTF_8);
++        writer.flush();
++        byteStream.flush();
++        byte[] data = byteStream.toByteArray();
+         pex.setSize(data.length);
+         putArchiveEntry(pex);
+         write(data);

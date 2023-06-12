@@ -1,0 +1,39 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/deser/impl/InnerClassProperty.java b/src/main/java/com/fasterxml/jackson/databind/deser/impl/InnerClassProperty.java
+index 128a8346f..8974a3be4 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/deser/impl/InnerClassProperty.java
++++ b/src/main/java/com/fasterxml/jackson/databind/deser/impl/InnerClassProperty.java
+@@ -117,13 +100,7 @@ public final class InnerClassProperty
+         } else if (_valueTypeDeserializer != null) {
+             value = _valueDeserializer.deserializeWithType(jp, ctxt, _valueTypeDeserializer);
+         } else  { // the usual case
+-            try {
+-                value = _creator.newInstance(bean);
+-            } catch (Exception e) {
+-                ClassUtil.unwrapAndThrowAsIAE(e, "Failed to instantiate class "+_creator.getDeclaringClass().getName()+", problem: "+e.getMessage());
+-                value = null;
+-            }
+-            _valueDeserializer.deserialize(jp, ctxt, value);
++            value = deserialize(jp, ctxt);
+         }
+         set(bean, value);
+     }
+@@ -164,4 +135,18 @@ public final class InnerClassProperty
+         }
+         return new InnerClassProperty(this, new AnnotatedConstructor(null, _creator, null, null));
+     }
++    @Override
++    public Object deserialize(JsonParser jp, DeserializationContext ctxt)
++        throws IOException, JsonProcessingException
++    {
++        Object value;
++        try {
++            value = _creator.newInstance(bean);
++        } catch (Exception e) {
++            ClassUtil.unwrapAndThrowAsIAE(e, "Failed to instantiate class "+_creator.getDeclaringClass().getName()+", problem: "+e.getMessage());
++            value = null;
++        }
++        _valueDeserializer.deserialize(jp, ctxt, value);
++        return value;
++    }
+ }
+\ No newline at end of file

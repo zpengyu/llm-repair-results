@@ -1,0 +1,39 @@
+    protected JavaType _narrow(Class<?> subclass)
+    {
+        if (_class == subclass) {
+            return this;
+        }
+        // Should we check that there is a sub-class relationship?
+        if (!_class.isAssignableFrom(subclass)) {
+            throw new IllegalArgumentException("Class "+subclass.getName()+" not sub-type of "
+                    +_class.getName());
+        }
+        // Otherwise, stitch together the hierarchy. First, super-class
+        JavaType superClass = _superClass;
+        if (superClass == null) {
+            superClass = _findSuperTypeChain(_class);
+            if (superClass == null) {
+                superClass = _superClass;
+            }
+        }
+        if (superClass.getRawClass() == subclass) {
+            return superClass.widenBy(subclass);
+        }
+        // if not found, try a super-interface
+        for (JavaType t : _superInterfaces) {
+            // Only compare by raw class, to avoid infinite recursion
+            Class<?> raw = t.getRawClass();
+            if (raw == subclass) {
+                return t.widenBy(subclass);
+            }
+            if (raw.isAssignableFrom(subclass)) {
+                return _fromClass(subclass, new TypeBindings(this),
+                        t.widenBy(subclass));
+            }
+        }
+        // should not get here but...
+        throw new IllegalArgumentException("Internal error: class "+subclass.getName()
+                +" not super-type of (impl) "+_class.getName());
+    }
+
+

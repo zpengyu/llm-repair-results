@@ -1,0 +1,19 @@
+  private Node tryFoldSimpleFunctionCall(Node n) {
+    Preconditions.checkState(n.isCall());
+    Node callTarget = n.getFirstChild();
+    if (callTarget != null && callTarget.isName() &&
+        callTarget.getString().equals("String") &&
+        n.getChildCount() == 2 && n.getLastChild().isString()) {
+      // If a simple call to the string constructor is being used to create
+      // a string object from a literal, just use the literal.
+      Node value = callTarget.getNext();
+      if (value != null) {
+        Node result = NodeUtil.newStringNode(
+            value.getString(), value.getSourcePosition());
+        n.getParent().replaceChild(n, result);
+        reportCodeChange();
+        return result;
+      }
+    }
+    return n;
+  }

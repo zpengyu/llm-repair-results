@@ -1,0 +1,54 @@
+diff --git a/src/main/java/org/jsoup/helper/DataUtil.java b/src/main/java/org/jsoup/helper/DataUtil.java
+index bbbd8fb..3eb903d 100644
+--- a/src/main/java/org/jsoup/helper/DataUtil.java
++++ b/src/main/java/org/jsoup/helper/DataUtil.java
+@@ -90,7 +90,7 @@ public final class DataUtil {
+         }
+     }
+ 
+-    static Document parseInputStream(InputStream input, String charsetName, String baseUri, Parser parser) throws IOException  {
++    static Document parseInputStream(InputStream input, String charsetName, String baseUri, Parser parser) throws IOException {
+         if (input == null) // empty body
+             return new Document(baseUri);
+         input = ConstrainableInputStream.wrap(input, bufferSize, 0);
+@@ -119,19 +114,25 @@ public final class DataUtil {
+             Elements metaElements = doc.select("meta[http-equiv=content-type], meta[charset]");
+             String foundCharset = null; // if not found, will keep utf-8 as best attempt
+             for (Element meta : metaElements) {
+-                if (meta.hasAttr("http-equiv"))
++                if (meta.hasAttr("http-equiv")) {
+                     foundCharset = getCharsetFromContentType(meta.attr("content"));
+-                if (foundCharset == null && meta.hasAttr("charset"))
++                    if (foundCharset != null) {
++                        break;
++                    }
++                }
++                if (foundCharset == null && meta.hasAttr("charset")) {
+                     foundCharset = meta.attr("charset");
+-                if (foundCharset != null)
+-                    break;
++                    if (foundCharset != null) {
++                        break;
++                    }
++                }
+             }
+-
+             // look for <?xml encoding='ISO-8859-1'?>
+             if (foundCharset == null && doc.childNodeSize() > 0 && doc.childNode(0) instanceof XmlDeclaration) {
+                 XmlDeclaration prolog = (XmlDeclaration) doc.childNode(0);
+-                if (prolog.name().equals("xml"))
++                if (prolog.name().equals("xml")) {
+                     foundCharset = prolog.attr("encoding");
++                }
+             }
+             foundCharset = validateCharset(foundCharset);
+             if (foundCharset != null && !foundCharset.equalsIgnoreCase(defaultCharset)) { // need to re-decode. (case insensitive check here to match how validate works)
+@@ -149,7 +150,7 @@ public final class DataUtil {
+                 charsetName = defaultCharset;
+             BufferedReader reader = new BufferedReader(new InputStreamReader(input, charsetName), bufferSize);
+                 doc = parser.parseInput(reader, baseUri);
+-                // io exception when parsing (not seen before because reading the stream as we go)
++            // io exception when parsing (not seen before because reading the stream as we go)
+             doc.outputSettings().charset(charsetName);
+         }
+         input.close();

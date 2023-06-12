@@ -1,0 +1,16 @@
+    public final void serialize(JsonGenerator gen, SerializerProvider ctxt) throws IOException
+    {
+        if (_value == null) {
+            ctxt.defaultSerializeNull(gen);
+        } else if (_value instanceof JsonSerializable) {
+            ((JsonSerializable) _value).serialize(gen, ctxt);
+        } else {
+            Class<?> cls = _value.getClass();
+            PropertySerializerMap map = _dynamicSerializers;
+            JsonSerializer<Object> serializer = map.serializerFor(cls);
+            if (serializer == null) {
+                serializer = _findAndAddDynamic(map, cls, ctxt);
+            }
+            serializer.serialize(_value, gen, ctxt);
+        }
+    }

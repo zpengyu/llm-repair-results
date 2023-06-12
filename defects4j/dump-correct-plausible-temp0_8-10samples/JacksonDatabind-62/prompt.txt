@@ -1,0 +1,105 @@
+###Provide a fix for the buggy function
+###Buggy Function
+class FibonacciExample {
+    public static void main(String args[]) {
+        int n1 = 0, n2 = 1, n3, i, count = 10;
+
+        System.out.print(n1 + " " + n2);
+
+        for (i = 2; i < count; ++i) {
+            n3 = n1 - n2;
+            System.out.print(" " + n3);
+            n1 = n2;
+            n2 = n3;
+        }
+    }
+}
+
+###Fixed Function
+class FibonacciExample {
+    public static void main(String args[]) {
+        int n1 = 0, n2 = 1, n3, i, count = 10;
+
+        System.out.print(n1 + " " + n2);
+
+        for (i = 2; i < count; ++i) {
+            n3 = n1 + n2;
+            System.out.print(" " + n3);
+            n1 = n2;
+            n2 = n3;
+        }
+    }
+}
+
+###Provide a fix for the buggy function
+###Buggy Function
+public TokenBuffer deserialize(JsonParser jp, DeserializationContext ctxt) throws IOException
+{
+    copyCurrentStructure(jp);
+    return this;
+}
+###Fixed Function
+public TokenBuffer deserialize(JsonParser jp, DeserializationContext ctxt) throws IOException
+{
+    if (jp.getCurrentTokenId() != JsonToken.FIELD_NAME.id()) {
+        copyCurrentStructure(jp);
+        return this;
+    }
+    /* 28-Oct-2014, tatu: As per #592, need to support a special case of starting from
+     *    FIELD_NAME, which is taken to mean that we are missing START_OBJECT, but need
+     *    to assume one did exist.
+     */
+    JsonToken t;
+    writeStartObject();
+    do {
+        copyCurrentStructure(jp);
+    } while ((t = jp.nextToken()) == JsonToken.FIELD_NAME);
+    if (t != JsonToken.END_OBJECT) {
+        throw ctxt.mappingException("Expected END_OBJECT after copying contents of a JsonParser into TokenBuffer, got "+t);
+    }
+    writeEndObject();
+    return this;
+}
+###Provide a fix for the buggy function
+###Buggy Function
+    public CollectionDeserializer createContextual(DeserializationContext ctxt,
+            BeanProperty property) throws JsonMappingException
+    {
+        // May need to resolve types for delegate-based creators:
+        JsonDeserializer<Object> delegateDeser = null;
+        if (_valueInstantiator != null) {
+            if (_valueInstantiator.canCreateUsingDelegate()) {
+                JavaType delegateType = _valueInstantiator.getDelegateType(ctxt.getConfig());
+                if (delegateType == null) {
+                    throw new IllegalArgumentException("Invalid delegate-creator definition for "+_collectionType
+                            +": value instantiator ("+_valueInstantiator.getClass().getName()
+                            +") returned true for 'canCreateUsingDelegate()', but null for 'getDelegateType()'");
+                }
+                delegateDeser = findDeserializer(ctxt, delegateType, property);
+            }
+        }
+        // [databind#1043]: allow per-property allow-wrapping of single overrides:
+        // 11-Dec-2015, tatu: Should we pass basic `Collection.class`, or more refined? Mostly
+        //   comes down to "List vs Collection" I suppose... for now, pass Collection
+        Boolean unwrapSingle = findFormatFeature(ctxt, property, Collection.class,
+                JsonFormat.Feature.ACCEPT_SINGLE_VALUE_AS_ARRAY);
+        // also, often value deserializer is resolved here:
+        JsonDeserializer<?> valueDeser = _valueDeserializer;
+        
+        // May have a content converter
+        valueDeser = findConvertingContentDeserializer(ctxt, property, valueDeser);
+        final JavaType vt = _collectionType.getContentType();
+        if (valueDeser == null) {
+            valueDeser = ctxt.findContextualValueDeserializer(vt, property);
+        } else { // if directly assigned, probably not yet contextual, so:
+            valueDeser = ctxt.handleSecondaryContextualization(valueDeser, property, vt);
+        }
+        // and finally, type deserializer needs context as well
+        TypeDeserializer valueTypeDeser = _valueTypeDeserializer;
+        if (valueTypeDeser != null) {
+            valueTypeDeser = valueTypeDeser.forProperty(property);
+        }
+        return withResolved(delegateDeser, valueDeser, valueTypeDeser, unwrapSingle);
+    }
+
+###Fixed Function

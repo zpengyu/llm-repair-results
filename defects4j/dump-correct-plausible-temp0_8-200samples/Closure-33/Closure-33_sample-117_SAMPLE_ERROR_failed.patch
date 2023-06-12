@@ -1,0 +1,56 @@
+diff --git a/src/com/google/javascript/rhino/jstype/PrototypeObjectType.java b/src/com/google/javascript/rhino/jstype/PrototypeObjectType.java
+index 77c5441e..2b670898 100644
+--- a/src/com/google/javascript/rhino/jstype/PrototypeObjectType.java
++++ b/src/com/google/javascript/rhino/jstype/PrototypeObjectType.java
+@@ -552,30 +552,26 @@ class PrototypeObjectType extends ObjectType {
+   }
+ 
+   @Override
+-  public void matchConstraint(ObjectType constraintObj) {
+-    // We only want to match contraints on anonymous types.
+-
+-    // Handle the case where the constraint object is a record type.
+-    //
+-    // param constraintObj {{prop: (number|undefined)}}
+-    // function f(constraintObj) {}
+-    // f({});
+-    //
+-    // We want to modify the object literal to match the constraint, by
+-    // taking any each property on the record and trying to match
+-    // properties on this object.
+-    if (constraintObj.isRecordType()) {
+-      for (String prop : constraintObj.getOwnPropertyNames()) {
+-        JSType propType = constraintObj.getPropertyType(prop);
+-        if (!isPropertyTypeDeclared(prop)) {
+-          JSType typeToInfer = propType;
+-          if (!hasProperty(prop)) {
+-            typeToInfer = getNativeType(JSTypeNative.VOID_TYPE)
+-                .getLeastSupertype(propType);
+-          }
+-          defineInferredProperty(prop, typeToInfer, null);
+-        }
++private static void checkPropertyArgument(Node call, Node propArg) {
++    checkNotNull(propArg);
++    // Check whether a string literal was used.
++    if (propArg.isString()) {
++      // Enforce the convention that properties should be accessed using
++      // bracket notation if the property is a reserved word.
++      if (TokenStream.isKeyword(propArg.getString())) {
++        warnings.add(JSError.make(propArg, RESERVED_PROP_NAME, propArg
++            .getString()));
++      }
++    } else {
++      if (propArg.isGetProp()) {
++        // If the property is a qualified name, e.g. x.y, then report an
++        // error.
++        warnings.add(JSError.make(propArg, UNEXPECTED_PARAMETER, propArg
++            .getQualifiedName()));
++      } else {
++        // Otherwise, report an error on the call node.
++        warnings.add(JSError.make(call, BAD_JSDOC_ANNOTATION,
++            "jsdoc type", "Unknown type"));
+       }
+     }
+-  }
+-}
++  }}

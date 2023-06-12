@@ -1,0 +1,20 @@
+diff --git a/src/com/google/javascript/jscomp/ProcessCommonJSModules.java b/src/com/google/javascript/jscomp/ProcessCommonJSModules.java
+index f516e584..4eeca64c 100644
+--- a/src/com/google/javascript/jscomp/ProcessCommonJSModules.java
++++ b/src/com/google/javascript/jscomp/ProcessCommonJSModules.java
+@@ -225,8 +213,14 @@ public class ProcessCommonJSModules implements CompilerPass {
+       Node exports = prop.getChildAtIndex(1);
+       exports.putProp(Node.ORIGINALNAME_PROP, "exports");
+       exports.setString("module$exports");
++      if (reportDependencies) {
++        CompilerInput ci = compiler.getInput(prop.getSourceFileName());
++        ci.addProvide(moduleName);
++        JSModule m = new JSModule(moduleName);
++        m.addAndOverrideModule(ci);
++        module = m;
++      }
+     }
+-
+     /**
+      * Returns next script node in parents.
+      */

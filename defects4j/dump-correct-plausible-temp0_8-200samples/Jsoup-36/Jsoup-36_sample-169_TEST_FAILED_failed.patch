@@ -1,0 +1,55 @@
+diff --git a/src/main/java/org/jsoup/helper/DataUtil.java b/src/main/java/org/jsoup/helper/DataUtil.java
+index 3626928..4e7813b 100644
+--- a/src/main/java/org/jsoup/helper/DataUtil.java
++++ b/src/main/java/org/jsoup/helper/DataUtil.java
+@@ -80,19 +75,22 @@ public class DataUtil {
+             doc = parser.parseInput(docData, baseUri);
+             Element meta = doc.select("meta[http-equiv=content-type], meta[charset]").first();
+             if (meta != null) { // if not found, will keep utf-8 as best attempt
+-
+-                String foundCharset;
+-                if (meta.hasAttr("http-equiv")) {
+-                    foundCharset = getCharsetFromContentType(meta.attr("content"));
+-                } else {
+-                    foundCharset = meta.attr("charset");
+-                }
+-
+-                if (foundCharset != null && foundCharset.length() != 0 && !foundCharset.equals(defaultCharset)) { // need to re-decode
+-                    charsetName = foundCharset;
+-                    byteData.rewind();
+-                    docData = Charset.forName(foundCharset).decode(byteData).toString();
+-                    doc = null;
++            	if(!meta.hasAttr("http-equiv") && meta.hasAttr("charset")){
++            		String foundCharset = meta.attr("charset");
++                    if (foundCharset != null && foundCharset.length() != 0 && !foundCharset.equals(defaultCharset)) { // need to re-decode
++                        charsetName = foundCharset;
++                        byteData.rewind();
++                        docData = Charset.forName(foundCharset).decode(byteData).toString();
++                        doc = null;
++                    }
++            	}else if (meta.hasAttr("http-equiv")) {
++                    String foundCharset = getCharsetFromContentType(meta.attr("content"));
++                    if (foundCharset != null && foundCharset.length() != 0 && !foundCharset.equals(defaultCharset)) { // need to re-decode
++                        charsetName = foundCharset;
++                        byteData.rewind();
++                        docData = Charset.forName(foundCharset).decode(byteData).toString();
++                        doc = null;
++                    }
+                 }
+             }
+         } else { // specified by content type header (or by user on file load)
+@@ -158,10 +151,10 @@ public class DataUtil {
+         Matcher m = charsetPattern.matcher(contentType);
+         if (m.find()) {
+             String charset = m.group(1).trim();
+-                if (Charset.isSupported(charset)) return charset;
+-                charset = charset.toUpperCase(Locale.ENGLISH);
+-                if (Charset.isSupported(charset)) return charset;
+-                // if our advanced charset matching fails.... we just take the default
++            if (Charset.isSupported(charset)) return charset;
++            charset = charset.toUpperCase(Locale.ENGLISH);
++            if (Charset.isSupported(charset)) return charset;
++            // if our advanced charset matching fails.... we just take the default
+         }
+         return null;
+     }

@@ -1,0 +1,128 @@
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.Iterator;
+
+import org.exolab.castor.mapping.EvaluationContext;
+import org.exolab.castor.mapping.accessors.InitialContext;
+import org.exolab.castor.mapping.xml.types.CoreOperationType;
+import org.exolab.castor.mapping.xml.types.RelationalExpressionOperatorType;
+import org.exolab.castor.mapping.xml.types.RelationalExpressionType;
+
+public abstract class CoreOperationRelationalExpression extends CoreOperation {
+    private RelationalExpressionType _relationalExpression;
+
+    protected CoreOperationRelationalExpression(
+            RelationalExpressionType relationalExpression, Expression[] args) {
+        super(args);
+        _relationalExpression = relationalExpression;
+    }
+
+    public final Object computeValue(EvaluationContext evalContext) {
+        Object value = compute(getExpression(0).compute(evalContext), getExpression(1)
+                .compute(evalContext));
+        return (value == null) ? Boolean.FALSE : value;
+    }
+
+    protected final int getPrecedence() {
+        return RELATIONAL_EXPR_PRECEDENCE;
+    }
+
+    protected final boolean isSymmetric() {
+        return false;
+    }
+
+    protected abstract Object compute(Object left, Object right);
+
+    protected Expression getExpression(int index) {
+        return _args[index];
+    }
+
+    protected RelationalExpressionType getRelationalExpression() {
+        return _relationalExpression;
+    }
+
+    protected boolean evaluateCompare(int compare) {
+        boolean result = false;
+        if (getRelationalExpression().getOperator() == RelationalExpressionOperatorType.EQUAL) {
+            result = (compare == 0);
+        } else if (getRelationalExpression().getOperator() == RelationalExpressionOperatorType.NOT_EQUAL) {
+            result = (compare != 0);
+        } else if (getRelationalExpression().getOperator() == RelationalExpressionOperatorType.LESS_THAN) {
+            result = (compare < 0);
+        } else if (getRelationalExpression().getOperator() == RelationalExpressionOperatorType.GREATER_THAN) {
+            result = (compare > 0);
+        } else if (getRelationalExpression().getOperator() == RelationalExpressionOperatorType.LESS_THAN_OR_EQUAL) {
+            result = (compare <= 0);
+        } else if (getRelationalExpression().getOperator() == RelationalExpressionOperatorType.GREATER_THAN_OR_EQUAL) {
+            result = (compare >= 0);
+        }
+        return result;
+    }
+
+    protected Object reduce(Object o) {
+        if (o instanceof EvaluationContext) {
+            o = ((EvaluationContext) o).getSingleNodePointer();
+        }
+        if (o instanceof Collection) {
+            o = ((Collection) o).iterator();
+        }
+        return o;
+    }
+
+    protected boolean containsMatch(Iterator it, Object value) {
+        boolean result = false;
+        while (it.hasNext()) {
+            Object element = it.next();
+            if (compute(element, value) == Boolean.TRUE) {
+                result = true;
+                break;
+            }
+        }
+        return result;
+    }
+
+    protected boolean findMatch(Iterator lit, Iterator rit) {
+        HashSet left = new HashSet();
+        while (lit.hasNext()) {
+            left.add(lit.next());
+        }
+        boolean result = false;
+        while (rit.hasNext()) {
+            if (containsMatch(left.iterator(), rit.next())) {
+                result = true;
+                break;
+            }
+        }
+        return result;
+    }
+
+    protected boolean compare(Object left, Object right) {
+        left = reduce(left);
+        right = reduce(right);
+
+        if (left instanceof InitialContext) {
+            ((InitialContext) left).reset();
+        }
+        if (right instanceof InitialContext) {
+            ((InitialContext) right).reset();
+        }
+        if (left instanceof Iterator && right instanceof Iterator) {
+            return findMatch((Iterator) left, (Iterator) right);
+        }
+        if (left instanceof Iterator) {
+            return containsMatch((Iterator) left, right);
+        }
+        if (right instanceof Iterator) {
+            return containsMatch((Iterator) right, left);
+        }
+        double ld = InfoSetUtil.doubleValue(left);
+        if (Double.isNaN(ld)) {
+            return false;
+        }
+        double rd = InfoSetUtil.doubleValue(right);
+        if (Double.isNaN(rd)) {
+            return false;
+        }
+        return evaluateCompare(ld == rd ? 0 : ld < rd ? -1 : 1);
+    }
+}

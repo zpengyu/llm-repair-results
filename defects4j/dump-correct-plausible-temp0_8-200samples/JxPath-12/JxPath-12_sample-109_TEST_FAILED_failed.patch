@@ -1,0 +1,59 @@
+diff --git a/src/java/org/apache/commons/jxpath/ri/model/dom/DOMNodePointer.java b/src/java/org/apache/commons/jxpath/ri/model/dom/DOMNodePointer.java
+index a5bb202..70b1616 100644
+--- a/src/java/org/apache/commons/jxpath/ri/model/dom/DOMNodePointer.java
++++ b/src/java/org/apache/commons/jxpath/ri/model/dom/DOMNodePointer.java
+@@ -89,23 +89,32 @@ public class DOMNodePointer extends NodePointer {
+             return true;
+         }
+         if (test instanceof NodeNameTest) {
+-            if (node.getNodeType() != Node.ELEMENT_NODE) {
+-                return false;
+-            }
+-
+             NodeNameTest nodeNameTest = (NodeNameTest) test;
+             QName testName = nodeNameTest.getNodeName();
+             String namespaceURI = nodeNameTest.getNamespaceURI();
+             boolean wildcard = nodeNameTest.isWildcard();
+             String testPrefix = testName.getPrefix();
+-            if (wildcard && testPrefix == null) {
+-                return true;
+-            }
+-            if (wildcard
+-                || testName.getName()
+-                        .equals(DOMNodePointer.getLocalName(node))) {
+-                String nodeNS = DOMNodePointer.getNamespaceURI(node);
+-                return equalStrings(namespaceURI, nodeNS);
++            int nodeType = node.getNodeType();
++            if (nodeType == Node.ELEMENT_NODE) {
++                if (wildcard && testPrefix == null) {
++                    return true;
++                }
++                if (wildcard || testName.getName()
++                            .equals(DOMNodePointer.getLocalName(node))) {
++                    String nodeNS = DOMNodePointer.getNamespaceURI(node);
++                    return equalStrings(namespaceURI, nodeNS);
++                }
++                return false;
++            } else if (nodeType == Node.ATTRIBUTE_NODE) {
++                if (wildcard && testPrefix == null) {
++                    return true;
++                }
++                if (wildcard || testName.getName()
++                            .equals(DOMNodePointer.getLocalName(node))) {
++                    String nodeNS = DOMNodePointer.getNamespaceURI(node);
++                    return equalStrings(namespaceURI, nodeNS);
++                }
++                return false;
+             }
+             return false;
+         }
+@@ -114,7 +123,8 @@ public class DOMNodePointer extends NodePointer {
+             switch (((NodeTypeTest) test).getNodeType()) {
+                 case Compiler.NODE_TYPE_NODE :
+                     return nodeType == Node.ELEMENT_NODE
+-                            || nodeType == Node.DOCUMENT_NODE;
++                            || nodeType == Node.DOCUMENT_NODE
++                            || nodeType == Node.ATTRIBUTE_NODE;
+                 case Compiler.NODE_TYPE_TEXT :
+                     return nodeType == Node.CDATA_SECTION_NODE
+                         || nodeType == Node.TEXT_NODE;

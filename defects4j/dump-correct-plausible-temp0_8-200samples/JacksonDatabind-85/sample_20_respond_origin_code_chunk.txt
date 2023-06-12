@@ -1,0 +1,32 @@
+    public JsonSerializer<?> createContextual(SerializerProvider serializers,
+            BeanProperty property) throws JsonMappingException
+    {
+        if (property == null) {
+            return this;
+        }
+        JsonFormat.Value format = findFormatOverrides(serializers, property, handledType());
+        if (format == null) {
+            return this;
+        }
+        // Simple case first: serialize as numeric timestamp?
+        JsonFormat.Shape shape = format.getShape();
+        if (shape.isNumeric()) {
+            return withFormat(Boolean.TRUE, null);
+        }
+
+        // Otherwise: custom pattern will override things
+        if (format.hasPattern()) {
+            String pattern = format.getPattern();
+            TimeZone tz = format.getTimeZone();
+            Locale loc = format.hasLocale() ? format.getLocale() : serializers.getLocale();
+            SimpleDateFormat df = new SimpleDateFormat(pattern, loc);
+            if (tz == null) {
+                tz = serializers.getTimeZone();
+            }
+            df.setTimeZone(tz);
+            return withFormat(Boolean.FALSE, df);
+        }
+        // Otherwise: nothing more to do really;
+        // could perhaps add support for other types, but...
+        return this;
+    }

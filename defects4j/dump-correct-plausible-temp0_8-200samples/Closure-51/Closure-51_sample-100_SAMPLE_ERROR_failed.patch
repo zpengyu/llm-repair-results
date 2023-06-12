@@ -1,0 +1,120 @@
+diff --git a/src/com/google/javascript/jscomp/CodeConsumer.java b/src/com/google/javascript/jscomp/CodeConsumer.java
+index dbdb0a9b..ec281217 100644
+--- a/src/com/google/javascript/jscomp/CodeConsumer.java
++++ b/src/com/google/javascript/jscomp/CodeConsumer.java
+@@ -36,15 +35,49 @@ abstract class CodeConsumer {
+    * node at the current position.
+    */
+   void startSourceMapping(Node node) {
++    Node parent = node.getParent();
++    int nodeType = node.getType();
++    int parentType = parent.getType();
++    if (nodeType != Token.BLOCK
++        || parentType == Token.CATCH
++        || parentType == Token.FOR
++        || parentType == Token.DO
++        || parentType == Token.WHILE
++        || parentType == Token.IF
++        || parentType == Token.FUNCTION
++        || parentType == Token.SWITCH
++        || parentType == Token.FINALLY
++        || parentType == Token.EXPR_RESULT
++        || parentType == Token.SCRIPT) {
++      startSourceMapping(node.getLineno(), node.getCharno());
++    } else {
++      startSourceMapping(node.getLineno() + 1, 1);
++    }
+   }
+-
+   /**
+    * Finishes the source mapping for the given
+    * node at the current position.
+    */
+   void endSourceMapping(Node node) {
++    Node parent = node.getParent();
++    int nodeType = node.getType();
++    int parentType = parent.getType();
++    if (nodeType != Token.BLOCK
++        || parentType == Token.CATCH
++        || parentType == Token.FOR
++        || parentType == Token.DO
++        || parentType == Token.WHILE
++        || parentType == Token.IF
++        || parentType == Token.FUNCTION
++        || parentType == Token.SWITCH
++        || parentType == Token.FINALLY
++        || parentType == Token.EXPR_RESULT
++        || parentType == Token.SCRIPT) {
++      endSourceMapping(node.getLineno(), node.getCharno() + node.getLength());
++    } else {
++      endSourceMapping(node.getLineno() + 1, 1);
++    }
+   }
+-
+   /**
+    * Provides a means of interrupting the CodeGenerator. Derived classes should
+    * return false to stop further processing.
+@@ -80,23 +108,39 @@ abstract class CodeConsumer {
+   void appendBlockEnd() {
+     append("}");
+   }
+-
+   void startNewLine() {
++    if (statementStarted) {
++      endLine();
++      statementStarted = false;
++      statementNeedsEnded = false;
++    }
+   }
+-
+   void maybeLineBreak() {
+-    maybeCutLine();
++    // If we're in a statement, and the last char was a '(', add a line break.
++    // This keeps expressions like arguments and function calls from
++    // getting too long.
++    if (statementStarted && getLastChar() == '(') {
++      startNewLine();
++    }
+   }
+-
+   void maybeCutLine() {
++    // If we're in a statement, and the last char was a ',' or '=', add
++    // a line break. This keeps lists of arguments or object literals
++    // from getting too long.
++    if (statementStarted) {
++      char lastChar = getLastChar();
++      if (lastChar == ',' || lastChar == '=') {
++        startNewLine();
++      }
++    }
+   }
+-
+   void endLine() {
++    startSourceMapping(0, 0);
++    append("\n");
+   }
+-
+   void notePreferredLineBreak() {
++    startNewLine();
+   }
+-
+   void beginBlock() {
+     if (statementNeedsEnded) {
+       append(";");
+@@ -283,7 +300,14 @@ abstract class CodeConsumer {
+   boolean breakAfterBlockFor(Node n, boolean statementContext) {
+     return statementContext;
+   }
+-
+   /** Called when we're at the end of a file. */
+   void endFile() {}
++  /**
++   * Starts the source mapping at the given line and column.
++   */
++  protected abstract void startSourceMapping(int line, int column);
++  /**
++   * Ends the source mapping at the given line and column.
++   */
++  protected abstract void endSourceMapping(int line, int column);
+ }
+\ No newline at end of file

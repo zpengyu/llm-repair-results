@@ -1,0 +1,20 @@
+diff --git a/src/com/google/javascript/jscomp/TypeInference.java b/src/com/google/javascript/jscomp/TypeInference.java
+index dbe40e0f..9721de6e 100644
+--- a/src/com/google/javascript/jscomp/TypeInference.java
++++ b/src/com/google/javascript/jscomp/TypeInference.java
+@@ -1055,6 +1054,15 @@ class TypeInference
+         }
+       }
+     }
++    // Infer the 'this' type of the constructor based on the type of the
++    // 'new' expression.
++    // See http://code.google.com/p/closure-compiler/issues/detail?id=401
++    if (type != null && constructorType != null) {
++      FunctionType ct = constructorType.toMaybeFunctionType();
++      if (ct != null && !ct.hasInstanceType()) {
++        ct.setInstanceType(type);
++      }
++    }
+     n.setJSType(type);
+     for (Node arg = constructor.getNext(); arg != null; arg = arg.getNext()) {
+       scope = traverse(arg, scope);

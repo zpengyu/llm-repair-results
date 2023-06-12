@@ -1,0 +1,30 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/ser/std/StdKeySerializer.java b/src/main/java/com/fasterxml/jackson/databind/ser/std/StdKeySerializer.java
+index 60ce578bf..414c2f5e7 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/ser/std/StdKeySerializer.java
++++ b/src/main/java/com/fasterxml/jackson/databind/ser/std/StdKeySerializer.java
+@@ -24,12 +24,22 @@ public class StdKeySerializer extends StdSerializer<Object>
+     @Override
+     public void serialize(Object value, JsonGenerator jgen, SerializerProvider provider) throws IOException {
+         String str;
+-
+         if (value instanceof Date) {
+-            provider.defaultSerializeDateKey((Date) value, jgen);
++            Date date = (Date) value;
++            if (_useTimestamp) {
++                provider.defaultSerializeDateKey(date, jgen);
++            } else {
++                // 31-Dec-2012, tatu: As per [databind#163], may need to use timestamp
++                jgen.writeFieldName(date.toString());
++            }
+             return;
+         } else {
+-            str = value.toString();
++            if (value instanceof Calendar) {
++                Calendar cal = (Calendar) value;
++                str = (_useTimestamp) ? ISO8601Utils.format(cal.getTime()) : cal.getTime().toString();
++            } else {
++                str = value.toString();
++            }
+         }
+         jgen.writeFieldName(str);
+     }

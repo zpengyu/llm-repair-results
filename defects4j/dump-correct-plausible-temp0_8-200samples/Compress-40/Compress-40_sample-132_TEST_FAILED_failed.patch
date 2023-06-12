@@ -1,0 +1,24 @@
+diff --git a/src/main/java/org/apache/commons/compress/utils/BitInputStream.java b/src/main/java/org/apache/commons/compress/utils/BitInputStream.java
+index 4086c8b5..7c3b0519 100644
+--- a/src/main/java/org/apache/commons/compress/utils/BitInputStream.java
++++ b/src/main/java/org/apache/commons/compress/utils/BitInputStream.java
+@@ -85,7 +85,11 @@ public class BitInputStream implements Closeable {
+         while (bitsCachedSize < count) {
+             final long nextByte = in.read();
+             if (nextByte < 0) {
+-                return nextByte;
++                if (count > bitsCachedSize) {
++                    // we only have bitsCachedSize < count bits remaining, but
++                    // count wants more than that.  return -1 if that's the case.
++                    return nextByte;
++                }
+             }
+             if (byteOrder == ByteOrder.LITTLE_ENDIAN) {
+                 bitsCached |= (nextByte << bitsCachedSize);
+@@ -106,5 +109,4 @@ public class BitInputStream implements Closeable {
+             }
+             bitsCachedSize -= count;
+         return bitsOut;
+-    }
+-}
++    }}

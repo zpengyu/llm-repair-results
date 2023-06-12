@@ -1,0 +1,15 @@
+        public ArrayNode deserialize(JsonParser p, DeserializationContext ctxt) throws IOException
+        {
+            if (p.isExpectedStartArrayToken()) {
+                return deserializeArray(p, ctxt, ctxt.getNodeFactory());
+            }
+            // 05-Aug-2016, tatu: [databind#1312] Allow START_OBJECT as well -- should allow
+            //    underlying POJOs to act just fine, and obviously can coerce to ArrayNode
+            if (p.isExpectedStartObjectToken()) {
+                JsonNode n = ctxt.readTree(p);
+                if (n.isArray()) {
+                    return (ArrayNode) n;
+                }
+            }
+            throw ctxt.mappingException(ArrayNode.class);
+        }

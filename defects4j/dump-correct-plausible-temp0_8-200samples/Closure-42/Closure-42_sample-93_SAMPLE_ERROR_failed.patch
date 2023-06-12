@@ -1,0 +1,19 @@
+diff --git a/src/com/google/javascript/jscomp/parsing/IRFactory.java b/src/com/google/javascript/jscomp/parsing/IRFactory.java
+index 6a42e729..425e5da6 100644
+--- a/src/com/google/javascript/jscomp/parsing/IRFactory.java
++++ b/src/com/google/javascript/jscomp/parsing/IRFactory.java
+@@ -573,7 +572,13 @@ class IRFactory {
+           transform(loopNode.getIteratedObject()),
+           transformBlock(loopNode.getBody()));
+     }
+-
++    private Node transformBlock(Block block) {
++        Node blockNode = newNode(Token.BLOCK, block.getLineno());
++        for (Node child : block.children()) {
++            blockNode.addChildToBack(transform(child));
++        }
++        return blockNode;
++    }
+     @Override
+     Node processForLoop(ForLoop loopNode) {
+       Node node = newNode(

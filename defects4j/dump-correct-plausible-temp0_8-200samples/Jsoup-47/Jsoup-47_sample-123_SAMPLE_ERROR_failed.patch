@@ -1,0 +1,26 @@
+diff --git a/src/main/java/org/jsoup/nodes/Entities.java b/src/main/java/org/jsoup/nodes/Entities.java
+index 5a2b368..ca93396 100644
+--- a/src/main/java/org/jsoup/nodes/Entities.java
++++ b/src/main/java/org/jsoup/nodes/Entities.java
+@@ -144,12 +141,16 @@ public class Entities {
+                         else
+                             accum.append("&#x").append(Integer.toHexString(codePoint)).append(';');
+                 }
+-            } else {
+-                final String c = new String(Character.toChars(codePoint));
+-                if (encoder.canEncode(c)) // uses fallback encoder for simplicity
+-                    accum.append(c);
+-                else
++            } else if (Character.isSupplementaryCodePoint(codePoint)) { // split implementation, avoids string concats
++                if (Character.isValidCodePoint(codePoint)) {
++                    final char[] surrogates = Character.toChars(codePoint);
++                    if (canEncode(coreCharset, surrogates, encoder))
++                        accum.append(surrogates);
++                    else
++                        accum.append("&#x").append(Integer.toHexString(codePoint)).append(';');
++                } else {
+                     accum.append("&#x").append(Integer.toHexString(codePoint)).append(';');
++                }
+             }
+         }
+     }

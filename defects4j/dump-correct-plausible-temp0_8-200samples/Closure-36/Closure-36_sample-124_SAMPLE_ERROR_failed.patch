@@ -1,0 +1,45 @@
+diff --git a/src/com/google/javascript/jscomp/InlineVariables.java b/src/com/google/javascript/jscomp/InlineVariables.java
+index 4f045430..1a2db45f 100644
+--- a/src/com/google/javascript/jscomp/InlineVariables.java
++++ b/src/com/google/javascript/jscomp/InlineVariables.java
+@@ -516,6 +516,7 @@ class InlineVariables implements CompilerPass {
+      * @return true if the provided reference and declaration can be safely
+      *         inlined according to our criteria
+      */
++class InlineFunctions {
+     private boolean canInline(
+         Reference declaration,
+         Reference initialization,
+@@ -557,10 +555,9 @@ class InlineVariables implements CompilerPass {
+           && reference.getParent().getFirstChild() == reference.getNode()) {
+         return false;
+       }
+-
+       if (value.isFunction()) {
+         Node callNode = reference.getParent();
+-        if (reference.getParent().isCall()) {
++        if (callNode.isCall()) {
+           CodingConvention convention = compiler.getCodingConvention();
+           // Bug 2388531: Don't inline subclass definitions into class defining
+           // calls as this confused class removing logic.
+@@ -569,16 +566,17 @@ class InlineVariables implements CompilerPass {
+           if (relationship != null) {
+             return false;
+           }
+-
+           // issue 668: Don't inline singleton getter methods
+           // calls as this confused class removing logic.
++          if (convention.getSingletonGetterFunctionName(callNode) != null) {
++            return false;
++          }
+         }
+       }
+-
+       return canMoveAggressively(value) ||
+           canMoveModerately(initialization, reference);
+     }
+-
++}
+     /**
+      * If the value is a literal, we can cross more boundaries to inline it.
+      */

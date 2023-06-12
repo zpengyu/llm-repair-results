@@ -1,0 +1,27 @@
+  static boolean isValidDefineValue(Node val, Set<String> defines) {
+    if (val.isString() || val.isNumber() || val.isBoolean() || val.isNull()) {
+      return true;
+    }
+
+    // Binary operators are only valid if both children are valid.
+    if (val.isBitOp() || val.isNot()) {
+      return isValidDefineValue(val.getFirstChild(), defines);
+    }
+
+    if (val.isNeg()) {
+      return isValidDefineValue(val.getFirstChild(), defines);
+    }
+
+    // Uniary operators are valid if the child is valid.
+    if (val.isUnaryOp()) {
+      return isValidDefineValue(val.getFirstChild(), defines);
+    }
+
+    // Names are valid if and only if they are defines themselves.
+    if (val.isName()) {
+      return defines.contains(val.getString());
+    }
+
+    return false;
+  }
+

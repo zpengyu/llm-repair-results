@@ -1,0 +1,30 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/deser/std/StringArrayDeserializer.java b/src/main/java/com/fasterxml/jackson/databind/deser/std/StringArrayDeserializer.java
+index 773d1fbd8..e5689add7 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/deser/std/StringArrayDeserializer.java
++++ b/src/main/java/com/fasterxml/jackson/databind/deser/std/StringArrayDeserializer.java
+@@ -49,20 +44,18 @@ public final class StringArrayDeserializer
+         if (_elementDeserializer != null) {
+             return _deserializeCustom(jp, ctxt);
+         }
+-
+-        final ObjectBuffer buffer = ctxt.leaseObjectBuffer();
++        ObjectBuffer buffer = ctxt.leaseObjectBuffer();
+         Object[] chunk = buffer.resetAndStart();
+-
+         int ix = 0;
+         JsonToken t;
+-
++        final TypeDeserializer typeDeser = _valueTypeDeserializer;
+             while ((t = jp.nextToken()) != JsonToken.END_ARRAY) {
+                 // Ok: no need to convert Strings, but must recognize nulls
+                 String value;
+-                if (t == JsonToken.VALUE_STRING) {
+-                    value = jp.getText();
+-                } else if (t == JsonToken.VALUE_NULL) {
++                if (t == JsonToken.VALUE_NULL) {
+                     value = null; // since we have established that '_elementDeserializer == null' earlier
++                } else if (typeDeser == null) {
++                    value = _parseString(jp, ctxt);
+                 } else {
+                     value = _parseString(jp, ctxt);
+                 }

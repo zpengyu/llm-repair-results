@@ -1,0 +1,24 @@
+diff --git a/src/com/google/javascript/jscomp/SourceFile.java b/src/com/google/javascript/jscomp/SourceFile.java
+index 99096504..501b6c41 100644
+--- a/src/com/google/javascript/jscomp/SourceFile.java
++++ b/src/com/google/javascript/jscomp/SourceFile.java
+@@ -234,12 +230,16 @@ public class SourceFile implements StaticSourceFile, Serializable {
+     // Remember this offset for the next search we do.
+     lastOffset = pos;
+     lastLine = lineNumber;
+-
+     if (js.indexOf('\n', pos) == -1) {
+       // If next new line cannot be found, there are two cases
+-      // 1. pos already reaches the end of file, then null should be returned
++      // 1. pos already reaches the end of file, then return the content after
++      // pos (including "")
+       // 2. otherwise, return the contents between pos and the end of file.
+-        return null;
++      if (pos < js.length()) {
++        return js.substring(pos);
++      } else {
++        return "";
++      }
+     } else {
+       return js.substring(pos, js.indexOf('\n', pos));
+     }

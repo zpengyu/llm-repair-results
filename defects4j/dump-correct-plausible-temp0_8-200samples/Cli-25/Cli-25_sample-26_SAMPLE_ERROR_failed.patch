@@ -1,0 +1,42 @@
+diff --git a/src/java/org/apache/commons/cli/HelpFormatter.java b/src/java/org/apache/commons/cli/HelpFormatter.java
+index da89f9d..0a52dcb 100644
+--- a/src/java/org/apache/commons/cli/HelpFormatter.java
++++ b/src/java/org/apache/commons/cli/HelpFormatter.java
+@@ -809,16 +809,16 @@ public class HelpFormatter
+     protected StringBuffer renderWrappedText(StringBuffer sb, int width, 
+                                              int nextLineTabStop, String text)
+     {
++        if (text == null)
++        {
++            return null;
++        }
+         int pos = findWrapPos(text, width, 0);
+-
+         if (pos == -1)
+         {
+-            sb.append(rtrim(text));
+-
+-            return sb;
++            return renderString(sb, text, width, nextLineTabStop);
+         }
+         sb.append(rtrim(text.substring(0, pos))).append(defaultNewLine);
+-
+         if (nextLineTabStop >= width)
+         {
+             // stops infinite loop happening
+@@ -833,14 +831,10 @@ public class HelpFormatter
+         {
+             text = padding + text.substring(pos).trim();
+             pos = findWrapPos(text, width, 0);
+-
+             if (pos == -1)
+             {
+-                sb.append(text);
+-
+-                return sb;
++                return renderString(sb, text, width, nextLineTabStop);
+             }
+-            
+             if ( (text.length() > width) && (pos == nextLineTabStop - 1) ) 
+             {
+                 pos = width;

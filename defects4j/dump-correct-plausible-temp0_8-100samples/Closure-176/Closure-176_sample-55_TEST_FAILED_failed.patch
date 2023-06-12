@@ -1,0 +1,47 @@
+diff --git a/src/com/google/javascript/jscomp/TypeInference.java b/src/com/google/javascript/jscomp/TypeInference.java
+index 53e8cb48..b4abcc55 100644
+--- a/src/com/google/javascript/jscomp/TypeInference.java
++++ b/src/com/google/javascript/jscomp/TypeInference.java
+@@ -528,26 +528,26 @@ class TypeInference
+         String varName = left.getString();
+         Var var = syntacticScope.getVar(varName);
+         boolean isVarDeclaration = left.hasChildren();
+-
+-        // When looking at VAR initializers for declared VARs, we tend
+-        // to use the declared type over the type it's being
+-        // initialized to in the global scope.
++        // TODO(nicksantos): If a declared var is assigned null or undefined,
++        // and is later reassigned to an object literal, then the var's type
++        // should be declared as {Object}, not {?Object}.
+         //
+-        // For example,
+-        // /** @param {number} */ var f = goog.abstractMethod;
+-        // it's obvious that the programmer wants you to use
+-        // the declared function signature, not the inferred signature.
++        // Either that, or we need some kind of declaration to tell the type
++        // checker that a var is allowed to be null/undefined.
+         //
+-        // Or,
+-        // /** @type {Object.<string>} */ var x = {};
+-        // the one-time anonymous object on the right side
+-        // is as narrow as it can possibly be, but we need to make
+-        // sure we back-infer the <string> element constraint on
+-        // the left hand side, so we use the left hand side.
+-
++        // For example:
++        // /** @type {Object} */ var a = null;
++        // /** @param {Object} b */
++        // function f(b) {
++        //   a = b;
++        //   return a.foo;
++        // }
++        //
++        // is legal, even though a is null.
++        //
++        // This is an aspect of the type system, not a bug in type inference.
+         boolean isVarTypeBetter = !isVarDeclaration || var == null || var.isTypeInferred();
+             // Makes it easier to check for NPEs.
+-
+         // TODO(nicksantos): This might be a better check once we have
+         // back-inference of object/array constraints.  It will probably
+         // introduce more type warnings.  It uses the result type iff it's

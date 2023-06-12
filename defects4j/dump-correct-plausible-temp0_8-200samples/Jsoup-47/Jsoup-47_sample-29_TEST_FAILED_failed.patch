@@ -1,0 +1,26 @@
+diff --git a/src/main/java/org/jsoup/nodes/Entities.java b/src/main/java/org/jsoup/nodes/Entities.java
+index 5a2b368..6f8787c 100644
+--- a/src/main/java/org/jsoup/nodes/Entities.java
++++ b/src/main/java/org/jsoup/nodes/Entities.java
+@@ -103,7 +100,6 @@ public class Entities {
+                     reachedNonWhite = true;
+                 }
+             }
+-            // surrogate pairs, split implementation for efficiency on single char common case (saves creating strings, char[]):
+             if (codePoint < Character.MIN_SUPPLEMENTARY_CODE_POINT) {
+                 final char c = (char) codePoint;
+                 // html specific and required escapes:
+@@ -145,9 +141,10 @@ public class Entities {
+                             accum.append("&#x").append(Integer.toHexString(codePoint)).append(';');
+                 }
+             } else {
+-                final String c = new String(Character.toChars(codePoint));
+-                if (encoder.canEncode(c)) // uses fallback encoder for simplicity
+-                    accum.append(c);
++                // split implementation for efficiency on single char common case (saves creating strings, char[]):
++                final char c = Character.highSurrogate(codePoint);
++                if (map.containsKey(c))
++                    accum.append('&').append(map.get(c)).append(';');
+                 else
+                     accum.append("&#x").append(Integer.toHexString(codePoint)).append(';');
+             }

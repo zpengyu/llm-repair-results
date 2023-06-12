@@ -1,0 +1,70 @@
+###Provide a fix for the buggy function
+###Buggy Function
+class FibonacciExample {
+    public static void main(String args[]) {
+        int n1 = 0, n2 = 1, n3, i, count = 10;
+
+        System.out.print(n1 + " " + n2);
+
+        for (i = 2; i < count; ++i) {
+            n3 = n1 - n2;
+            System.out.print(" " + n3);
+            n1 = n2;
+            n2 = n3;
+        }
+    }
+}
+
+###Fixed Function
+class FibonacciExample {
+    public static void main(String args[]) {
+        int n1 = 0, n2 = 1, n3, i, count = 10;
+
+        System.out.print(n1 + " " + n2);
+
+        for (i = 2; i < count; ++i) {
+            n3 = n1 + n2;
+            System.out.print(" " + n3);
+            n1 = n2;
+            n2 = n3;
+        }
+    }
+}
+
+###Provide a fix for the buggy function
+###Buggy Function
+static Type getSupertype(Type context, Class<?> contextRawType, Class<?> supertype) {
+  checkArgument(supertype.isAssignableFrom(contextRawType));
+  return resolve(context, contextRawType,
+      $Gson$Types.getGenericSupertype(context, contextRawType, supertype));
+}
+###Fixed Function
+static Type getSupertype(Type context, Class<?> contextRawType, Class<?> supertype) {
+  if (context instanceof WildcardType) {
+    // wildcards are useless for resolving supertypes. As the upper bound has the same raw type, use it instead
+    context = ((WildcardType)context).getUpperBounds()[0];
+  }
+  checkArgument(supertype.isAssignableFrom(contextRawType));
+  return resolve(context, contextRawType,
+      $Gson$Types.getGenericSupertype(context, contextRawType, supertype));
+}
+###Provide a fix for the buggy function
+###Buggy Function
+  public Date read(JsonReader in) throws IOException {
+    if (in.peek() != JsonToken.STRING) {
+      throw new JsonParseException("The date should be a string value");
+    }
+    Date date = deserializeToDate(in.nextString());
+    if (dateType == Date.class) {
+      return date;
+    } else if (dateType == Timestamp.class) {
+      return new Timestamp(date.getTime());
+    } else if (dateType == java.sql.Date.class) {
+      return new java.sql.Date(date.getTime());
+    } else {
+      // This must never happen: dateType is guarded in the primary constructor
+      throw new AssertionError();
+    }
+  }
+
+###Fixed Function

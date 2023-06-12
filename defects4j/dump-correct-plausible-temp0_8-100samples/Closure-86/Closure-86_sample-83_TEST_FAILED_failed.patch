@@ -1,0 +1,25 @@
+diff --git a/src/com/google/javascript/jscomp/NodeUtil.java b/src/com/google/javascript/jscomp/NodeUtil.java
+index 933d4ffa..23a7c682 100644
+--- a/src/com/google/javascript/jscomp/NodeUtil.java
++++ b/src/com/google/javascript/jscomp/NodeUtil.java
+@@ -2457,6 +2457,7 @@ public final class NodeUtil {
+       case Token.CALL:
+         return callHasLocalResult(value)
+             || isToStringMethodCall(value)
++            || isImmutableValue(value)
+             || locals.apply(value);
+       case Token.NEW:
+         // TODO(nicksantos): This needs to be changed so that it
+@@ -2477,11 +2478,9 @@ public final class NodeUtil {
+         //  x = '' + g (x is now an local string)
+         //  x -= g (x is now an local number)
+         if (isAssignmentOp(value)
+-            || isSimpleOperator(value)
+-            || isImmutableValue(value)) {
++            || isSimpleOperator(value)) {
+           return true;
+         }
+-
+         throw new IllegalStateException(
+             "Unexpected expression node" + value +
+             "\n parent:" + value.getParent());

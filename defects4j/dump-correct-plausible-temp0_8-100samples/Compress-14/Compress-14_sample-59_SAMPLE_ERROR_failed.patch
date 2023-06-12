@@ -1,0 +1,43 @@
+diff --git a/src/main/java/org/apache/commons/compress/archivers/tar/TarUtils.java b/src/main/java/org/apache/commons/compress/archivers/tar/TarUtils.java
+index 121012d0..14f60727 100644
+--- a/src/main/java/org/apache/commons/compress/archivers/tar/TarUtils.java
++++ b/src/main/java/org/apache/commons/compress/archivers/tar/TarUtils.java
+@@ -107,10 +102,36 @@ public class TarUtils {
+             result = (result << 3) + (currentByte - '0'); // convert from ASCII
+             // CheckStyle:MagicNumber ON
+         }
+-
+         return result;
+     }
+-
++    private static String exceptionMessage(final byte[] buffer, final int offset, final int length, final int currentByte, final byte badByte) {
++        final int maxLength = Math.max(currentByte, Math.min(offset + length, offset + 20));
++        final StringBuilder sb = new StringBuilder(80);
++        sb.append("Bad octal character '");
++        sb.append((char) badByte);
++        sb.append("' 0x").append(Integer.toString(badByte, 16));
++        sb.append(" in header starting at offset ");
++        sb.append(offset);
++        sb.append(" of ");
++        sb.append(length);
++        sb.append(" bytes starting with '");
++        for (int i = offset; i < maxLength; i++) {
++            final byte b = buffer[i];
++            if (b == 0) {
++                sb.append("(NUL)");
++            } else if (b == '\n') {
++                sb.append("(LF)");
++            } else if (b == '\r') {
++                sb.append("(CR)");
++            } else if (b < 0x20 || b > 0x7e) {
++                sb.append("(").append(Integer.toString(b, 16)).append(")");
++            } else {
++                sb.append((char) b);
++            }
++        }
++        sb.append("'");
++        return sb.toString();
++    }
+     /** 
+      * Compute the value contained in a byte buffer.  If the most
+      * significant bit of the first byte in the buffer is set, this

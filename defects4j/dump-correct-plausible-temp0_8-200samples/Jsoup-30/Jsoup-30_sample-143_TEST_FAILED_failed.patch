@@ -1,0 +1,86 @@
+diff --git a/src/main/java/org/jsoup/safety/Cleaner.java b/src/main/java/org/jsoup/safety/Cleaner.java
+index c6879b1..d14f10d 100644
+--- a/src/main/java/org/jsoup/safety/Cleaner.java
++++ b/src/main/java/org/jsoup/safety/Cleaner.java
+@@ -20,21 +20,19 @@ import java.util.List;
+  */
+ public class Cleaner {
+     private Whitelist whitelist;
+-
+     /**
+-     Create a new cleaner, that sanitizes documents using the supplied whitelist.
+-     @param whitelist white-list to clean with
++     * Create a new cleaner, that sanitizes documents using the supplied whitelist.
++     * @param whitelist white-list to clean with
+      */
+     public Cleaner(Whitelist whitelist) {
+         Validate.notNull(whitelist);
+         this.whitelist = whitelist;
+     }
+-
+     /**
+-     Creates a new, clean document, from the original dirty document, containing only elements allowed by the whitelist.
+-     The original document is not modified. Only elements from the dirt document's <code>body</code> are used.
+-     @param dirtyDocument Untrusted base document to clean.
+-     @return cleaned document.
++     * Creates a new, clean document, from the original dirty document, containing only elements allowed by the whitelist.
++     * The original document is not modified. Only elements from the dirt document's <code>body</code> are used.
++     * @param dirtyDocument Untrusted base document to clean.
++     * @return cleaned document.
+      */
+     public Document clean(Document dirtyDocument) {
+         Validate.notNull(dirtyDocument);
+@@ -42,19 +39,17 @@ public class Cleaner {
+         Document clean = Document.createShell(dirtyDocument.baseUri());
+         if (dirtyDocument.body() != null) // frameset documents won't have a body. the clean doc will have empty body.
+             copySafeNodes(dirtyDocument.body(), clean.body());
+-
+         return clean;
+     }
+-
+     /**
+-     Determines if the input document is valid, against the whitelist. It is considered valid if all the tags and attributes
+-     in the input HTML are allowed by the whitelist.
+-     <p/>
+-     This method can be used as a validator for user input forms. An invalid document will still be cleaned successfully
+-     using the {@link #clean(Document)} document. If using as a validator, it is recommended to still clean the document
+-     to ensure enforced attributes are set correctly, and that the output is tidied.
+-     @param dirtyDocument document to test
+-     @return true if no tags or attributes need to be removed; false if they do
++     * Determines if the input document is valid, against the whitelist. It is considered valid if all the tags and attributes
++     * in the input HTML are allowed by the whitelist.
++     * <p/>
++     * This method can be used as a validator for user input forms. An invalid document will still be cleaned successfully
++     * using the {@link #clean(Document)} document. If using as a validator, it is recommended to still clean the document
++     * to ensure enforced attributes are set correctly, and that the output is tidied.
++     * @param dirtyDocument document to test
++     * @return true if no tags or attributes need to be removed; false if they do
+      */
+     public boolean isValid(Document dirtyDocument) {
+         Validate.notNull(dirtyDocument);
+@@ -63,9 +57,8 @@ public class Cleaner {
+         int numDiscarded = copySafeNodes(dirtyDocument.body(), clean.body());
+         return numDiscarded == 0;
+     }
+-
+     /**
+-     Iterates the input and copies trusted nodes (tags, attributes, text) into the destination.
++     * Iterates the input and copies trusted nodes (tags, attributes, text) into the destination.
+      */
+     private int copySafeNodes(Element root, Element destination) {
+         List<Node> sourceChildren = root.childNodes();
+@@ -111,11 +97,11 @@ public class Cleaner {
+                 numDiscarded++;
+         }
+         Attributes enforcedAttrs = whitelist.getEnforcedAttributes(sourceTag);
+-        destAttrs.addAll(enforcedAttrs);
+-
++        if(enforcedAttrs != null) {
++            destAttrs.addAll(enforcedAttrs);
++        }
+         return new ElementMeta(dest, numDiscarded);
+     }
+-
+     private static class ElementMeta {
+         Element el;
+         int numAttribsDiscarded;

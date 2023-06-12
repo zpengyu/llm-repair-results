@@ -1,0 +1,24 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/deser/std/CollectionDeserializer.java b/src/main/java/com/fasterxml/jackson/databind/deser/std/CollectionDeserializer.java
+index af4270610..16205c47f 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/deser/std/CollectionDeserializer.java
++++ b/src/main/java/com/fasterxml/jackson/databind/deser/std/CollectionDeserializer.java
+@@ -204,9 +203,18 @@ public class CollectionDeserializer
+         if (valueTypeDeser != null) {
+             valueTypeDeser = valueTypeDeser.forProperty(property);
+         }
++        // Added the following lines
++        JsonDeserializer<?> deser = valueDeser;
++        if (deser == null) {
++            deser = _collectionType.getContentType().getValueHandler();
++            if (deser == null) {
++                throw new JsonMappingException("Can not find a deserializer for type " + _collectionType);
++            }
++        }
++        valueDeser = ctxt.handleSecondaryContextualization(deser, property, vt);
++        // End of added lines
+         return withResolved(delegateDeser, valueDeser, valueTypeDeser, unwrapSingle);
+     }
+-
+     /*
+     /**********************************************************
+     /* ContainerDeserializerBase API

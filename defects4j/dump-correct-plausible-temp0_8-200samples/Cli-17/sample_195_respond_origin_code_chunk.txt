@@ -1,0 +1,44 @@
+    protected void burstToken(String token, boolean stopAtNonOption)
+    {
+        int index = 1;
+
+        while (index < token.length())
+        {
+            String ch = String.valueOf(token.charAt(index));
+            if (options.hasOption(ch))
+            {
+                tokens.add("-" + ch);
+                currentOption = options.getOption(ch);
+
+                if (currentOption.hasArg() && (token.length() != (index + 1)))
+                {
+                    tokens.add(token.substring(index + 1));
+                    break;
+                }
+                else
+                {
+                    if (currentOption.hasArg())
+                    {
+                        throw new RuntimeException("Illegal option: " + token);
+                    }
+                }
+
+                index++;
+            }
+            else
+            {
+                if (stopAtNonOption)
+                {
+                    process(token.substring(index));
+                }
+                else
+                {
+                    tokens.add(token);
+                }
+
+                break;
+            }
+        }
+    }
+
+

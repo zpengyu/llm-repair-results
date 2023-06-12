@@ -1,0 +1,40 @@
+    protected void iterateSimplex(final Comparator<RealPointValuePair> comparator)
+        throws FunctionEvaluationException, OptimizationException, IllegalArgumentException {
+        while (true) {
+            incrementIterationsCounter();
+            // save the original vertex
+            final RealPointValuePair[] original = simplex;
+            final RealPointValuePair best = original[0];
+            // perform a reflection step
+            final RealPointValuePair reflected = evaluateNewSimplex(original, 1.0, comparator);
+            if (comparator.compare(reflected, best) < 0) {
+                // compute the expanded simplex
+                final RealPointValuePair[] reflectedSimplex = simplex;
+                final RealPointValuePair expanded = evaluateNewSimplex(original, khi, comparator);
+                if (comparator.compare(reflected, expanded) <= 0) {
+                    // accept the reflected simplex
+                    simplex = reflectedSimplex;
+                } else {
+                    // accept the expanded simplex
+                    simplex = simplex;
+                }
+                return;
+            }
+            // perform a contraction step outside the simplex
+            final RealPointValuePair contracted = evaluateNewSimplex(original, gamma, comparator);
+            if (comparator.compare(contracted, best) <= 0) {
+                // accept the contracted simplex
+                simplex = simplex;
+                // check convergence
+                return;
+            }
+            // perform a contraction step inside the simplex
+            final RealPointValuePair[] smallerSimplex = new RealPointValuePair[n];
+            smallerSimplex[0] = original[0];
+            smallerSimplex[n - 1] = evaluateNewSimplex(original, rho, comparator);
+            for (int i = 1; i < n; i++) {
+                smallerSimplex[i] = original[i];
+            }
+            simplex = smallerSimplex;
+        }
+    }

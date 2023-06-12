@@ -1,0 +1,62 @@
+  public Rotation(Vector3D u1, Vector3D u2, Vector3D v1, Vector3D v2) {
+        final double epsilon = 1.0e-10;
+
+        // normalize v1 in order to have (v1|v1) = (u1|u1)
+        final double norm2V1 = v1.getNormSq();
+        final double norm2U1 = u1.getNormSq();
+        final double dotU1V1 = u1.dotProduct(v1);
+        final double compV1  = norm2U1 / (norm2V1 + dotU1V1 + dotU1V1);
+        v1 = new Vector3D(compV1, v1);
+
+        // normalize v2 in order to have (v2|v2) = (u2|u2)
+        final double norm2V2 = v2.getNormSq();
+        final double norm2U2 = u2.getNormSq();
+        final double dotU2V2 = u2.dotProduct(v2);
+        final double compV2  = norm2U2 / (norm2V2 + dotU2V2 + dotU2V2);
+        v2 = new Vector3D(compV2, v2);
+
+        // normalize v1 in order to have (u1|u2) = (v1|v2)
+        final double dotU1U2 = u1.dotProduct(u2);
+        final double dotV1V2 = v1.dotProduct(v2);
+        final double compV1V2  = dotU1U2 / (dotV1V2 + epsilon);
+        v1 = new Vector3D(compV1V2, v1);
+
+        // adjust v2 in order to have (u1|u2) = (v1|v2) and (v2|v2) = (u2|u2)
+        final double dotV1U1 = v1.dotProduct(u1);
+        final double dotV2U2 = v2.dotProduct(u2);
+        final double dotV2V2 = v2.getNormSq();
+        final double dotU2U2 = norm2U2;
+        final double compV2U2 = (dotU2U2 - dotU1U2 * dotU1U2 - dotV1U1 * dotV1U1) /
+                (dotV2V2 - 2 * dotV2U2 - 2 * dotV2U2 + dotU2U2 + epsilon);
+        final double compV2V2 = (dotU2U2 - dotU1U2 * dotU1U2 - dotV1V2 * dotV1V2) /
+                (dotV2V2 - 2 * dotV2V2 - 2 * dotV2V2 + dotU2U2 + epsilon);
+        v2 = new Vector3D(compV2V2, v2);
+
+        // compute the vectorial part
+        final Vector3D uCrossV = u1.crossProduct(v1);
+        final double normUCrossV = uCrossV.getNorm();
+        q0 = normUCrossV / (2 * norm2U1);
+        q1 = uCrossV.getX() / (normUCrossV + epsilon);
+        q2 = uCrossV.getY() / (normUCrossV + epsilon);
+        q3 = uCrossV.getZ() / (normUCrossV + epsilon);
+
+        // compute the scalar part
+        final Vector3D k = new Vector3D(u2.getY() * q3 - u2.getZ() * q2,
+                                        u2.getZ() * q1 - u2.getX() * q3,
+                                        u2.getX() * q2 - u2.getY() * q1);
+        final double dotKV2 = k.dotProduct(v2);
+        q0 += dotKV2 / (2 * norm2U2);
+
+        // normalize
+        final double q0q0 = q0 * q0;
+        final double q1q1 = q1 * q1;
+        final double q2q2 = q2 * q2;
+        final double q3q3 = q3 * q3;
+        final double inv  = 1.0 / (q0q0 + q1q1 + q2q2 + q3q3);
+        q0 *= inv;
+        q1 *= inv;
+        q2 *= inv;
+        q3 *= inv;
+
+    }
+ 

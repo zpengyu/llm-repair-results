@@ -1,0 +1,22 @@
+diff --git a/src/com/google/javascript/jscomp/InlineObjectLiterals.java b/src/com/google/javascript/jscomp/InlineObjectLiterals.java
+index 2f5a8e10..903c72eb 100644
+--- a/src/com/google/javascript/jscomp/InlineObjectLiterals.java
++++ b/src/com/google/javascript/jscomp/InlineObjectLiterals.java
+@@ -192,12 +189,13 @@ class InlineObjectLiterals implements CompilerPass {
+           }
+           continue;
+         }
+-
+         // Only rewrite VAR declarations or simple assignment statements
+-        if (!isVarOrAssignExprLhs(name)) {
+-           return false;
++        if (!(parent.isVar() ||
++            (parent.isAssign() &&
++            parent.getFirstChild() == name &&
++            parent.getLastChild().isObjectLit()))) {
++          return false;
+         }
+-
+         Node val = ref.getAssignedValue();
+         if (val == null) {
+           // A var with no assignment.

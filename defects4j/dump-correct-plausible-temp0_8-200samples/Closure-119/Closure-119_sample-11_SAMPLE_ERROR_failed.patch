@@ -1,0 +1,35 @@
+diff --git a/src/com/google/javascript/jscomp/GlobalNamespace.java b/src/com/google/javascript/jscomp/GlobalNamespace.java
+index a00893b3..9199a3e4 100644
+--- a/src/com/google/javascript/jscomp/GlobalNamespace.java
++++ b/src/com/google/javascript/jscomp/GlobalNamespace.java
+@@ -428,7 +424,29 @@ class GlobalNamespace
+         handleGet(module, scope, n, parent, name);
+       }
+     }
+-
++    @Override
++    void handleSetFromGlobal(JSModule module,
++        Scope scope, Node n, Node parent,
++        String name, boolean isPropAssign, Name.Type type) {
++      Preconditions.checkState(isGlobalScope(scope));
++      // Don't allow assignments to extern names.
++      if (externsNames.contains(name)) {
++        compiler.report(JSError.make(n, MISPLACED_EXTERNS_ANNOTATION));
++        return;
++      }
++      if (isPropAssign) {
++        name = Name.Type.getPropertyName(name, type);
++      }
++      // For simple global assignments, just record the definition.
++      Name nameObj = nameMap.get(name);
++      if (nameObj == null) {
++        nameObj = new Name(name, type);
++        nameMap.put(name, nameObj);
++      } else {
++        nameObj.setType(type);
++      }
++      nameObj.define(module, n);
++    }
+     /**
+      * Gets the fully qualified name corresponding to an object literal key,
+      * as long as it and its prefix property names are valid JavaScript

@@ -1,0 +1,22 @@
+diff --git a/src/main/java/org/apache/commons/compress/archivers/sevenz/SevenZFile.java b/src/main/java/org/apache/commons/compress/archivers/sevenz/SevenZFile.java
+index 6bf6dc68..2c0bf7e0 100644
+--- a/src/main/java/org/apache/commons/compress/archivers/sevenz/SevenZFile.java
++++ b/src/main/java/org/apache/commons/compress/archivers/sevenz/SevenZFile.java
+@@ -909,12 +908,14 @@ public class SevenZFile implements Closeable {
+             // so that entire blocks can be skipped without wasting time for decompression.
+             final InputStream stream = deferredBlockStreams.remove(0);
+             IOUtils.skip(stream, Long.MAX_VALUE);
+-            stream.close();
++            try {
++                stream.close();
++            } catch (IOException ex) {
++                // Ignore.
++            }
+         }
+-
+         return deferredBlockStreams.get(0);
+     }
+-
+     /**
+      * Reads data into an array of bytes.
+      * 

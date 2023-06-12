@@ -1,0 +1,20 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/deser/std/StdKeyDeserializer.java b/src/main/java/com/fasterxml/jackson/databind/deser/std/StdKeyDeserializer.java
+index d4417f6ad..88d08935c 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/deser/std/StdKeyDeserializer.java
++++ b/src/main/java/com/fasterxml/jackson/databind/deser/std/StdKeyDeserializer.java
+@@ -312,8 +312,14 @@ public class StdKeyDeserializer extends KeyDeserializer
+                 return null;
+             }
+             try {
++                // we assume type may be final: if not, we'd need to use Lookup and other trickery
++                // (which was error-prone and slow before)
++                JsonParser p = ctxt.getParser();
++                if (p.hasToken(JsonToken.VALUE_STRING)) {
++                    key = p.getText();
++                }
+                 // Ugh... should not have to give parser which may or may not be correct one...
+-                Object result = _delegate.deserialize(ctxt.getParser(), ctxt);
++                Object result = _delegate.deserialize(p, ctxt);
+                 if (result != null) {
+                     return result;
+                 }

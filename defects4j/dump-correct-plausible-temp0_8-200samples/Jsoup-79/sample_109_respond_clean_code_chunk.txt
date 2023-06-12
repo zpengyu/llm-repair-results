@@ -1,0 +1,59 @@
+abstract class LeafNode extends Node {
+    Attributes attributes; // either a string value, or an attribute map (in the rare case multiple attributes are set)
+    @Override
+    public final boolean hasAttributes() {
+        return attributes != null;
+    }
+    @Override
+    public final Attributes attributes() {
+        if (attributes == null) {
+            attributes = new Attributes();
+        }
+        return attributes;
+    }
+    @Override
+    public String attr(String key) {
+        Validate.notNull(key);
+        return attributes() != null ? attributes.getIgnoreCase(key) : EmptyString;
+    }
+    @Override
+    public Node attr(String key, String value) {
+        attributes().putIgnoreCase(key, value);
+        return this;
+    }
+    @Override
+    public boolean hasAttr(String key) {
+        return attributes() != null && attributes.hasKeyIgnoreCase(key);
+    }
+    @Override
+    public Node removeAttr(String key) {
+        if (hasAttr(key)) {
+            attributes.removeIgnoreCase(key);
+        }
+        return this;
+    }
+    @Override
+    public String absUrl(String key) {
+        if (hasAttr(key)) {
+            return absUrl(key);
+        } else {
+            return "";
+        }
+    }
+    @Override
+    public String baseUri() {
+        return hasParent() ? parent().baseUri() : "";
+    }
+    @Override
+    protected void doSetBaseUri(String baseUri) {
+        // noop
+    }
+    @Override
+    public int childNodeSize() {
+        return 0;
+    }
+    @Override
+    protected List<Node> ensureChildNodes() {
+        throw new UnsupportedOperationException("Leaf Nodes do not have child nodes.");
+    }
+}

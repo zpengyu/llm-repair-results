@@ -1,0 +1,27 @@
+private Node tryFoldJsTypeofValueOf(Node n) {
+  Node parent = n.getParent();
+  Node first = n.getFirstChild();
+  Node second = first.getNext();
+
+  // pattern match: (typeof x.valueOf())
+  if (NodeUtil.isGet(first)
+      && first.getFirstChild().getType() == Token.NAME
+      && first.getLastChild().getType() == Token.STRING
+      && first.getLastChild().getString().equals("valueOf")
+      && parent.getType() == Token.NOT
+      && second.getType() == Token.CALL
+      && second.getFirstChild().equals(first)
+      && second.getLastChild() == null
+      && NodeUtil.isExpressionNode(parent.getParent())) {
+    Node call = IR.call(IR.getprop(IR.name("JSCompiler_StaticMethods_typeOf"),
+                                   IR.string("call")),
+                        IR.thisNode(), first.getFirstChild().detachFromParent());
+    n.getParent().getParent().replaceChild(
+        n.getParent(),
+        call.srcrefTree(n.getParent()));
+    reportCodeChange();
+    return call;
+  }
+  return n;
+}
+

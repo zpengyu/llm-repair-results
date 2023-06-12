@@ -1,0 +1,23 @@
+diff --git a/src/main/java/org/jsoup/safety/Cleaner.java b/src/main/java/org/jsoup/safety/Cleaner.java
+index c6879b1..df36e4d 100644
+--- a/src/main/java/org/jsoup/safety/Cleaner.java
++++ b/src/main/java/org/jsoup/safety/Cleaner.java
+@@ -88,8 +78,16 @@ public class Cleaner {
+                 }
+             } else if (source instanceof TextNode) {
+                 TextNode sourceText = (TextNode) source;
+-                TextNode destText = new TextNode(sourceText.getWholeText(), source.baseUri());
+-                destination.appendChild(destText);
++                if (sourceText instanceof CDataNode){
++                    String text = sourceText.getWholeText();
++                    if (text.startsWith("\n")) text = text.substring(1);
++                    if (text.endsWith("\n")) text = text.substring(0,text.length()-1);
++                    TextNode destText = new CDataNode(text, source.baseUri());
++                    destination.appendChild(destText);
++                } else {
++                    TextNode destText = new TextNode(sourceText.getWholeText(), source.baseUri());
++                    destination.appendChild(destText);
++                }
+             }
+         }
+         return numDiscarded;

@@ -1,0 +1,81 @@
+diff --git a/src/com/google/javascript/jscomp/CodeConsumer.java b/src/com/google/javascript/jscomp/CodeConsumer.java
+index dbdb0a9b..205af9bd 100644
+--- a/src/com/google/javascript/jscomp/CodeConsumer.java
++++ b/src/com/google/javascript/jscomp/CodeConsumer.java
+@@ -36,15 +35,15 @@ abstract class CodeConsumer {
+    * node at the current position.
+    */
+   void startSourceMapping(Node node) {
++    currentSourceMap.recordStartPosition(node, getLastChar());
+   }
+-
+   /**
+    * Finishes the source mapping for the given
+    * node at the current position.
+    */
+   void endSourceMapping(Node node) {
++    currentSourceMap.recordEndPosition(node, getLastChar());
+   }
+-
+   /**
+    * Provides a means of interrupting the CodeGenerator. Derived classes should
+    * return false to stop further processing.
+@@ -80,23 +74,26 @@ abstract class CodeConsumer {
+   void appendBlockEnd() {
+     append("}");
+   }
+-
+   void startNewLine() {
++    currentLineChars = 0;
+   }
+-
+   void maybeLineBreak() {
+     maybeCutLine();
+   }
+-
+   void maybeCutLine() {
++    int toCut = preferredLineLength - currentLineChars;
++    if (toCut < LINE_BREAK_COST_PENALTY) {
++      startNewLine();
++    }
+   }
+-
+   void endLine() {
++    startNewLine();
++    append("\n");
+   }
+-
+   void notePreferredLineBreak() {
++    maybeLineBreak();
++    preferredLineBreak = true;
+   }
+-
+   void beginBlock() {
+     if (statementNeedsEnded) {
+       append(";");
+@@ -281,9 +251,22 @@ abstract class CodeConsumer {
+    * @return Whether the a line break can be added after the specified BLOCK.
+    */
+   boolean breakAfterBlockFor(Node n, boolean statementContext) {
+-    return statementContext;
++    if (statementContext) {
++      if (n.getType() == Token.BLOCK || n.getType() == Token.SCRIPT) {
++        // No break is needed if the block would have been wrapped in braces
++        // anyway.
++        if (!NodeUtil.isControlStructureCodeBlock(n)) {
++          return true;
++        }
++        // The block must be a children of an IF, FOR, WHILE, or WITH node.
++        return NodeUtil.isControlStructure(n.getParent());
++      }
++      // No break is needed for single-statement DO or TRY blocks.
++      return n.getType() == Token.DO || n.getType() == Token.TRY;
++    } else {
++      return false;
++    }
+   }
+-
+   /** Called when we're at the end of a file. */
+   void endFile() {}
+ }
+\ No newline at end of file

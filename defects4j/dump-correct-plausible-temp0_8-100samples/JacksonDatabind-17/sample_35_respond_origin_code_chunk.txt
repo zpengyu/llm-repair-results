@@ -1,0 +1,21 @@
+public boolean useForType(JavaType t)
+{
+    while (t.isArrayType()) {
+        t = t.getContentType();
+    }
+    // [Issue#88] Should not apply to JSON tree models:
+    boolean isObject = (t.getRawClass() == Object.class);
+    if (_appliesFor == JsonTypeInfo.Id.NON_CONCRETE_AND_ARRAYS) {
+        return !t.isConcrete() && !TreeNode.class.isAssignableFrom(t.getRawClass());
+    }
+    if (_appliesFor == JsonTypeInfo.Id.OBJECT_AND_NON_CONCRETE) {
+        return isObject || (!t.isConcrete()
+                // [databind#88] Should not apply to JSON tree models:
+        || TreeNode.class.isAssignableFrom(t.getRawClass()));
+    }
+    if (_appliesFor == JsonTypeInfo.Id.NON_FINAL) {
+        return !t.isFinal() && !TreeNode.class.isAssignableFrom(t.getRawClass());
+    }
+    //case JAVA_LANG_OBJECT:
+    return isObject;
+}

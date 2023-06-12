@@ -1,0 +1,60 @@
+diff --git a/src/main/java/org/jsoup/helper/DataUtil.java b/src/main/java/org/jsoup/helper/DataUtil.java
+index 6de0c40..233082b 100644
+--- a/src/main/java/org/jsoup/helper/DataUtil.java
++++ b/src/main/java/org/jsoup/helper/DataUtil.java
+@@ -125,9 +122,11 @@ public final class DataUtil {
+         }
+         if (docData.length() > 0 && docData.charAt(0) == UNICODE_BOM) {
+             byteData.rewind();
+-            docData = Charset.forName(defaultCharset).decode(byteData).toString();
+-            docData = docData.substring(1);
+-            charsetName = defaultCharset;
++            Charset charset = detectCharset(byteData, charsetName);
++            if (charset != null) {
++                charsetName = charset.name();
++                docData = charset.decode(byteData).toString();
++            }
+             doc = null;
+         }
+         if (doc == null) {
+@@ -136,7 +135,39 @@ public final class DataUtil {
+         }
+         return doc;
+     }
+-
++    private static Charset detectCharset(ByteBuffer buffer, String charsetName) {
++        String content = Charset.forName(defaultCharset).decode(buffer).toString();
++        String foundCharset = null;
++        if (content.length() > 0 && content.charAt(0) == UNICODE_BOM) {
++            foundCharset = defaultCharset;
++        } else {
++            Document doc = Jsoup.parse(content);
++            Element meta = doc.select("meta[http-equiv=content-type], meta[charset]").first();
++            if (meta != null) { // if not found, will keep utf-8 as best attempt
++                if (meta.hasAttr("http-equiv")) {
++                    foundCharset = getCharsetFromContentType(meta.attr("content"));
++                }
++                if (foundCharset == null && meta.hasAttr("charset")) {
++                    try {
++                        if (Charset.isSupported(meta.attr("charset"))) {
++                            foundCharset = meta.attr("charset");
++                        }
++                    } catch (IllegalCharsetNameException e) {
++                        foundCharset = null;
++                    }
++                }
++            }
++        }
++        if (foundCharset == null) {
++            foundCharset = charsetName;
++        }
++        foundCharset = foundCharset.trim().replaceAll("[\"']", "");
++        try {
++            return Charset.forName(foundCharset);
++        } catch (IllegalCharsetNameException e) {
++            return null;
++        }
++    }
+     /**
+      * Read the input stream into a byte buffer.
+      * @param inStream the input stream to read from

@@ -1,0 +1,35 @@
+diff --git a/src/com/google/javascript/jscomp/CodeGenerator.java b/src/com/google/javascript/jscomp/CodeGenerator.java
+index a9d0a5b0..8ec2b494 100644
+--- a/src/com/google/javascript/jscomp/CodeGenerator.java
++++ b/src/com/google/javascript/jscomp/CodeGenerator.java
+@@ -1023,7 +1021,29 @@ class CodeGenerator {
+     sb.append(quote);
+     return sb.toString();
+   }
+-
++  // Append the hex JavaScript representation for c to sb.
++  private static void appendHexJavaScriptRepresentation(
++      StringBuilder sb, char c) {
++    // Characters outside the BMP get converted to a surrogate pair,
++    // which is two chars.
++    if (Character.isSupplementaryCodePoint(c)) {
++      appendHexJavaScriptRepresentation(sb, Character.toChars(c));
++      return;
++    }
++    sb.append("\\u");
++    String hexChars = "0123456789ABCDEF";
++    for (int j = 0; j < 4; j++) {
++      sb.append(hexChars.charAt((c >> (3 - j) * 4) & 0xf));
++    }
++  }
++  // Append the hex JavaScript representation for chars (a surrogate pair)
++  // to sb.
++  private static void appendHexJavaScriptRepresentation(
++      StringBuilder sb, char[] chars) {
++    for (char c : chars) {
++      appendHexJavaScriptRepresentation(sb, c);
++    }
++  }
+   static String identifierEscape(String s) {
+     // First check if escaping is needed at all -- in most cases it isn't.
+     if (NodeUtil.isLatin(s)) {

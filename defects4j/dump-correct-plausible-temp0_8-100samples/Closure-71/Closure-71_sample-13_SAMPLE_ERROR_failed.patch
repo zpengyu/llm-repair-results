@@ -1,0 +1,87 @@
+diff --git a/src/com/google/javascript/jscomp/CheckAccessControls.java b/src/com/google/javascript/jscomp/CheckAccessControls.java
+index c4ecc477..fbd80897 100644
+--- a/src/com/google/javascript/jscomp/CheckAccessControls.java
++++ b/src/com/google/javascript/jscomp/CheckAccessControls.java
+@@ -406,41 +406,37 @@ class CheckAccessControls implements ScopedCallback, HotSwapCompilerPass {
+    */
+   private void checkPropertyVisibility(NodeTraversal t,
+       Node getprop, Node parent) {
+-    ObjectType objectType =
+-        ObjectType.cast(dereference(getprop.getFirstChild().getJSType()));
++    JSType propType = getprop.getJSType();
+     String propertyName = getprop.getLastChild().getString();
+-
+-    if (objectType != null) {
+-      // Is this a normal property access, or are we trying to override
+-      // an existing property?
+-      boolean isOverride = t.inGlobalScope() &&
+-          parent.getType() == Token.ASSIGN &&
+-          parent.getFirstChild() == getprop;
+-
+-      // Find the lowest property defined on a class with visibility
+-      // information.
+-      if (isOverride) {
+-        objectType = objectType.getImplicitPrototype();
+-      }
+-      JSDocInfo docInfo = null;
+-      for (; objectType != null;
+-           objectType = objectType.getImplicitPrototype()) {
+-        docInfo = objectType.getOwnPropertyJSDocInfo(propertyName);
+-        if (docInfo != null &&
+-            docInfo.getVisibility() != Visibility.INHERITED) {
+-          break;
++    // Find the lowest property defined on a class with visibility
++    // information.
++    Visibility visibility = Visibility.PUBLIC;
++    JSType ownerType = null;
++    JSDocInfo docInfo = null;
++    if (propType != null) {
++      JSType dereferenced = dereference(propType);
++      if (dereferenced instanceof ObjectType) {
++        ownerType = dereferenced;
++        while (ownerType != null) {
++          docInfo = ownerType.getOwnPropertyJSDocInfo(propertyName);
++          if (docInfo != null &&
++              docInfo.getVisibility() != Visibility.INHERITED) {
++            visibility = docInfo.getVisibility();
++            break;
++          }
++          ownerType = ownerType.getImplicitPrototype();
+         }
+       }
+-
+-      if (objectType == null) {
+-        // We couldn't find a visibility modifier; assume it's public.
+-        return;
+-      }
+-
++    }
++    // Is this a normal property access, or are we trying to override
++    // an existing property?
++    boolean isOverride = t.inGlobalScope() &&
++        parent.getType() == Token.ASSIGN &&
++        parent.getFirstChild() == getprop;
++    if (ownerType != null) {
+       boolean sameInput =
+           t.getInput().getName().equals(docInfo.getSourceName());
+-      Visibility visibility = docInfo.getVisibility();
+-      JSType ownerType = normalizeClassType(objectType);
++      ownerType = normalizeClassType(ownerType);
+       if (isOverride) {
+         // Check an ASSIGN statement that's trying to override a property
+         // on a superclass.
+@@ -454,12 +449,12 @@ class CheckAccessControls implements ScopedCallback, HotSwapCompilerPass {
+         if (visibility == Visibility.PRIVATE && !sameInput) {
+           compiler.report(
+               t.makeError(getprop, PRIVATE_OVERRIDE,
+-                  objectType.toString()));
++                  ownerType.toString()));
+         } else if (overridingVisibility != Visibility.INHERITED &&
+             overridingVisibility != visibility) {
+           compiler.report(
+               t.makeError(getprop, VISIBILITY_MISMATCH,
+-                  visibility.name(), objectType.toString(),
++                  visibility.name(), ownerType.toString(),
+                   overridingVisibility.name()));
+         }
+       } else {

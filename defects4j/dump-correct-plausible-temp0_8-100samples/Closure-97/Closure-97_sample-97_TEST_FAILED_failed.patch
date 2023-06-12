@@ -1,0 +1,39 @@
+diff --git a/src/com/google/javascript/jscomp/PeepholeFoldConstants.java b/src/com/google/javascript/jscomp/PeepholeFoldConstants.java
+index 0f2a6d44..2fa8be40 100644
+--- a/src/com/google/javascript/jscomp/PeepholeFoldConstants.java
++++ b/src/com/google/javascript/jscomp/PeepholeFoldConstants.java
+@@ -701,17 +695,26 @@ public class PeepholeFoldConstants extends AbstractPeepholeOptimization {
+           throw new AssertionError("Unknown shift operator: " +
+               Node.tokenToName(n.getType()));
+       }
+-
+-      Node newNumber = Node.newNumber(result);
+-      n.getParent().replaceChild(n, newNumber);
+-      reportCodeChange();
+-
+-      return newNumber;
++      int ival = (int) result;
++      // The value as a signed int.
++      if (ival == result) {
++        Node newNumber = Node.newNumber(ival);
++        n.getParent().replaceChild(n, newNumber);
++        reportCodeChange();
++        return newNumber;
++      } else {
++        // To match output of Closure compiler, do not try to fold
++        // shifts to a float if the shift operation overflows as a signed
++        // int.
++        if (!(result == 0.0
++              || (result >= Integer.MIN_VALUE && result <= Integer.MAX_VALUE))) {
++          error(BITWISE_OPERAND_OUT_OF_RANGE, n);
++          return n;
++        }
++      }
+     }
+-
+     return n;
+   }
+-
+   /**
+    * Try to fold comparison nodes, e.g ==
+    */

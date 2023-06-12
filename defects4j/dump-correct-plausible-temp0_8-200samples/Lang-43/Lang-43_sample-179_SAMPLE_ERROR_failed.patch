@@ -1,0 +1,27 @@
+diff --git a/src/java/org/apache/commons/lang/text/ExtendedMessageFormat.java b/src/java/org/apache/commons/lang/text/ExtendedMessageFormat.java
+index c63fbf6d..e1b2c3ea 100644
+--- a/src/java/org/apache/commons/lang/text/ExtendedMessageFormat.java
++++ b/src/java/org/apache/commons/lang/text/ExtendedMessageFormat.java
+@@ -435,14 +435,19 @@ public class ExtendedMessageFormat extends MessageFormat {
+                 next(pos);
+                 return appendTo == null ? null : appendTo.append(c, lastHold,
+                         pos.getIndex() - lastHold);
++            case PATTERN_SEPARATOR:
++            case FIELD_SEPARATOR:
++                if (escapingOn) {
++                    next(pos);
++                    continue;
++                }
++                return appendTo.append(c, lastHold, pos.getIndex() - lastHold);
+             default:
+                 next(pos);
+             }
+         }
+-        throw new IllegalArgumentException(
+-                "Unterminated quoted string at position " + start);
++        return appendTo.append(c, lastHold, pos.getIndex() - lastHold);
+     }
+-
+     /**
+      * Consume quoted string only
+      * 

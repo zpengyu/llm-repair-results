@@ -1,0 +1,21 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/deser/impl/ExternalTypeHandler.java b/src/main/java/com/fasterxml/jackson/databind/deser/impl/ExternalTypeHandler.java
+index b0797059f..5b7623d9b 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/deser/impl/ExternalTypeHandler.java
++++ b/src/main/java/com/fasterxml/jackson/databind/deser/impl/ExternalTypeHandler.java
+@@ -295,6 +293,16 @@ public class ExternalTypeHandler
+                 if ((typeProp != null) && (typeProp.getCreatorIndex() >= 0)) {
+                     // 31-May-2018, tatu: [databind#1328] if id is NOT plain `String`, need to
+                     //    apply deserializer... fun fun.
++                    JsonDeserializer<Object> deser = typeProp.getValueDeserializer();
++                    if (deser == null) {
++                        // should never happen (since all creator props must have deserializers)
++                        throw new IllegalStateException("Missing value deserializer for type id property '"
++                                +typeProp.getName()+"' (in class "+_beanType.getName()+")");
++                    }
++                    if (deser.handledType() != String.class) {
++                        buffer.assignParameter(typeProp, deser.deserialize(p, ctxt));
++                        continue;
++                    }
+                     buffer.assignParameter(typeProp, typeId);
+                 }
+             }

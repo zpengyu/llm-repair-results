@@ -1,0 +1,25 @@
+diff --git a/src/main/java/org/jsoup/helper/DataUtil.java b/src/main/java/org/jsoup/helper/DataUtil.java
+index 4bdf4fe..2cb301e 100644
+--- a/src/main/java/org/jsoup/helper/DataUtil.java
++++ b/src/main/java/org/jsoup/helper/DataUtil.java
+@@ -82,7 +82,6 @@ public class DataUtil {
+                 String foundCharset = meta.hasAttr("http-equiv") ? getCharsetFromContentType(meta.attr("content")) : meta.attr("charset");
+                 if (foundCharset != null && foundCharset.length() != 0 && !foundCharset.equals(defaultCharset)) { // need to re-decode
+                     charsetName = foundCharset;
+-                    byteData.rewind();
+                     docData = Charset.forName(foundCharset).decode(byteData).toString();
+                     doc = null;
+                 }
+@@ -95,8 +94,10 @@ public class DataUtil {
+             // there are times where there is a spurious byte-order-mark at the start of the text. Shouldn't be present
+             // in utf-8. If after decoding, there is a BOM, strip it; otherwise will cause the parser to go straight
+             // into head mode
+-
+-            doc = parser.parseInput(docData, baseUri);
++            StringBuilder sb = new StringBuilder(docData);
++            if (sb.length() > 0 && sb.charAt(0) == 65279) // byte-order-mark
++                sb.deleteCharAt(0);
++            doc = parser.parseInput(sb.toString(), baseUri);
+             doc.outputSettings().charset(charsetName);
+         }
+         return doc;

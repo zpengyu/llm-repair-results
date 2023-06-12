@@ -1,0 +1,37 @@
+diff --git a/src/java/org/apache/commons/cli/HelpFormatter.java b/src/java/org/apache/commons/cli/HelpFormatter.java
+index 0c5dc6b..2df242a 100644
+--- a/src/java/org/apache/commons/cli/HelpFormatter.java
++++ b/src/java/org/apache/commons/cli/HelpFormatter.java
+@@ -789,11 +789,14 @@ public class HelpFormatter {
+      *
+      * @return the StringBuffer with the rendered Options contents.
+      */
+-    protected StringBuffer renderWrappedText(StringBuffer sb, int width, 
++  protected StringBuffer renderWrappedText(StringBuffer sb, int width, 
+                                              int nextLineTabStop, String text)
+     {
++        if (text == null)
++        {
++            return sb;
++        }
+         int pos = findWrapPos(text, width, 0);
+-
+         if (pos == -1)
+         {
+             sb.append(rtrim(text));
+@@ -814,10 +813,13 @@ public class HelpFormatter {
+             if (pos == -1)
+             {
+                 sb.append(text);
+-
+                 return sb;
+             }
+-
++            if (text.length() > width && pos == nextLineTabStop - 1)
++            {
++                // Do not break after the first ' ' character after nextLineTabStop
++                pos = findWrapPos(text, width, nextLineTabStop + 1);
++            }
+             sb.append(rtrim(text.substring(0, pos))).append(defaultNewLine);
+         }
+     }

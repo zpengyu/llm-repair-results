@@ -1,0 +1,51 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/deser/std/NumberDeserializers.java b/src/main/java/com/fasterxml/jackson/databind/deser/std/NumberDeserializers.java
+index a76403c86..91f25ba06 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/deser/std/NumberDeserializers.java
++++ b/src/main/java/com/fasterxml/jackson/databind/deser/std/NumberDeserializers.java
+@@ -118,16 +118,15 @@ public class NumberDeserializers
+         extends StdScalarDeserializer<T>
+     {
+         private static final long serialVersionUID = 1L;
+-
+         protected final T _nullValue;
+         protected final boolean _primitive;
+-
+-        protected PrimitiveOrWrapperDeserializer(Class<T> vc, T nvl) {
++        protected final boolean _allowStringNull;
++        protected PrimitiveOrWrapperDeserializer(Class<T> vc, T nvl, boolean allowNull) {
+             super(vc);
+             _nullValue = nvl;
+             _primitive = vc.isPrimitive();
++            _allowStringNull = allowNull;
+         }
+-
+         @Override
+         public final T getNullValue(DeserializationContext ctxt) throws JsonMappingException
+         {
+@@ -144,11 +142,22 @@ public class NumberDeserializers
+         public final T getNullValue() {
+             return _nullValue;
+         }
+-
+-            // [databind#1095]: Should not allow coercion from into null from Empty String
+-            // either, if `null` not allowed
++        /**
++         * Legacy method that was bit of misnomer: it did not
++         * necessarily return `null`, but rather whatever value
++         * "represented" null.
++         *
++         * @deprecated Since 2.5: use `DeserializationContext.handleUnexpectedToken()`
++         *    instead.
++         */
++        @Deprecated
++        protected T _coerceNullToken(DeserializationContext ctxt) throws JsonMappingException
++        {
++            // // [databind#1095]: Should not allow coercion from into null from Empty String
++            // // either, if `null` not allowed
++            throw ctxt.mappingException("Can not map empty String as null (use `DeserializationConfig.DeserializationFeature.ACCEPT_EMPTY_STRING_AS_NULL_OBJECT` feature to allow)");
++        }
+     }
+-
+     /*
+     /**********************************************************
+     /* Then primitive/wrapper types

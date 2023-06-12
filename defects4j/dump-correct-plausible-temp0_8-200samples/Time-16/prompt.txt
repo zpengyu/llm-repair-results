@@ -1,0 +1,81 @@
+###Provide a fix for the buggy function
+###Buggy Function
+class FibonacciExample {
+    public static void main(String args[]) {
+        int n1 = 0, n2 = 1, n3, i, count = 10;
+
+        System.out.print(n1 + " " + n2);
+
+        for (i = 2; i < count; ++i) {
+            n3 = n1 - n2;
+            System.out.print(" " + n3);
+            n1 = n2;
+            n2 = n3;
+        }
+    }
+}
+
+###Fixed Function
+class FibonacciExample {
+    public static void main(String args[]) {
+        int n1 = 0, n2 = 1, n3, i, count = 10;
+
+        System.out.print(n1 + " " + n2);
+
+        for (i = 2; i < count; ++i) {
+            n3 = n1 + n2;
+            System.out.print(" " + n3);
+            n1 = n2;
+            n2 = n3;
+        }
+    }
+}
+
+###Provide a fix for the buggy function
+###Buggy Function
+protected BasePeriod(long duration) {
+    this(duration, null, null);
+    // bug [3264409]
+}
+###Fixed Function
+protected BasePeriod(long duration) {
+    super();
+    // bug [3264409]
+    iType = PeriodType.time();
+    int[] values = ISOChronology.getInstanceUTC().get(this, duration);
+    iType = PeriodType.standard();
+    iValues = new int[8];
+    System.arraycopy(values, 0, iValues, 4, 4);
+}
+###Provide a fix for the buggy function
+###Buggy Function
+    public int parseInto(ReadWritableInstant instant, String text, int position) {
+        DateTimeParser parser = requireParser();
+        if (instant == null) {
+            throw new IllegalArgumentException("Instant must not be null");
+        }
+        
+        long instantMillis = instant.getMillis();
+        Chronology chrono = instant.getChronology();
+        long instantLocal = instantMillis + chrono.getZone().getOffset(instantMillis);
+        chrono = selectChronology(chrono);
+        
+        DateTimeParserBucket bucket = new DateTimeParserBucket(
+            instantLocal, chrono, iLocale, iPivotYear, iDefaultYear);
+        int newPos = parser.parseInto(bucket, text, position);
+        instant.setMillis(bucket.computeMillis(false, text));
+        if (iOffsetParsed && bucket.getOffsetInteger() != null) {
+            int parsedOffset = bucket.getOffsetInteger();
+            DateTimeZone parsedZone = DateTimeZone.forOffsetMillis(parsedOffset);
+            chrono = chrono.withZone(parsedZone);
+        } else if (bucket.getZone() != null) {
+            chrono = chrono.withZone(bucket.getZone());
+        }
+        instant.setChronology(chrono);
+        if (iZone != null) {
+            instant.setZone(iZone);
+        }
+        return newPos;
+    }
+
+###Fixed Function

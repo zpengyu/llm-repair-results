@@ -1,0 +1,114 @@
+diff --git a/src/main/java/org/jsoup/nodes/Entities.java b/src/main/java/org/jsoup/nodes/Entities.java
+index 5a2b368..f996f7c 100644
+--- a/src/main/java/org/jsoup/nodes/Entities.java
++++ b/src/main/java/org/jsoup/nodes/Entities.java
+@@ -86,17 +85,31 @@ public class Entities {
+         final CoreCharset coreCharset = CoreCharset.byName(encoder.charset().name());
+         final Map<Character, String> map = escapeMode.getMap();
+         final int length = string.length();
+-
+-        int codePoint;
+-        for (int offset = 0; offset < length; offset += Character.charCount(codePoint)) {
+-            codePoint = string.codePointAt(offset);
+-
++        // never encode script and style tags if we are outputting as html
++        // we will not encode '<' outside of script and style tags, it may be
++        // in a data url
++        boolean inScriptOrStyle = false;
++        for (int offset = 0; offset < length; ) {
++            final int c = string.codePointAt(offset);
++            if (c == '<') {
++                if (string.regionMatches(true, offset, "<script", 0, 7))
++                    inScriptOrStyle = true;
++                else if (string.regionMatches(true, offset, "</script", 0, 8))
++                    inScriptOrStyle = false;
++                else if (string.regionMatches(true, offset, "<style", 0, 6))
++                    inScriptOrStyle = true;
++                else if (string.regionMatches(true, offset, "</style", 0, 7))
++                    inScriptOrStyle = false;
++            }
+             if (normaliseWhite) {
+-                if (StringUtil.isWhitespace(codePoint)) {
+-                    if ((stripLeadingWhite && !reachedNonWhite) || lastWasWhite)
++                if (StringUtil.isWhitespace(c)) {
++                    if ((stripLeadingWhite && !reachedNonWhite) || lastWasWhite) {
++                        offset += Character.charCount(c);
+                         continue;
++                    }
+                     accum.append(' ');
+                     lastWasWhite = true;
++                    offset += Character.charCount(c);
+                     continue;
+                 } else {
+                     lastWasWhite = false;
+@@ -104,10 +117,10 @@ public class Entities {
+                 }
+             }
+             // surrogate pairs, split implementation for efficiency on single char common case (saves creating strings, char[]):
+-            if (codePoint < Character.MIN_SUPPLEMENTARY_CODE_POINT) {
+-                final char c = (char) codePoint;
++            if (c < Character.MIN_SUPPLEMENTARY_CODE_POINT) {
++                final char c1 = (char) c;
+                 // html specific and required escapes:
+-                switch (c) {
++                switch (c1) {
+                     case '&':
+                         accum.append("&amp;");
+                         break;
+@@ -119,41 +132,41 @@ public class Entities {
+                         break;
+                     case '<':
+                         // escape when in character data or when in a xml attribue val; not needed in html attr val
+-                        if (!inAttribute)
++                        if (!inAttribute && (!inScriptOrStyle || escapeMode != EscapeMode.html))
+                             accum.append("&lt;");
+                         else
+-                            accum.append(c);
++                            accum.append(c1);
+                         break;
+                     case '>':
+-                        if (!inAttribute)
++                        if (!inAttribute && (!inScriptOrStyle || escapeMode != EscapeMode.html))
+                             accum.append("&gt;");
+                         else
+-                            accum.append(c);
++                            accum.append(c1);
+                         break;
+                     case '"':
+                         if (inAttribute)
+                             accum.append("&quot;");
+                         else
+-                            accum.append(c);
++                            accum.append(c1);
+                         break;
+                     default:
+-                        if (canEncode(coreCharset, c, encoder))
+-                            accum.append(c);
+-                        else if (map.containsKey(c))
+-                            accum.append('&').append(map.get(c)).append(';');
++                        if (canEncode(coreCharset, c1, encoder))
++                            accum.append(c1);
++                        else if (map.containsKey(c1))
++                            accum.append('&').append(map.get(c1)).append(';');
+                         else
+-                            accum.append("&#x").append(Integer.toHexString(codePoint)).append(';');
++                            accum.append("&#x").append(Integer.toHexString(c)).append(';');
+                 }
+             } else {
+-                final String c = new String(Character.toChars(codePoint));
+-                if (encoder.canEncode(c)) // uses fallback encoder for simplicity
+-                    accum.append(c);
++                final String c1 = new String(Character.toChars(c));
++                if (encoder.canEncode(c1)) // uses fallback encoder for simplicity
++                    accum.append(c1);
+                 else
+-                    accum.append("&#x").append(Integer.toHexString(codePoint)).append(';');
++                    accum.append("&#x").append(Integer.toHexString(c)).append(';');
+             }
++            offset += Character.charCount(c);
+         }
+     }
+-
+     static String unescape(String string) {
+         return unescape(string, false);
+     }

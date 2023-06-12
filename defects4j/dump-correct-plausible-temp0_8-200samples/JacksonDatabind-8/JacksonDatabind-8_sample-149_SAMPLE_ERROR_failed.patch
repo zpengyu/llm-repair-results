@@ -1,0 +1,53 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/deser/impl/CreatorCollector.java b/src/main/java/com/fasterxml/jackson/databind/deser/impl/CreatorCollector.java
+index fd590d628..5701ea91a 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/deser/impl/CreatorCollector.java
++++ b/src/main/java/com/fasterxml/jackson/databind/deser/impl/CreatorCollector.java
+@@ -280,33 +280,30 @@ public class CreatorCollector
+         AnnotatedWithParams oldOne = _creators[typeIndex];
+         // already had an explicitly marked one?
+         if (oldOne != null) {
+-
+-            if ((_explicitCreators & mask) != 0) { // already had explicitly annotated, leave as-is
+-                // but skip, if new one not annotated
+-                if (!explicit) {
+-                    return;
+-                }
+-                // both explicit: verify
+-                // otherwise only verify if neither explicitly annotated.
++            // But if we have explicit one, leave it as is
++            if ((_explicitCreators & mask) != 0) {
++                return;
+             }
+-
+-            // one more thing: ok to override in sub-class
+-            if (oldOne.getClass() == newOne.getClass()) {
+-                // [databind#667]: avoid one particular class of bogus problems
+-
++            // ... except that if new one is explicit, we must consider it
++            if (explicit) {
++                // 02-Apr-2017, tatu: As per [databind#1527], if non-default creator, then
++                //   we can only have explicit overrides.
++                if ((_nonDefaultCreators & mask) != 0) {
+                     throw new IllegalArgumentException("Conflicting "+TYPE_DESCS[typeIndex]
+-                            +" creators: already had explicitly marked "+oldOne+", encountered "+newOne);
+-                // otherwise, which one to choose?
+-                    // new type more generic, use old
+-                // new type more specific, use it
++                            +" creators: already had non-default "+oldOne+", encountered "+newOne);
++                }
++                _explicitCreators |= mask;
++                _creators[typeIndex] = _fixAccess(newOne);
++                return;
+             }
+         }
++        // if not explicit, just add
+         if (explicit) {
+             _explicitCreators |= mask;
+         }
++        _nonDefaultCreators |= mask;
+         _creators[typeIndex] = _fixAccess(newOne);
+     }
+-
+     /*
+     /**********************************************************
+     /* Helper class(es)

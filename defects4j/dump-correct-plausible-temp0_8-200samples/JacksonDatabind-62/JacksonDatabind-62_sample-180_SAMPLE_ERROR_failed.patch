@@ -1,0 +1,25 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/deser/std/CollectionDeserializer.java b/src/main/java/com/fasterxml/jackson/databind/deser/std/CollectionDeserializer.java
+index af4270610..87c6672c6 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/deser/std/CollectionDeserializer.java
++++ b/src/main/java/com/fasterxml/jackson/databind/deser/std/CollectionDeserializer.java
+@@ -204,9 +203,19 @@ public class CollectionDeserializer
+         if (valueTypeDeser != null) {
+             valueTypeDeser = valueTypeDeser.forProperty(property);
+         }
++        //FIX
++        if (_collectionType.isInterface() || _collectionType.isAbstract()) {
++            Class<?> fallback = (Class<?>) _collectionType.getRawClass();
++            // if can not determine type, use array list
++            if (Collection.class.isAssignableFrom(fallback)) {
++                fallback = ArrayList.class;
++            }
++            return withResolved(delegateDeser, valueDeser, valueTypeDeser, unwrapSingle,
++                    ctxt.findContextualValueInstantiator(
++                            ctxt.constructSpecializedType(_collectionType, fallback), property));
++        }
+         return withResolved(delegateDeser, valueDeser, valueTypeDeser, unwrapSingle);
+     }
+-
+     /*
+     /**********************************************************
+     /* ContainerDeserializerBase API

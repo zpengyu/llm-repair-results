@@ -1,0 +1,53 @@
+diff --git a/src/main/java/org/jsoup/nodes/LeafNode.java b/src/main/java/org/jsoup/nodes/LeafNode.java
+index 0e068b5..01beefd 100644
+--- a/src/main/java/org/jsoup/nodes/LeafNode.java
++++ b/src/main/java/org/jsoup/nodes/LeafNode.java
+@@ -17,17 +14,12 @@ abstract class LeafNode extends Node {
+         ensureAttributes();
+         return (Attributes) value;
+     }
+-
+     private void ensureAttributes() {
+         if (!hasAttributes()) {
+-            Object coreValue = value;
+             Attributes attributes = new Attributes();
+             value = attributes;
+-            if (coreValue != null)
+-                attributes.put(nodeName(), (String) coreValue);
+         }
+     }
+-
+     String coreValue() {
+         return attr(nodeName());
+     }
+@@ -35,27 +26,16 @@ abstract class LeafNode extends Node {
+     void coreValue(String value) {
+         attr(nodeName(), value);
+     }
+-
+     @Override
+     public String attr(String key) {
+-        Validate.notNull(key);
+-        if (!hasAttributes()) {
+-            return key.equals(nodeName()) ? (String) value : EmptyString;
+-        }
++        ensureAttributes();
+         return super.attr(key);
+     }
+-
+     @Override
+     public Node attr(String key, String value) {
+-        if (!hasAttributes() && key.equals(nodeName())) {
+-            this.value = value;
+-        } else {
+-            ensureAttributes();
+-            super.attr(key, value);
+-        }
+-        return this;
++        ensureAttributes();
++        return super.attr(key, value);
+     }
+-
+     @Override
+     public boolean hasAttr(String key) {
+         ensureAttributes();

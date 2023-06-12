@@ -1,0 +1,38 @@
+diff --git a/src/com/google/javascript/jscomp/FlowSensitiveInlineVariables.java b/src/com/google/javascript/jscomp/FlowSensitiveInlineVariables.java
+index 0a7f29c3..f183faf5 100644
+--- a/src/com/google/javascript/jscomp/FlowSensitiveInlineVariables.java
++++ b/src/com/google/javascript/jscomp/FlowSensitiveInlineVariables.java
+@@ -91,10 +90,20 @@ class FlowSensitiveInlineVariables extends AbstractPostOrderCallback
+         // TODO(user): We only care about calls to functions that
+         // passes one of the dependent variable to a non-side-effect free
+         // function.
+-        if (n.isCall() && NodeUtil.functionCallHasSideEffects(n)) {
+-          return true;
++        if (n.isCall()) {
++          // We only care about calls that have side-effects.
++          Node callTarget = n.getFirstChild();
++          Node callee = callTarget.getFirstChild();
++          if (callee != null && callee.isName()) {
++            String calleeName = callee.getString();
++            if (calleeName.equals("eval") || calleeName.equals("arguments")) {
++              return true;
++            }
++          }
++          if (NodeUtil.functionCallHasSideEffects(n)) {
++            return true;
++          }
+         }
+-
+         if (n.isNew() && NodeUtil.constructorCallHasSideEffects(n)) {
+           return true;
+         }
+@@ -106,8 +113,7 @@ class FlowSensitiveInlineVariables extends AbstractPostOrderCallback
+           }
+         }
+         return false;
+-      }
+-  };
++      }  };
+ 
+   public FlowSensitiveInlineVariables(AbstractCompiler compiler) {
+     this.compiler = compiler;

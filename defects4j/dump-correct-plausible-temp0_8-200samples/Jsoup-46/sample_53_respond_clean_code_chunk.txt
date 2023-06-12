@@ -1,0 +1,46 @@
+    static void escape(StringBuilder accum, String string, Document.OutputSettings out,
+                       boolean inAttribute, boolean normaliseWhite, boolean stripLeadingWhite) {
+        final EscapeMode escapeMode = out.escapeMode();
+        final CharsetEncoder encoder = out.encoder();
+        final CoreCharset coreCharset = CoreCharset.byName(encoder.charset().name());
+        final Map<Character, String> map = escapeMode.getMap();
+        final int length = string.length();
+        boolean lastWasWhite = false;
+        boolean reachedNonWhite = false;
+        int codePoint;
+        for (int offset = 0; offset < length; offset += Character.charCount(codePoint)) {
+            codePoint = string.codePointAt(offset);
+            if (normaliseWhite) {
+                if (StringUtil.isWhitespace(codePoint)) {
+                    if ((stripLeadingWhite && !reachedNonWhite) || lastWasWhite) {
+                        offset += Character.charCount(codePoint);
+                        continue;
+                    }
+                    accum.append(' ');
+                    offset += Character.charCount(codePoint);
+                    lastWasWhite = true;
+                    continue;
+                } else {
+                    lastWasWhite = false;
+                    reachedNonWhite = true;
+                }
+            }
+            if (Character.isSupplementaryCodePoint(codePoint)) {
+                final String c = new String(Character.toChars(codePoint));
+                if (encoder.canEncode(c)) {
+                    accum.append(c);
+                } else {
+                    accum.append("&#x").append(Integer.toHexString(codePoint)).append(';');
+                }
+            } else {
+                final char c = (char) codePoint;
+                if (escapeMode.isValid(c)) {
+                    accum.append(c);
+                } else if (map.containsKey(c)) {
+                    accum.append('&').append(map.get(c)).append(';');
+                } else {
+                    accum.append("&#x").append(Integer.toHexString(c)).append(';');
+                }
+            }
+        }
+    }

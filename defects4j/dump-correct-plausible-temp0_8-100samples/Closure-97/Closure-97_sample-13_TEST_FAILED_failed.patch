@@ -1,0 +1,32 @@
+diff --git a/src/com/google/javascript/jscomp/PeepholeFoldConstants.java b/src/com/google/javascript/jscomp/PeepholeFoldConstants.java
+index 0f2a6d44..8be8c088 100644
+--- a/src/com/google/javascript/jscomp/PeepholeFoldConstants.java
++++ b/src/com/google/javascript/jscomp/PeepholeFoldConstants.java
+@@ -705,13 +698,24 @@ public class PeepholeFoldConstants extends AbstractPeepholeOptimization {
+       Node newNumber = Node.newNumber(result);
+       n.getParent().replaceChild(n, newNumber);
+       reportCodeChange();
+-
+       return newNumber;
+     }
+-
++    // In Java, shifting by a negative number is an undefined operation.
++    // JavaScript defines it to be equivalent to shifting by the absolute value
++    // of the shift amount modulo 32.
++    if (right.getType() == Token.NUMBER) {
++      if (right.getDouble() < 0) {
++        int rvalInt = (int) right.getDouble();
++        if (rvalInt != right.getDouble()) {
++          error(FRACTIONAL_BITWISE_OPERAND, right);
++          return n;
++        }
++        right.setDouble(rvalInt >>> -rvalInt);
++        reportCodeChange();
++      }
++    }
+     return n;
+   }
+-
+   /**
+    * Try to fold comparison nodes, e.g ==
+    */

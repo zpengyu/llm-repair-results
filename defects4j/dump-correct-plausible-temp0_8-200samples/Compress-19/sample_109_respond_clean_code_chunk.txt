@@ -1,0 +1,71 @@
+    public void reparseCentralDirectoryData(boolean hasUncompressedSize,
+                                            boolean hasCompressedSize,
+                                            boolean hasRelativeHeaderOffset,
+                                            boolean hasDiskStart)
+        throws ZipException {
+        if (rawCentralDirectoryData != null) {
+            int expectedLength = (hasUncompressedSize ? DWORD : 0)
+                + (hasCompressedSize ? DWORD : 0)
+                + (hasRelativeHeaderOffset ? DWORD : 0)
+                + (hasDiskStart ? DWORD : 0);
+            if (rawCentralDirectoryData.length != expectedLength) {
+                throw new ZipException("central directory zip64 extended"
+                                       + " information extra field's length"
+                                       + " doesn't match central directory"
+                                       + " data.  Expected length "
+                                       + expectedLength + " but is "
+                                       + rawCentralDirectoryData.length);
+            }
+            int offset = 0;
+            if (hasUncompressedSize) {
+                size = new ZipEightByteInteger(rawCentralDirectoryData, offset);
+                offset += DWORD;
+            }
+            if (hasCompressedSize) {
+                compressedSize = new ZipEightByteInteger(rawCentralDirectoryData,
+                                                         offset);
+                offset += DWORD;
+            }
+            if (hasRelativeHeaderOffset) {
+                relativeHeaderOffset =
+                    new ZipEightByteInteger(rawCentralDirectoryData, offset);
+                offset += DWORD;
+            }
+            if (hasDiskStart) {
+                diskStart = new ZipEightByteInteger(rawCentralDirectoryData, offset);
+                offset += DWORD;
+            }
+        }
+    }
+* Development method
+* Test-first
+* Extreme programming
+* Test-driven development
+1. **Add a test**
+2. **Run all tests and see the new one fail**
+3. **Write some code**
+4. **Run tests**
+5. **Refactor code**
+6. **Repeat**
+* The code you write is cleaner
+* You don't spend time thinking about the best way of solving problems
+* You always know what works and what doesn't
+* Your code is easier to change
+* You learn to think about problems from the perspective of others
+* Testing small parts of an application in isolation
+* Building confidence that the components work properly
+* Providing a safety net when refactoring or adding new features
+* Unit testing: small pieces of code
+* Integration testing: connections between components
+* Test cases
+* Assertions
+* Compare an expected value with the actual value
+* Fail if the two values are not equal
+* Junit
+* TestNG
+* JUnit is one of the most popular unit testing frameworks in the Java ecosystem
+* JUnit is integrated into popular IDEs such as Eclipse and IntelliJ
+* JUnit is suitable for both simple and complex tests
+* TestNG is an alternative to JUnit
+* TestNG is more powerful than JUnit
+* TestNG is less popular than JUnit

@@ -1,0 +1,25 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/deser/BeanDeserializerFactory.java b/src/main/java/com/fasterxml/jackson/databind/deser/BeanDeserializerFactory.java
+index bc8e6736f..cfd18df3d 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/deser/BeanDeserializerFactory.java
++++ b/src/main/java/com/fasterxml/jackson/databind/deser/BeanDeserializerFactory.java
+@@ -707,12 +707,19 @@ public class BeanDeserializerFactory
+     {
+         // need to ensure method is callable (for non-public)
+         AnnotatedMember mutator = propDef.getNonConstructorMutator();
+-
++        if (mutator == null) {
++            ctxt.reportBadDefinition(beanDesc.getType(), String.format(
++                    "No non-constructor mutator available for property \"%s\" (in %s)",
++                    propDef.getName(), beanDesc.getType()));
++        }
+         if (ctxt.canOverrideAccessModifiers()) {
+             // [databind#877]: explicitly prevent forced access to `cause` of `Throwable`;
+             // never needed and attempts may cause problems on some platforms.
+             // !!! NOTE: should be handled better for 2.8 and later
++            if (!(beanDesc.getType().isThrowable()
++                    && "cause".equals(propDef.getName()))) {
+                 mutator.fixAccess(ctxt.isEnabled(MapperFeature.OVERRIDE_PUBLIC_ACCESS_MODIFIERS));
++            }
+         }
+         // note: this works since we know there's exactly one argument for methods
+         BeanProperty.Std property = new BeanProperty.Std(propDef.getFullName(),

@@ -1,0 +1,58 @@
+diff --git a/src/org/mockito/internal/util/Primitives.java b/src/org/mockito/internal/util/Primitives.java
+index b44b8253d..761c66842 100644
+--- a/src/org/mockito/internal/util/Primitives.java
++++ b/src/org/mockito/internal/util/Primitives.java
+@@ -42,27 +37,31 @@ public class Primitives {
+         primitiveTypes.put(Long.class, Long.TYPE);
+         primitiveTypes.put(Float.class, Float.TYPE);
+         primitiveTypes.put(Double.class, Double.TYPE);
++        for(Map.Entry<Class<?>, Class<?>> entry : primitiveTypes.entrySet()) {
++            wrapperTypes.put(entry.getValue(), entry.getKey());
++            wrapperReturnValues.put(entry.getKey(), Primitives.defaultValue(entry.getValue()));
++            primitiveValues.put(entry.getValue(), Primitives.defaultValue(entry.getValue()));
++        }
+     }
+-
+-    static {
+-        wrapperReturnValues.put(Boolean.class, false);
+-        wrapperReturnValues.put(Character.class, '\u0000');
+-        wrapperReturnValues.put(Byte.class, (byte) 0);
+-        wrapperReturnValues.put(Short.class, (short) 0);
+-        wrapperReturnValues.put(Integer.class, 0);
+-        wrapperReturnValues.put(Long.class, 0L);
+-        wrapperReturnValues.put(Float.class, 0F);
+-        wrapperReturnValues.put(Double.class, 0D);
+-    }
+-
+-    static {
+-        primitiveValues.put(boolean.class, false);
+-        primitiveValues.put(char.class, '\u0000');
+-        primitiveValues.put(byte.class, (byte) 0);
+-        primitiveValues.put(short.class, (short) 0);
+-        primitiveValues.put(int.class, 0);
+-        primitiveValues.put(long.class, 0L);
+-        primitiveValues.put(float.class, 0F);
+-        primitiveValues.put(double.class, 0);
++    private static <T> T defaultValue(Class<T> type) {
++        if (type == Boolean.TYPE) {
++            return (T) Boolean.FALSE;
++        } else if (type == Character.TYPE) {
++            return (T) Character.valueOf((char) 0);
++        } else if (type == Byte.TYPE) {
++            return (T) Byte.valueOf((byte) 0);
++        } else if (type == Short.TYPE) {
++            return (T) Short.valueOf((short) 0);
++        } else if (type == Integer.TYPE) {
++            return (T) Integer.valueOf(0);
++        } else if (type == Long.TYPE) {
++            return (T) Long.valueOf(0L);
++        } else if (type == Float.TYPE) {
++            return (T) Float.valueOf(0f);
++        } else if (type == Double.TYPE) {
++            return (T) Double.valueOf(0d);
++        } else {
++            return null;
++        }
+     }
+ }
+\ No newline at end of file

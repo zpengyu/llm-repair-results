@@ -1,0 +1,30 @@
+diff --git a/src/main/java/org/jsoup/helper/DataUtil.java b/src/main/java/org/jsoup/helper/DataUtil.java
+index 4bdf4fe..6345dfa 100644
+--- a/src/main/java/org/jsoup/helper/DataUtil.java
++++ b/src/main/java/org/jsoup/helper/DataUtil.java
+@@ -95,7 +95,24 @@ public class DataUtil {
+             // there are times where there is a spurious byte-order-mark at the start of the text. Shouldn't be present
+             // in utf-8. If after decoding, there is a BOM, strip it; otherwise will cause the parser to go straight
+             // into head mode
+-
++            int len = docData.length();
++            int index = 0;
++            while (index < len) {
++                int cur = docData.charAt(index);
++                if (!Character.isWhitespace(cur)) {
++                    if (cur == '<' && index + 3 < len) {
++                        char cur1 = docData.charAt(index + 1);
++                        char cur2 = docData.charAt(index + 2);
++                        if (cur1 == '!' && cur2 == '-') {
++                            index += 3;
++                            continue;
++                        }
++                    }
++                    break;
++                }
++                index++;
++            }
++            docData = docData.substring(index);
+             doc = parser.parseInput(docData, baseUri);
+             doc.outputSettings().charset(charsetName);
+         }

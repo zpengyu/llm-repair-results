@@ -1,0 +1,37 @@
+diff --git a/src/main/java/org/apache/commons/cli/Options.java b/src/main/java/org/apache/commons/cli/Options.java
+index c89882a..7545adb 100644
+--- a/src/main/java/org/apache/commons/cli/Options.java
++++ b/src/main/java/org/apache/commons/cli/Options.java
+@@ -233,22 +233,26 @@ public class Options implements Serializable
+     public List<String> getMatchingOptions(String opt)
+     {
+         opt = Util.stripLeadingHyphens(opt);
+-        
+         List<String> matchingOpts = new ArrayList<String>();
+-
++        List<String> candidateMatchingOpts = new ArrayList<String>();
+         // for a perfect match return the single option only
+-
++        if (longOpts.containsKey(opt))
++        {
++            matchingOpts.add(opt);
++        }
+         for (String longOpt : longOpts.keySet())
+         {
+             if (longOpt.startsWith(opt))
+             {
+-                matchingOpts.add(longOpt);
++                candidateMatchingOpts.add(longOpt);
+             }
+         }
+-        
++        if (candidateMatchingOpts.size() == 1)
++        {
++            matchingOpts.addAll(candidateMatchingOpts);
++        }
+         return matchingOpts;
+     }
+-
+     /**
+      * Returns whether the named {@link Option} is a member of this {@link Options}.
+      *

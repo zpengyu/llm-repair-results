@@ -1,0 +1,17 @@
+diff --git a/gson/src/main/java/com/google/gson/internal/UnsafeAllocator.java b/gson/src/main/java/com/google/gson/internal/UnsafeAllocator.java
+index a72d3d10..edc3e89a 100644
+--- a/gson/src/main/java/com/google/gson/internal/UnsafeAllocator.java
++++ b/gson/src/main/java/com/google/gson/internal/UnsafeAllocator.java
+@@ -87,7 +84,11 @@ public abstract class UnsafeAllocator {
+         @Override
+         @SuppressWarnings("unchecked")
+         public <T> T newInstance(Class<T> c) throws Exception {
+-          return (T) newInstance.invoke(null, c, Object.class);
++          if (c.isInterface() || Modifier.isAbstract(c.getModifiers())) {
++            return (T) newInstance.invoke(null, c, Object.class);
++          } else {
++            return (T) newInstance.invoke(null, c, c);
++          }
+         }
+       };
+     } catch (Exception ignored) {

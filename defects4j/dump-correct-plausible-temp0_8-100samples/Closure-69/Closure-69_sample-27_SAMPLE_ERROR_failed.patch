@@ -1,0 +1,25 @@
+diff --git a/src/com/google/javascript/jscomp/TypeCheck.java b/src/com/google/javascript/jscomp/TypeCheck.java
+index 6030d48d..12f554ef 100644
+--- a/src/com/google/javascript/jscomp/TypeCheck.java
++++ b/src/com/google/javascript/jscomp/TypeCheck.java
+@@ -1574,16 +1570,17 @@ public class TypeCheck implements NodeTraversal.Callback, CompilerPass {
+            !isExtern)) {
+         report(t, n, CONSTRUCTOR_NOT_CALLABLE, childType.toString());
+       }
+-
+       // Functions with explcit 'this' types must be called in a GETPROP
+       // or GETELEM.
+-
+       visitParameterList(t, n, functionType);
+       ensureTyped(t, n, functionType.getReturnType());
++    } else if (childType.isFunctionPrototypeType() &&
++               n.getParent().isAssign()) {
++      ensureTyped(t, n);
+     } else {
++      report(t, n, ILLEGAL_OBJLIT_KEY, childType.toString());
+       ensureTyped(t, n);
+     }
+-
+     // TODO: Add something to check for calls of RegExp objects, which is not
+     // supported by IE.  Either say something about the return type or warn
+     // about the non-portability of the call or both.

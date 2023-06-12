@@ -1,0 +1,34 @@
+diff --git a/src/com/google/javascript/jscomp/CheckGlobalThis.java b/src/com/google/javascript/jscomp/CheckGlobalThis.java
+index 961b964c..24ffbeee 100644
+--- a/src/com/google/javascript/jscomp/CheckGlobalThis.java
++++ b/src/com/google/javascript/jscomp/CheckGlobalThis.java
+@@ -122,19 +118,20 @@ final class CheckGlobalThis implements Callback {
+       } else {
+         // Only traverse the right side if it's not an assignment to a prototype
+         // property or subproperty.
+-          if (lhs.getType() == Token.GETPROP &&
+-              lhs.getLastChild().getString().equals("prototype")) {
+-            return false;
+-          }
+-          if (lhs.getQualifiedName() != null && lhs.getQualifiedName().contains(".prototype.")) {
+-            return false;
+-          }
++        //
++        // Note(nicksantos): We used to use NodeUtil.isPrototypeProperty here,
++        // but that method was broken for an obscure edge case where
++        // someone tried to alias Object.prototype.create = {};
++        //
++        // We still use NodeUtil.isPrototypeProperty to update the
++        // assignLhsChild and assignRhsChild state.
++        if (NodeUtil.isPrototypeProperty(lhs)) {
++          return false;
++        }
+       }
+     }
+-
+     return true;
+   }
+-
+   public void visit(NodeTraversal t, Node n, Node parent) {
+     if (n.getType() == Token.THIS && shouldReportThis(n, parent)) {
+       compiler.report(t.makeError(n, level, GLOBAL_THIS));

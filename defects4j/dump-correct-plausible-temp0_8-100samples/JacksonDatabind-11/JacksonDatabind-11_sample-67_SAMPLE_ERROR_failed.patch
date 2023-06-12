@@ -1,0 +1,46 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/type/TypeFactory.java b/src/main/java/com/fasterxml/jackson/databind/type/TypeFactory.java
+index 87b165830..5f784a3ed 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/type/TypeFactory.java
++++ b/src/main/java/com/fasterxml/jackson/databind/type/TypeFactory.java
+@@ -895,10 +895,6 @@ public final class TypeFactory
+             return _unknownType();
+         } else {
+             // Ok: here's where context might come in handy!
+-            /* 19-Mar-2015, tatu: As per [databind#609], may need to allow
+-             *   unresolved type variables to handle some cases where bounds
+-             *   are enough. Let's hope it does not hide real fail cases.
+-             */
+             JavaType actualType = context.findType(name);
+             if (actualType != null) {
+                 return actualType;
+@@ -926,9 +919,28 @@ public final class TypeFactory
+          *   for resolution to catch those.
+          */
+         context._addPlaceholder(name);
+-        return _constructType(bounds[0], context);
++        JavaType foundType = _constructType(bounds[0], context);
++        // Works for simple types, but not for cases like:
++        // class Bar<K extends Comparable<K>> { ... }
++        TypeBindings newBindings = context.childInstance();
++        for (int i = 1, len = bounds.length; i < len; ++i) {
++            newBindings._addPlaceholder(name);
++            JavaType t = _constructType(bounds[i], newBindings);
++            if (foundType.getClass() == ClassKey.class) {
++                if (t.getRawClass() == Object.class) {
++                    continue;
++                }
++                foundType = t;
++            } else {
++                if (!foundType.isAssignableFrom(t)) {
++                    foundType = _moreSpecificType(foundType, t);
++                }
++            }
++        }
++        // 17-Dec-2015, tatu: We do want to do this however
++        context.addBinding(name, foundType);
++        return foundType;
+     }
+-
+     protected JavaType _fromWildcard(WildcardType type, TypeBindings context)
+     {
+         /* Similar to challenges with TypeVariable, we may have

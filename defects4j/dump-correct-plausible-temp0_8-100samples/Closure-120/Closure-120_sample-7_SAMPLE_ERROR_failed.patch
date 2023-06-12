@@ -1,0 +1,20 @@
+diff --git a/src/com/google/javascript/jscomp/ReferenceCollectingCallback.java b/src/com/google/javascript/jscomp/ReferenceCollectingCallback.java
+index fefd3926..e2a8396b 100644
+--- a/src/com/google/javascript/jscomp/ReferenceCollectingCallback.java
++++ b/src/com/google/javascript/jscomp/ReferenceCollectingCallback.java
+@@ -431,12 +430,13 @@ class ReferenceCollectingCallback implements ScopedCallback,
+           break;
+         } else if (block.isLoop) {
+           return false;
++        } else if (block.isTry() && block.getType() != Token.BLOCK) {
++          // We cannot move declarations out of a catch block.
++          return false;
+         }
+       }
+-
+       return true;
+     }
+-
+     /**
+      * @return The one and only assignment. Returns if there are 0 or 2+
+      *    assignments.

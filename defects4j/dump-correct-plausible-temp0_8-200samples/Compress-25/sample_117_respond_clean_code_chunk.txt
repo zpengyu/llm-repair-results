@@ -1,0 +1,22 @@
+    public ZipArchiveInputStream(InputStream inputStream,
+                                 String encoding,
+                                 boolean useUnicodeExtraFields,
+                                 boolean allowStoredEntriesWithDataDescriptor) throws IOException {
+        this.allowStoredEntriesWithDataDescriptor =
+            allowStoredEntriesWithDataDescriptor;
+        zipEncoding = ZipEncodingHelper.getZipEncoding(encoding);
+        this.useUnicodeExtraFields = useUnicodeExtraFields;
+        in = new PushbackInputStream(inputStream, buf.capacity());
+        byte[] signature = new byte[4];
+        IOUtils.readFully(in, signature);
+        if (ZipArchiveInputStream.isEOCD(signature)) {
+            readEOCD();
+            if (zipEncoding.canEncode(getComment())) {
+                this.comment = getComment();
+            } else {
+                this.unicodeComment = getComment();
+            }
+        } else {
+            in.unread(signature);
+        }
+    }

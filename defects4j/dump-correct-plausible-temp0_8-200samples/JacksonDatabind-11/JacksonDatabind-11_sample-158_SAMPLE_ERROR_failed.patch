@@ -1,0 +1,37 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/type/TypeFactory.java b/src/main/java/com/fasterxml/jackson/databind/type/TypeFactory.java
+index 87b165830..1425cbe16 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/type/TypeFactory.java
++++ b/src/main/java/com/fasterxml/jackson/databind/type/TypeFactory.java
+@@ -895,10 +895,6 @@ public final class TypeFactory
+             return _unknownType();
+         } else {
+             // Ok: here's where context might come in handy!
+-            /* 19-Mar-2015, tatu: As per [databind#609], may need to allow
+-             *   unresolved type variables to handle some cases where bounds
+-             *   are enough. Let's hope it does not hide real fail cases.
+-             */
+             JavaType actualType = context.findType(name);
+             if (actualType != null) {
+                 return actualType;
+@@ -926,9 +919,19 @@ public final class TypeFactory
+          *   for resolution to catch those.
+          */
+         context._addPlaceholder(name);
+-        return _constructType(bounds[0], context);
++        JavaType[] boundsAsJavaTypes = null;
++        Type[] bounds2 = bounds;
++        for (int i = 0; i < bounds2.length; i++) {
++            Type b = bounds2[i];
++            if (bounds == null) {
++                boundsAsJavaTypes = new JavaType[bounds2.length];
++            }
++            // can't use _fromType here (both because it may recurse, and because it requires context)
++            JavaType bt = _fromClass(b, context);
++            boundsAsJavaTypes[i] = bt;
++        }
++        return context.withUnboundVariable(name, boundsAsJavaTypes);
+     }
+-
+     protected JavaType _fromWildcard(WildcardType type, TypeBindings context)
+     {
+         /* Similar to challenges with TypeVariable, we may have

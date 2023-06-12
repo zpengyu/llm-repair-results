@@ -1,0 +1,31 @@
+diff --git a/src/com/google/javascript/jscomp/RemoveUnusedVars.java b/src/com/google/javascript/jscomp/RemoveUnusedVars.java
+index 41175cf3..2dbfcf05 100644
+--- a/src/com/google/javascript/jscomp/RemoveUnusedVars.java
++++ b/src/com/google/javascript/jscomp/RemoveUnusedVars.java
+@@ -393,7 +390,7 @@ class RemoveUnusedVars
+       Node lastArg;
+       while ((lastArg = argList.getLastChild()) != null) {
+         Var var = fnScope.getVar(lastArg.getString());
+-        if (!referenced.contains(var)) {
++        if (!referenced.contains(var) && !isReferencedInnerFunction(function, var)) {
+           argList.removeChild(lastArg);
+           compiler.reportCodeChange();
+         } else {
+@@ -404,7 +401,16 @@ class RemoveUnusedVars
+       callSiteOptimizer.optimize(fnScope, referenced);
+     }
+   }
+-
++  private boolean isReferencedInnerFunction(Node function, Var var) {
++    for (Node innerFunction : NodeUtil.getFunctionDeclarations(function)) {
++      String varName = var.getName();
++      String innerFunctionName = innerFunction.getFirstChild().getString();
++      if (varName.equals(innerFunctionName)) {
++        return true;
++      }
++    }
++    return false;
++  }
+ 
+   /**
+    * @return the LP node containing the function parameters.

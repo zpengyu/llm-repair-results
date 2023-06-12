@@ -1,0 +1,19 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/deser/BeanDeserializer.java b/src/main/java/com/fasterxml/jackson/databind/deser/BeanDeserializer.java
+index 3c89dc109..695debf09 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/deser/BeanDeserializer.java
++++ b/src/main/java/com/fasterxml/jackson/databind/deser/BeanDeserializer.java
+@@ -782,7 +779,13 @@ public class BeanDeserializer
+                                 "Cannot create polymorphic instances with unwrapped values");
+                         return null;
+                     }
+-                    return _unwrappedPropertyHandler.processUnwrapped(p, ctxt, bean, tokens);
++                    // 28-Aug-2018, tatu: As per [databind#2130], `readAndBind` _can_ return
++                    //    null (not likely, but possible) so:
++                    Object result = _unwrappedPropertyHandler.processUnwrapped(p, ctxt, bean, tokens);
++                    if (result == null) {
++                        return bean;
++                    }
++                    return result;
+                 }
+                 continue;
+             }

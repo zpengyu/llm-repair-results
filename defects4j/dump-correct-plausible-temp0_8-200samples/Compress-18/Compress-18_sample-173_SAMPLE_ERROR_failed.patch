@@ -1,0 +1,43 @@
+diff --git a/src/main/java/org/apache/commons/compress/archivers/tar/TarArchiveOutputStream.java b/src/main/java/org/apache/commons/compress/archivers/tar/TarArchiveOutputStream.java
+index da6bbfde..692788ed 100644
+--- a/src/main/java/org/apache/commons/compress/archivers/tar/TarArchiveOutputStream.java
++++ b/src/main/java/org/apache/commons/compress/archivers/tar/TarArchiveOutputStream.java
+@@ -461,7 +461,9 @@ public class TarArchiveOutputStream extends ArchiveOutputStream {
+         }
+         TarArchiveEntry pex = new TarArchiveEntry(name,
+                                                   TarConstants.LF_PAX_EXTENDED_HEADER_LC);
+-
++        final int MAX_LEN = Integer.MAX_VALUE - 8;
++        int maxBytesPerChar = Math.max(1,
++                                       Charset.forName(CharsetNames.UTF_8).newEncoder().maxBytesPerChar());
+         StringWriter w = new StringWriter();
+         for (Map.Entry<String, String> h : headers.entrySet()) {
+             String key = h.getKey();
+@@ -469,6 +471,12 @@ public class TarArchiveOutputStream extends ArchiveOutputStream {
+             int len = key.length() + value.length()
+                 + 3 /* blank, equals and newline */
+                 + 2 /* guess 9 < actual length < 100 */;
++            if (len > MAX_LEN) {
++                value = value.substring(0, MAX_LEN - len);
++                len = key.length() + value.length()
++                    + 3 /* blank, equals and newline */
++                    + 2 /* guess 9 < actual length < 100 */;
++            }
+             String line = len + " " + key + "=" + value + "\n";
+             int actualLength = line.getBytes(CharsetNames.UTF_8).length;
+             while (len != actualLength) {
+@@ -478,7 +486,13 @@ public class TarArchiveOutputStream extends ArchiveOutputStream {
+                 // Must be in loop as size may go from 99 to 100 in
+                 // first pass so we'd need a second.
+                 len = actualLength;
+-                line = len + " " + key + "=" + value + "\n";
++                if (len > MAX_LEN) {
++                    value = value.substring(0, MAX_LEN - len);
++                    len = key.length() + value.length()
++                        + 3 /* blank, equals and newline */
++                        + 2 /* guess 9 < actual length < 100 */;
++                    line = len + " " + key + "=" + value + "\n";
++                }
+                 actualLength = line.getBytes(CharsetNames.UTF_8).length;
+             }
+             w.write(line);

@@ -1,0 +1,220 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/deser/std/StringArrayDeserializer.java b/src/main/java/com/fasterxml/jackson/databind/deser/std/StringArrayDeserializer.java
+index f8cb03e1c..f13d9bb47 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/deser/std/StringArrayDeserializer.java
++++ b/src/main/java/com/fasterxml/jackson/databind/deser/std/StringArrayDeserializer.java
+@@ -16,137 +16,102 @@ import com.fasterxml.jackson.databind.util.ObjectBuffer;
+  * Used if (and only if) no custom value deserializers are used.
+  */
+ @JacksonStdImpl
+-public final class StringArrayDeserializer
+-    extends StdDeserializer<String[]>
++/**
++ * Deserializer that can deserialize instances of {@link String}
++ * from JSON Strings.
++ * 
++ * @author tsaloranta
++ */
++public final class StringDeserializer
++    extends StdScalarDeserializer<String>
+     implements ContextualDeserializer
+ {
+-    private static final long serialVersionUID = -7589512013334920693L;
+-
+-    public final static StringArrayDeserializer instance = new StringArrayDeserializer();
+-    
++    private static final long serialVersionUID = 1L;
++    public final static StringDeserializer instance = new StringDeserializer();
+     /**
+-     * Value serializer to use, if not the standard one (which is inlined)
++     * This is the default deserializer that gets applied in absence of anything else
++     * (which usually means: default deserializer for basic {@link String} type,
++     * without any other annotations to indicate alternative handling)
+      */
+-    protected JsonDeserializer<String> _elementDeserializer;
+-
+-    public StringArrayDeserializer() {
+-        super(String[].class);
+-        _elementDeserializer = null;
+-    }
+-
+-    @SuppressWarnings("unchecked")
+-    protected StringArrayDeserializer(JsonDeserializer<?> deser) {
+-        super(String[].class);
+-        _elementDeserializer = (JsonDeserializer<String>) deser;
+-    }
+-   
+-    @Override
+-    public String[] deserialize(JsonParser jp, DeserializationContext ctxt) throws IOException
++    public StringDeserializer() { super(String.class); }
++    public String deserialize(JsonParser jp, DeserializationContext ctxt) throws IOException, JsonProcessingException
+     {
+-        // Ok: must point to START_ARRAY (or equivalent)
+-        if (!jp.isExpectedStartArrayToken()) {
+-            return handleNonArray(jp, ctxt);
++        JsonToken t = jp.getCurrentToken();
++        if (t == JsonToken.VALUE_STRING) {
++            return jp.getText();
+         }
+-        if (_elementDeserializer != null) {
+-            return _deserializeCustom(jp, ctxt);
++        // [JACKSON-330]: need to allow nulls...
++        if (t == JsonToken.VALUE_NULL) {
++            return getNullValue();
+         }
+-
+-        final ObjectBuffer buffer = ctxt.leaseObjectBuffer();
+-        Object[] chunk = buffer.resetAndStart();
+-        
+-        int ix = 0;
+-        JsonToken t;
+-        
+-        while ((t = jp.nextToken()) != JsonToken.END_ARRAY) {
+-            // Ok: no need to convert Strings, but must recognize nulls
+-            String value;
+-            if (t == JsonToken.VALUE_STRING) {
+-                value = jp.getText();
+-            } else if (t == JsonToken.VALUE_NULL) {
+-                value = _elementDeserializer.getNullValue();
+-            } else {
+-                value = _parseString(jp, ctxt);
++        // [JACKSON-606]: should accept Int, Long, Float, Double too (but NOT BigInteger/BigDecimal;
++        // those are better handled using proper type deserializers)
++        // [JACKSON-700]: should also accept boolean
++        if (t != null) {
++            switch (t.id()) {
++            case ID_NUMBER_INT:
++                return jp.getNumberValue().toString();
++            case ID_NUMBER_FLOAT: // coercing should work too
++                return jp.getNumberValue().toString();
++            case ID_TRUE:
++                return "true";
++            case ID_FALSE:
++                return "false";
+             }
+-            if (ix >= chunk.length) {
+-                chunk = buffer.appendCompletedChunk(chunk);
+-                ix = 0;
+-            }
+-            chunk[ix++] = value;
+         }
+-        String[] result = buffer.completeAndClearBuffer(chunk, ix, String.class);
+-        ctxt.returnObjectBuffer(buffer);
+-        return result;
++        // Otherwise, no can do:
++        throw ctxt.mappingException(getValueClass(), t);
+     }
+-
+-    /**
+-     * Offlined version used when we do not use the default deserialization method.
+-     */
+-    protected final String[] _deserializeCustom(JsonParser jp, DeserializationContext ctxt) throws IOException
++    @Override
++    public String deserializeWithType(JsonParser jp, DeserializationContext ctxt,
++            TypeDeserializer typeDeserializer)
++        throws IOException, JsonProcessingException
+     {
+-        final ObjectBuffer buffer = ctxt.leaseObjectBuffer();
+-        Object[] chunk = buffer.resetAndStart();
+-        final JsonDeserializer<String> deser = _elementDeserializer;
+-        
+-        int ix = 0;
+-        JsonToken t;
+-
+-        while ((t = jp.nextToken()) != JsonToken.END_ARRAY) {
+-            // Ok: no need to convert Strings, but must recognize nulls
+-            String value = (t == JsonToken.VALUE_NULL) ? null : deser.deserialize(jp, ctxt);
+-            if (ix >= chunk.length) {
+-                chunk = buffer.appendCompletedChunk(chunk);
+-                ix = 0;
+-            }
+-            chunk[ix++] = value;
+-        }
+-        String[] result = buffer.completeAndClearBuffer(chunk, ix, String.class);
+-        ctxt.returnObjectBuffer(buffer);
+-        return result;
++        /* 28-Nov-2010, tatu: Actually, here we can fully delegate to typed
++         *    variant, since Strings can not contain type information.
++         */
++        return deserialize(jp, ctxt);
+     }
+-    
++    /*
++    /**********************************************************
++    /* JsonDeserializer impl
++    /**********************************************************
++     */
+     @Override
+-    public Object deserializeWithType(JsonParser jp, DeserializationContext ctxt, TypeDeserializer typeDeserializer) throws IOException {
+-        return typeDeserializer.deserializeTypedFromArray(jp, ctxt);
++    public String getNullValue() {
++        return "";
+     }
+-
+-    private final String[] handleNonArray(JsonParser jp, DeserializationContext ctxt) throws IOException
+-    {
+-        // [JACKSON-526]: implicit arrays from single values?
+-        if (!ctxt.isEnabled(DeserializationFeature.ACCEPT_SINGLE_VALUE_AS_ARRAY)) {
+-            // [JACKSON-620] Empty String can become null...
+-            if ((jp.getCurrentToken() == JsonToken.VALUE_STRING)
+-                    && ctxt.isEnabled(DeserializationFeature.ACCEPT_EMPTY_STRING_AS_NULL_OBJECT)) {
+-                String str = jp.getText();
+-                if (str.length() == 0) {
+-                    return null;
+-                }
+-            }
+-            throw ctxt.mappingException(_valueClass);
+-        }
+-        return new String[] { (jp.getCurrentToken() == JsonToken.VALUE_NULL) ? null : _parseString(jp, ctxt) };
++    @Override
++    public String getEmptyValue() {
++        return "";
+     }
+-
+-    /**
+-     * Contextualization is needed to see whether we can "inline" deserialization
+-     * of String values, or if we have to use separate value deserializer.
++    /*
++    /**********************************************************
++    /* Contextualization
++    /**********************************************************
+      */
+     @Override
+-    public JsonDeserializer<?> createContextual(DeserializationContext ctxt, BeanProperty property) throws JsonMappingException
++    public JsonDeserializer<?> createContextual(DeserializationContext ctxt,
++            BeanProperty property) throws JsonMappingException
+     {
+-        JsonDeserializer<?> deser = _elementDeserializer;
+-        // #125: May have a content converter
+-        deser = findConvertingContentDeserializer(ctxt, property, deser);
+-        if (deser == null) {
+-            deser = ctxt.findContextualValueDeserializer(ctxt.constructType(String.class), property);
+-        } else { // if directly assigned, probably not yet contextual, so:
+-            deser = ctxt.handleSecondaryContextualization(deser, property);
+-        }
+-        // Ok ok: if all we got is the default String deserializer, can just forget about it
+-        if (deser != null && this.isDefaultDeserializer(deser)) {
+-            deser = null;
+-        }
+-        if (_elementDeserializer != deser) {
+-            return new StringArrayDeserializer(deser);
++        // [JACKSON-620]: should be able to convert empty Strings -> null (if indicated)
++        if (property != null) {
++            Object value = property.getMember().getAnnotation(JsonDeserialize.class);
++            if (value != null) {
++                JsonDeserialize ann = (JsonDeserialize) value;
++                Class<?> deserClass = ann.using();
++                if (deserClass != JsonDeserializer.None.class) {
++                    return ctxt.deserializerInstance(property.getMember(), deserClass);
++                }
++                value = ann.contentUsing();
++                if (value != JsonDeserializer.None.class) {
++                    return StringDeserializer.forType((Class<? extends String>) value);
++                }
++                value = ann.keyUsing();
++                if (value != JsonDeserializer.None.class) {
++                    return StringDeserializer.forType((Class<? extends String>) value);
++                }
++            }
+         }
+         return this;
+     }

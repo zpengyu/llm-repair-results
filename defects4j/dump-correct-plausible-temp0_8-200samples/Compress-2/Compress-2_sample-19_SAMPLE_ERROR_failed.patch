@@ -1,0 +1,65 @@
+diff --git a/src/main/java/org/apache/commons/compress/archivers/ar/ArArchiveInputStream.java b/src/main/java/org/apache/commons/compress/archivers/ar/ArArchiveInputStream.java
+index 9112fa85..fbf36d21 100644
+--- a/src/main/java/org/apache/commons/compress/archivers/ar/ArArchiveInputStream.java
++++ b/src/main/java/org/apache/commons/compress/archivers/ar/ArArchiveInputStream.java
+@@ -110,13 +101,56 @@ public class ArArchiveInputStream extends ArchiveInputStream {
+                 }
+             }
+         }
+-
+         return new ArArchiveEntry(new String(name).trim(),
+-                                          Long.parseLong(new String(length)
++                 Long.parseLong(new String(length)
++                                                         .trim()));
++    }
++    /**
++     * Returns the next AR entry in this stream.
++     * 
++     * @return the next AR entry.
++     * @throws IOException
++     *             if the entry could not be read
++     */
++    public ArArchiveEntry getNextArEntry() throws IOException {
++        // hit EOF before previous entry was complete
++        // TODO: throw an exception instead?
++        if (input.available() == 0) {
++            return null;
++        }
++        // hit eof
++        if (offset % 2 != 0) {
++            read();
++        }
++        final byte[] name = new byte[16];
++        final byte[] lastmodified = new byte[12];
++        final byte[] userid = new byte[6];
++        final byte[] groupid = new byte[6];
++        final byte[] filemode = new byte[8];
++        final byte[] length = new byte[10];
++        read(name);
++        read(lastmodified);
++        read(userid);
++        read(groupid);
++        read(filemode);
++        read(length);
++        {
++            final byte[] expected = ArArchiveEntry.TRAILER.getBytes();
++            final byte[] realized = new byte[expected.length]; 
++            final int read = read(realized);
++            if (read != expected.length) {
++                throw new IOException("failed to read entry header");
++            }
++            for (int i = 0; i < expected.length; i++) {
++                if (expected[i] != realized[i]) {
++                    throw new IOException("invalid entry header. not read the content?");
++                }
++            }
++        }
++        return new ArArchiveEntry(new String(name).trim(),
++                 Long.parseLong(new String(length)
+                                                          .trim()));
+     }
+-
+-
+     public ArchiveEntry getNextEntry() throws IOException {
+         return getNextArEntry();
+     }

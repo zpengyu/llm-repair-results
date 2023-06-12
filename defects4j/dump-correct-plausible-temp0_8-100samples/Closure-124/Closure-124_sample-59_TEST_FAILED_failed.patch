@@ -1,0 +1,27 @@
+diff --git a/src/com/google/javascript/jscomp/ExploitAssigns.java b/src/com/google/javascript/jscomp/ExploitAssigns.java
+index 196b710d..925d294d 100644
+--- a/src/com/google/javascript/jscomp/ExploitAssigns.java
++++ b/src/com/google/javascript/jscomp/ExploitAssigns.java
+@@ -209,16 +209,14 @@ class ExploitAssigns extends AbstractPeepholeOptimization {
+       return true;
+     }
+     Preconditions.checkArgument(node.isGetProp());
+-
+-      node = node.getFirstChild();
+-    if (node.isName()
+-        && isNameAssignedTo(node.getString(), replacement)) {
+-      return false;
++    // For GETPROPs it is safe to replace 'this' with an object literal
++    // that contains a property with the same name, but for NAMEs it is
++    // not. E.g 'this.a = {a: 1};' is fine, but 'a = {a: 1};' is not.
++    if (!isNameAssignedTo(node.getFirstChild().getString(), replacement)) {
++      return true;
+     }
+-
+-    return true;
++    return false;
+   }
+-
+   /**
+    * @return Whether name is assigned in the expression rooted at node.
+    */

@@ -1,0 +1,83 @@
+    public JavaType refineSerializationType(final MapperConfig<?> config,
+            final Annotated a, final JavaType baseType) throws JsonMappingException
+    {
+        JavaType type = baseType;
+        final TypeFactory tf = config.getTypeFactory();
+        // First: maybe we had explicit static typing?
+        final TypeIdResolver idDef = idResolver(config, a, type, null, false, true);
+        if (idDef != null) {
+            // 11-Oct-2015, tatu: For 2.7, we'll need to delegate back to
+            //    now-deprecated secondary methods; this because while
+            //    direct sub-class not yet retrofitted may only override
+            //    those methods. With 2.8 or later we may consider removal
+            //    of these methods
+            /* That is, exact type to use is indicated by annotations; but we do
+             * NOT have to necessarily use static typing for that. So:
+             */
+            final JavaType refdType = idDef.getDefaultImpl();
+            if (refdType != null && refdType.getRawClass() != type.getRawClass()) {
+                type = refdType;
+            }
+        }
+        // Second: any explicit class annotations?
+        Class<?> serClass = findSerializationType(a);
+        if (serClass != null) {
+            try {
+                type = tf.constructSpecializedType(type, serClass);
+            } catch (IllegalArgumentException iae) {
+                throw new JsonMappingException(null,
+                        String.format("Failed to narrow type %s with annotation (value %s), from '%s': %s",
+                                type, serClass.getName(), a.getName(), iae.getMessage()),
+                        iae);
+            }
+        }
+        // Then further processing for container types
+        if (type.isContainerType()) {
+            Class<?> keyClass, contentClass;
+            // First: container (collection, map) key type:
+            if (type.isMapLikeType()) {
+                JavaType keyType = type.getKeyType();
+                keyClass = findSerializationKeyType(a, keyType);
+                if (keyClass != null) {
+                    if (keyType.hasRawClass(keyClass)) {
+                        keyType = keyType.withStaticTyping();
+                    } else {
+                        try {
+                            keyType = tf.constructSpecializedType(keyType, keyClass);
+                        } catch (IllegalArgumentException iae) {
+                            throw new JsonMappingException(null,
+                                    String.format("Failed to narrow key type of %s with concrete-type annotation (value %s), from '%s': %s",
+                                            type, keyClass.getName(), a.getName(), iae.getMessage()),
+                                    iae);
+                        }
+                    }
+                    type = ((MapLikeType) type).withKeyType(keyType);
+                }
+            } else {
+                keyClass = null;
+            }
+            // And then value types for all containers:
+            JavaType contentType = type.getContentType();
+            contentClass = findSerializationContentType(a, contentType);
+            if (contentClass != null) {
+                if (contentType.hasRawClass(contentClass)) {
+                    contentType = contentType.withStaticTyping();
+                } else {
+                    try {
+                        contentType = tf.constructSpecializedType(contentType, contentClass);
+                    } catch (IllegalArgumentException iae) {
+                        throw new JsonMappingException(null,
+                                String.format("Failed to narrow value type of %s with concrete-type annotation (value %s), from '%s': %s",
+                                        type, contentClass.getName(), a.getName(), iae.getMessage()),
+                                iae);
+                    }
+                }
+                type = type.withContentType(contentType);
+            }
+            // [databind#2463]: need to go through ContainerSerializer for proper handling
+            // (before it was fine as it would be done later, but with new framework it
+            // is done earlier)
+            type = _config.getContainerSerializer(type);
+        }
+        return type;
+    }

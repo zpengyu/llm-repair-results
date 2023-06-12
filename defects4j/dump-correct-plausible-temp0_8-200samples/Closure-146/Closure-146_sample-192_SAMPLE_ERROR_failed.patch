@@ -1,0 +1,50 @@
+diff --git a/src/com/google/javascript/rhino/jstype/JSType.java b/src/com/google/javascript/rhino/jstype/JSType.java
+index 576d6322..232f34e1 100644
+--- a/src/com/google/javascript/rhino/jstype/JSType.java
++++ b/src/com/google/javascript/rhino/jstype/JSType.java
+@@ -694,26 +694,28 @@ public abstract class JSType implements Serializable {
+    *         components may be {@code null}
+    */
+   public TypePair getTypesUnderInequality(JSType that) {
+-    // unions types
+     if (that instanceof UnionType) {
+-      TypePair p = that.getTypesUnderInequality(this);
+-      return new TypePair(p.typeB, p.typeA);
+-    }
+-
+-    // other types
+-    switch (this.testForEquality(that)) {
+-      case TRUE:
+-        return new TypePair(null, null);
+-
+-      case FALSE:
+-      case UNKNOWN:
+-        return new TypePair(this, that);
++      UnionType union = (UnionType) that;
++      boolean found = false;
++      List<JSType> newAlternates = new ArrayList<>();
++      for (JSType alternate : union.alternates) {
++        TypePair p = alternate.getTypesUnderInequality(this);
++        if (p.typeA == null || p.typeB == null) {
++          found = true;
++          break;
++        } else {
++          newAlternates.add(p.typeA);
++          newAlternates.add(p.typeB);
++        }
++      }
++      if (!found) {
++        return new TypePair(
++            JSType.fromTypeVar(newAlternates),
++            JSType.fromTypeVar(newAlternates));
++      }
+     }
+-
+-    // switch case is exhaustive
+-    throw new IllegalStateException();
++    return new TypePair(this, that);
+   }
+-
+   /**
+    * Computes the subset of {@code this} and {@code that} types under shallow
+    * equality.

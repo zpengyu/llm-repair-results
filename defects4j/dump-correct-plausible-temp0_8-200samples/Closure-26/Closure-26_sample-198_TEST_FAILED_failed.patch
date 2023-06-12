@@ -1,0 +1,18 @@
+diff --git a/src/com/google/javascript/jscomp/ProcessCommonJSModules.java b/src/com/google/javascript/jscomp/ProcessCommonJSModules.java
+index f516e584..aef525ff 100644
+--- a/src/com/google/javascript/jscomp/ProcessCommonJSModules.java
++++ b/src/com/google/javascript/jscomp/ProcessCommonJSModules.java
+@@ -187,9 +181,11 @@ public class ProcessCommonJSModules implements CompilerPass {
+       script.addChildToFront(IR.exprResult(
+           IR.call(IR.getprop(IR.name("goog"), IR.string("provide")),
+               IR.string(moduleName))).copyInformationFromForTree(script));
+-
++      // Rewrite require("name").
++      script.addChildToFront(IR.exprResult(
++          IR.call(IR.getprop(IR.name("goog"), IR.string("provide")),
++              IR.string(moduleName))).copyInformationFromForTree(script));
+       emitOptionalModuleExportsOverride(script, moduleName);
+-
+       // Rename vars to not conflict in global scope.
+       NodeTraversal.traverse(compiler, script, new SuffixVarsCallback(
+           moduleName));

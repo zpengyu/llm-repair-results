@@ -1,0 +1,32 @@
+diff --git a/src/com/google/javascript/jscomp/ProcessClosurePrimitives.java b/src/com/google/javascript/jscomp/ProcessClosurePrimitives.java
+index d1d12a3c..08fd276e 100644
+--- a/src/com/google/javascript/jscomp/ProcessClosurePrimitives.java
++++ b/src/com/google/javascript/jscomp/ProcessClosurePrimitives.java
+@@ -806,8 +804,26 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback
+         }
+         compiler.reportCodeChange();
+       }
++      if (explicitNode != null) {
++        explicitNode.detachFromParent();
++      }
+     }
+-
++  }
++  /**
++   * Try to create an assignment that doesn't change the value, but does
++   * attach type information.
++   */
++  private Node tryToTypeAssign(Node src) {
++    Node assign = IR.assign(src.cloneTree(), src);
++    assign.copyInformationFrom(src);
++    if (!mayWarnAboutRequired(src)) {
++      return assign;
++    }
++    Node result = IR.exprResult(assign);
++    result.copyInformationFrom(assign);
++    return result;
++  }
++}
+     /**
+      * Create the declaration node for this name, without inserting it
+      * into the AST.

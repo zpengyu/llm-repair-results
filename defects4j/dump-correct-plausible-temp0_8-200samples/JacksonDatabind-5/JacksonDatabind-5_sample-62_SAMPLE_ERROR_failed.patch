@@ -1,0 +1,25 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/introspect/AnnotatedClass.java b/src/main/java/com/fasterxml/jackson/databind/introspect/AnnotatedClass.java
+index 929076729..c1c4e8756 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/introspect/AnnotatedClass.java
++++ b/src/main/java/com/fasterxml/jackson/databind/introspect/AnnotatedClass.java
+@@ -637,6 +637,7 @@ public final class AnnotatedClass
+         List<Class<?>> parents = new ArrayList<Class<?>>();
+         parents.add(mixInCls);
+         ClassUtil.findSuperTypes(mixInCls, targetClass, parents);
++        // first: mixins for current target, then its supertypes:
+         for (Class<?> mixin : parents) {
+             for (Method m : mixin.getDeclaredMethods()) {
+                 if (!_isIncludableMemberMethod(m)) {
+@@ -655,7 +656,12 @@ public final class AnnotatedClass
+                      */
+                 } else {
+                     // Well, or, as per [Issue#515], multi-level merge within mixins...
++                    AnnotatedMethod prev = mixIns.find(m);
++                    if (prev == null) {
+                         mixIns.add(_constructMethod(m));
++                    } else {
++                        prev.addMixIns(_constructMethod(m));
++                    }
+                 }
+             }
+         }

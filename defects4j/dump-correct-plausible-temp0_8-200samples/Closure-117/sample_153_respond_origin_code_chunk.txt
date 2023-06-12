@@ -1,0 +1,55 @@
+private static String getReadableJSTypeName(Node n, boolean dereference) {
+  String name = getReadableJSTypeName(getJSType(n), n, dereference);
+  if (name != null) {
+    return name;
+  }
+
+  if (n.isGetProp()) {
+    Node receiver = n.getFirstChild();
+    Node prop = n.getLastChild();
+
+    JSType type = getJSType(receiver);
+    if (dereference) {
+      ObjectType dereferenced = type.dereference();
+      if (dereferenced != null) {
+        type = dereferenced;
+      }
+    }
+    // Don't show complex function names or anonymous types.
+    // Instead, try to get a human-readable type name.
+    if (type.isFunctionPrototypeType() ||
+        (type.toObjectType() != null &&
+         type.toObjectType().getConstructor() != null)) {
+      return type.toString() + "." + prop.getString();
+    }
+  }
+
+  return null;
+}
+
+private static String getReadableJSTypeName(JSType type, Node node,
+    boolean dereference) {
+  if (dereference) {
+    ObjectType dereferenced = type.dereference();
+    if (dereferenced != null) {
+      type = dereferenced;
+    }
+  }
+
+  if (type.isFunctionPrototypeType() ||
+      (type.toObjectType() != null &&
+       type.toObjectType().getConstructor() != null)) {
+    return type.toString();
+  }
+
+  String qualifiedName = node.getQualifiedName();
+  if (qualifiedName != null) {
+    return qualifiedName;
+  } else if (type.isFunctionType()) {
+    // Don't show complex function names.
+    return "function";
+  } else {
+    return type.toString();
+  }
+}
+

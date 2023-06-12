@@ -1,0 +1,38 @@
+diff --git a/src/main/java/com/fasterxml/jackson/core/util/JsonParserSequence.java b/src/main/java/com/fasterxml/jackson/core/util/JsonParserSequence.java
+index bed27f2b..5e955eab 100644
+--- a/src/main/java/com/fasterxml/jackson/core/util/JsonParserSequence.java
++++ b/src/main/java/com/fasterxml/jackson/core/util/JsonParserSequence.java
+@@ -32,7 +30,7 @@ public class JsonParserSequence extends JsonParserDelegate
+      *
+      * @since 2.8
+      */
+-
++    protected boolean _hasToken;
+     /*
+      *******************************************************
+      * Construction
+@@ -103,6 +95,12 @@ public class JsonParserSequence extends JsonParserDelegate
+     @Override
+     public JsonToken nextToken() throws IOException, JsonParseException
+     {
++        // [databind#2135]: need to skip calls of `nextToken()`, in case
++        // we have one pre-fetched
++        if (_hasToken) {
++            _hasToken = false;
++            return _currToken;
++        }
+         JsonToken t = delegate.nextToken();
+         if (t != null) return t;
+         while (switchToNext()) {
+@@ -146,7 +140,9 @@ public class JsonParserSequence extends JsonParserDelegate
+         if (_nextParser >= _parsers.length) {
+             return false;
+         }
+-        delegate = _parsers[_nextParser++];
++        JsonParser next = _parsers[_nextParser++];
++        delegate = next;
++        _hasToken = next.hasCurrentToken();
+         return true;
+     }
+ }
+\ No newline at end of file

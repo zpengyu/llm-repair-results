@@ -1,0 +1,22 @@
+@JacksonStdImpl
+public final static class DoubleSerializer extends Base<Object>
+{
+    final static DoubleSerializer instance = new DoubleSerializer();
+    public DoubleSerializer() { super(Double.class, JsonParser.NumberType.DOUBLE, "number"); }
+    @Override
+    public void serialize(Object value, JsonGenerator gen, SerializerProvider provider) throws IOException {
+        double doubleValue = value.doubleValue();
+        if (!Double.isNaN(doubleValue) && !Double.isInfinite(doubleValue)) {
+            gen.writeNumber(doubleValue);
+        } else {
+            provider.defaultSerializeValue(value, gen);
+        }
+    }
+    // IMPORTANT: copied from `NonTypedScalarSerializerBase`
+    @Override
+    public void serializeWithType(Object value, JsonGenerator gen,
+            SerializerProvider provider, TypeSerializer typeSer) throws IOException {
+        // no type info, just regular serialization
+        serialize(value, gen, provider);            
+    }
+}

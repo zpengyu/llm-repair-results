@@ -1,0 +1,33 @@
+diff --git a/src/main/java/org/apache/commons/compress/archivers/zip/ZipArchiveInputStream.java b/src/main/java/org/apache/commons/compress/archivers/zip/ZipArchiveInputStream.java
+index 5d4c0a82..861fa318 100644
+--- a/src/main/java/org/apache/commons/compress/archivers/zip/ZipArchiveInputStream.java
++++ b/src/main/java/org/apache/commons/compress/archivers/zip/ZipArchiveInputStream.java
+@@ -316,13 +297,26 @@ public ZipArchiveEntry getNextZipEntry() throws IOException {
+                         new BoundedInputStream(in, current.entry.getCompressedSize()));
+             } else if (current.entry.getMethod() == ZipMethod.BZIP2.getCode()) {
+                 current.in = new BZip2CompressorInputStream(new BoundedInputStream(in, current.entry.getCompressedSize()));
++            } else if(current.entry.getMethod() == ZipMethod.STORED.getCode()) {
++                current.in = new BoundedInputStream(in, current.entry.getCompressedSize());
+             }
+         }
+-        
+         entriesRead++;
+         return current.entry;
+     }
+-
++import uuid
++import json
++import requests
++class Data:
++    def __init__(self):
++        self.answers = {}
++        self.uuid = uuid.uuid1()
++    def addAnswer(self, key, answer):
++        self.answers[key] = answer
++    def toJSON(self):
++        return json.dumps(self, default=lambda o: o.__dict__, 
++            sort_keys=True, indent=4)
++answer = Data()
+     /**
+      * Fills the given array with the first local file header and
+      * deals with splitting/spanning markers that may prefix the first

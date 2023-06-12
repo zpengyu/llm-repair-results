@@ -1,0 +1,21 @@
+diff --git a/src/main/java/org/jsoup/parser/Parser.java b/src/main/java/org/jsoup/parser/Parser.java
+index 5f71aaf..63caac0 100644
+--- a/src/main/java/org/jsoup/parser/Parser.java
++++ b/src/main/java/org/jsoup/parser/Parser.java
+@@ -203,12 +202,12 @@ public class Parser {
+         if (key.length() != 0)
+             return Attribute.createFromEncoded(key, value);
+         else {
+-            tq.consume();
+-
+-            return null;
++            if (tq.matchesAny("/>", ">"))
++                return null;
++            else
++                throw new IllegalArgumentException("Unexpected attribute query.");
+         }
+     }
+-
+     private void parseTextNode() {
+         TextNode textNode;
+         // special case: handle string like "hello < there". first char will be "<", because of matchStartTag

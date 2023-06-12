@@ -1,0 +1,27 @@
+diff --git a/src/main/java/org/jsoup/nodes/FormElement.java b/src/main/java/org/jsoup/nodes/FormElement.java
+index 256eb1b..5914105 100644
+--- a/src/main/java/org/jsoup/nodes/FormElement.java
++++ b/src/main/java/org/jsoup/nodes/FormElement.java
+@@ -77,10 +76,9 @@ public class FormElement extends Element {
+         // iterate the form control elements and accumulate their values
+         for (Element el: elements) {
+             if (!el.tag().isFormSubmittable()) continue; // contents are form listable, superset of submitable
++            if (!el.hasAttr("name")) continue; // must have a name
+             String name = el.attr("name");
+-            if (name.length() == 0) continue;
+             String type = el.attr("type");
+-
+             if ("select".equals(el.tagName())) {
+                 Elements options = el.select("option[selected]");
+                 boolean set = false;
+@@ -100,7 +98,9 @@ public class FormElement extends Element {
+                     data.add(HttpConnection.KeyVal.create(name, val));
+                 }
+             } else {
+-                data.add(HttpConnection.KeyVal.create(name, el.val()));
++                String val = el.val();
++                if (val != null)
++                    data.add(HttpConnection.KeyVal.create(name, val));
+             }
+         }
+         return data;

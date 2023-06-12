@@ -1,0 +1,20 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/deser/BeanDeserializer.java b/src/main/java/com/fasterxml/jackson/databind/deser/BeanDeserializer.java
+index 3c89dc109..dd2e5dda5 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/deser/BeanDeserializer.java
++++ b/src/main/java/com/fasterxml/jackson/databind/deser/BeanDeserializer.java
+@@ -801,6 +798,15 @@ public class BeanDeserializer
+                 handleIgnoredProperty(p, ctxt, handledType(), propName);
+                 continue;
+             }
++            // how about any setter? We'll get copies but...
++            if (_anySetter != null) {
++                buffer.bufferAnyProperty(_anySetter, propName,
++                        _anySetter.deserialize(p, ctxt));
++                continue;
++            }
++            // 29-Nov-2016, tatu: probably should try to avoid sending content
++            //    both to any setter AND buffer... but, for now, the only thing
++            //    we can do.
+             // 29-Nov-2016, tatu: probably should try to avoid sending content
+             //    both to any setter AND buffer... but, for now, the only thing
+             //    we can do.

@@ -1,0 +1,52 @@
+diff --git a/src/main/java/org/jsoup/parser/HtmlTreeBuilderState.java b/src/main/java/org/jsoup/parser/HtmlTreeBuilderState.java
+index 9bb0006..8d3007a 100644
+--- a/src/main/java/org/jsoup/parser/HtmlTreeBuilderState.java
++++ b/src/main/java/org/jsoup/parser/HtmlTreeBuilderState.java
+@@ -760,27 +760,29 @@ enum HtmlTreeBuilderState {
+             return true;
+         }
+ 
+-        boolean anyOtherEndTag(Token t, HtmlTreeBuilder tb) {
+-            String name = t.asEndTag().normalName();
+-            ArrayList<Element> stack = tb.getStack();
+-            for (int pos = stack.size() -1; pos >= 0; pos--) {
+-                Element node = stack.get(pos);
+-                if (node.nodeName().equals(name)) {
+-                    tb.generateImpliedEndTags(name);
+-                    if (!name.equals(tb.currentElement().nodeName()))
+-                        tb.error(this);
+-                    tb.popStackToClose(name);
+-                    break;
+-                } else {
+-                    if (tb.isSpecial(node)) {
+-                        tb.error(this);
+-                        return false;
+-                    }
+-                }
++    boolean anyOtherEndTag(Token t, HtmlTreeBuilder tb) {
++        String name = t.asEndTag().normalName();
++        ArrayList<Element> stack = tb.getStack();
++        int pos;
++        for (pos = stack.size() -1; pos >= 0; pos--) {
++            Element node = stack.get(pos);
++            if (node.nodeName().equals(name)) {
++                break;
+             }
++            if (tb.isSpecial(node)) {
++                tb.error(this);
++                return false;
++            }
++        }
++        if (pos == -1) {
+             return true;
+         }
+-    },
++        tb.generateImpliedEndTags(name);
++        if (!name.equals(tb.currentElement().nodeName()))
++            tb.error(this);
++        tb.popStackToClose(name);
++        return true;
++    }    },
+     Text {
+         // in script, style etc. normally treated as data tags
+         boolean process(Token t, HtmlTreeBuilder tb) {

@@ -1,0 +1,108 @@
+###Provide a fix for the buggy function
+###Buggy Function
+class FibonacciExample {
+    public static void main(String args[]) {
+        int n1 = 0, n2 = 1, n3, i, count = 10;
+
+        System.out.print(n1 + " " + n2);
+
+        for (i = 2; i < count; ++i) {
+            n3 = n1 - n2;
+            System.out.print(" " + n3);
+            n1 = n2;
+            n2 = n3;
+        }
+    }
+}
+
+###Fixed Function
+class FibonacciExample {
+    public static void main(String args[]) {
+        int n1 = 0, n2 = 1, n3, i, count = 10;
+
+        System.out.print(n1 + " " + n2);
+
+        for (i = 2; i < count; ++i) {
+            n3 = n1 + n2;
+            System.out.print(" " + n3);
+            n1 = n2;
+            n2 = n3;
+        }
+    }
+}
+
+###Provide a fix for the buggy function
+###Buggy Function
+public TokenBuffer deserialize(JsonParser jp, DeserializationContext ctxt) throws IOException
+{
+    copyCurrentStructure(jp);
+    return this;
+}
+###Fixed Function
+public TokenBuffer deserialize(JsonParser jp, DeserializationContext ctxt) throws IOException
+{
+    if (jp.getCurrentTokenId() != JsonToken.FIELD_NAME.id()) {
+        copyCurrentStructure(jp);
+        return this;
+    }
+    /* 28-Oct-2014, tatu: As per #592, need to support a special case of starting from
+     *    FIELD_NAME, which is taken to mean that we are missing START_OBJECT, but need
+     *    to assume one did exist.
+     */
+    JsonToken t;
+    writeStartObject();
+    do {
+        copyCurrentStructure(jp);
+    } while ((t = jp.nextToken()) == JsonToken.FIELD_NAME);
+    if (t != JsonToken.END_OBJECT) {
+        throw ctxt.mappingException("Expected END_OBJECT after copying contents of a JsonParser into TokenBuffer, got "+t);
+    }
+    writeEndObject();
+    return this;
+}
+###Provide a fix for the buggy function
+###Buggy Function
+    protected JavaType _fromVariable(TypeVariable<?> type, TypeBindings context)
+    {
+        final String name = type.getName();
+        // 19-Mar-2015: Without context, all we can check are bounds.
+        if (context == null) {
+            // And to prevent infinite loops, now need this:
+            return _unknownType();
+        } else {
+            // Ok: here's where context might come in handy!
+            /* 19-Mar-2015, tatu: As per [databind#609], may need to allow
+             *   unresolved type variables to handle some cases where bounds
+             *   are enough. Let's hope it does not hide real fail cases.
+             */
+            JavaType actualType = context.findType(name);
+            if (actualType != null) {
+                return actualType;
+            }
+        }
+
+        /* 29-Jan-2010, tatu: We used to throw exception here, if type was
+         *   bound: but the problem is that this can occur for generic "base"
+         *   method, overridden by sub-class. If so, we will want to ignore
+         *   current type (for method) since it will be masked.
+         */
+        Type[] bounds = type.getBounds();
+
+        // With type variables we must use bound information.
+        // Theoretically this gets tricky, as there may be multiple
+        // bounds ("... extends A & B"); and optimally we might
+        // want to choose the best match. Also, bounds are optional;
+        // but here we are lucky in that implicit "Object" is
+        // added as bounds if so.
+        // Either way let's just use the first bound, for now, and
+        // worry about better match later on if there is need.
+
+        /* 29-Jan-2010, tatu: One more problem are recursive types
+         *   (T extends Comparable<T>). Need to add "placeholder"
+         *   for resolution to catch those.
+         */
+        context._addPlaceholder(name);
+        return _constructType(bounds[0], context);
+    }
+
+###Fixed Function

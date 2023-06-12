@@ -1,0 +1,29 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/node/TreeTraversingParser.java b/src/main/java/com/fasterxml/jackson/databind/node/TreeTraversingParser.java
+index afb9f1869..39d4afbb2 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/node/TreeTraversingParser.java
++++ b/src/main/java/com/fasterxml/jackson/databind/node/TreeTraversingParser.java
+@@ -360,9 +360,8 @@ public class TreeTraversingParser extends ParserMinimalBase
+         if (n != null) {
+             // [databind#2096]: although `binaryValue()` works for real binary node
+             // and embedded "POJO" node, coercion from TextNode may require variant, so:
+-            byte[] data = n.binaryValue();
+-            if (data != null) {
+-                return data;
++            if (n.isBinary()) {
++                return n.binaryValue();
+             }
+             if (n.isPojo()) {
+                 Object ob = ((POJONode) n).getPojo();
+@@ -370,6 +369,12 @@ public class TreeTraversingParser extends ParserMinimalBase
+                     return (byte[]) ob;
+                 }
+             }
++            // coerce?
++            if (b64variant != null) {
++                if (n.isTextual()) {
++                    return b64variant.decode(n.textValue());
++                }
++            }
+         }
+         // otherwise return null to mark we have no binary content
+         return null;

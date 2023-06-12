@@ -1,0 +1,60 @@
+diff --git a/src/com/google/javascript/jscomp/CodeGenerator.java b/src/com/google/javascript/jscomp/CodeGenerator.java
+index a9d0a5b0..6907338a 100644
+--- a/src/com/google/javascript/jscomp/CodeGenerator.java
++++ b/src/com/google/javascript/jscomp/CodeGenerator.java
+@@ -954,10 +954,10 @@ class CodeGenerator {
+ 
+   /** Helper to escape javascript string as well as regular expression */
+   static String strEscape(String s, char quote,
+-                          String doublequoteEscape,
+-                          String singlequoteEscape,
+-                          String backslashEscape,
+-                          CharsetEncoder outputCharsetEncoder) {
++       String doublequoteEscape,
++       String singlequoteEscape,
++       String backslashEscape,
++       CharsetEncoder outputCharsetEncoder) {
+     StringBuilder sb = new StringBuilder(s.length() + 2);
+     sb.append(quote);
+     for (int i = 0; i < s.length(); i++) {
+@@ -1023,7 +1021,39 @@ class CodeGenerator {
+     sb.append(quote);
+     return sb.toString();
+   }
+-
++public static void appendHexJavaScriptRepresentation(
++      StringBuilder sb, char c) {
++    sb.append("\\u");
++    appendHexJavaScriptRepresentation(sb, c, 4);
++  }
++  /**
++   * Append a hexadecimal JavaScript representation of a character.
++   *
++   * <p>Unicode characters between 0x10000 and 0x10FFFF are escaped using a
++   * 5-digit hexadecimal representation.
++   *
++   * @param sb {@link StringBuilder} to append to.
++   * @param c character to convert to hex.
++   * @param minDigits minimum number of digits to generate.
++   *     Between 1 and 4.
++   */
++  public static void appendHexJavaScriptRepresentation(
++      StringBuilder sb, char c, int minDigits) {
++    int n = c;
++    if (n > 0x10FFFF) {
++      // Handle a bug in the method from which this was copied.
++      // See http://code.google.com/p/closure-compiler/issues/detail?id=717
++      n = 0x10FFFF;
++    }
++    for (int shift = 12; shift >= 0; shift -= 4) {
++      int digit = 0xf & (n >> shift);
++      // This optimization keeps the output small for the most common case
++      // where the character is not unicode.
++      if (digit != 0 || shift < minDigits * 4) {
++        sb.append(HEX_CHARS[digit]);
++      }
++    }
++  }
+   static String identifierEscape(String s) {
+     // First check if escaping is needed at all -- in most cases it isn't.
+     if (NodeUtil.isLatin(s)) {

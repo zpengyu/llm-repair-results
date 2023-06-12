@@ -1,0 +1,109 @@
+diff --git a/src/java/org/apache/commons/jxpath/ri/axes/AttributeContext.java b/src/java/org/apache/commons/jxpath/ri/axes/AttributeContext.java
+index 25d0931..b3eabee 100644
+--- a/src/java/org/apache/commons/jxpath/ri/axes/AttributeContext.java
++++ b/src/java/org/apache/commons/jxpath/ri/axes/AttributeContext.java
+@@ -29,63 +29,50 @@ import org.apache.commons.jxpath.ri.model.NodePointer;
+  * @author Dmitri Plotnikov
+  * @version $Revision$ $Date$
+  */
+-public class AttributeContext extends EvalContext {
+-
+-    private NodeTest nodeTest;
+-    private boolean setStarted = false;
+-    private NodeIterator iterator;
+-    private NodePointer currentNodePointer;
+-
+-    /**
+-     * @param parentContext represents the previous step on the path
+-     * @param nodeTest is the name of the attribute we are looking for
+-     */
+-    public AttributeContext(EvalContext parentContext, NodeTest nodeTest) {
+-        super(parentContext);
+-        this.nodeTest = nodeTest;
+-    }
+-
+-    public NodePointer getCurrentNodePointer() {
+-        return currentNodePointer;
+-    }
+-
+-    public void reset() {
+-        setStarted = false;
+-        iterator = null;
+-        super.reset();
+-    }
+-
+-    public boolean setPosition(int position) {
+-        if (position < getCurrentPosition()) {
+-            reset();
+-        }
+-
+-        while (getCurrentPosition() < position) {
+-            if (!nextNode()) {
+-                return false;
+-            }
+-        }
+-        return true;
++/**
++ * @param parentContext represents the previous step on the path
++ * @param nodeTest is the name of the attribute we are looking for
++ */
++public AttributeContext(EvalContext parentContext, NodeTest nodeTest) {
++    super(parentContext);
++    this.nodeTest = nodeTest;
++}
++public NodePointer getCurrentNodePointer() {
++    return currentNodePointer;
++}
++public void reset() {
++    setStarted = false;
++    iterator = null;
++    super.reset();
++}
++public boolean setPosition(int position) {
++    if (position < getCurrentPosition()) {
++        reset();
+     }
+-
+-    public boolean nextNode() {
+-        super.setPosition(getCurrentPosition() + 1);
+-        if (!setStarted) {
+-            setStarted = true;
+-            if (!(nodeTest instanceof NodeNameTest)) {
+-                return false;
+-            }
+-            QName name = ((NodeNameTest) nodeTest).getNodeName();
+-            iterator =
+-                parentContext.getCurrentNodePointer().attributeIterator(name);
+-        }
+-        if (iterator == null) {
++    while (getCurrentPosition() < position) {
++        if (!nextNode()) {
+             return false;
+         }
+-        if (!iterator.setPosition(iterator.getPosition() + 1)) {
++    }
++    return true;
++}
++public boolean nextNode() {
++    super.setPosition(getCurrentPosition() + 1);
++    if (!setStarted) {
++        setStarted = true;
++        if (!(nodeTest instanceof NodeNameTest)) {
+             return false;
+         }
+-        currentNodePointer = iterator.getNodePointer();
+-        return true;
++        QName name = ((NodeNameTest) nodeTest).getNodeName();
++        iterator =
++            parentContext.getCurrentNodePointer().attributeIterator(name);
++    }
++    if (iterator == null) {
++        return false;
++    }
++    if (!iterator.setPosition(iterator.getPosition() + 1)) {
++        return false;
+     }
++    currentNodePointer = iterator.getNodePointer();
++    return true;
+ }
+\ No newline at end of file

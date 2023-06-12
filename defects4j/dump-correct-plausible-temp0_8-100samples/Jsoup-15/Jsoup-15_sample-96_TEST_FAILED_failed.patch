@@ -1,0 +1,29 @@
+diff --git a/src/main/java/org/jsoup/parser/TreeBuilderState.java b/src/main/java/org/jsoup/parser/TreeBuilderState.java
+index 169a48a..f2fb3bd 100644
+--- a/src/main/java/org/jsoup/parser/TreeBuilderState.java
++++ b/src/main/java/org/jsoup/parser/TreeBuilderState.java
+@@ -1443,10 +1443,20 @@ enum TreeBuilderState {
+     },
+     ForeignContent {
+         boolean process(Token t, TreeBuilder tb) {
+-            return true;
+-            // todo: implement. Also; how do we get here?
+-        }
+-    };
++            switch (t.type) {
++                case Doctype:
++                    tb.error(this);
++                    break;
++                case StartTag:
++                case EndTag:
++                case Comment:
++                case Character:
++                case EOF:
++                    tb.error(this);
++                    break;
++            }
++            return false;
++        }    };
+ 
+     private static String nullString = String.valueOf(0x0000);
+ 

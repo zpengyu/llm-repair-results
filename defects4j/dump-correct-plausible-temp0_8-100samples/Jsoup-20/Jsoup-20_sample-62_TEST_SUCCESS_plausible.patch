@@ -1,0 +1,25 @@
+diff --git a/src/main/java/org/jsoup/helper/DataUtil.java b/src/main/java/org/jsoup/helper/DataUtil.java
+index 4bdf4fe..3e60d1e 100644
+--- a/src/main/java/org/jsoup/helper/DataUtil.java
++++ b/src/main/java/org/jsoup/helper/DataUtil.java
+@@ -95,13 +95,18 @@ public class DataUtil {
+             // there are times where there is a spurious byte-order-mark at the start of the text. Shouldn't be present
+             // in utf-8. If after decoding, there is a BOM, strip it; otherwise will cause the parser to go straight
+             // into head mode
+-
++            docData = stripBOM(docData);
+             doc = parser.parseInput(docData, baseUri);
+             doc.outputSettings().charset(charsetName);
+         }
+         return doc;
+     }
+-
++    private static String stripBOM(String string) {
++        if (string.charAt(0) == '\uFEFF') {
++            string = string.substring(1);
++        }
++        return string;
++    }
+     static ByteBuffer readToByteBuffer(InputStream inStream) throws IOException {
+         byte[] buffer = new byte[bufferSize];
+         ByteArrayOutputStream outStream = new ByteArrayOutputStream(bufferSize);

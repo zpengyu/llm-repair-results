@@ -1,0 +1,23 @@
+diff --git a/src/com/google/javascript/jscomp/CodeConsumer.java b/src/com/google/javascript/jscomp/CodeConsumer.java
+index 47ecfb1d..cea33f83 100644
+--- a/src/com/google/javascript/jscomp/CodeConsumer.java
++++ b/src/com/google/javascript/jscomp/CodeConsumer.java
+@@ -262,10 +261,16 @@ abstract class CodeConsumer {
+         add(Long.toString(value));
+       }
+     } else {
+-      add(String.valueOf(x));
++      String stringValue = String.valueOf(x);
++      if (stringValue.indexOf("E") != -1) {
++        String mantissa = stringValue.substring(0, stringValue.indexOf("E"));
++        String exponent = stringValue.substring(stringValue.indexOf("E") + 1);
++        add(mantissa + "E" + exponent);
++      } else {
++        add(stringValue);
++      }
+     }
+   }
+-
+   static boolean isNegativeZero(double x) {
+     return x == 0.0 && Math.copySign(1, x) == -1.0;
+   }

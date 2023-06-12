@@ -1,0 +1,24 @@
+diff --git a/src/com/google/javascript/jscomp/TypeInference.java b/src/com/google/javascript/jscomp/TypeInference.java
+index 53e8cb48..d2f19a1e 100644
+--- a/src/com/google/javascript/jscomp/TypeInference.java
++++ b/src/com/google/javascript/jscomp/TypeInference.java
+@@ -556,8 +553,8 @@ class TypeInference
+         //boolean isVarTypeBetter = isVarDeclaration &&
+         //    (varType.restrictByNotNullOrUndefined().isSubtype(resultType)
+         //     || !resultType.isSubtype(varType));
+-
+-
++        JSType varType = var.getType();
++        JSType leastSupertype = varType.getLeastSupertype(resultType);
+         if (isVarTypeBetter) {
+           redeclareSimpleVar(scope, left, resultType);
+         }
+@@ -567,7 +563,7 @@ class TypeInference
+         if (var != null && var.isTypeInferred()) {
+           JSType oldType = var.getType();
+           var.setType(oldType == null ?
+-              resultType : oldType.getLeastSupertype(resultType));
++              resultType : leastSupertype);
+         }
+         break;
+       case Token.GETPROP:

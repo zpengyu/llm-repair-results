@@ -1,0 +1,91 @@
+diff --git a/src/java/org/apache/commons/cli2/option/GroupImpl.java b/src/java/org/apache/commons/cli2/option/GroupImpl.java
+index 27640c1..b7973c7 100644
+--- a/src/java/org/apache/commons/cli2/option/GroupImpl.java
++++ b/src/java/org/apache/commons/cli2/option/GroupImpl.java
+@@ -234,53 +234,43 @@ public class GroupImpl
+         } // [END process each command line token
+     }
+ 
+-    public void validate(final WriteableCommandLine commandLine)
+-        throws OptionException {
+-        // number of options found
+-        int present = 0;
+-
+-        // reference to first unexpected option
+-        Option unexpected = null;
+-
+-        for (final Iterator i = options.iterator(); i.hasNext();) {
+-            final Option option = (Option) i.next();
+-
+-            // needs validation?
+-            boolean validate = option.isRequired() || option instanceof Group;
+-            if (validate) {
+-                option.validate(commandLine);
+-            }
+-
+-            // if the child option is present then validate it
+-            if (commandLine.hasOption(option)) {
+-                if (++present > maximum) {
+-                    unexpected = option;
+-
+-                    break;
+-                }
+-
+-                option.validate(commandLine);
+-            }
+-        }
+-
+-        // too many options
+-        if (unexpected != null) {
+-            throw new OptionException(this, ResourceConstants.UNEXPECTED_TOKEN,
+-                                      unexpected.getPreferredName());
+-        }
+-
+-        // too few option
+-        if (present < minimum) {
+-            throw new OptionException(this, ResourceConstants.MISSING_OPTION);
++public void validate(final WriteableCommandLine commandLine)
++    throws OptionException {
++    // number of options found
++    int present = 0;
++    // reference to first unexpected option
++    Option unexpected = null;
++    for (final Iterator i = options.iterator(); i.hasNext();) {
++        final Option option = (Option) i.next();
++        // needs validation?
++        boolean validate = option.isRequired() || option instanceof Group;
++        if (validate) {
++            option.validate(commandLine);
+         }
+-
+-        // validate each anonymous argument
+-        for (final Iterator i = anonymous.iterator(); i.hasNext();) {
+-            final Option option = (Option) i.next();
++        // if the child option is present then validate it
++        if (commandLine.hasOption(option)) {
++            if (++present > maximum) {
++                unexpected = option;
++                break;
++            }
+             option.validate(commandLine);
+         }
+     }
+-
++    // too many options
++    if (unexpected != null) {
++        throw new OptionException(this, ResourceConstants.UNEXPECTED_TOKEN,
++                                  unexpected.getPreferredName());
++    }
++    // too few option
++    if (present < minimum) {
++        throw new OptionException(this, ResourceConstants.MISSING_OPTION);
++    }
++    // validate each anonymous argument
++    for (final Iterator i = anonymous.iterator(); i.hasNext();) {
++        final Option option = (Option) i.next();
++        option.validate(commandLine);
++    }
++}
+     public String getPreferredName() {
+         return name;
+     }

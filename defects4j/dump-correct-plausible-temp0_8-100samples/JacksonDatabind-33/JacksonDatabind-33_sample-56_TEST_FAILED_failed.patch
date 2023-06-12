@@ -1,0 +1,44 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/introspect/JacksonAnnotationIntrospector.java b/src/main/java/com/fasterxml/jackson/databind/introspect/JacksonAnnotationIntrospector.java
+index f66075ef7..2504628b8 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/introspect/JacksonAnnotationIntrospector.java
++++ b/src/main/java/com/fasterxml/jackson/databind/introspect/JacksonAnnotationIntrospector.java
+@@ -730,30 +730,28 @@ public class JacksonAnnotationIntrospector
+     @Override
+     public PropertyName findNameForSerialization(Annotated a)
+     {
+-        String name = null;
+-
++        PropertyName name = null;
+         JsonGetter jg = _findAnnotation(a, JsonGetter.class);
+         if (jg != null) {
+-            name = jg.value();
++            name = PropertyName.construct(jg.value());
+         } else {
+             JsonProperty pann = _findAnnotation(a, JsonProperty.class);
+             if (pann != null) {
+-                name = pann.value();
+-                /* 22-Apr-2014, tatu: Should figure out a better way to do this, but
+-                 *   it's actually bit tricky to do it more efficiently (meta-annotations
+-                 *   add more lookups; AnnotationMap costs etc)
+-                 */
++                name = PropertyName.construct(pann.value());
+             } else if (_hasAnnotation(a, JsonSerialize.class)
+                     || _hasAnnotation(a, JsonView.class)
+                     || _hasAnnotation(a, JsonRawValue.class)) {
+-                name = "";
++                name = PropertyName.USE_DEFAULT;
+             } else {
+                 return null;
+             }
+         }
+-        return PropertyName.construct(name);
++        // Null name is only to be used with 'use default'; otherwise it suppresses
++        if (name == null || name.isEmpty()) {
++            name = PropertyName.USE_DEFAULT;
++        }
++        return name;
+     }
+-
+     @Override
+     public boolean hasAsValueAnnotation(AnnotatedMethod am) {
+         JsonValue ann = _findAnnotation(am, JsonValue.class);

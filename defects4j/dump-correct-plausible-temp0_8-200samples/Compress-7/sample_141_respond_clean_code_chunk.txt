@@ -1,0 +1,23 @@
+    public static String parseName(byte[] buffer, final int offset, final int length) {
+        StringBuffer result = new StringBuffer(length);
+        int          end = offset + length;
+        for (int i = offset; i < end; ++i) {
+            if (buffer[i] == 0) {
+                break;
+            }
+            else if (buffer[i] == 0x5c) {
+                //if (buffer[i + 1] == 0x75) {
+                    char c = (char) (parseHex(buffer, i + 2, 2) & 0xff);
+                    if (c == 0) {
+                        break;
+                    }
+                    i += 2;
+                    result.append(c);
+                //}
+            }
+            else {
+                result.append((char) buffer[i]);
+            }
+        }
+        return result.toString();
+    }

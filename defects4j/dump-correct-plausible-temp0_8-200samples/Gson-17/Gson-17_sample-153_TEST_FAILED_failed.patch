@@ -1,0 +1,23 @@
+diff --git a/gson/src/main/java/com/google/gson/DefaultDateTypeAdapter.java b/gson/src/main/java/com/google/gson/DefaultDateTypeAdapter.java
+index 70c30e14..ca06f929 100644
+--- a/gson/src/main/java/com/google/gson/DefaultDateTypeAdapter.java
++++ b/gson/src/main/java/com/google/gson/DefaultDateTypeAdapter.java
+@@ -96,10 +96,15 @@ final class DefaultDateTypeAdapter extends TypeAdapter<Date> {
+ 
+   @Override
+   public Date read(JsonReader in) throws IOException {
+-    if (in.peek() != JsonToken.STRING) {
+-      throw new JsonParseException("The date should be a string value");
++    Date date;
++    if (in.peek() == JsonToken.NUMBER) {
++      long timestamp = in.nextLong();
++      date = new Date(timestamp);
++    } else if (in.peek() == JsonToken.STRING) {
++      date = deserializeToDate(in.nextString());
++    } else {
++      throw new JsonParseException("The date should be a string value or a number value.");
+     }
+-    Date date = deserializeToDate(in.nextString());
+     if (dateType == Date.class) {
+       return date;
+     } else if (dateType == Timestamp.class) {

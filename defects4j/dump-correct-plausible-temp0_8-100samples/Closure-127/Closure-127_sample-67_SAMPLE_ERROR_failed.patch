@@ -1,0 +1,60 @@
+diff --git a/src/com/google/javascript/jscomp/UnreachableCodeElimination.java b/src/com/google/javascript/jscomp/UnreachableCodeElimination.java
+index 3b323395..a85c4985 100644
+--- a/src/com/google/javascript/jscomp/UnreachableCodeElimination.java
++++ b/src/com/google/javascript/jscomp/UnreachableCodeElimination.java
+@@ -84,7 +84,7 @@ class UnreachableCodeElimination implements CompilerPass {
+       });
+   }
+ 
+-  private class EliminationPass extends AbstractShallowCallback {
++   private class EliminationPass extends AbstractShallowCallback {
+     private final ControlFlowGraph<Node> cfg;
+     private EliminationPass(ControlFlowGraph<Node> cfg) {
+       this.cfg = cfg;
+@@ -126,7 +124,7 @@ class UnreachableCodeElimination implements CompilerPass {
+      *     the target of that useless jump recursively.
+      */
+     @SuppressWarnings("fallthrough")
+-    private void tryRemoveUnconditionalBranching(Node n) {
++    private Node tryRemoveUnconditionalBranching(Node n) {
+       /*
+        * For each unconditional branching control flow node, check to see
+        * if the ControlFlowAnalysis.computeFollowNode of that node is same as
+@@ -136,18 +134,14 @@ class UnreachableCodeElimination implements CompilerPass {
+        * if-else conversion but it handles more complicated switch statements
+        * much more nicely.
+        */
+-
+       // If n is null the target is the end of the function, nothing to do.
+       if (n == null) {
+-         return;
++         return null;
+       }
+-
+       DiGraphNode<Node, Branch> gNode = cfg.getDirectedGraphNode(n);
+-
+       if (gNode == null) {
+-        return;
++        return null;
+       }
+-
+       switch (n.getType()) {
+         case Token.RETURN:
+           if (n.hasChildren()) {
+@@ -169,6 +162,9 @@ class UnreachableCodeElimination implements CompilerPass {
+             Node nextCfgNode = outEdges.get(0).getDestination().getValue();
+             if (nextCfgNode == fallThrough) {
+               removeNode(n);
++              return null;
++            } else {
++              return tryRemoveUnconditionalBranching(nextCfgNode);
+             }
+           }
+       }
+@@ -246,5 +232,4 @@ class UnreachableCodeElimination implements CompilerPass {
+       }
+       NodeUtil.removeChild(n.getParent(), n);
+     }
+-  }
+-}
++  }}

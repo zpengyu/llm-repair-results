@@ -1,0 +1,31 @@
+diff --git a/src/main/java/org/jsoup/helper/W3CDom.java b/src/main/java/org/jsoup/helper/W3CDom.java
+index f866f43..d3ecb8e 100644
+--- a/src/main/java/org/jsoup/helper/W3CDom.java
++++ b/src/main/java/org/jsoup/helper/W3CDom.java
+@@ -87,9 +86,8 @@ public class W3CDom {
+                 String prefix = updateNamespaces(sourceEl);
+                 String namespace = namespacesStack.peek().get(prefix);
+                 String tagName = sourceEl.tagName();
+-
+                 Element el =
+-                    doc.createElementNS(namespace, tagName);
++                        doc.createElementNS(namespace, tagName);
+                 copyAttributes(sourceEl, el);
+                 if (dest == null) { // sets up the root
+                     doc.appendChild(el);
+@@ -99,8 +97,14 @@ public class W3CDom {
+                 dest = el; // descend
+             } else if (source instanceof org.jsoup.nodes.TextNode) {
+                 org.jsoup.nodes.TextNode sourceText = (org.jsoup.nodes.TextNode) source;
+-                Text text = doc.createTextNode(sourceText.getWholeText());
++                String src = sourceText.getWholeText();
++                String[] lines = src.split("\n");
++                Text text = doc.createTextNode("");
+                 dest.appendChild(text);
++                for (String line : lines) {
++                    text.appendData(line);
++                    dest.appendChild(doc.createTextNode("\n"));
++                }
+             } else if (source instanceof org.jsoup.nodes.Comment) {
+                 org.jsoup.nodes.Comment sourceComment = (org.jsoup.nodes.Comment) source;
+                 Comment comment = doc.createComment(sourceComment.getData());

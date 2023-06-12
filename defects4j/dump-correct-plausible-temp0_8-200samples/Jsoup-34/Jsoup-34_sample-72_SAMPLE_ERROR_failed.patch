@@ -1,0 +1,41 @@
+diff --git a/src/main/java/org/jsoup/parser/CharacterReader.java b/src/main/java/org/jsoup/parser/CharacterReader.java
+index bcda218..76854bc 100644
+--- a/src/main/java/org/jsoup/parser/CharacterReader.java
++++ b/src/main/java/org/jsoup/parser/CharacterReader.java
+@@ -80,18 +80,25 @@ class CharacterReader {
+      * @return offset between current position and next instance of target. -1 if not found.
+      */
+     int nextIndexOf(CharSequence seq) {
+-        // doesn't handle scanning for surrogates
+-        char startChar = seq.charAt(0);
+-        for (int offset = pos; offset < length; offset++) {
++        return nextIndexOf(seq, pos);
++    }
++    int nextIndexOf(CharSequence seq, int start) {
++        int slen = seq.length();
++        if (slen == 1) {
++            return indexOf(seq.charAt(0), start);
++        }
++        if (slen == 0) {
++            return start;
++        }
++        for (int offset = start; offset < length - slen + 1; offset++) {
++            int i = offset;
++            int j = 0;
+             // scan to first instance of startchar:
+-            if (startChar != input[offset])
+-                while(++offset < length && startChar != input[offset]);
+-            int i = offset + 1;
+-            int last = i + seq.length()-1;
+-            if (offset < length) {
+-                for (int j = 1; i < last && seq.charAt(j) == input[i]; i++, j++);
+-                if (i == last) // found full sequence
+-                    return offset - pos;
++            while (i < length && j < slen && input[i] != seq.charAt(j)) {
++                i++;
++            }
++            if (j == slen) { // found full sequence
++                return offset;
+             }
+         }
+         return -1;

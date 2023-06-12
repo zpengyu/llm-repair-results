@@ -1,0 +1,42 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/deser/impl/CreatorCollector.java b/src/main/java/com/fasterxml/jackson/databind/deser/impl/CreatorCollector.java
+index fd590d628..50dc41784 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/deser/impl/CreatorCollector.java
++++ b/src/main/java/com/fasterxml/jackson/databind/deser/impl/CreatorCollector.java
+@@ -286,19 +285,29 @@ public class CreatorCollector
+                 if (!explicit) {
+                     return;
+                 }
+-                // both explicit: verify
+-                // otherwise only verify if neither explicitly annotated.
+             }
+-
+             // one more thing: ok to override in sub-class
+-            if (oldOne.getClass() == newOne.getClass()) {
++            if (oldOne.getClass() != newOne.getClass()) {
+                 // [databind#667]: avoid one particular class of bogus problems
+-
++                if (oldOne.getRawType() != newOne.getRawType()) {
+                     throw new IllegalArgumentException("Conflicting "+TYPE_DESCS[typeIndex]
+-                            +" creators: already had explicitly marked "+oldOne+", encountered "+newOne);
++                            +" creators: already had "+oldOne+", encountered "+newOne);
++                }
++            } else {
+                 // otherwise, which one to choose?
+-                    // new type more generic, use old
+-                // new type more specific, use it
++                if (oldOne instanceof AnnotatedMember) {
++                    Class<?> oldType = ((AnnotatedMember) oldOne).getDeclaringClass();
++                    Class<?> newType = ((AnnotatedMember) newOne).getDeclaringClass();
++                    if (oldType.isAssignableFrom(newType)) { // new type more generic, use old
++                        return;
++                    }
++                    if (newType.isAssignableFrom(oldType)) { // new type more specific, use it
++                        _creators[typeIndex] = _fixAccess(newOne);
++                        return;
++                    }
++                }
++                throw new IllegalArgumentException("Conflicting "+TYPE_DESCS[typeIndex]
++                        +" creators: already had "+oldOne+", encountered "+newOne);
+             }
+         }
+         if (explicit) {

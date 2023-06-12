@@ -1,0 +1,53 @@
+diff --git a/src/java/org/apache/commons/cli/PosixParser.java b/src/java/org/apache/commons/cli/PosixParser.java
+index 2b1bbb1..87584b7 100644
+--- a/src/java/org/apache/commons/cli/PosixParser.java
++++ b/src/java/org/apache/commons/cli/PosixParser.java
+@@ -98,16 +98,14 @@ public class PosixParser extends Parser {
+     {
+         init();
+         this.options = options;
+-
+         // an iterator for the command line tokens
+-        Iterator iter = Arrays.asList(arguments).iterator();
+-
++        List tokensList = Arrays.asList(arguments);
++        int position = 0;
+         // process each command line token
+-        while (iter.hasNext())
++        while (position < tokensList.size())
+         {
+             // get the next command line token
+-            String token = (String) iter.next();
+-
++            String token = (String) tokensList.get(position);
+             // handle long option --foo or --foo=bar
+             if (token.startsWith("--"))
+             {
+@@ -151,13 +148,23 @@ public class PosixParser extends Parser {
+             {
+                 tokens.add(token);
+             }
+-
+-            gobble(iter);
++            position = gobble(tokensList, position);
+         }
+-
+         return (String[]) tokens.toArray(new String[tokens.size()]);
+     }
+-
++    private int gobble(List tokens, int position)
++    {
++        if (position + 1 < tokens.size())
++        {
++            String next = (String) tokens.get(position + 1);
++            if (options.hasOption(token) && !next.startsWith("-"))
++            {
++                tokens.add(position + 1, token);
++                position++;
++            }
++        }
++        return position;
++    }
+     /**
+      * Adds the remaining tokens to the processed tokens list.
+      *

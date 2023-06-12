@@ -1,0 +1,27 @@
+diff --git a/src/org/mockito/internal/MockHandler.java b/src/org/mockito/internal/MockHandler.java
+index 9452f1664..194b9cb13 100644
+--- a/src/org/mockito/internal/MockHandler.java
++++ b/src/org/mockito/internal/MockHandler.java
+@@ -82,13 +79,9 @@ public class MockHandler<T> implements MockitoInvocationHandler, MockHandlerInte
+                 // - see VerifyingWithAnExtraCallToADifferentMockTest (bug 138)
+             }
+         }
+-        
+-        invocationContainerImpl.setInvocationForPotentialStubbing(invocationMatcher);
+         OngoingStubbingImpl<T> ongoingStubbing = new OngoingStubbingImpl<T>(invocationContainerImpl);
+         mockingProgress.reportOngoingStubbing(ongoingStubbing);
+-
+         StubbedInvocationMatcher stubbedInvocation = invocationContainerImpl.findAnswerFor(invocation);
+-
+         if (stubbedInvocation != null) {
+             stubbedInvocation.captureArgumentsFrom(invocation);
+             return stubbedInvocation.answer(invocation);
+@@ -100,7 +92,7 @@ public class MockHandler<T> implements MockitoInvocationHandler, MockHandlerInte
+             // Without it, the real method inside 'when' might have delegated
+             // to other self method and overwrite the intended stubbed method
+             // with a different one. The reset is required to avoid runtime exception that validates return type with stubbed method signature.
+-            invocationContainerImpl.resetInvocationForPotentialStubbing(invocationMatcher);
++            invocationContainerImpl.setInvocationForPotentialStubbing(invocationMatcher);
+             return ret;
+         }
+     }

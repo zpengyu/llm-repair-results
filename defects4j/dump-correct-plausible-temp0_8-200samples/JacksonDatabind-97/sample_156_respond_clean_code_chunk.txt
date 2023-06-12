@@ -1,0 +1,18 @@
+    public final void serialize(JsonGenerator gen, SerializerProvider ctxt) throws IOException
+    {
+        if (_value == null) {
+            ctxt.defaultSerializeNull(gen);
+        } else if (_value instanceof JsonSerializable) {
+            ((JsonSerializable) _value).serialize(gen, ctxt);
+        } else {
+            // 25-May-2018, tatu: [databind#1991] do not call via generator but through context;
+            //    this to preserve contextual information
+            if (!(_value instanceof Map)) {
+                ctxt.defaultSerializeValue(gen, _value);
+            } else {
+                // 18-Oct-2017, tatu: [databind#1880] Need to filter out illegal entries
+                //    (`null`-s, empty `Map`s and such) in Maps.
+                ctxt.defaultSerializeValue(gen, _value);
+            }
+        }
+    }

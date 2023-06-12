@@ -1,0 +1,28 @@
+diff --git a/src/com/google/javascript/jscomp/ControlFlowAnalysis.java b/src/com/google/javascript/jscomp/ControlFlowAnalysis.java
+index 0f5c5421..cbc4e482 100644
+--- a/src/com/google/javascript/jscomp/ControlFlowAnalysis.java
++++ b/src/com/google/javascript/jscomp/ControlFlowAnalysis.java
+@@ -749,6 +748,11 @@ final class ControlFlowAnalysis implements Callback, CompilerPass {
+         // If we are coming out of the TRY block...
+         if (parent.getFirstChild() == node) {
+           if (NodeUtil.hasFinally(parent)) { // and have FINALLY block.
++            if (cfa != null) {
++              for (Node finallyNode : cfa.finallyMap.get(parent)) {
++                cfa.createEdge(fromNode, Branch.UNCOND, finallyNode);
++              }
++            }
+             return computeFallThrough(parent.getLastChild());
+           } else { // and have no FINALLY.
+             return computeFollowNode(fromNode, parent, cfa);
+@@ -762,11 +766,6 @@ final class ControlFlowAnalysis implements Callback, CompilerPass {
+           }
+         // If we are coming out of the FINALLY block...
+         } else if (parent.getLastChild() == node){
+-          if (cfa != null) {
+-            for (Node finallyNode : cfa.finallyMap.get(parent)) {
+-              cfa.createEdge(fromNode, Branch.UNCOND, finallyNode);
+-            }
+-          }
+           return computeFollowNode(fromNode, parent, cfa);
+         }
+     }

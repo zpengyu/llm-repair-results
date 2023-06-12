@@ -1,0 +1,25 @@
+diff --git a/src/org/mockito/internal/invocation/InvocationMatcher.java b/src/org/mockito/internal/invocation/InvocationMatcher.java
+index a3a7c08df..a7d057fe8 100644
+--- a/src/org/mockito/internal/invocation/InvocationMatcher.java
++++ b/src/org/mockito/internal/invocation/InvocationMatcher.java
+@@ -24,7 +23,8 @@ public class InvocationMatcher implements DescribedInvocation, CapturesArgumensF
+     private static final long serialVersionUID = -3047126096857467610L;
+     private final Invocation invocation;
+     private final List<Matcher> matchers;
+-
++    private final Object[] varargs;
++    private final Object[] rawArguments;
+     public InvocationMatcher(Invocation invocation, List<Matcher> matchers) {
+         this.invocation = invocation;
+         if (matchers.isEmpty()) {
+@@ -32,8 +32,9 @@ public class InvocationMatcher implements DescribedInvocation, CapturesArgumensF
+         } else {
+             this.matchers = matchers;
+         }
++        this.varargs = Arrays.copyOfRange(invocation.getRawArguments(), invocation.getRawArguments().length - invocation.getArguments().length, invocation.getRawArguments().length);
++        this.rawArguments = invocation.getRawArguments();
+     }
+-    
+     public InvocationMatcher(Invocation invocation) {
+         this(invocation, Collections.<Matcher>emptyList());
+     }

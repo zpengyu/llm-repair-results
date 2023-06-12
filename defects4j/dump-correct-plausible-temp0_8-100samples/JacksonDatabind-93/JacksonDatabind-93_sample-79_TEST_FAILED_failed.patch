@@ -1,0 +1,55 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/jsontype/impl/SubTypeValidator.java b/src/main/java/com/fasterxml/jackson/databind/jsontype/impl/SubTypeValidator.java
+index fe9cba8d4..254fbe4bd 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/jsontype/impl/SubTypeValidator.java
++++ b/src/main/java/com/fasterxml/jackson/databind/jsontype/impl/SubTypeValidator.java
+@@ -70,31 +70,23 @@ public class SubTypeValidator
+         // via default typing -- catch them here.
+         final Class<?> raw = type.getRawClass();
+         String full = raw.getName();
+-
+-        main_check:
+-        do {
+-            if (_cfgIllegalClassNames.contains(full)) {
+-                break;
+-            }
+-
+-            // 18-Dec-2017, tatu: As per [databind#1855], need bit more sophisticated handling
+-            //    for some Spring framework types
+-            // 05-Jan-2017, tatu: ... also, only applies to classes, not interfaces
+-            if (full.startsWith(PREFIX_STRING)) {
+-                for (Class<?> cls = raw; cls != Object.class; cls = cls.getSuperclass()) {
+-                    String name = cls.getSimpleName();
+-                    // looking for "AbstractBeanFactoryPointcutAdvisor" but no point to allow any is there?
+-                    if ("AbstractPointcutAdvisor".equals(name)
+-                            // ditto  for "FileSystemXmlApplicationContext": block all ApplicationContexts
+-                            || "AbstractApplicationContext".equals(name)) {
+-                        break main_check;
+-                    }
+-                }
+-            }
++        // 18-Dec-2017, tatu: As per [databind#1855], need bit more sophisticated handling
++        //    for some Spring framework types
++        // 05-Jan-2017, tatu: ... also, only applies to classes, not interfaces
++        if (raw.isInterface()) {
+             return;
+-        } while (false);
+-
+-        throw JsonMappingException.from(ctxt,
+-                String.format("Illegal type (%s) to deserialize: prevented for security reasons", full));
+-    }
+-}
++        }
++        if (!full.startsWith(PREFIX_STRING)) {
++            return;
++        }
++        // looking for "AbstractBeanFactoryPointcutAdvisor" but no point to allow any is there?
++        if (raw.getSimpleName().equals("AbstractPointcutAdvisor")) {
++            throw JsonMappingException.from(ctxt,
++                    String.format("Illegal type (%s) to deserialize: prevented for security reasons", full));
++        }
++        // ditto  for "FileSystemXmlApplicationContext": block all ApplicationContexts
++        if (raw.getSimpleName().equals("AbstractApplicationContext")) {
++            throw JsonMappingException.from(ctxt,
++                    String.format("Illegal type (%s) to deserialize: prevented for security reasons", full));
++        }
++    }}

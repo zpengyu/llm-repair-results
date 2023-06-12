@@ -1,0 +1,25 @@
+diff --git a/src/com/google/javascript/jscomp/FoldConstants.java b/src/com/google/javascript/jscomp/FoldConstants.java
+index 003743b3..d91ad58e 100644
+--- a/src/com/google/javascript/jscomp/FoldConstants.java
++++ b/src/com/google/javascript/jscomp/FoldConstants.java
+@@ -1511,9 +1506,10 @@ class FoldConstants extends AbstractPostOrderCallback
+         Node emptyStringNode = Node.newString("");
+         parent.replaceChild(n, emptyStringNode);
+         break;
+-
+       case 1:
+         Node foldedStringNode = arrayFoldedChildren.remove(0);
++        // if the folded size becomes greater than the original size,
++        // then it is not worth simplifying
+         if (foldedSize > originalSize) {
+           return;
+         }
+@@ -1536,6 +1531,8 @@ class FoldConstants extends AbstractPostOrderCallback
+         int kJoinOverhead = "[].join()".length();
+         foldedSize += kJoinOverhead;
+         foldedSize += InlineCostEstimator.getCost(right);
++        // if the folded size becomes greater than the original size,
++        // then it is not worth simplifying
+         if (foldedSize > originalSize) {
+           return;
+         }

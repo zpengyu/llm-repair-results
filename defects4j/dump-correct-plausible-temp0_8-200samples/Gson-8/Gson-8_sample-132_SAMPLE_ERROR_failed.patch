@@ -1,0 +1,27 @@
+diff --git a/gson/src/main/java/com/google/gson/internal/UnsafeAllocator.java b/gson/src/main/java/com/google/gson/internal/UnsafeAllocator.java
+index a72d3d10..fd6abac4 100644
+--- a/gson/src/main/java/com/google/gson/internal/UnsafeAllocator.java
++++ b/gson/src/main/java/com/google/gson/internal/UnsafeAllocator.java
+@@ -87,6 +84,10 @@ public abstract class UnsafeAllocator {
+         @Override
+         @SuppressWarnings("unchecked")
+         public <T> T newInstance(Class<T> c) throws Exception {
++          // Do not allow Interface or Abstract class to be instantiated
++          if ((c.getModifiers() & (Modifier.INTERFACE | Modifier.ABSTRACT)) != 0) {
++            return null;
++          }
+           return (T) newInstance.invoke(null, c, Object.class);
+         }
+       };
+@@ -101,10 +101,4 @@ public abstract class UnsafeAllocator {
+       }
+     };
+   }
+-
+-  /**
+-   * Check if the class can be instantiated by unsafe allocator. If the instance has interface or abstract modifiers
+-   * throw an {@link java.lang.UnsupportedOperationException}
+-   * @param c instance of the class to be checked
+-   */
+ }
+\ No newline at end of file

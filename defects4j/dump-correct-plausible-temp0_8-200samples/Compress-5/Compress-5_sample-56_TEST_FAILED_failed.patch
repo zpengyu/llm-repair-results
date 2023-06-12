@@ -1,0 +1,29 @@
+diff --git a/src/main/java/org/apache/commons/compress/archivers/zip/ZipArchiveInputStream.java b/src/main/java/org/apache/commons/compress/archivers/zip/ZipArchiveInputStream.java
+index fc7b80d5..a308ae4c 100644
+--- a/src/main/java/org/apache/commons/compress/archivers/zip/ZipArchiveInputStream.java
++++ b/src/main/java/org/apache/commons/compress/archivers/zip/ZipArchiveInputStream.java
+@@ -237,6 +236,24 @@ public class ZipArchiveInputStream extends ArchiveInputStream {
+                 throw new ZipException(e.getMessage());
+             }
+             if (read == 0 && inf.finished()) {
++                try {
++                    if (readBytesOfEntry != current.getSize()) {
++                        throw new ZipException(
++                            "failed to read entry " + current.getName()
++                            + " from " + current.getName() + ": "
++                            + "bytes read != reported size when finished");
++                    }
++                    if (current.getCrc() != crc.getValue()) {
++                        throw new ZipException(
++                            "failed to read entry " + current.getName()
++                            + " from " + current.getName() + ": "
++                            + "crc was " + Long.toHexString(crc.getValue())
++                            + " but expected "
++                            + Long.toHexString(current.getCrc()));
++                    }
++                } finally {
++                    current = null;
++                }
+                 return -1;
+             }
+             crc.update(buffer, start, read);

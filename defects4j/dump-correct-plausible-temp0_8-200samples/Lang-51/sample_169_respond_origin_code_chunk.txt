@@ -1,0 +1,30 @@
+    public static boolean toBoolean(String str) {
+        // Previously used equalsIgnoreCase, which was fast for interned 'true'.
+        // Non interned 'true' matched 15 times slower.
+        // 
+        // Optimisation provides same performance as before for interned 'true'.
+        // Similar performance for null, 'false', and other strings not length 2/3/4.
+        // 'true'/'TRUE' match 4 times slower, 'tRUE'/'True' 7 times slower.
+        if (str == null) {
+            return false;
+        }
+        int length = str.length();
+        if (length == 0) {
+            return false;
+        }
+        int ch = str.charAt(0);
+        if (ch == 't') {
+            return str.equals("true") || str.equals("tRUE");
+        }
+        if (ch == 'T') {
+            return str.equals("True") || str.equals("TRUE");
+        }
+        if (ch == 'y') {
+            return str.equals("yes") || str.equals("YEs");
+        }
+        if (ch == 'Y') {
+            return str.equals("YES") || str.equals("Yes");
+        }
+        return false;
+    }
+

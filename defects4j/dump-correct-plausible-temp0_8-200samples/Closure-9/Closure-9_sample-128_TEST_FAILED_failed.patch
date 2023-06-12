@@ -1,0 +1,43 @@
+diff --git a/src/com/google/javascript/jscomp/ProcessCommonJSModules.java b/src/com/google/javascript/jscomp/ProcessCommonJSModules.java
+index 6107328b..6fc46a6d 100644
+--- a/src/com/google/javascript/jscomp/ProcessCommonJSModules.java
++++ b/src/com/google/javascript/jscomp/ProcessCommonJSModules.java
+@@ -35,6 +35,38 @@ import java.util.regex.Pattern;
+  * goog.provide and goog.require are emitted for closure compiler automatic
+  * ordering.
+  */
++import java.net.URI;
++import java.net.URISyntaxException;
++import java.util.Set;
++import java.util.regex.Pattern;
++import com.google.common.base.Preconditions;
++import com.google.common.collect.Sets;
++import com.google.javascript.jscomp.AbstractCompiler;
++import com.google.javascript.jscomp.CompilerInput;
++import com.google.javascript.jscomp.CompilerPass;
++import com.google.javascript.jscomp.JSModule;
++import com.google.javascript.jscomp.NodeTraversal;
++import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
++import com.google.javascript.jscomp.Scope;
++import com.google.javascript.rhino.IR;
++import com.google.javascript.rhino.Node;
++/**
++ * Processes CommonJS modules that are included in the compilation. This
++ * processes each input file as its own CommonJS module.
++ *
++ * <p>
++ * This pass does the following:
++ * <ul>
++ * <li>Rewrites CommonJS require calls to goog.require for goog.module
++ * dependencies.</li>
++ * <li>Rewrites CommonJS module.exports to export the result of a call to
++ * goog.loadModule.</li>
++ * <li>Creates synthetic modules to wrap the file. See {@link
++ * #wrapModule}</li>
++ * </ul>
++ *
++ * @author johnlenz@google.com (John Lenz)
++ */
+ public class ProcessCommonJSModules implements CompilerPass {
+   // According to the spec, the forward slash should be the delimite on
+   // all platforms.

@@ -1,0 +1,38 @@
+diff --git a/src/main/java/org/apache/commons/math3/optimization/fitting/HarmonicFitter.java b/src/main/java/org/apache/commons/math3/optimization/fitting/HarmonicFitter.java
+index 42399c04d..d6bd0042c 100644
+--- a/src/main/java/org/apache/commons/math3/optimization/fitting/HarmonicFitter.java
++++ b/src/main/java/org/apache/commons/math3/optimization/fitting/HarmonicFitter.java
+@@ -292,12 +288,12 @@ public class HarmonicFitter extends CurveFitter<HarmonicOscillator.Parametric> {
+                 sxz += x * fPrime2Integral;
+                 syz += f2Integral * fPrime2Integral;
+             }
+-
+             // compute the amplitude and pulsation coefficients
+-            double c1 = sy2 * sxz - sxy * syz;
+-            double c2 = sxy * sxz - sx2 * syz;
+-            double c3 = sx2 * sy2 - sxy * sxy;
+-            if ((c1 / c2 < 0) || (c2 / c3 < 0)) {
++            final double c1 = sy2 * sxz - sxy * syz;
++            final double c2 = sxy * sxz - sx2 * syz;
++            final double c3 = sx2 * sy2 - sxy * sxy;
++            final double c23 = c2 / c3;
++            if ((c1 / c2 < 0) || (c23 < 0)) {
+                 final int last = observations.length - 1;
+                 // Range of the observations, assuming that the
+                 // observations are sorted.
+@@ -320,14 +315,10 @@ public class HarmonicFitter extends CurveFitter<HarmonicOscillator.Parametric> {
+                 }
+                 a = 0.5 * (yMax - yMin);
+             } else {
+-                    // In some ill-conditioned cases (cf. MATH-844), the guesser
+-                    // procedure cannot produce sensible results.
+-
+                 a = FastMath.sqrt(c1 / c2);
+-                omega = FastMath.sqrt(c2 / c3);
++                omega = FastMath.sqrt(c23);
+             }
+         }
+-
+         /**
+          * Estimate a first guess of the phase.
+          */

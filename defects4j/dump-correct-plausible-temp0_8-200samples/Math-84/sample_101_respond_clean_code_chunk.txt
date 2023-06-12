@@ -1,0 +1,42 @@
+    protected void iterateSimplex(final Comparator<RealPointValuePair> comparator)
+        throws FunctionEvaluationException, OptimizationException, IllegalArgumentException {
+        while (true) {
+            incrementIterationsCounter();
+            // save the original vertex
+            final RealPointValuePair[] original = simplex;
+            final RealPointValuePair best = original[0];
+            // perform a reflection step
+            final RealPointValuePair reflected = evaluateNewSimplex(original, 1.0, comparator);
+            if (comparator.compare(reflected, best) < 0) {
+                // compute the expanded simplex
+                final RealPointValuePair[] reflectedSimplex = simplex;
+                final RealPointValuePair expanded = evaluateNewSimplex(original, khi, comparator);
+                if (comparator.compare(reflected, expanded) <= 0) {
+                    // accept the reflected simplex
+                    simplex = reflectedSimplex;
+                } else {
+                    // accept the expanded simplex
+                    simplex = reflectedSimplex;
+                }
+                return;
+            } else {
+                // perform an inside contraction step
+                final RealPointValuePair insideContracted = evaluateNewSimplex(original, psi, comparator);
+                if (comparator.compare(insideContracted, best) <= 0) {
+                    // accept the contracted simplex
+                    return;
+                }
+                // perform a reduction step on the original simplex
+                final RealPointValuePair[] reducedSimplex = new RealPointValuePair[n + 1];
+                reducedSimplex[0] = original[0];
+                for (int i = 1; i <= n; ++i) {
+                    final double[] v = new double[n];
+                    for (int j = 0; j < n; ++j) {
+                        v[j] = sigma * (original[0].getPointRef()[j] + original[i].getPointRef()[j]);
+                    }
+                    reducedSimplex[i] = new RealPointValuePair(v, Double.NaN, false);
+                }
+                simplex = reducedSimplex;
+            }
+        }
+    }

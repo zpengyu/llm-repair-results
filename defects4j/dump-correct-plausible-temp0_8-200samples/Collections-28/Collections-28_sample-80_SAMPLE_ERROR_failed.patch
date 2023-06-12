@@ -1,0 +1,50 @@
+diff --git a/src/main/java/org/apache/commons/collections4/trie/AbstractPatriciaTrie.java b/src/main/java/org/apache/commons/collections4/trie/AbstractPatriciaTrie.java
+index 9eaf0837..5d5f52b0 100644
+--- a/src/main/java/org/apache/commons/collections4/trie/AbstractPatriciaTrie.java
++++ b/src/main/java/org/apache/commons/collections4/trie/AbstractPatriciaTrie.java
+@@ -2217,17 +2189,41 @@ abstract class AbstractPatriciaTrie<K, V> extends AbstractBitwiseTrie<K, V> {
+          */
+         @Override
+         protected boolean inFromRange(final K key, final boolean forceInclusive) {
+-            return getKeyAnalyzer().isPrefix(prefix, offsetInBits, lengthInBits, key);
++            if (getKeyAnalyzer().isPrefix(prefix, offsetInBits, lengthInBits, key)) {
++                return true;
++            }
++            if (forceInclusive) {
++                final String prefix2 = Strings.toBinaryString(prefix);
++                final String key2 = Strings.toBinaryString(key);
++                // The length of the key must be less than or equal to the prefix, and
++                // each digit of the key up to the length of the prefix must be less than
++                // or equal to the respective digit in the prefix.
++                if (key2.length() <= prefix2.length() && key2.compareTo(prefix2.substring(0, key2.length())) <= 0) {
++                    return true;
++                }
++            }
++            return false;
+         }
+-
+         /**
+          * Returns true if the provided Key is in the TO range of the {@link PrefixRangeMap}.
+          */
+         @Override
+         protected boolean inToRange(final K key, final boolean forceInclusive) {
+-            return getKeyAnalyzer().isPrefix(prefix, offsetInBits, lengthInBits, key);
++            if (getKeyAnalyzer().isPrefix(prefix, offsetInBits, lengthInBits, key)) {
++                return true;
++            }
++            if (forceInclusive) {
++                final String prefix2 = Strings.toBinaryString(prefix);
++                final String key2 = Strings.toBinaryString(key);
++                // The length of the key must be less than or equal to the prefix, and
++                // each digit of the key up to the length of the prefix must be greater than
++                // or equal to the respective digit in the prefix.
++                if (key2.length() <= prefix2.length() && key2.compareTo(prefix2.substring(0, key2.length())) >= 0) {
++                    return true;
++                }
++            }
++            return false;
+         }
+-
+         @Override
+         protected Set<Map.Entry<K, V>> createEntrySet() {
+             return new PrefixRangeEntrySet(this);

@@ -1,0 +1,20 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/node/TreeTraversingParser.java b/src/main/java/com/fasterxml/jackson/databind/node/TreeTraversingParser.java
+index afb9f1869..2bfa41890 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/node/TreeTraversingParser.java
++++ b/src/main/java/com/fasterxml/jackson/databind/node/TreeTraversingParser.java
+@@ -370,6 +370,15 @@ public class TreeTraversingParser extends ParserMinimalBase
+                     return (byte[]) ob;
+                 }
+             }
++            // 25-Jan-2016, tatu: Code added for [databind#1295], to support POJOs
++            // as per [databind#1232], check for possible Base64 encoded textual content
++            // (only makes sense for textual nodes)
++            if (n.isTextual()) {
++                String str = ((TextNode)n).getTextValue();
++                if (str != null) {
++                    return b64variant.decode(str);
++                }
++            }
+         }
+         // otherwise return null to mark we have no binary content
+         return null;

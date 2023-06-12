@@ -1,0 +1,44 @@
+diff --git a/src/com/google/javascript/jscomp/FunctionInjector.java b/src/com/google/javascript/jscomp/FunctionInjector.java
+index c17b3cb3..fb877457 100644
+--- a/src/com/google/javascript/jscomp/FunctionInjector.java
++++ b/src/com/google/javascript/jscomp/FunctionInjector.java
+@@ -691,13 +691,10 @@ class FunctionInjector {
+     if (!isDirectCallNodeReplacementPossible(fnNode)) {
+       return CanInlineResult.NO;
+     }
+-
+     Node block = fnNode.getLastChild();
+-
+-
++    String fnName = fnNode.getFirstChild().getString();
+     // CALL NODE: [ NAME, ARG1, ARG2, ... ]
+     Node cArg = callNode.getFirstChild().getNext();
+-
+     // Functions called via 'call' and 'apply' have a this-object as
+     // the first parameter, but this is not part of the called function's
+     // parameter list.
+@@ -744,10 +737,22 @@ class FunctionInjector {
+         cArg = cArg.getNext();
+       }
+     }
+-
++    for (Node fnChild = fnNode.getFirstChild(); fnChild != null;
++         fnChild = fnChild.getNext()) {
++      if (fnChild.isFunction()) {
++        // See if there are any references to this inner function.
++        if (!NodeUtil.getVarsDeclaredInFunction(fnChild).isEmpty()) {
++          if (fnChild.getLastChild().hasChildren()) {
++            String fnChildName = fnChild.getFirstChild().getString();
++            if (NodeUtil.getNameReferenceCount(block, fnChildName) > 0) {
++              return CanInlineResult.NO;
++            }
++          }
++        }
++      }
++    }
+     return CanInlineResult.YES;
+   }
+-
+   /**
+    * Determine if inlining the function is likely to reduce the code size.
+    * @param namesToAlias

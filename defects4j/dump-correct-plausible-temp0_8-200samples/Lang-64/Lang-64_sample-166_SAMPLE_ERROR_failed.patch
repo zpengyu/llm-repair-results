@@ -1,0 +1,43 @@
+diff --git a/src/java/org/apache/commons/lang/enums/ValuedEnum.java b/src/java/org/apache/commons/lang/enums/ValuedEnum.java
+index 0823e77d..b3c1c7db 100644
+--- a/src/java/org/apache/commons/lang/enums/ValuedEnum.java
++++ b/src/java/org/apache/commons/lang/enums/ValuedEnum.java
+@@ -180,19 +174,32 @@ public abstract class ValuedEnum extends Enum {
+      * @throws NullPointerException if other is <code>null</code>
+      */
+     public int compareTo(Object other) {
+-        return iValue - ((ValuedEnum) other).iValue;
++        if (other == null) {
++            return 0;
++        }
++        if (other instanceof ValuedEnum) {
++            return iValue - ((ValuedEnum) other).iValue;
++        } else if (other instanceof Integer) {
++            return iValue - ((Integer)other).intValue();
++        } else {
++            // allow other types for remote comparison, see LANG-403
++            return iValue - extractIntValue(other);
++        }
+     }
+-
+     /**
+      * <p>Use reflection to return an objects value.</p>
+      *
+      * @param other  the object to determine the value for
+      * @return the value
+      */
+-            // ignore - should never happen
+-            // ignore - should never happen
+-            // ignore - should never happen
+-
++    private int extractIntValue(Object other) {
++        try {
++            Field field = other.getClass().getField("value");
++            return field.getInt(other);
++        } catch (Exception ex) {
++            return 0;
++        }
++    }
+     /**
+      * <p>Human readable description of this <code>Enum</code> item.</p>
+      *

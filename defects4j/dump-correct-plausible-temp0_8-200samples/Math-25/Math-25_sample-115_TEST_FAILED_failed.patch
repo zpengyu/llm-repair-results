@@ -1,0 +1,80 @@
+diff --git a/src/main/java/org/apache/commons/math3/optimization/fitting/HarmonicFitter.java b/src/main/java/org/apache/commons/math3/optimization/fitting/HarmonicFitter.java
+index 42399c04d..ccf45e765 100644
+--- a/src/main/java/org/apache/commons/math3/optimization/fitting/HarmonicFitter.java
++++ b/src/main/java/org/apache/commons/math3/optimization/fitting/HarmonicFitter.java
+@@ -255,6 +255,7 @@ public class HarmonicFitter extends CurveFitter<HarmonicOscillator.Parametric> {
+          * produce sensible results.
+          */
+         private void guessAOmega() {
++            final int n = observations.length;
+             // initialize the sums for the linear model between the two integrals
+             double sx2 = 0;
+             double sy2 = 0;
+@@ -267,7 +267,7 @@ public class HarmonicFitter extends CurveFitter<HarmonicOscillator.Parametric> {
+             double f2Integral = 0;
+             double fPrime2Integral = 0;
+             final double startX = currentX;
+-            for (int i = 1; i < observations.length; ++i) {
++            for (int i = 1; i < n; ++i) {
+                 // one step forward
+                 final double previousX = currentX;
+                 final double previousY = currentY;
+@@ -292,42 +289,33 @@ public class HarmonicFitter extends CurveFitter<HarmonicOscillator.Parametric> {
+                 sxz += x * fPrime2Integral;
+                 syz += f2Integral * fPrime2Integral;
+             }
+-
+             // compute the amplitude and pulsation coefficients
+-            double c1 = sy2 * sxz - sxy * syz;
+-            double c2 = sxy * sxz - sx2 * syz;
+-            double c3 = sx2 * sy2 - sxy * sxy;
+-            if ((c1 / c2 < 0) || (c2 / c3 < 0)) {
+-                final int last = observations.length - 1;
++            final double c1 = sy2 * sxz - sxy * syz;
++            final double c2 = sxy * sxz - sx2 * syz;
++            final double c3 = sx2 * sy2 - sxy * sxy;
++            // In some ill-conditioned cases (cf. MATH-844), the guesser
++            // procedure cannot produce sensible results.
++            double aOmegaSq = c2 / c3;
++            if (aOmegaSq < 0) {
+                 // Range of the observations, assuming that the
+                 // observations are sorted.
+-                final double xRange = observations[last].getX() - observations[0].getX();
++                final double xRange = observations[n - 1].getX() - observations[0].getX();
+                 if (xRange == 0) {
+                     throw new ZeroException();
+                 }
+-                omega = 2 * Math.PI / xRange;
+-
+-                double yMin = Double.POSITIVE_INFINITY;
+-                double yMax = Double.NEGATIVE_INFINITY;
+-                for (int i = 1; i < observations.length; ++i) {
+-                    final double y = observations[i].getY();
+-                    if (y < yMin) {
+-                        yMin = y;
+-                    }
+-                    if (y > yMax) {
+-                        yMax = y;
+-                    }
++                final double twoPowXRange = 2 * Math.PI / xRange;
++                final double f2IntegralMean = f2Integral / n;
++                aOmegaSq = fPrime2Integral / (n * f2IntegralMean * f2IntegralMean);
++                if (aOmegaSq < 0) {
++                    aOmegaSq = 0;
+                 }
+-                a = 0.5 * (yMax - yMin);
++                a = FastMath.sqrt(aOmegaSq / twoPowXRange);
++                omega = twoPowXRange;
+             } else {
+-                    // In some ill-conditioned cases (cf. MATH-844), the guesser
+-                    // procedure cannot produce sensible results.
+-
+                 a = FastMath.sqrt(c1 / c2);
+-                omega = FastMath.sqrt(c2 / c3);
++                omega = FastMath.sqrt(aOmegaSq);
+             }
+         }
+-
+         /**
+          * Estimate a first guess of the phase.
+          */

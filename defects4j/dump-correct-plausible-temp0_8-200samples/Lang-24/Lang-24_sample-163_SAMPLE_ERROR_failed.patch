@@ -1,0 +1,178 @@
+diff --git a/src/main/java/org/apache/commons/lang3/math/NumberUtils.java b/src/main/java/org/apache/commons/lang3/math/NumberUtils.java
+index ec3f516a..b3627ffb 100644
+--- a/src/main/java/org/apache/commons/lang3/math/NumberUtils.java
++++ b/src/main/java/org/apache/commons/lang3/math/NumberUtils.java
+@@ -1316,108 +1316,76 @@ public class NumberUtils {
+      * @param str  the <code>String</code> to check
+      * @return <code>true</code> if the string is a correctly formatted number
+      */
+-    public static boolean isNumber(String str) {
+-        if (StringUtils.isEmpty(str)) {
++import java.util.regex.Matcher;
++import java.util.regex.Pattern;
++public class Util {
++    public static final String DOUBLE_PATTERN = "[\\x00-\\x20]*[+-]?(NaN|Infinity|((((\\p{Digit}+)(\\.)?((\\p{Digit}+)?)([eE][+-]?(\\p{Digit}+))?)|(\\.((\\p{Digit}+))([eE][+-]?(\\p{Digit}+))?)|(((0[xX](\\p{XDigit}+)(\\.)?)|(0[xX](\\p{XDigit}+)?(\\.)(\\p{XDigit}+)))[pP][+-]?(\\p{Digit}+)))[fFdD]?))[\\x00-\\x20]*";
++    public static final Pattern DOUBLE_PATTERN_COMPILED = Pattern.compile(DOUBLE_PATTERN);
++    public static final String FLOAT_PATTERN = "[\\x00-\\x20]*[+-]?(NaN|Infinity|((((\\p{Digit}+)(\\.)?((\\p{Digit}+)?)([eE][+-]?(\\p{Digit}+))?)|(\\.((\\p{Digit}+))([eE][+-]?(\\p{Digit}+))?)|(((0[xX](\\p{XDigit}+)(\\.)?)|(0[xX](\\p{XDigit}+)?(\\.)(\\p{XDigit}+)))[pP][+-]?(\\p{Digit}+)))[fF]?))[\\x00-\\x20]*";
++    public static final Pattern FLOAT_PATTERN_COMPILED = Pattern.compile(FLOAT_PATTERN);
++    public static final String HEX_PATTERN = "0[xX][\\p{XDigit}]+";
++    public static final Pattern HEX_PATTERN_COMPILED = Pattern.compile(HEX_PATTERN);
++    public static final String CHARACTER_PATTERN = "'([^']|\\\\')'";
++    public static final Pattern CHARACTER_PATTERN_COMPILED = Pattern.compile(CHARACTER_PATTERN);
++    public static final String STRING_PATTERN = "\"([^\"]|\\\\\")*\"";
++    public static final Pattern STRING_PATTERN_COMPILED = Pattern.compile(STRING_PATTERN);
++    public static boolean isString(String str) {
++        return str != null && STRING_PATTERN_COMPILED.matcher(str).matches();
++    }
++    public static boolean isCharacter(String str) {
++        return str != null && CHARACTER_PATTERN_COMPILED.matcher(str).matches();
++    }
++    public static boolean isBoolean(String str) {
++        return str != null && ("true".equals(str) || "false".equals(str));
++    }
++    public static boolean isInteger(String str) {
++        try {
++            Integer.parseInt(str);
++            return true;
++        } catch (NumberFormatException e) {
+             return false;
+         }
+-        char[] chars = str.toCharArray();
+-        int sz = chars.length;
+-        boolean hasExp = false;
+-        boolean hasDecPoint = false;
+-        boolean allowSigns = false;
+-        boolean foundDigit = false;
+-        // deal with any possible sign up front
+-        int start = (chars[0] == '-') ? 1 : 0;
+-        if (sz > start + 1) {
+-            if (chars[start] == '0' && chars[start + 1] == 'x') {
+-                int i = start + 2;
+-                if (i == sz) {
+-                    return false; // str == "0x"
+-                }
+-                // checking hex (it can't be anything else)
+-                for (; i < chars.length; i++) {
+-                    if ((chars[i] < '0' || chars[i] > '9')
+-                        && (chars[i] < 'a' || chars[i] > 'f')
+-                        && (chars[i] < 'A' || chars[i] > 'F')) {
+-                        return false;
+-                    }
+-                }
+-                return true;
+-            }
++    }
++    public static boolean isHex(String str) {
++        return str != null && HEX_PATTERN_COMPILED.matcher(str).matches();
++    }
++    public static boolean isFloat(String str) {
++        try {
++            Float.parseFloat(str);
++            return true;
++        } catch (NumberFormatException e) {
++            return false;
+         }
+-        sz--; // don't want to loop to the last char, check it afterwords
+-              // for type qualifiers
+-        int i = start;
+-        // loop to the next to last char or to the last char if we need another digit to
+-        // make a valid number (e.g. chars[0..5] = "1234E")
+-        while (i < sz || (i < sz + 1 && allowSigns && !foundDigit)) {
+-            if (chars[i] >= '0' && chars[i] <= '9') {
+-                foundDigit = true;
+-                allowSigns = false;
+-
+-            } else if (chars[i] == '.') {
+-                if (hasDecPoint || hasExp) {
+-                    // two decimal points or dec in exponent   
+-                    return false;
+-                }
+-                hasDecPoint = true;
+-            } else if (chars[i] == 'e' || chars[i] == 'E') {
+-                // we've already taken care of hex.
+-                if (hasExp) {
+-                    // two E's
+-                    return false;
+-                }
+-                if (!foundDigit) {
+-                    return false;
+-                }
+-                hasExp = true;
+-                allowSigns = true;
+-            } else if (chars[i] == '+' || chars[i] == '-') {
+-                if (!allowSigns) {
+-                    return false;
+-                }
+-                allowSigns = false;
+-                foundDigit = false; // we need a digit after the E
+-            } else {
+-                return false;
+-            }
+-            i++;
++    }
++    public static boolean isDouble(String str) {
++        try {
++            Double.parseDouble(str);
++            return true;
++        } catch (NumberFormatException e) {
++            return false;
+         }
+-        if (i < chars.length) {
+-            if (chars[i] >= '0' && chars[i] <= '9') {
+-                // no type qualifier, OK
+-                return true;
+-            }
+-            if (chars[i] == 'e' || chars[i] == 'E') {
+-                // can't have an E at the last byte
+-                return false;
+-            }
+-            if (chars[i] == '.') {
+-                if (hasDecPoint || hasExp) {
+-                    // two decimal points or dec in exponent
+-                    return false;
+-                }
+-                // single trailing decimal point after non-exponent is ok
+-                return foundDigit;
+-            }
+-            if (!allowSigns
+-                && (chars[i] == 'd'
+-                    || chars[i] == 'D'
+-                    || chars[i] == 'f'
+-                    || chars[i] == 'F')) {
+-                return foundDigit;
+-            }
+-            if (chars[i] == 'l'
+-                || chars[i] == 'L') {
+-                // not allowing L with an exponent or decimal point
+-                return foundDigit && !hasExp;
+-            }
+-            // last character is illegal
++    }
++    public static boolean isLong(String str) {
++        try {
++            Long.parseLong(str);
++            return true;
++        } catch (NumberFormatException e) {
+             return false;
+         }
+-        // allowSigns is true iff the val ends in 'E'
+-        // found digit it to make sure weird stuff like '.' and '1E-' doesn't pass
+-        return !allowSigns && foundDigit;
+     }
+-    
++    public static boolean isNumber(String str) {
++        if (StringUtils.isEmpty(str)) {
++            return false;
++        }
++        Matcher matcher = DOUBLE_PATTERN_COMPILED.matcher(str);
++        if (matcher.matches()) {
++            return true;
++        }
++        matcher = FLOAT_PATTERN_COMPILED.matcher(str);
++        if (matcher.matches()) {
++            return true;
++        }
++        return isInteger(str);
++    }
++}    
+ }

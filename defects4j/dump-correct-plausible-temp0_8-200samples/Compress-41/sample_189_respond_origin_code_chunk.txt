@@ -1,0 +1,27 @@
+   public ZipArchiveEntry getNextZipEntry() throws IOException {
+        if (closed) {
+            return null;
+        }
+        if (firstEntry) {
+            firstEntry = false;
+            return getFirstEntry();
+        }
+        if (current != null) {
+            closeEntry();
+        }
+        if (entries.isEmpty() && !hasMoreEntries) {
+            return null;
+        }
+        current = entries.removeFirst();
+        while (current.entry == null) {
+            current = entries.removeFirst();
+        }
+        if (hasHitCentralDirectory) {
+            skipRemainderOfArchive();
+            return null;
+        }
+        if (entries.isEmpty()) {
+            populateFromCentralDirectory();
+        }
+        return current.entry;
+    }

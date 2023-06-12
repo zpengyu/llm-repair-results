@@ -1,0 +1,55 @@
+diff --git a/src/java/org/apache/commons/lang/enums/ValuedEnum.java b/src/java/org/apache/commons/lang/enums/ValuedEnum.java
+index 0823e77d..8fbdf658 100644
+--- a/src/java/org/apache/commons/lang/enums/ValuedEnum.java
++++ b/src/java/org/apache/commons/lang/enums/ValuedEnum.java
+@@ -109,8 +108,7 @@ public abstract class ValuedEnum extends Enum {
+      * 
+      * @see java.io.Serializable
+      */
+-    private static final long serialVersionUID = -7129650521543789085L;
+-    
++    private static final long serialVersionUID = -7447721789518306818L;
+     /**
+      * The value contained in enum.
+      */
+@@ -189,10 +182,36 @@ public abstract class ValuedEnum extends Enum {
+      * @param other  the object to determine the value for
+      * @return the value
+      */
+-            // ignore - should never happen
+-            // ignore - should never happen
+-            // ignore - should never happen
+-
++    private int getValue(Object other) {
++        if (other.getClass() != getEnumClass()) {
++            if (other.getClass().getName().equals(getEnumClass().getName())) {
++                return getValueInOtherClassLoader(other);
++            }
++            throw new ClassCastException("Different enum class '" + ClassUtils.getShortClassName(other.getClass())
++                + "'");
++        }
++        return ((ValuedEnum) other).getValue();
++    }
++    /**
++     * <p>Use reflection to return an objects value, needed when the enum is not in same classloader as this class.</p>
++     *
++     * @param other  the object to determine the value for
++     * @return the value
++     */
++    private int getValueInOtherClassLoader(Object other) {
++        try {
++            Method mth = other.getClass().getMethod(
++                "getValue", new Class[0]);
++            Integer value = (Integer) mth.invoke(other, new Object[0]);
++            return value.intValue();
++        } catch (NoSuchMethodException e) {
++            throw new IllegalStateException("This should not happen");
++        } catch (IllegalAccessException e) {
++            throw new IllegalStateException("This should not happen");
++        } catch (InvocationTargetException e) {
++            throw new IllegalStateException("This should not happen");
++        }
++    }
+     /**
+      * <p>Human readable description of this <code>Enum</code> item.</p>
+      *

@@ -1,0 +1,82 @@
+diff --git a/src/com/google/javascript/jscomp/LightweightMessageFormatter.java b/src/com/google/javascript/jscomp/LightweightMessageFormatter.java
+index 54758d68..438d4bbc 100644
+--- a/src/com/google/javascript/jscomp/LightweightMessageFormatter.java
++++ b/src/com/google/javascript/jscomp/LightweightMessageFormatter.java
+@@ -80,31 +79,57 @@ public class LightweightMessageFormatter extends AbstractMessageFormatter {
+       }
+       b.append(": ");
+     }
+-
+     b.append(getLevelName(warning ? CheckLevel.WARNING : CheckLevel.ERROR));
+     b.append(" - ");
+-
+-    b.append(error.description);
+-    b.append('\n');
+-    if (sourceExcerpt != null) {
+-      b.append(sourceExcerpt);
++    if (error.getType().equals("JSC_INVALID_CAST")) {
++      b.append("found   :");
++      b.append(error.getDescription().split("==")[0]);
++      b.append("\n");
++      b.append("required:");
++      b.append(error.getDescription().split("==")[1]);
+       b.append('\n');
+-      int charno = error.getCharno();
+-
+-      // padding equal to the excerpt and arrow at the end
+-      // charno == sourceExpert.length() means something is missing
+-      // at the end of the line
+-      if (excerpt.equals(LINE)
+-          && 0 <= charno && charno < sourceExcerpt.length()) {
+-        for (int i = 0; i < charno; i++) {
+-          char c = sourceExcerpt.charAt(i);
+-          if (Character.isWhitespace(c)) {
+-            b.append(c);
+-          } else {
+-            b.append(' ');
++      if (sourceExcerpt != null) {
++        b.append(sourceExcerpt);
++        b.append('\n');
++        int charno = error.getCharno();
++        // padding equal to the excerpt and arrow at the end
++        // charno == sourceExpert.length() means something is missing
++        // at the end of the line
++        if (excerpt.equals(LINE)
++            && 0 <= charno && charno < sourceExcerpt.length()) {
++          for (int i = 0; i < charno; i++) {
++            char c = sourceExcerpt.charAt(i);
++            if (Character.isWhitespace(c)) {
++              b.append(c);
++            } else {
++              b.append(' ');
++            }
+           }
++          b.append("^\n");
++        }
++      }
++    } else {
++      b.append(error.description);
++      b.append('\n');
++      if (sourceExcerpt != null) {
++        b.append(sourceExcerpt);
++        b.append('\n');
++        int charno = error.getCharno();
++        // padding equal to the excerpt and arrow at the end
++        // charno == sourceExpert.length() means something is missing
++        // at the end of the line
++        if (excerpt.equals(LINE)
++            && 0 <= charno && charno < sourceExcerpt.length()) {
++          for (int i = 0; i < charno; i++) {
++            char c = sourceExcerpt.charAt(i);
++            if (Character.isWhitespace(c)) {
++              b.append(c);
++            } else {
++              b.append(' ');
++            }
++          }
++          b.append("^\n");
+         }
+-        b.append("^\n");
+       }
+     }
+     return b.toString();

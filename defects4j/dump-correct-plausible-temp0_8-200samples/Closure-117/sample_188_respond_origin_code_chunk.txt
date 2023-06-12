@@ -1,0 +1,74 @@
+private String getReadableJSTypeName(Node n, boolean dereference) {
+    String typeName = null;
+
+    if (n.isGetProp()) {
+      Node parent = n.getParent();
+      if (!parent.isCall() && !parent.isNew() && !parent.isDec()) {
+        typeName = getTypeNameForProperty(n, dereference);
+      }
+    }
+
+    if (typeName == null) {
+      JSType type = getJSType(n);
+      if (dereference) {
+        ObjectType dereferenced = type.dereference();
+        if (dereferenced != null) {
+          type = dereferenced;
+        }
+      }
+      if (type.isFunctionPrototypeType() ||
+          (type.toObjectType() != null &&
+           type.toObjectType().getConstructor() != null)) {
+        typeName = type.toString();
+      } else {
+        String qualifiedName = n.getQualifiedName();
+        if (qualifiedName != null) {
+          typeName = qualifiedName;
+        } else if (type.isFunctionType()) {
+          // Don't show complex function names.
+          typeName = "function";
+        } else {
+          typeName = type.toString();
+        }
+      }
+    }
+    return typeName;
+  }
+
+  /**
+   * @param n A node.
+   * @param dereference Whether to dereference types.
+   * @return The type name for a getprop or getelem operation. Returns null if
+   *     no type name could be found.
+   */
+  private String getTypeNameForProperty(Node n, boolean dereference) {
+    Node first = n.getFirstChild();
+    String propName = n.getLastChild().getString();
+    JSType type = getJSType(first);
+    if (dereference && type.isNullType()) {
+      return null;
+    }
+
+    ObjectType objectType = type.dereference();
+    if (objectType != null) {
+      if (objectType.getConstructor() != null &&
+          objectType.getConstructor().isInterface()) {
+        objectType = FunctionType.getTopDefiningInterface(objectType, propName);
+      } else {
+        // classes
+        while (objectType != null && !objectType.hasOwnProperty(propName)) {
+          objectType = objectType.getImplicitPrototype();
+        }
+      }
+
+      // Don't show complex function names or anonymous types.
+      // Instead, try to get a human-readable type name.
+      if (objectType != null &&
+          (objectType.getConstructor() != null ||
+           objectType.isFunctionPrototypeType())) {
+        return objectType.toString() + "." + propName;
+      }
+    }
+    return null;
+  }
+

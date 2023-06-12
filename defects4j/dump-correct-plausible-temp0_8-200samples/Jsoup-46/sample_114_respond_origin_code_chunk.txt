@@ -1,0 +1,67 @@
+static void escape(StringBuilder accum, String string, Document.OutputSettings out,
+                   boolean inAttribute, boolean normaliseWhite, boolean stripLeadingWhite) {
+    final EscapeMode escapeMode = out.escapeMode();
+
+    boolean lastWasWhite = false;
+    boolean reachedNonWhite = false;
+    final int length = string.length();
+
+    int codePoint;
+    for (int offset = 0; offset < length; offset += Character.charCount(codePoint)) {
+        codePoint = string.codePointAt(offset);
+
+        if (normaliseWhite) {
+            if (StringUtil.isWhitespace(codePoint)) {
+                if ((stripLeadingWhite && !reachedNonWhite) || lastWasWhite)
+                    continue;
+                accum.append(' ');
+                lastWasWhite = true;
+                continue;
+            } else {
+                lastWasWhite = false;
+                reachedNonWhite = true;
+            }
+        }
+
+        if (escapeMode == EscapeMode.extended) {
+            final String c = new String(Character.toChars(codePoint));
+            if (c.startsWith("&") && !c.startsWith("&#")) {
+                accum.append("&amp;");
+            } else if (c.startsWith("<") || c.startsWith(">") || c.startsWith("&")) {
+                accum.append("&#x").append(Integer.toHexString(codePoint)).append(';');
+            } else {
+                // surrogate pairs, split implementation for efficiency on single char common case (saves creating strings, char[]):
+                if (codePoint < Character.MIN_SUPPLEMENTARY_CODE_POINT) {
+                    final char c1 = (char) codePoint;
+                    // html specific and required escapes:
+                    switch (c1) {
+                        case '"':
+                            if (inAttribute)
+                                accum.append("&quot;");
+                            else
+                                accum.append(c1);
+                            break;
+                        case '\'':
+                            if (inAttribute)
+                                accum.append("&apos;");
+                            else
+                                accum.append(c1);
+                            break;
+                        default:
+                            accum.append(c1);
+                            break;
+                    }
+                } else {
+                    accum.append(c);
+                }
+            }
+        } else {
+            if (escapeMode.getMap().containsKey(codePoint))
+                accum.append(escapeMode.getMap().get(codePoint));
+            else
+                accum.append(new String(Character.toChars(codePoint)));
+        }
+    }
+}
+
+

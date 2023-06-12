@@ -1,0 +1,38 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/deser/std/NumberDeserializers.java b/src/main/java/com/fasterxml/jackson/databind/deser/std/NumberDeserializers.java
+index a76403c86..f836ed4ee 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/deser/std/NumberDeserializers.java
++++ b/src/main/java/com/fasterxml/jackson/databind/deser/std/NumberDeserializers.java
+@@ -144,11 +140,31 @@ public class NumberDeserializers
+         public final T getNullValue() {
+             return _nullValue;
+         }
+-
+             // [databind#1095]: Should not allow coercion from into null from Empty String
+             // either, if `null` not allowed
++        @Override
++        public T deserialize(JsonParser p, DeserializationContext ctxt) throws IOException
++        {
++            if (p.hasToken(JsonToken.VALUE_NULL)) {
++                if (_primitive && ctxt.isEnabled(DeserializationFeature.FAIL_ON_NULL_FOR_PRIMITIVES)) {
++                    throw ctxt.mappingException("Can not map JSON null into type %s (set DeserializationConfig.DeserializationFeature.FAIL_ON_NULL_FOR_PRIMITIVES to 'false' to allow)",
++                            handledType().toString());
++                }
++                return _nullValue;
++            }
++            if (p.hasToken(JsonToken.VALUE_STRING)) {
++                String text = p.getText().trim();
++                if (text.isEmpty()) {
++                    if (_primitive && ctxt.isEnabled(DeserializationFeature.FAIL_ON_NULL_FOR_PRIMITIVES)) {
++                        throw ctxt.mappingException("Can not map empty String into type %s (set DeserializationConfig.DeserializationFeature.FAIL_ON_NULL_FOR_PRIMITIVES to 'false' to allow)",
++                                handledType().toString());
++                    }
++                    return _nullValue;
++                }
++            }
++            return _parseInteger(p, ctxt);
++        }
+     }
+-
+     /*
+     /**********************************************************
+     /* Then primitive/wrapper types

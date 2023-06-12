@@ -1,0 +1,32 @@
+diff --git a/src/main/java/org/apache/commons/math/stat/descriptive/SummaryStatistics.java b/src/main/java/org/apache/commons/math/stat/descriptive/SummaryStatistics.java
+index 424120430..31e886e16 100644
+--- a/src/main/java/org/apache/commons/math/stat/descriptive/SummaryStatistics.java
++++ b/src/main/java/org/apache/commons/math/stat/descriptive/SummaryStatistics.java
+@@ -165,8 +165,26 @@ public class SummaryStatistics implements StatisticalSummary, Serializable {
+             geoMeanImpl.increment(value);
+         }
+         n++;
++        if (n == 1) {
++            return;
++        }
++        sumOfLogs = sumLogImpl.getResult();
++        sum = sumImpl.getResult();
++        sumsq = sumsqImpl.getResult();
++        min = minImpl.getResult();
++        max = maxImpl.getResult();
++        mean = meanImpl.getResult();
++        if (n < 2) {
++            variance = Double.NaN;
++            secondMomentValue = Double.NaN;
++        } else if (n == 2) {
++            secondMomentValue = sumsq - sum * sum / n;
++            variance = Double.NaN;
++        } else {
++            secondMomentValue = secondMoment.getResult();
++            variance = varianceImpl.getResult();
++        }
+     }
+-
+     /**
+      * Returns the number of available values
+      * @return The number of available values

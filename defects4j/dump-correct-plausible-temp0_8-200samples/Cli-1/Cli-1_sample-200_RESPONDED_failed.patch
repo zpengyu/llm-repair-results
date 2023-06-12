@@ -1,0 +1,88 @@
+diff --git a/src/java/org/apache/commons/cli/CommandLine.java b/src/java/org/apache/commons/cli/CommandLine.java
+index de23601..549c880 100644
+--- a/src/java/org/apache/commons/cli/CommandLine.java
++++ b/src/java/org/apache/commons/cli/CommandLine.java
+@@ -45,11 +43,8 @@ public class CommandLine {
+     /** the processed options */
+     private Map options = new HashMap();
+     private Map names = new HashMap();
+-
+     /** Map of unique options for ease to get complete list of options */
+-//    private Set allOptions = new HashSet();
+     private Map hashcodeMap = new HashMap();
+-
+     /**
+      * Creates a command line.
+      */
+@@ -160,15 +141,34 @@ public class CommandLine {
+             return ((Option) options.get(key)).getValues();
+         }
+         return null;
+-        }
+-
++    }
+     /**
+      * <p>Retrieves the option object given the long or short option as a String</p>
+      * @param opt short or long name of the option
+      * @return Canonicalized option
+      */
+-
+-
++    public Option getOption(String opt)
++    {
++        opt = Util.stripLeadingHyphens(opt);
++        String key = opt;
++        if (names.containsKey(opt))
++        {
++            key = (String) names.get(opt);
++        }
++        if (options.containsKey(key))
++        {
++            return (Option) options.get(key);
++        }
++        // if the option is null, check to see if the key
++        // passed in was a long name with a "=" at the end
++        // if so, then strip off the "=" and try again
++        // see bugzilla report 7363
++        if (opt.endsWith("=") && names.containsKey(opt.substring(0, opt.length() - 1)))
++        {
++            return (Option) options.get(names.get(opt.substring(0, opt.length() - 1)));
++        }
++        return null;
++    }
+     /**
+      * Retrieves the array of values, if any, of an option.
+      *
+@@ -234,29 +227,21 @@ public class CommandLine {
+     {
+         return args;
+     }
+-
+     /** 
+-     * jkeyes
+-     * - commented out until it is implemented properly
+-     * <p>Dump state, suitable for debugging.</p>
++     * Dump state, suitable for debugging.
+      *
+      * @return Stringified form of this object
+      */
+-
+-    /*
+-    public String toString() {
++    public String toString()
++    {
+         StringBuffer buf = new StringBuffer();
+-            
+         buf.append("[ CommandLine: [ options: ");
+         buf.append(options.toString());
+         buf.append(" ] [ args: ");
+         buf.append(args.toString());
+         buf.append(" ] ]");
+-            
+         return buf.toString();
+     }
+-    */
+-
+     /**
+      * Add left-over unrecognized option/argument.
+      *

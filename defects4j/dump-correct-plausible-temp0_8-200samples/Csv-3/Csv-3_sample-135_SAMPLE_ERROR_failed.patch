@@ -1,0 +1,27 @@
+diff --git a/src/main/java/org/apache/commons/csv/Lexer.java b/src/main/java/org/apache/commons/csv/Lexer.java
+index c161334..025e38c 100644
+--- a/src/main/java/org/apache/commons/csv/Lexer.java
++++ b/src/main/java/org/apache/commons/csv/Lexer.java
+@@ -108,11 +108,19 @@ abstract class Lexer {
+             throw new IOException("EOF whilst processing escape sequence");
+         default:
+             // Now check for meta-characters
+-                return c;
+-            // indicate unexpected char - available from in.getLastChar()
++            if (c >= 0 && c < 32) {
++                // control char - convert to unicode
++                return unicodeEscape(c);
++            } else if (c == '\\') {
++                return BACKSLASH;
++            } else if (c == '\"') {
++                return QUOTE;
++            } else {
++                // indicate unexpected char - available from in.getLastChar()
++                return -2;
++            }
+         }
+     }
+-
+     void trimTrailingSpaces(final StringBuilder buffer) {
+         int length = buffer.length();
+         while (length > 0 && Character.isWhitespace(buffer.charAt(length - 1))) {

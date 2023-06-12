@@ -1,0 +1,53 @@
+  private void inlineAliases(GlobalNamespace namespace) {
+    // Invariant: All the names in the worklist meet condition (a).
+    Deque<Name> workList = new ArrayDeque<Name>(namespace.getNameForest());
+    while (!workList.isEmpty()) {
+      Name name = workList.pop();
+      // Don't attempt to inline a getter or setter property as a variable.
+      if (name.type == Name.Type.GET || name.type == Name.Type.SET) {
+        continue;
+      }
+      if (name.globalSets == 1 && name.localSets == 0 &&
+          name.aliasingGets > 0) {
+        // {@code name} meets condition (b). Find all of its local aliases
+        // and try to inline them.
+        List<Ref> refs = Lists.newArrayList(name.getRefs());
+        for (Ref ref : refs) {
+          if (ref.type == Type.ALIASING_GET && ref.scope.isLocal()) {
+            // {@code name} meets condition (c). Try to inline it.
+            if (inlineAliasIfPossible(ref, namespace)) {
+              name.removeRef(ref);
+            }
+          }
+        }
+      }
+      // Check if {@code name} has any aliases left after the
+      // local-alias-inlining above.
+      if ((name.type == Name.Type.OBJECTLIT ||
+           name.type == Name.Type.FUNCTION) &&
+          name.aliasingGets == 0 && name.props != null &&
+          !name.refs.isEmpty()) {
+        // All of {@code name}'s children meet condition (a), so they can be
+        // added to the worklist.
+        workList.addAll(name.props);
+      }
+    }
+  }
+* Develop a set of test cases that expose the bug
+* Develop a set of test cases that don't expose the bug
+* Develop a hypothesis of what you think the bug is
+* Modify code based on hypothesis
+* Run test cases to see if hypothesis is correct
+* If correct, you've localized the bug!
+* Fix the bug
+* Retest the bug
+* Fix any regressions
+* Retest the bug
+* Add test cases for the bug
+* A good set of test cases can give you insight into the cause of the bug
+* Can be used to verify that you've fixed the bug
+* Can be used to verify that you haven't broken anything else
+* Examples of valid behavior
+* Examples of invalid behavior
+* Should be repeatable and easy to run
+* Should fail without a bug and pass with a bug

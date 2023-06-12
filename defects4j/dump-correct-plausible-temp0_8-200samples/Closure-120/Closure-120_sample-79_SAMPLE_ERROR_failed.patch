@@ -1,0 +1,25 @@
+diff --git a/src/com/google/javascript/jscomp/ReferenceCollectingCallback.java b/src/com/google/javascript/jscomp/ReferenceCollectingCallback.java
+index fefd3926..243abb40 100644
+--- a/src/com/google/javascript/jscomp/ReferenceCollectingCallback.java
++++ b/src/com/google/javascript/jscomp/ReferenceCollectingCallback.java
+@@ -430,13 +429,17 @@ class ReferenceCollectingCallback implements ScopedCallback,
+         if (block.isFunction) {
+           break;
+         } else if (block.isLoop) {
+-          return false;
++          if (ref.isParam()) {
++            // If the assignment is a param, then it's only assigned
++            // once in the lifetime of the function.
++            return true;
++          } else {
++            return false;
++          }
+         }
+       }
+-
+       return true;
+     }
+-
+     /**
+      * @return The one and only assignment. Returns if there are 0 or 2+
+      *    assignments.

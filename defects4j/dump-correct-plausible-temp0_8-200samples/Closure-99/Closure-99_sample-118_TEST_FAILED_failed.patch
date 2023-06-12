@@ -1,0 +1,22 @@
+diff --git a/src/com/google/javascript/jscomp/CheckGlobalThis.java b/src/com/google/javascript/jscomp/CheckGlobalThis.java
+index 961b964c..f8bda616 100644
+--- a/src/com/google/javascript/jscomp/CheckGlobalThis.java
++++ b/src/com/google/javascript/jscomp/CheckGlobalThis.java
+@@ -86,7 +85,7 @@ final class CheckGlobalThis implements Callback {
+     if (n.getType() == Token.FUNCTION) {
+       // Don't traverse functions that are constructors or have the @this
+       // or @override annotation.
+-      JSDocInfo jsDoc = getFunctionJsDocInfo(n);
++      JSDocInfo jsDoc = n.getJSDocInfo();
+       if (jsDoc != null &&
+           (jsDoc.isConstructor() ||
+            jsDoc.hasThisType() ||
+@@ -126,7 +122,7 @@ final class CheckGlobalThis implements Callback {
+               lhs.getLastChild().getString().equals("prototype")) {
+             return false;
+           }
+-          if (lhs.getQualifiedName() != null && lhs.getQualifiedName().contains(".prototype.")) {
++          if (NodeUtil.getPrototypeClassName(lhs) != null) {
+             return false;
+           }
+       }

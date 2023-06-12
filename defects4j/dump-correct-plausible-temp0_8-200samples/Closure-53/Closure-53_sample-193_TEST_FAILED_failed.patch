@@ -1,0 +1,37 @@
+diff --git a/src/com/google/javascript/jscomp/InlineObjectLiterals.java b/src/com/google/javascript/jscomp/InlineObjectLiterals.java
+index 5b8fedb1..9bf5039f 100644
+--- a/src/com/google/javascript/jscomp/InlineObjectLiterals.java
++++ b/src/com/google/javascript/jscomp/InlineObjectLiterals.java
+@@ -300,6 +300,8 @@ class InlineObjectLiterals implements CompilerPass {
+      * Note that the resulting expression will always evaluate to
+      * true, as would the x = {...} expression.
+      */
++// This code was taken from 
++// https://github.com/google/closure-compiler/issues/1320#issuecomment-222327012
+     private void replaceAssignmentExpression(Var v, Reference ref,
+                                              Map<String, String> varmap) {
+       // Compute all of the assignments necessary
+@@ -326,8 +327,10 @@ class InlineObjectLiterals implements CompilerPass {
+                    Node.newString(Token.NAME, varmap.get(var)),
+                    NodeUtil.newUndefinedNode(null)));
+       }
+-
+       Node replacement;
++      if (nodes.size() == 1) {
++        replacement = nodes.get(0);
++      } else {
+         // All assignments evaluate to true, so make sure that the
+         // expr statement evaluates to true in case it matters.
+         nodes.add(new Node(Token.TRUE));
+@@ -347,10 +349,9 @@ class InlineObjectLiterals implements CompilerPass {
+         }
+         cur.addChildToFront(nodes.get(i));
+         cur.addChildToFront(nodes.get(i + 1));
+-
++      }
+       Node replace = ref.getParent();
+       replacement.copyInformationFromForTree(replace);
+-
+       if (replace.getType() == Token.VAR) {
+         replace.getParent().replaceChild(
+             replace, NodeUtil.newExpr(replacement));

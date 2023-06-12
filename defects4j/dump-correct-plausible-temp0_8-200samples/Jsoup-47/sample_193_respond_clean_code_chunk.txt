@@ -1,0 +1,112 @@
+    static void escape(StringBuilder accum, String string, Document.OutputSettings out,
+                       boolean inAttribute, boolean normaliseWhite, boolean stripLeadingWhite) {
+        boolean lastWasWhite = false;
+        boolean reachedNonWhite = false;
+        final EscapeMode escapeMode = out.escapeMode();
+        final CharsetEncoder encoder = out.encoder();
+        final CoreCharset coreCharset = CoreCharset.byName(encoder.charset().name());
+        final Map<Character, String> map = escapeMode.getMap();
+        final int length = string.length();
+        final int lastOffset = length - 2;
+        int codePoint, offset = 0;
+        // html specific and required escapes:
+        final char[] buffer = new char[length * 2 + 2]; // worst case;
+        final char a = '&', lt = '<', gt = '>', quot = '"', nbsp = 0xA0;
+        while (offset < length) {
+            codePoint = string.codePointAt(offset);
+            if (normaliseWhite) {
+                if (StringUtil.isWhitespace(codePoint)) {
+                    if ((stripLeadingWhite && !reachedNonWhite) || lastWasWhite) {
+                        offset += Character.charCount(codePoint);
+                        continue;
+                    }
+                    buffer[offset++] = ' ';
+                    lastWasWhite = true;
+                    continue;
+                } else {
+                    lastWasWhite = false;
+                    reachedNonWhite = true;
+                }
+            }
+            // surrogate pairs, split implementation for efficiency on single char common case (saves creating strings, char[]):
+            if (codePoint < Character.MIN_SUPPLEMENTARY_CODE_POINT) {
+                final char c = (char) codePoint;
+                switch (c) {
+                    case a: // amp
+                        buffer[offset++] = a;
+                        buffer[offset++] = 'm';
+                        buffer[offset++] = 'p';
+                        break;
+                    case lt: // lt
+                        buffer[offset++] = a;
+                        buffer[offset++] = 'l';
+                        buffer[offset++] = 't';
+                        break;
+                    case gt: // gt
+                        buffer[offset++] = a;
+                        buffer[offset++] = 'g';
+                        buffer[offset++] = 't';
+                        break;
+                    case quot: // quot
+                        buffer[offset++] = a;
+                        buffer[offset++] = 'q';
+                        buffer[offset++] = 'u';
+                        buffer[offset++] = 'o';
+                        buffer[offset++] = 't';
+                        break;
+                    case nbsp: // nbsp
+                        if (escapeMode != EscapeMode.xhtml) {
+                            buffer[offset++] = a;
+                            buffer[offset++] = 'n';
+                            buffer[offset++] = 'b';
+                            buffer[offset++] = 's';
+                            buffer[offset++] = 'p';
+                        } else {
+                            buffer[offset++] = a;
+                            buffer[offset++] = '#';
+                            buffer[offset++] = 'x';
+                            buffer[offset++] = 'a';
+                            buffer[offset++] = '0';
+                        }
+                        break;
+                    default:
+                        if (canEncode(coreCharset, c, encoder)) {
+                            buffer[offset++] = c;
+                        } else if (map.containsKey(c)) {
+                            String e = map.get(c);
+                            final int elen = e.length();
+                            e.getChars(0, elen, buffer, offset);
+                            offset += elen;
+                        } else {
+                            buffer[offset++] = a;
+                            buffer[offset++] = '#';
+                            buffer[offset++] = 'x';
+                            final int ch = codePoint; // don't use Character.forDigit, as it doesn't accept negative values
+                            buffer[offset + 2] = Character.forDigit((ch >> 12) & 0xf, 16);
+                            buffer[offset + 3] = Character.forDigit((ch >> 8) & 0xf, 16);
+                            buffer[offset + 4] = Character.forDigit((ch >> 4) & 0xf, 16);
+                            buffer[offset + 5] = Character.forDigit(ch & 0xf, 16);
+                            offset += 6;
+                        }
+                }
+            } else {
+                final String c = new String(Character.toChars(codePoint));
+                if (encoder.canEncode(c)) { // uses fallback encoder for simplicity
+                    int clen = c.length();
+                    c.getChars(0, clen, buffer, offset);
+                    offset += clen;
+                } else {
+                    buffer[offset++] = a;
+                    buffer[offset++] = '#';
+                    buffer[offset++] = 'x';
+                    final int ch = codePoint; // don't use Character.forDigit, as it doesn't accept negative values
+                    buffer[offset + 2] = Character.forDigit((ch >> 12) & 0xf, 16);
+                    buffer[offset + 3] = Character.forDigit((ch >> 8) & 0xf, 16);
+                    buffer[offset + 4] = Character.forDigit((ch >> 4) & 0xf, 16);
+                    buffer[offset + 5] = Character.forDigit(ch & 0xf, 16);
+                    offset += 6;
+                }
+            }
+        }
+        accum.append(buffer, 0, offset);
+    }

@@ -1,0 +1,19 @@
+  public void visit(NodeTraversal t, Node n, Node parent) {
+    if (n.getType() == Token.THIS && shouldReportThis(n, parent)) {
+      compiler.report(t.makeError(n, level, GLOBAL_THIS));
+    }
+    if (n == assignLhsChild) {
+      assignLhsChild = null;
+    }
+  }
+
+  private boolean shouldReportThis(Node n, Node parent) {
+    if (assignLhsChild != null) {
+      // Always report a THIS on the left side of an assign.
+      return true;
+    }
+
+    // Also report a THIS with a property access.
+    return parent != null
+        && (parent.getType() == Token.GETPROP || parent.getType() == Token.GETELEM);
+  }

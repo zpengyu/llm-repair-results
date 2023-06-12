@@ -1,0 +1,29 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/jsontype/impl/TypeDeserializerBase.java b/src/main/java/com/fasterxml/jackson/databind/jsontype/impl/TypeDeserializerBase.java
+index 339362e1e..7f831dd17 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/jsontype/impl/TypeDeserializerBase.java
++++ b/src/main/java/com/fasterxml/jackson/databind/jsontype/impl/TypeDeserializerBase.java
+@@ -171,17 +171,13 @@ public abstract class TypeDeserializerBase
+                  *   type in process (getting SimpleType of Map.class which will not work as expected)
+                  */
+                 if ((_baseType != null)
+-                        && _baseType.getClass() == type.getClass()) {
+-                    /* 09-Aug-2015, tatu: Not sure if the second part of the check makes sense;
+-                     *   but it appears to check that JavaType impl class is the same which is
+-                     *   important for some reason?
+-                     *   Disabling the check will break 2 Enum-related tests.
+-                     */
+-                    // 19-Jun-2016, tatu: As per [databind#1270] we may actually get full
+-                    //   generic type with custom type resolvers. If so, should try to retain them.
+-                    //  Whether this is sufficient to avoid problems remains to be seen, but for
+-                    //  now it should improve things.
+-                        type = ctxt.getTypeFactory().constructSpecializedType(_baseType, type.getRawClass());
++                        && (_baseType.getClass() == type.getClass())
++                        // 19-Jun-2016, tatu: As per [databind#1270] we may actually get full
++                        //   generic type with custom type resolvers. If so, should try to retain them.
++                        //  Whether this is sufficient to avoid problems remains to be seen, but for
++                        //  now it should improve things.
++                        && !(type.isContainerType() && type.getContentType().hasRawClass(Object.class))) {
++                    type = ctxt.getTypeFactory().constructSpecializedType(_baseType, type.getRawClass());
+                 }
+                 deser = ctxt.findContextualValueDeserializer(type, _property);
+             }

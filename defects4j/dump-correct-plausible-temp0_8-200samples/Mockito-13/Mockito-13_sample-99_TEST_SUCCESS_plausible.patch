@@ -1,0 +1,20 @@
+diff --git a/src/org/mockito/internal/MockHandler.java b/src/org/mockito/internal/MockHandler.java
+index 9452f1664..29e114588 100644
+--- a/src/org/mockito/internal/MockHandler.java
++++ b/src/org/mockito/internal/MockHandler.java
+@@ -86,9 +82,13 @@ public class MockHandler<T> implements MockitoInvocationHandler, MockHandlerInte
+         invocationContainerImpl.setInvocationForPotentialStubbing(invocationMatcher);
+         OngoingStubbingImpl<T> ongoingStubbing = new OngoingStubbingImpl<T>(invocationContainerImpl);
+         mockingProgress.reportOngoingStubbing(ongoingStubbing);
+-
++        //if verificationMode is not null then someone is doing verify()
++        if (verificationMode != null) {
++            VerificationDataImpl data = new VerificationDataImpl(invocationContainerImpl, invocationMatcher);            
++            verificationMode.verify(data);
++            return null;
++        }
+         StubbedInvocationMatcher stubbedInvocation = invocationContainerImpl.findAnswerFor(invocation);
+-
+         if (stubbedInvocation != null) {
+             stubbedInvocation.captureArgumentsFrom(invocation);
+             return stubbedInvocation.answer(invocation);

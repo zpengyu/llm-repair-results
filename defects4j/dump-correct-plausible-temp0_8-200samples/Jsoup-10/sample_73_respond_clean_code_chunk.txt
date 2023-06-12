@@ -1,0 +1,36 @@
+public String absUrl(String attributeKey) {
+        Validate.notEmpty(attributeKey);
+        if (!hasAttr(attributeKey))
+            return ""; // nothing to make absolute with
+        String relUrl = attr(attributeKey);
+        if (!relUrl.contains("://")) {
+            if (relUrl.startsWith("//")) {
+                return "http:" + relUrl;
+            } else if (relUrl.startsWith("/")) {
+                try {
+                    URL abs = new URL(baseUri);
+                    return abs.getProtocol() + "://" + abs.getHost() + relUrl;
+                } catch (MalformedURLException e) {
+                    return "";
+                }
+            } else if (relUrl.startsWith("#")) {
+                try {
+                    URL abs = new URL(baseUri);
+                    return abs.getProtocol() + "://" + abs.getHost() + abs.getPath() + relUrl;
+                } catch (MalformedURLException e) {
+                    return "";
+                }
+            }
+        } else {
+            return relUrl;
+        }
+        // workaround: java resolves '//path/file + ?foo' to '//path/?foo', not '//path/file?foo' as desired
+        URL abs;
+        try {
+            abs = new URL(baseUri);
+            abs = new URL(abs, relUrl);
+        } catch (MalformedURLException e) {
+            return "";
+        }
+        return abs.toExternalForm();
+    }

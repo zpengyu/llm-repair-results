@@ -1,0 +1,22 @@
+diff --git a/src/main/java/org/apache/commons/compress/archivers/tar/TarArchiveOutputStream.java b/src/main/java/org/apache/commons/compress/archivers/tar/TarArchiveOutputStream.java
+index da6bbfde..9785c09e 100644
+--- a/src/main/java/org/apache/commons/compress/archivers/tar/TarArchiveOutputStream.java
++++ b/src/main/java/org/apache/commons/compress/archivers/tar/TarArchiveOutputStream.java
+@@ -485,11 +484,13 @@ public class TarArchiveOutputStream extends ArchiveOutputStream {
+         }
+         byte[] data = w.toString().getBytes(CharsetNames.UTF_8);
+         pex.setSize(data.length);
+-        putArchiveEntry(pex);
+-        write(data);
+-        closeArchiveEntry();
++        long written = 0;
++        while (written < data.length) {
++            putArchiveEntry(pex);
++            write(data, written, data.length - written);
++            closeArchiveEntry();
++        }
+     }
+-
+     private String stripTo7Bits(String name) {
+         final int length = name.length();
+         StringBuffer result = new StringBuffer(length);

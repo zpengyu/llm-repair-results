@@ -1,0 +1,24 @@
+diff --git a/src/main/java/org/apache/commons/compress/archivers/ArchiveStreamFactory.java b/src/main/java/org/apache/commons/compress/archivers/ArchiveStreamFactory.java
+index 57b411d0..c0b6f347 100644
+--- a/src/main/java/org/apache/commons/compress/archivers/ArchiveStreamFactory.java
++++ b/src/main/java/org/apache/commons/compress/archivers/ArchiveStreamFactory.java
+@@ -250,10 +246,16 @@ public class ArchiveStreamFactory {
+                     // ignored
+                 }
+             }
++            // BZIP2 needs an even bigger buffer to check the signature; read the first block
++            final byte[] bzheader = new byte[512];
++            in.mark(bzheader.length);
++            signatureLength = in.read(bzheader);
++            in.reset();
++            if (BZip2ArchiveInputStream.matches(bzheader, signatureLength)) {
++                return new BZip2ArchiveInputStream(in);
++            }
+         } catch (IOException e) {
+             throw new ArchiveException("Could not use reset and mark operations.", e);
+         }
+-
+         throw new ArchiveException("No Archiver found for the stream signature");
+-    }
+-}
++    }}

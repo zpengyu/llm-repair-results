@@ -1,0 +1,68 @@
+diff --git a/src/java/org/apache/commons/cli/CommandLine.java b/src/java/org/apache/commons/cli/CommandLine.java
+index de23601..9985120 100644
+--- a/src/java/org/apache/commons/cli/CommandLine.java
++++ b/src/java/org/apache/commons/cli/CommandLine.java
+@@ -45,11 +43,9 @@ public class CommandLine {
+     /** the processed options */
+     private Map options = new HashMap();
+     private Map names = new HashMap();
+-
+     /** Map of unique options for ease to get complete list of options */
+-//    private Set allOptions = new HashSet();
++    private Set allOptions = new HashSet();
+     private Map hashcodeMap = new HashMap();
+-
+     /**
+      * Creates a command line.
+      */
+@@ -167,8 +148,16 @@ public class CommandLine {
+      * @param opt short or long name of the option
+      * @return Canonicalized option
+      */
+-
+-
++    public Option getOption(String opt)
++    {
++        opt = Util.stripLeadingHyphens(opt);
++        // if the option is in the names map, then get the key
++        if (names.containsKey(opt))
++        {
++            opt = (String) names.get(opt);
++        }
++        return (Option) options.get(opt);
++    }
+     /** 
+      * Retrieves the array of values, if any, of an option.
+      *
+@@ -234,29 +216,21 @@ public class CommandLine {
+     {
+         return args;
+     }
+-
+     /** 
+-     * jkeyes
+-     * - commented out until it is implemented properly
+      * <p>Dump state, suitable for debugging.</p>
+      *
+      * @return Stringified form of this object
+      */
+-
+-    /*
+-    public String toString() {
++    public String toString()
++    {
+         StringBuffer buf = new StringBuffer();
+-            
+         buf.append("[ CommandLine: [ options: ");
+         buf.append(options.toString());
+         buf.append(" ] [ args: ");
+         buf.append(args.toString());
+         buf.append(" ] ]");
+-            
+         return buf.toString();
+     }
+-    */
+-
+     /**
+      * Add left-over unrecognized option/argument.
+      *

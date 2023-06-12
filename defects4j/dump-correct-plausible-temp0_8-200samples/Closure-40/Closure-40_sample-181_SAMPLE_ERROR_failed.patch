@@ -1,0 +1,25 @@
+diff --git a/src/com/google/javascript/jscomp/NameAnalyzer.java b/src/com/google/javascript/jscomp/NameAnalyzer.java
+index 25e2b5d4..e6ecb15a 100644
+--- a/src/com/google/javascript/jscomp/NameAnalyzer.java
++++ b/src/com/google/javascript/jscomp/NameAnalyzer.java
+@@ -924,7 +913,19 @@ final class NameAnalyzer implements CompilerPass {
+         }
+       }
+     }
+-
++  private boolean maybeRecordAlias(String name, Node parent,
++                                   NameInformation referring,
++                                   String referringName) {
++    if (NodeUtil.isNameDeclaration(parent)) {
++      if (referring != null) {
++        recordAlias(referringName, name);
++      } else {
++        recordAlias(WINDOW, name);
++      }
++      return true;
++    }
++    return false;
++  }
+     /**
+      * A value whose result is the return value of a function call
+      * can be an alias to global object. The dependency on the call target will

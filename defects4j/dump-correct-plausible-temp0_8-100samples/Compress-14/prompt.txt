@@ -1,0 +1,106 @@
+###Provide a fix for the buggy function
+###Buggy Function
+class FibonacciExample {
+    public static void main(String args[]) {
+        int n1 = 0, n2 = 1, n3, i, count = 10;
+
+        System.out.print(n1 + " " + n2);
+
+        for (i = 2; i < count; ++i) {
+            n3 = n1 - n2;
+            System.out.print(" " + n3);
+            n1 = n2;
+            n2 = n3;
+        }
+    }
+}
+
+###Fixed Function
+class FibonacciExample {
+    public static void main(String args[]) {
+        int n1 = 0, n2 = 1, n3, i, count = 10;
+
+        System.out.print(n1 + " " + n2);
+
+        for (i = 2; i < count; ++i) {
+            n3 = n1 + n2;
+            System.out.print(" " + n3);
+            n1 = n2;
+            n2 = n3;
+        }
+    }
+}
+
+###Provide a fix for the buggy function
+###Buggy Function
+protected void setName(String name) {
+    this.name = name;
+}
+###Fixed Function
+protected void setName(String name) {
+   if (name != null && getPlatform() == PLATFORM_FAT
+       && name.indexOf("/") == -1) {
+       name = name.replace('\\', '/');
+   }
+}
+###Provide a fix for the buggy function
+###Buggy Function
+    public static long parseOctal(final byte[] buffer, final int offset, final int length) {
+        long    result = 0;
+        int     end = offset + length;
+        int     start = offset;
+
+        if (length < 2){
+            throw new IllegalArgumentException("Length "+length+" must be at least 2");
+        }
+
+        boolean allNUL = true;
+        for (int i = start; i < end; i++){
+            if (buffer[i] != 0){
+                allNUL = false;
+                break;
+            }
+        }
+        if (allNUL) {
+            return 0L;
+        }
+
+        // Skip leading spaces
+        while (start < end){
+            if (buffer[start] == ' '){
+                start++;
+            } else {
+                break;
+            }
+        }
+
+        // Must have trailing NUL or space
+        byte trailer;
+        trailer = buffer[end-1];
+        if (trailer == 0 || trailer == ' '){
+            end--;
+        } else {
+            throw new IllegalArgumentException(
+                    exceptionMessage(buffer, offset, length, end-1, trailer));
+        }
+        // May have additional NUL or space
+        trailer = buffer[end-1];
+        if (trailer == 0 || trailer == ' '){
+            end--;
+        }
+
+        for ( ;start < end; start++) {
+            final byte currentByte = buffer[start];
+            // CheckStyle:MagicNumber OFF
+            if (currentByte < '0' || currentByte > '7'){
+                throw new IllegalArgumentException(
+                        exceptionMessage(buffer, offset, length, start, currentByte));
+            }
+            result = (result << 3) + (currentByte - '0'); // convert from ASCII
+            // CheckStyle:MagicNumber ON
+        }
+
+        return result;
+    }
+
+###Fixed Function

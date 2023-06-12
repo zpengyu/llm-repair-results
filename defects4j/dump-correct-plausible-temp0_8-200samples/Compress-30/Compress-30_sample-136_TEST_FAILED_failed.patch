@@ -1,0 +1,25 @@
+diff --git a/src/main/java/org/apache/commons/compress/compressors/bzip2/BZip2CompressorInputStream.java b/src/main/java/org/apache/commons/compress/compressors/bzip2/BZip2CompressorInputStream.java
+index d0c0d43c..6efe2e58 100644
+--- a/src/main/java/org/apache/commons/compress/compressors/bzip2/BZip2CompressorInputStream.java
++++ b/src/main/java/org/apache/commons/compress/compressors/bzip2/BZip2CompressorInputStream.java
+@@ -170,10 +169,18 @@ public class BZip2CompressorInputStream extends CompressorInputStream implements
+         int destOffs = offs;
+         int b;
+         while (destOffs < hi && ((b = read0()) >= 0)) {
+-            dest[destOffs++] = (byte) b;
++            if (b < 0x80) {
++                dest[destOffs++] = (byte) b;
++            } else if (b < 0x800) {
++                dest[destOffs++] = (byte) (0xc0 | (b >> 6));
++                dest[destOffs++] = (byte) (0x80 | (b & 0x3f));
++            } else {
++                dest[destOffs++] = (byte) (0xe0 | (b >> 12));
++                dest[destOffs++] = (byte) (0x80 | ((b >> 6) & 0x3f));
++                dest[destOffs++] = (byte) (0x80 | (b & 0x3f));
++            }
+             count(1);
+         }
+-
+         int c = (destOffs == offs) ? -1 : (destOffs - offs);
+         return c;
+     }

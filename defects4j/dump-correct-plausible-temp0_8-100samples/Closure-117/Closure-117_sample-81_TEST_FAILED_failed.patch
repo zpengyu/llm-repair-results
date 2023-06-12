@@ -1,0 +1,22 @@
+diff --git a/src/com/google/javascript/jscomp/TypeValidator.java b/src/com/google/javascript/jscomp/TypeValidator.java
+index c6d25483..bfc3d991 100644
+--- a/src/com/google/javascript/jscomp/TypeValidator.java
++++ b/src/com/google/javascript/jscomp/TypeValidator.java
+@@ -752,9 +749,15 @@ class TypeValidator {
+         }
+       }
+     }
+-
+     JSType type = getJSType(n);
+-    if (dereference) {
++    if (dereference && type.isUnionType()) {
++      // The below statement is a workaround for a bug we introduced in
++      // 1174. In that bug, we're making getJSType return a union type
++      // when calling getJSType on the LHS of an assign. See the bug for
++      // more info.
++      type = type.toMaybeUnionType().getRestrictedTypeGivenToBooleanOutcome(
++          true);
++    } else if (dereference) {
+       ObjectType dereferenced = type.dereference();
+       if (dereferenced != null) {
+         type = dereferenced;

@@ -1,0 +1,19 @@
+diff --git a/src/com/google/javascript/jscomp/parsing/IRFactory.java b/src/com/google/javascript/jscomp/parsing/IRFactory.java
+index 6a42e729..2b556796 100644
+--- a/src/com/google/javascript/jscomp/parsing/IRFactory.java
++++ b/src/com/google/javascript/jscomp/parsing/IRFactory.java
+@@ -565,8 +565,12 @@ class IRFactory {
+ 
+     @Override
+     Node processForInLoop(ForInLoop loopNode) {
+-
+-        // Return the bare minimum to put the AST in a valid state.
++      if (loopNode.isForEach()) {
++        report(
++            t.makeError(loopNode, FOR_EACH_NOT_SUPPORTED,
++                loopNode.getTypeAsString()));
++      }
++      // Return the bare minimum to put the AST in a valid state.
+       return newNode(
+           Token.FOR,
+           transform(loopNode.getIterator()),

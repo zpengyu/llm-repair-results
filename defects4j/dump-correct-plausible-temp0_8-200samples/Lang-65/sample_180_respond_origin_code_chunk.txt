@@ -1,0 +1,98 @@
+    private static void modify(Calendar val, int field, boolean round) {
+        if (val.get(Calendar.YEAR) > 280000000) {
+            throw new ArithmeticException("Calendar value too large for accurate calculations");
+        }
+
+
+        if (field == DateUtils.SEMI_MONTH) {
+            if (val.get(Calendar.DATE) == 1) {
+                val.add(Calendar.DATE, 15);
+            }
+            else {
+                val.add(Calendar.DATE, -15);
+                val.add(Calendar.MONTH, 1);
+            }
+            return;
+        }
+
+        Date date = val.getTime();
+        long time = date.getTime();
+        boolean done = false;
+
+        // ----------------- Fix for LANG-440 ---------------------- START ---------------
+        // see http://issues.apache.org/jira/browse/LANG-440
+        //
+        // Human time (second, minute, hour, day)
+        // ----------------- Fix for LANG-440 ----------------------- END ----------------
+
+        //The time stamp given by the user is basically millisecond precision
+        // and calculations to generate a useful date for the beginning of the
+        // next instance of a field are easily overflowed by the residual time stamp.
+        // For this reason, the time stamp is reset to zero when a DATE or DATE_TIME
+        // field is passed in. This allows the time stamp to be divided down to the
+        // appropriate precision and prevents overflow.
+        switch (field) {
+            case DateUtils.ROUND_LIGHT_SECOND:
+            case DateUtils.ROUND_LIGHT_MINUTE:
+            case DateUtils.ROUND_LIGHT_HOUR:
+            case DateUtils.ROUND_LIGHT_DAY:
+            case Calendar.DATE:
+            case Calendar.HOUR_OF_DAY:
+            case Calendar.MINUTE:
+            case Calendar.SECOND:
+            case Calendar.MILLISECOND:
+                done = true;
+                break;
+        }
+
+        if (!done) {
+            throw new IllegalArgumentException("The field " + field + " is not supported");
+        }
+        // ceil round up floor
+        if (round) {
+            if (field == DateUtils.ROUND_LIGHT_SECOND) {
+                time = 1000 * ((time + 500) / 1000);
+            }
+            else if (field == DateUtils.ROUND_LIGHT_MINUTE) {
+                time = 60000 * ((time + 30000) / 60000);
+            }
+            else if (field == DateUtils.ROUND_LIGHT_HOUR) {
+                time = 3600000 * ((time + 1800000) / 3600000);
+            }
+            else if (field == DateUtils.ROUND_LIGHT_DAY) {
+                time = 86400000 * ((time + 43200000) / 86400000);
+            }
+            else if (field == Calendar.SECOND) {
+                time = 1000 * ((time + 500) / 1000);
+            }
+            else if (field == Calendar.MINUTE) {
+                time = 60000 * ((time + 30000) / 60000);
+            }
+            else if (field == Calendar.HOUR_OF_DAY) {
+                time = 3600000 * ((time + 1800000) / 3600000);
+            }
+            else if (field == Calendar.DATE || field == Calendar.DAY_OF_MONTH) {
+                time = 86400000 * ((time + 43200000) / 86400000);
+            }
+            date.setTime(time);
+            val.setTime(date);
+            return;
+        }
+        else {
+            if (field == Calendar.SECOND) {
+                time = 1000 * (time / 1000);
+            }
+            else if (field == Calendar.MINUTE) {
+                time = 60000 * (time / 60000);
+            }
+            else if (field == Calendar.HOUR_OF_DAY) {
+                time = 3600000 * (time / 3600000);
+            }
+            else if (field == Calendar.DATE) {
+                time = 86400000 * (time / 86400000);
+            }
+            date.setTime(time);
+            val.setTime(date);
+            return;
+        }
+    }

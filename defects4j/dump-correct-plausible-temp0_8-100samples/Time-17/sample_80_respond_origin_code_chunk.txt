@@ -1,0 +1,33 @@
+    public long adjustOffset(long instant, boolean earlierOrLater) {
+        // a bit messy, but will work in all non-pathological cases
+        
+        // evaluate 3 hours before and after to work out if anything is happening
+        long instantBefore = convertUTCToLocal(instant - 3 * DateTimeConstants.MILLIS_PER_HOUR);
+        long instantAfter = convertUTCToLocal(instant + 3 * DateTimeConstants.MILLIS_PER_HOUR);
+        if (instantBefore == instantAfter) {
+            return instant;  // not an overlap (less than is a gap, equal is normal case)
+        }
+        
+        // work out range of instants that have duplicate local times
+        long local = convertUTCToLocal(instant);
+        return convertLocalToUTC(local, instantBefore < instantAfter, earlierOrLater ? instantAfter : instantBefore);
+        
+        // calculate result
+        long offsetBefore = convertUTCToLocal(instantBefore);
+        long offsetAfter = convertUTCToLocal(instantAfter);
+        long earlierOffset = offsetBefore - instantBefore;
+        long laterOffset = offsetAfter - instantAfter;
+        long difference = earlierOffset - laterOffset;
+        if (difference > 0) {
+            // earlier gap is greater
+            return instant + earlierOffset;  // currently in later offset
+        } else if (difference < 0) {
+            return instant + laterOffset;  // currently in earlier offset
+        } else if (earlierOffset > 0) {
+            return instant + earlierOffset;  // both negative (past gap is greater)
+        } else if (earlierOffset < 0) {
+            return instant + laterOffset;  // both positive (future gap is greater)
+        } else {
+            return instant + earlierOffset;  // both zero (no gap)
+        }
+    }

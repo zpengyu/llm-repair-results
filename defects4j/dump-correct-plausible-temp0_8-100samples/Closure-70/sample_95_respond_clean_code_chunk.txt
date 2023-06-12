@@ -1,0 +1,25 @@
+    private void declareArguments(Node functionNode) {
+      Node astParameters = functionNode.getFirstChild().getNext();
+      Node body = astParameters.getNext();
+      FunctionType functionType = (FunctionType) functionNode.getJSType();
+      if (functionType != null) {
+        Node jsDocParameters = functionType.getParametersNode();
+        if (jsDocParameters != null) {
+          Node jsDocParameter = jsDocParameters.getFirstChild();
+          int jsDocParameterIndex = 0;
+          for (Node astParameter : astParameters.children()) {
+            if (jsDocParameter != null) {
+              defineSlot(astParameter, functionNode,
+                  jsDocParameter.getJSType(), true);
+              jsDocParameter = jsDocParameter.getNext();
+              jsDocParameterIndex++;
+            } else {
+              defineSlot(astParameter, functionNode, null, true);
+            }
+          }
+          // Prevent the JsDoc parameter type from being checked
+          // against the actual parameter types.
+          functionType.getParametersCount();
+        }
+      }
+    } // end declareArguments

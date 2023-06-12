@@ -1,0 +1,20 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/deser/impl/ExternalTypeHandler.java b/src/main/java/com/fasterxml/jackson/databind/deser/impl/ExternalTypeHandler.java
+index b0797059f..5fa8766d1 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/deser/impl/ExternalTypeHandler.java
++++ b/src/main/java/com/fasterxml/jackson/databind/deser/impl/ExternalTypeHandler.java
+@@ -299,7 +297,14 @@ public class ExternalTypeHandler
+                 }
+             }
+         }
+-        Object bean = creator.build(ctxt, buffer);
++        Object bean;
++        try {
++            bean = creator.build(ctxt, buffer);
++        } catch (Exception e) {
++            ClassUtil.unwrapAndThrowAsIAE(e, "Failed to instantiate bean of type %s from String value ('%s'); no single-String constructor/factory method",
++                    _beanType.getRawClass().getName(), _neitherNull(_tokens[0], _typeIds[0]));
++            return null; // never gets here
++        }
+         // third: assign non-creator properties
+         for (int i = 0; i < len; ++i) {
+             SettableBeanProperty prop = _properties[i].getProperty();

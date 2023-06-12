@@ -1,0 +1,77 @@
+    private String _handleOddName2(int startPtr, int hash, int[] codes) throws IOException
+    {
+        _textBuffer.resetWithShared(_inputBuffer, startPtr, (_inputPtr - startPtr));
+        char[] outBuf = _textBuffer.getCurrentSegment();
+        int outPtr = _textBuffer.getCurrentSegmentSize();
+        final int maxCode = codes.length;
+
+        while (true) {
+            if (_inputPtr >= _inputEnd) {
+                if (!_loadMore()) { // acceptable for now (will error out later)
+                    break;
+                }
+            }
+            char c = _inputBuffer[_inputPtr];
+            int i = (int) c;
+            if (i <= maxCode) {
+                if (codes[i] != 0) {
+                    break;
+                }
+            } else if (!Character.isJavaIdentifierPart(c)) {
+                break;
+            }
+            ++_inputPtr;
+            hash = (hash * CharsToNameCanonicalizer.HASH_MULT) + i;
+            // Ok, let's add char to output:
+            outBuf[outPtr++] = c;
+
+            // Need more room?
+            if (outPtr >= outBuf.length) {
+                outBuf = _textBuffer.finishCurrentSegment();
+                outPtr = 0;
+            }
+        }
+        _textBuffer.setCurrentLength(outPtr);
+        {
+            TextBuffer tb = _textBuffer;
+            char[] buf = tb.getTextBuffer();
+            int start = tb.getTextOffset();
+            int len = tb.size();
+            return addSymbol(buf, start, len, hash, codes);
+        }
+    }
+    private String addSymbol(char[] buffer, int start, int len, int hash, int[] codes) throws IOException
+    {
+        return _hashToSymbol[_findOffsetForAdd(computeHash(hash))].init(buffer, start, len, hash, codes);
+    }
+    // // // Internal methods
+
+    private int _findOffsetForAdd(int hash)
+    {
+        int ix = (hash & _hashMask);
+        Bucket bucket = _hashToSymbol[ix];
+        if (bucket != null) {
+            if (bucket.matchesHash(hash)) {
+                return ix;
+            }
+            return _findOffsetForAdd(hash, ix);
+        }
+        return ix;
+    }
+    
+    private int _findOffsetForAdd(int hash, int ix)
+    {
+        // Need to probe
+        final int probeOffset = (hash >> 8) + hash;
+        final int bucketCount = _hashToSymbol.length;
+        int probeIx = (ix + probeOffset) & (_hashToSymbol.length-1);
+
+        Bucket bucket = _hashToSymbol[probeIx];
+        if (bucket != null) {
+            if (bucket.matchesHash(hash)) {
+                return probeIx;
+            }
+            return _findOffsetForAdd(hash, probeIx);
+        }
+        return probeIx;
+    }

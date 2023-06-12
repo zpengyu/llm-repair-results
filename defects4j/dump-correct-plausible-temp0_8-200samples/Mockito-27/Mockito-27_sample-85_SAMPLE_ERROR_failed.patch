@@ -1,0 +1,26 @@
+diff --git a/src/org/mockito/internal/util/MockUtil.java b/src/org/mockito/internal/util/MockUtil.java
+index 3c20596b0..3b8b57adf 100644
+--- a/src/org/mockito/internal/util/MockUtil.java
++++ b/src/org/mockito/internal/util/MockUtil.java
+@@ -59,13 +59,18 @@ public class MockUtil {
+         return mock;
+     }
+ 
+-    public <T> void resetMock(T mock) {
++public void resetMock(T mock) {
+         MockHandlerInterface<T> oldMockHandler = getMockHandler(mock);
+         MockHandler<T> newMockHandler = new MockHandler<T>(oldMockHandler);
+         MethodInterceptorFilter newFilter = new MethodInterceptorFilter(newMockHandler, (MockSettingsImpl) org.mockito.Mockito.withSettings().defaultAnswer(org.mockito.Mockito.RETURNS_DEFAULTS));
+-        ((Factory) mock).setCallback(0, newFilter);
++        Field f = ReflectionUtils.findField(Factory.class, "callbacks");
++        f.setAccessible(true);
++        try {
++            ((Map) f.get(mock)).put(0, newFilter);
++        } catch (IllegalAccessException e) {
++            throw new MockitoException(e);
++        }
+     }
+-
+     private <T> MethodInterceptorFilter newMethodInterceptorFilter(MockSettingsImpl settings) {
+         MockHandler<T> mockHandler = new MockHandler<T>(settings);
+         InvocationNotifierHandler<T> invocationNotifierHandler = new InvocationNotifierHandler<T>(mockHandler, settings);

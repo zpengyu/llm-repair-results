@@ -1,0 +1,21 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/ser/BeanPropertyWriter.java b/src/main/java/com/fasterxml/jackson/databind/ser/BeanPropertyWriter.java
+index 781cacf84..334112cff 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/ser/BeanPropertyWriter.java
++++ b/src/main/java/com/fasterxml/jackson/databind/ser/BeanPropertyWriter.java
+@@ -579,13 +579,15 @@ public class BeanPropertyWriter
+      * 
+      * @since 2.1
+      */
+-    public void serializeAsColumn(Object bean, JsonGenerator jgen, SerializerProvider prov)
++	public void serializeAsColumn(Object bean, JsonGenerator jgen, SerializerProvider prov)
+         throws Exception
+     {
+         Object value = get(bean);
+         if (value == null) { // nulls need specialized handling
+             if (_nullSerializer != null) {
+                 _nullSerializer.serialize(null, jgen, prov);
++            } else if (_nullValueSerializer != null) { // can NOT suppress entries in tabular output
++                _nullValueSerializer.serialize(_nullValue, jgen, prov);
+             } else { // can NOT suppress entries in tabular output
+                 jgen.writeNull();
+             }

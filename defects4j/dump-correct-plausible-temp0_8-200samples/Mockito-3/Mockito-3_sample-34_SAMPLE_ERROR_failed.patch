@@ -1,0 +1,46 @@
+diff --git a/src/org/mockito/internal/invocation/InvocationMatcher.java b/src/org/mockito/internal/invocation/InvocationMatcher.java
+index a3a7c08df..870b90fc6 100644
+--- a/src/org/mockito/internal/invocation/InvocationMatcher.java
++++ b/src/org/mockito/internal/invocation/InvocationMatcher.java
+@@ -24,7 +23,7 @@ public class InvocationMatcher implements DescribedInvocation, CapturesArgumensF
+     private static final long serialVersionUID = -3047126096857467610L;
+     private final Invocation invocation;
+     private final List<Matcher> matchers;
+-
++    private final boolean isGeneric;
+     public InvocationMatcher(Invocation invocation, List<Matcher> matchers) {
+         this.invocation = invocation;
+         if (matchers.isEmpty()) {
+@@ -32,8 +31,8 @@ public class InvocationMatcher implements DescribedInvocation, CapturesArgumensF
+         } else {
+             this.matchers = matchers;
+         }
++        this.isGeneric = Modifier.isAbstract(invocation.getMethod().getModifiers());
+     }
+-    
+     public InvocationMatcher(Invocation invocation) {
+         this(invocation, Collections.<Matcher>emptyList());
+     }
+@@ -53,13 +48,17 @@ public class InvocationMatcher implements DescribedInvocation, CapturesArgumensF
+     public String toString() {
+         return new PrintSettings().print(matchers, invocation);
+     }
+-
+     public boolean matches(Invocation actual) {
+-        return invocation.getMock().equals(actual.getMock())
+-                && hasSameMethod(actual)
+-                && new ArgumentsComparator().argumentsMatch(this, actual);
++        if (isGeneric) {
++            return invocation.getMock().equals(actual.getMock())
++                    && hasSameMethod(actual)
++                    && new ArgumentsComparator().argumentsMatch(this, actual);
++        } else {
++            return invocation.getMock().equals(actual.getMock())
++                    && hasSameMethod(actual)
++                    && new ArgumentsComparator().argumentsMatch(this, actual);
++        }
+     }
+-
+     private boolean safelyArgumentsMatch(Object[] actualArgs) {
+         try {
+             return new ArgumentsComparator().argumentsMatch(this, actualArgs);

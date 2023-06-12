@@ -1,0 +1,38 @@
+diff --git a/src/main/java/com/fasterxml/jackson/core/json/JsonGeneratorImpl.java b/src/main/java/com/fasterxml/jackson/core/json/JsonGeneratorImpl.java
+index 81b90fed..ed7d7abe 100644
+--- a/src/main/java/com/fasterxml/jackson/core/json/JsonGeneratorImpl.java
++++ b/src/main/java/com/fasterxml/jackson/core/json/JsonGeneratorImpl.java
+@@ -194,4 +168,32 @@ public abstract class JsonGeneratorImpl extends GeneratorBase
+         writeFieldName(fieldName);
+         writeString(value);
+     }
++    @Override
++    public final void writeFieldName(String name) throws IOException
++    {
++        if (_cfgPrettyPrinter != null) {
++            _writePPFieldName(name);
++            return;
++        }
++        int status = _writeContext.writeFieldName(name);
++        if (status == JsonWriteContext.STATUS_EXPECT_VALUE) {
++            if (_cfgUnqNames) { // static, so won't change
++                _reportError("Can not write a field name, expecting a value");
++            }
++            _writeQuotedFieldName(name);
++            return;
++        }
++        if (status == JsonWriteContext.STATUS_OK_AFTER_COMMA) {
++            _cfgPrettyPrinter.writeObjectEntrySeparator(this);
++        } else if (status == JsonWriteContext.STATUS_OK_AFTER_COLON) {
++            _cfgPrettyPrinter.writeObjectFieldValueSeparator(this);
++        } else if (_rootValueSeparator != null) {
++            writeRaw(_rootValueSeparator.getValue());
++        }
++        if (_cfgUnqNames) { // static, so won't change
++            _writeString(name);
++            return;
++        }
++        _writeQuotedFieldName(name);
++    }
+ }
+\ No newline at end of file

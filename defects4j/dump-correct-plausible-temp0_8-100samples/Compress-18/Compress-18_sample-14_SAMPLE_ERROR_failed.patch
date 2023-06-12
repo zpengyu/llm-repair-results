@@ -1,0 +1,23 @@
+diff --git a/src/main/java/org/apache/commons/compress/archivers/tar/TarArchiveOutputStream.java b/src/main/java/org/apache/commons/compress/archivers/tar/TarArchiveOutputStream.java
+index da6bbfde..12c2dda7 100644
+--- a/src/main/java/org/apache/commons/compress/archivers/tar/TarArchiveOutputStream.java
++++ b/src/main/java/org/apache/commons/compress/archivers/tar/TarArchiveOutputStream.java
+@@ -466,6 +465,9 @@ public class TarArchiveOutputStream extends ArchiveOutputStream {
+         for (Map.Entry<String, String> h : headers.entrySet()) {
+             String key = h.getKey();
+             String value = h.getValue();
++            if (value.length() > MAX_PAX_VALUE_LENGTH) {
++                throw new IOException("Value of header '" + key + "' too long");
++            }
+             int len = key.length() + value.length()
+                 + 3 /* blank, equals and newline */
+                 + 2 /* guess 9 < actual length < 100 */;
+@@ -489,7 +491,7 @@ public class TarArchiveOutputStream extends ArchiveOutputStream {
+         write(data);
+         closeArchiveEntry();
+     }
+-
++Run the program with different inputs.
+     private String stripTo7Bits(String name) {
+         final int length = name.length();
+         StringBuffer result = new StringBuffer(length);

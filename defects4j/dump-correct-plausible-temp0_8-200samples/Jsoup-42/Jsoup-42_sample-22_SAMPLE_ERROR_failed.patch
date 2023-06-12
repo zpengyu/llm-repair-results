@@ -1,0 +1,77 @@
+diff --git a/src/main/java/org/jsoup/nodes/FormElement.java b/src/main/java/org/jsoup/nodes/FormElement.java
+index 256eb1b..37502cd 100644
+--- a/src/main/java/org/jsoup/nodes/FormElement.java
++++ b/src/main/java/org/jsoup/nodes/FormElement.java
+@@ -71,41 +71,43 @@ public class FormElement extends Element {
+      * list will not be reflected in the DOM.
+      * @return a list of key vals
+      */
+-    public List<Connection.KeyVal> formData() {
+-        ArrayList<Connection.KeyVal> data = new ArrayList<Connection.KeyVal>();
+-
+-        // iterate the form control elements and accumulate their values
+-        for (Element el: elements) {
+-            if (!el.tag().isFormSubmittable()) continue; // contents are form listable, superset of submitable
+-            String name = el.attr("name");
+-            if (name.length() == 0) continue;
+-            String type = el.attr("type");
+-
+-            if ("select".equals(el.tagName())) {
+-                Elements options = el.select("option[selected]");
+-                boolean set = false;
+-                for (Element option: options) {
++public List<Connection.KeyVal> formData() {
++    ArrayList<Connection.KeyVal> data = new ArrayList<Connection.KeyVal>();
++    // iterate the form control elements and accumulate their values
++    for (Element el: elements) {
++        if (!el.tag().isFormSubmittable()) continue; // contents are form listable, superset of submitable
++        String name = el.attr("name");
++        if (name.length() == 0) continue;
++        String type = el.attr("type");
++        if ("select".equals(el.tagName())) {
++            Elements options = el.select("option[selected]");
++            boolean set = false;
++            for (Element option: options) {
++                data.add(HttpConnection.KeyVal.create(name, option.val()));
++                set = true;
++            }
++            if (!set) {
++                Element option = el.select("option").first();
++                if (option != null)
+                     data.add(HttpConnection.KeyVal.create(name, option.val()));
+-                    set = true;
+-                }
+-                if (!set) {
+-                    Element option = el.select("option").first();
+-                    if (option != null)
+-                        data.add(HttpConnection.KeyVal.create(name, option.val()));
+-                }
+-            } else if ("checkbox".equalsIgnoreCase(type) || "radio".equalsIgnoreCase(type)) {
+-                // only add checkbox or radio if they have the checked attribute
+-                if (el.hasAttr("checked")) {
+-                    final String val = el.val();
++            }
++        } else if ("checkbox".equalsIgnoreCase(type) || "radio".equalsIgnoreCase(type)) {
++            // only add checkbox or radio if they have the checked attribute
++            if (el.hasAttr("checked")) {
++                final String val = el.val();
++                if (val != null) {
+                     data.add(HttpConnection.KeyVal.create(name, val));
+                 }
+-            } else {
+-                data.add(HttpConnection.KeyVal.create(name, el.val()));
+             }
++        } else {
++            data.add(HttpConnection.KeyVal.create(name, el.val()));
+         }
+-        return data;
+     }
+-
++    return data;
++}
++* The issue with the following Code is one of the parameters being taken as input is of type String, as opposed to integer. 
++* As such, when the code is executed, an exception is thrown as the code tries to convert a String to an integer. 
++* The code is buggy as it does not check if the String can be converted to an integer.
+     @Override
+     public boolean equals(Object o) {
+         return super.equals(o);

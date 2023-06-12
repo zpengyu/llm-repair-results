@@ -1,0 +1,23 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/type/TypeFactory.java b/src/main/java/com/fasterxml/jackson/databind/type/TypeFactory.java
+index 87b165830..178be19be 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/type/TypeFactory.java
++++ b/src/main/java/com/fasterxml/jackson/databind/type/TypeFactory.java
+@@ -925,10 +922,15 @@ public final class TypeFactory
+          *   (T extends Comparable<T>). Need to add "placeholder"
+          *   for resolution to catch those.
+          */
+-        context._addPlaceholder(name);
+-        return _constructType(bounds[0], context);
++        if (context.isBound()) {
++            context._addPlaceholder(name);
++            return _constructType(bounds[0], context);
++        }
++        // Otherwise, let's just use type itself. This gets tricky, since
++        // we MUST NOT use context; and if bounds exist, need to use raw type:
++        Type lowerBound = (bounds.length == 0) ? type : bounds[0];
++        return _constructType(lowerBound, null);
+     }
+-
+     protected JavaType _fromWildcard(WildcardType type, TypeBindings context)
+     {
+         /* Similar to challenges with TypeVariable, we may have

@@ -1,0 +1,35 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/jsontype/impl/TypeDeserializerBase.java b/src/main/java/com/fasterxml/jackson/databind/jsontype/impl/TypeDeserializerBase.java
+index 339362e1e..1933693af 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/jsontype/impl/TypeDeserializerBase.java
++++ b/src/main/java/com/fasterxml/jackson/databind/jsontype/impl/TypeDeserializerBase.java
+@@ -142,12 +142,24 @@ public abstract class TypeDeserializerBase
+     {
+         JsonDeserializer<Object> deser = _deserializers.get(typeId);
+         if (deser == null) {
+-            /* As per [Databind#305], need to provide contextual info. But for
+-             * backwards compatibility, let's start by only supporting this
+-             * for base class, not via interface. Later on we can add this
+-             * to the interface, assuming deprecation at base class helps.
+-             */
+-            JavaType type = _idResolver.typeFromId(ctxt, typeId);
++            JavaType type;
++            try {
++                type = _idResolver.typeFromId(ctxt, typeId);
++            } catch (IllegalArgumentException iae) {
++                // 10-May-2016, tatu: We may get some help...
++                JavaType actual = _handleUnknownTypeId(ctxt, typeId, _idResolver, _baseType);
++                if (actual == null) { // what should this be taken to mean?
++                    // TODO: try to figure out something better
++                    return null;
++                }
++                // ... would this actually work?
++                deser = ctxt.findContextualValueDeserializer(actual, _property);
++                if (deser != null) {
++                    return deser;
++                }
++                // ... but probably not, so we'll get an exception
++                type = actual;
++            }
+             if (type == null) {
+                 // As per [JACKSON-614], use the default impl if no type id available:
+                 deser = _findDefaultImplDeserializer(ctxt);

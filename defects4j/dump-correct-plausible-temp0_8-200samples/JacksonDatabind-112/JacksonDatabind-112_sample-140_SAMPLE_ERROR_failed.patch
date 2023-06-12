@@ -1,0 +1,17 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/deser/std/StringCollectionDeserializer.java b/src/main/java/com/fasterxml/jackson/databind/deser/std/StringCollectionDeserializer.java
+index 42c6f0491..2cb3a1a3d 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/deser/std/StringCollectionDeserializer.java
++++ b/src/main/java/com/fasterxml/jackson/databind/deser/std/StringCollectionDeserializer.java
+@@ -107,6 +107,12 @@ public final class StringCollectionDeserializer
+             AnnotatedWithParams delegateCreator = _valueInstantiator.getDelegateCreator();
+             if (delegateCreator != null) {
+                 JavaType delegateType = _valueInstantiator.getDelegateType(ctxt.getConfig());
++                if (delegateType == null) {
++                    // 08-Feb-2016, tatu: Fix for [databind#1256], trying to avoid
++                    throw ctxt.mappingException("Invalid delegate-creator definition for "
++                            +_mapType+": value instantiator ("+_valueInstantiator.getClass().getName()
++                            +") returned true for 'canCreateUsingDelegate()', but null for 'getDelegateType()'");
++                }
+                 delegate = findDeserializer(ctxt, delegateType, property);
+             }
+         }

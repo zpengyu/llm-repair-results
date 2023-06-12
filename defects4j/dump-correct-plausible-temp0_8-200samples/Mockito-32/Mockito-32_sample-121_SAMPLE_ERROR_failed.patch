@@ -1,0 +1,58 @@
+diff --git a/src/org/mockito/internal/configuration/SpyAnnotationEngine.java b/src/org/mockito/internal/configuration/SpyAnnotationEngine.java
+index e292e1300..519cba37b 100644
+--- a/src/org/mockito/internal/configuration/SpyAnnotationEngine.java
++++ b/src/org/mockito/internal/configuration/SpyAnnotationEngine.java
+@@ -35,12 +35,15 @@ public class SpyAnnotationEngine implements AnnotationEngine {
+                 try {
+                     Object instance = field.get(testClass);
+                     if (instance == null) {
+-                        throw new MockitoException("Cannot create a @Spy for '" + field.getName() + "' field because the *instance* is missing\n" +
+-                        		  "The instance must be created *before* initMocks();\n" +
+-                                  "Example of correct usage of @Spy:\n" +
+-                            	  "   @Spy List mock = new LinkedList();\n" +
+-                            	  "   //also, don't forget about MockitoAnnotations.initMocks();");
+-
++                        try {
++                            instance = newInstanceUsingMockitoConstructor(field, testClass);
++                        } catch (Exception e) {
++                            throw new MockitoException("Cannot create a @Spy for '" + field.getName() + "' field because the *instance* is missing\n" +
++                            		  "The instance must be created *before* initMocks();\n" +
++                                      "Example of correct usage of @Spy:\n" +
++                            		  "   @Spy List mock = new LinkedList();\n" +
++                            		  "   //also, don't forget about MockitoAnnotations.initMocks();", e);
++                        }
+                     }
+                     if (new MockUtil().isMock(instance)) { 
+                         // instance has been spied earlier
+@@ -56,7 +59,30 @@ public class SpyAnnotationEngine implements AnnotationEngine {
+             }
+         }
+     }
+-    
++    private Object newInstanceUsingMockitoConstructor(Field field, Object testClass) throws Exception {
++        MockitoAnnotations.Mock mockAnnotation = field.getAnnotation(MockitoAnnotations.Mock.class);
++        if (mockAnnotation == null) {
++            throw new IllegalStateException("Mock annotation should not be null here");
++        }
++        Class<?> typeToMock = mockAnnotation.value();
++        if (typeToMock == Void.class) {
++            typeToMock = field.getType();
++        }
++        return createDefaultInstanceUsingMockitoConstructor(typeToMock, field, testClass);
++    }
++    private Object createDefaultInstanceUsingMockitoConstructor(Class<?> typeToMock, Field field, Object testClass) throws Exception {
++        if (typeToMock.isEnum()) {
++            Field enumConstants = Enum.class.getDeclaredField("$VALUES");
++            enumConstants.setAccessible(true);
++            Object[] enumValues = (Object[]) enumConstants.get(null);
++            return enumValues[0];
++        }
++        if (typeToMock.isInterface()) {
++            return Mockito.mock(typeToMock);
++        } else {
++            return new ConstructorInjection().getConstructorFor(typeToMock).newInstance();
++        }
++    }    
+     //TODO duplicated elsewhere
+     void assertNoAnnotations(Class annotation, Field field, Class ... undesiredAnnotations) {
+         for (Class u : undesiredAnnotations) {

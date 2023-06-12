@@ -1,0 +1,31 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/jsontype/impl/AsPropertyTypeDeserializer.java b/src/main/java/com/fasterxml/jackson/databind/jsontype/impl/AsPropertyTypeDeserializer.java
+index 8bad30e7c..0a3f413e6 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/jsontype/impl/AsPropertyTypeDeserializer.java
++++ b/src/main/java/com/fasterxml/jackson/databind/jsontype/impl/AsPropertyTypeDeserializer.java
+@@ -134,7 +134,6 @@ public class AsPropertyTypeDeserializer extends AsArrayTypeDeserializer
+     protected Object _deserializeTypedUsingDefaultImpl(JsonParser p, DeserializationContext ctxt,
+             TokenBuffer tb) throws IOException
+     {
+-        // As per [JACKSON-614], may have default implementation to use
+         JsonDeserializer<Object> deser = _findDefaultImplDeserializer(ctxt);
+         if (deser != null) {
+             if (tb != null) {
+@@ -154,11 +153,14 @@ public class AsPropertyTypeDeserializer extends AsArrayTypeDeserializer
+         if (p.getCurrentToken() == JsonToken.START_ARRAY) {
+             return super.deserializeTypedFromAny(p, ctxt);
+         }
+-        ctxt.reportWrongTokenException(p, JsonToken.FIELD_NAME,
+-                "missing property '"+_typePropertyName+"' that is to contain type id  (for class "+baseTypeName()+")");
+-        return null;
++        // No default implementation, and not a natural type either:
++        if (tb != null) {
++            tb.writeEndObject();
++            p = tb.asParser(p);
++            p.nextToken();
++        }
++        return ctxt.handleUnexpectedToken(_baseType, p);
+     }
+-
+     /* Also need to re-route "unknown" version. Need to think
+      * this through bit more in future, but for now this does address issue and has
+      * no negative side effects (at least within existing unit test suite).

@@ -1,0 +1,33 @@
+diff --git a/src/java/org/apache/commons/jxpath/ri/model/dom/DOMNodePointer.java b/src/java/org/apache/commons/jxpath/ri/model/dom/DOMNodePointer.java
+index a5bb202..f8d482b 100644
+--- a/src/java/org/apache/commons/jxpath/ri/model/dom/DOMNodePointer.java
++++ b/src/java/org/apache/commons/jxpath/ri/model/dom/DOMNodePointer.java
+@@ -89,10 +89,6 @@ public class DOMNodePointer extends NodePointer {
+             return true;
+         }
+         if (test instanceof NodeNameTest) {
+-            if (node.getNodeType() != Node.ELEMENT_NODE) {
+-                return false;
+-            }
+-
+             NodeNameTest nodeNameTest = (NodeNameTest) test;
+             QName testName = nodeNameTest.getNodeName();
+             String namespaceURI = nodeNameTest.getNamespaceURI();
+@@ -101,11 +97,13 @@ public class DOMNodePointer extends NodePointer {
+             if (wildcard && testPrefix == null) {
+                 return true;
+             }
+-            if (wildcard
+-                || testName.getName()
+-                        .equals(DOMNodePointer.getLocalName(node))) {
++            int nodeType = node.getNodeType();
++            if (wildcard && nodeType == Node.ELEMENT_NODE) {
+                 String nodeNS = DOMNodePointer.getNamespaceURI(node);
+-                return equalStrings(namespaceURI, nodeNS);
++                if (equalStrings(namespaceURI, nodeNS)
++                    && testName.getName().equals(DOMNodePointer.getLocalName(node))) {
++                    return true;
++                }
+             }
+             return false;
+         }

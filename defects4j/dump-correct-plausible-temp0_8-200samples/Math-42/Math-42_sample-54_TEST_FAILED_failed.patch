@@ -1,0 +1,22 @@
+diff --git a/src/main/java/org/apache/commons/math/optimization/linear/SimplexTableau.java b/src/main/java/org/apache/commons/math/optimization/linear/SimplexTableau.java
+index 3c21cb52c..3112f2a63 100644
+--- a/src/main/java/org/apache/commons/math/optimization/linear/SimplexTableau.java
++++ b/src/main/java/org/apache/commons/math/optimization/linear/SimplexTableau.java
+@@ -421,9 +420,15 @@ class SimplexTableau implements Serializable {
+                   (restrictToNonNegative ? 0 : mostNegative);
+           }
+       }
+-      return new RealPointValuePair(coefficients, f.getValue(coefficients));
++      if (f instanceof LinearObjectiveFunction) {
++            // for a linear objective function we can just return the computed solution vector
++          return new RealPointValuePair(coefficients, f.getValue(coefficients));
++      } else {
++            // for a nonlinear objective function we need to recompute the objective function value
++            // at the found point (note that the solver only minimizes)
++          return new RealPointValuePair(coefficients, -f.getValue(coefficients));
++      }
+     }
+-
+     /**
+      * Subtracts a multiple of one row from another.
+      * <p>

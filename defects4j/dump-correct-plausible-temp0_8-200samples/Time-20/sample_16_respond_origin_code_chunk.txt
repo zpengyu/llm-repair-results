@@ -1,0 +1,52 @@
+            public int parseInto(DateTimeParserBucket bucket, String text, int position) {
+                DateTimeParser[] parsers = iParsers;
+                int length = parsers.length;
+
+                int bestValidPos = position;
+                Object bestValidState = null;
+
+                int bestInvalidPos = position;
+
+                for (int i=0; i<length; i++) {
+                    DateTimeParser parser = parsers[i];
+                    if (parser == null) {
+                        // The empty parser wins only if nothing is better.
+                        if (bestValidPos <= position) {
+                            return position;
+                        }
+                        break;
+                    }
+                    int parsePos = parser.parseInto(bucket, text, position);
+                    if (parsePos >= position) {
+                        if (parsePos > bestValidPos) {
+                            if (parsePos >= text.length() ||
+                                (i + 1) >= length || parsers[i + 1] == null) {
+
+                                // Completely parsed text or no more parsers to
+                                // check. Skip the rest.
+                                return parsePos;
+                            }
+                            bestValidPos = parsePos;
+                            bestValidState = bucket.saveState();
+                        }
+                    } else {
+                        if (parsePos < 0) {
+                            parsePos = ~parsePos;
+                            if (parsePos > bestInvalidPos) {
+                                bestInvalidPos = parsePos;
+                            }
+                        }
+                    }
+                }
+
+                if (bestValidPos > position) {
+                    // Restore the state to the best valid parse.
+                    if (bestValidState != null) {
+                        bucket.restoreState(bestValidState);
+                    }
+                    return bestValidPos;
+                }
+
+                return ~bestInvalidPos;
+            }
+

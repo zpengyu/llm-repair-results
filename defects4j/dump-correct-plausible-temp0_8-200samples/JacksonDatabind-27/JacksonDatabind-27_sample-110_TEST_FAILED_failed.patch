@@ -1,0 +1,25 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/deser/BeanDeserializer.java b/src/main/java/com/fasterxml/jackson/databind/deser/BeanDeserializer.java
+index cd54e7788..f59680628 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/deser/BeanDeserializer.java
++++ b/src/main/java/com/fasterxml/jackson/databind/deser/BeanDeserializer.java
+@@ -791,10 +789,9 @@ public class BeanDeserializer
+                 // first: let's check to see if this might be part of value with external type id:
+                 // 11-Sep-2015, tatu: Important; do NOT pass buffer as last arg, but null,
+                 //   since it is not the bean
+-                if (ext.handlePropertyValue(p, ctxt, propName, buffer)) {
+-                    ;
+-                } else {
+-                    // Last creator property to set?
++                if (ext.handlePropertyValue(p, ctxt, propName, null)) {
++                    // 11-Sep-2015, tatu: as per [databind#975], can not assume that we can create
++                    //   instance now; so instead have to stash away first
+                     if (buffer.assignParameter(creatorProp, _deserializeWithErrorWrapping(p, ctxt, creatorProp))) {
+                         t = p.nextToken(); // to move to following FIELD_NAME/END_OBJECT
+                         Object bean;
+@@ -854,5 +850,4 @@ public class BeanDeserializer
+             wrapInstantiationProblem(e, ctxt);
+             return null; // never gets here
+         }
+-    }
+-}
++    }}

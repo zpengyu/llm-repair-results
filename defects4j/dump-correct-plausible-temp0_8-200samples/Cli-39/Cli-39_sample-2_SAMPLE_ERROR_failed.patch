@@ -1,0 +1,32 @@
+diff --git a/src/main/java/org/apache/commons/cli/TypeHandler.java b/src/main/java/org/apache/commons/cli/TypeHandler.java
+index 775e0f2..84788b3 100644
+--- a/src/main/java/org/apache/commons/cli/TypeHandler.java
++++ b/src/main/java/org/apache/commons/cli/TypeHandler.java
+@@ -231,7 +221,26 @@ public class TypeHandler
+      * @return The file input stream represented by <code>str</code>.
+      * @throws ParseException if the file is not exist or not readable
+      */
+-
++    public static FileInputStream createFileInputStream(final String str) throws ParseException
++    {
++        final File f = new File(str);
++        if (!f.exists() || !f.isFile())
++        {
++            throw new ParseException("File " + str + " doesn't exist or is not a file");
++        }
++        if (!f.canRead())
++        {
++            throw new ParseException("File " + str + " is not readable.");
++        }
++        try
++        {
++            return new FileInputStream(f);
++        }
++        catch (final IOException ioe)
++        {
++            throw new ParseException("Unable to open FileInputStream for file: " + str);
++        }
++    }
+     /**
+      * Returns the File[] represented by <code>str</code>.
+      * <p>

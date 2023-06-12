@@ -1,0 +1,32 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/jsontype/impl/SubTypeValidator.java b/src/main/java/com/fasterxml/jackson/databind/jsontype/impl/SubTypeValidator.java
+index fe9cba8d4..402fd8797 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/jsontype/impl/SubTypeValidator.java
++++ b/src/main/java/com/fasterxml/jackson/databind/jsontype/impl/SubTypeValidator.java
+@@ -64,7 +64,7 @@ public class SubTypeValidator
+ 
+     public static SubTypeValidator instance() { return instance; }
+ 
+-    public void validateSubType(DeserializationContext ctxt, JavaType type) throws JsonMappingException
++  public void validateSubType(DeserializationContext ctxt, JavaType type) throws JsonMappingException
+     {
+         // There are certain nasty classes that could cause problems, mostly
+         // via default typing -- catch them here.
+@@ -80,7 +78,7 @@ public class SubTypeValidator
+             // 18-Dec-2017, tatu: As per [databind#1855], need bit more sophisticated handling
+             //    for some Spring framework types
+             // 05-Jan-2017, tatu: ... also, only applies to classes, not interfaces
+-            if (full.startsWith(PREFIX_STRING)) {
++            if (full.startsWith(PREFIX_STRING) && !raw.isInterface()) {
+                 for (Class<?> cls = raw; cls != Object.class; cls = cls.getSuperclass()) {
+                     String name = cls.getSimpleName();
+                     // looking for "AbstractBeanFactoryPointcutAdvisor" but no point to allow any is there?
+@@ -93,8 +91,6 @@ public class SubTypeValidator
+             }
+             return;
+         } while (false);
+-
+         throw JsonMappingException.from(ctxt,
+                 String.format("Illegal type (%s) to deserialize: prevented for security reasons", full));
+-    }
+-}
++    }}

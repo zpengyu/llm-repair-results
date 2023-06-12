@@ -1,0 +1,56 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/deser/BeanDeserializer.java b/src/main/java/com/fasterxml/jackson/databind/deser/BeanDeserializer.java
+index 3c89dc109..27b184401 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/deser/BeanDeserializer.java
++++ b/src/main/java/com/fasterxml/jackson/databind/deser/BeanDeserializer.java
+@@ -736,16 +736,10 @@ public class BeanDeserializer
+     protected Object deserializeUsingPropertyBasedWithUnwrapped(JsonParser p, DeserializationContext ctxt)
+         throws IOException
+     {
+-        // 01-Dec-2016, tatu: Note: This IS legal to call, but only when unwrapped
+-        //    value itself is NOT passed via `CreatorProperty` (which isn't supported).
+-        //    Ok however to pass via setter or field.
+-        
+         final PropertyBasedCreator creator = _propertyBasedCreator;
+         PropertyValueBuffer buffer = creator.startBuilding(p, ctxt, _objectIdReader);
+-
+         TokenBuffer tokens = new TokenBuffer(p, ctxt);
+         tokens.writeStartObject();
+-
+         JsonToken t = p.getCurrentToken();
+         for (; t == JsonToken.FIELD_NAME; t = p.nextToken()) {
+             String propName = p.getCurrentName();
+@@ -767,8 +761,7 @@ public class BeanDeserializer
+                     p.setCurrentValue(bean);
+                     // if so, need to copy all remaining tokens into buffer
+                     while (t == JsonToken.FIELD_NAME) {
+-                        // NOTE: do NOT skip name as it needs to be copied; `copyCurrentStructure` does that
+-                        p.nextToken();
++                        p.nextToken(); // to skip name
+                         tokens.copyCurrentStructure(p);
+                         t = p.nextToken();
+                     }
+@@ -805,11 +798,7 @@ public class BeanDeserializer
+             //    both to any setter AND buffer... but, for now, the only thing
+             //    we can do.
+             // how about any setter? We'll get copies but...
+-            if (_anySetter == null) {
+-                // but... others should be passed to unwrapped property deserializers
+-                tokens.writeFieldName(propName);
+-                tokens.copyCurrentStructure(p);
+-            } else {
++            if (_anySetter != null) {
+                 // Need to copy to a separate buffer first
+                 TokenBuffer b2 = TokenBuffer.asCopyOfValue(p);
+                 tokens.writeFieldName(propName);
+@@ -822,8 +811,10 @@ public class BeanDeserializer
+                 }
+                 continue;
+             }
++            // but... others should be passed to unwrapped property deserializers
++            tokens.writeFieldName(propName);
++            tokens.copyCurrentStructure(p);
+         }
+-
+         // We hit END_OBJECT, so:
+         Object bean;
+         try {

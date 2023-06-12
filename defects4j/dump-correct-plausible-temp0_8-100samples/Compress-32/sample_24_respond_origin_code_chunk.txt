@@ -1,0 +1,60 @@
+    private void applyPaxHeadersToCurrentEntry(Map<String, String> headers) {
+        /*
+         * The following headers are defined for Pax.
+         * atime, ctime, charset: cannot use these without changing TarArchiveEntry fields
+         * mtime
+         * comment
+         * gid, gname
+         * linkpath
+         * size
+         * uid,uname
+         * SCHILY.devminor, SCHILY.devmajor: don't have setters/getters for those
+         */
+        for (Entry<String, String> ent : headers.entrySet()){
+            String key = ent.getKey();
+            String val = ent.getValue();
+            if ("path".equals(key)){
+                currEntry.setName(val);
+            } else if ("linkpath".equals(key)){
+                currEntry.setLinkName(val);
+            } else if ("gid".equals(key)){
+                currEntry.setGroupId(Integer.parseInt(val));
+            } else if ("gname".equals(key)){
+                currEntry.setGroupName(val);
+            } else if ("uid".equals(key)){
+                currEntry.setUserId(Integer.parseInt(val));
+            } else if ("uname".equals(key)){
+                currEntry.setUserName(val);
+            } else if ("size".equals(key)){
+                try {
+                    currEntry.setSize(Long.parseLong(val));
+                } catch (NumberFormatException e) {
+                    if (val.contains(".")) {
+                        currEntry.setSize(Long.parseLong(val.substring(0, val.indexOf("."))));
+                    } else {
+                        e.printStackTrace();
+                    }
+                }
+            } else if ("mtime".equals(key)){
+                currEntry.setModTime((long) (Double.parseDouble(val) * 1000));
+            } else if ("SCHILY.devminor".equals(key)){
+                currEntry.setDevMinor(Integer.parseInt(val));
+            } else if ("SCHILY.devmajor".equals(key)){
+                currEntry.setDevMajor(Integer.parseInt(val));
+            }
+        }
+    }
+
+## Question 2 - Analyze the following Java method and write down the set of
+## atomic execution steps, and the number of atomic execution steps (without
+## considering the code inside the try/catch block)
+    public static boolean isExist(String pathname) {
+        File file = new File(pathname);
+        if (file.exists()) {
+            System.out.println("The file/directory " + pathname + " exists.");
+            return true;
+        } else {
+            System.out.println("The file/directory " + pathname + " does not exist.");
+            return false;
+        }
+    }

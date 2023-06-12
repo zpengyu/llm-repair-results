@@ -1,0 +1,49 @@
+diff --git a/src/java/org/apache/commons/jxpath/ri/compiler/CoreOperationRelationalExpression.java b/src/java/org/apache/commons/jxpath/ri/compiler/CoreOperationRelationalExpression.java
+index cd4ceac..4dba14b 100644
+--- a/src/java/org/apache/commons/jxpath/ri/compiler/CoreOperationRelationalExpression.java
++++ b/src/java/org/apache/commons/jxpath/ri/compiler/CoreOperationRelationalExpression.java
+@@ -87,17 +80,13 @@ public abstract class CoreOperationRelationalExpression extends CoreOperation {
+         if (right instanceof Iterator) {
+             return containsMatch((Iterator) right, left);
+         }
+-        double ld = InfoSetUtil.doubleValue(left);
+-        if (Double.isNaN(ld)) {
+-            return false;
+-        }
+-        double rd = InfoSetUtil.doubleValue(right);
+-        if (Double.isNaN(rd)) {
+-            return false;
++        if (right instanceof Node) {
++            return compare(InfoSetUtil.doubleValue(left), InfoSetUtil
++                    .doubleValue(((Node) right).value()));
+         }
+-        return evaluateCompare(ld == rd ? 0 : ld < rd ? -1 : 1);
++        return compare(InfoSetUtil.doubleValue(left), InfoSetUtil
++                .doubleValue(right));
+     }
+-
+     /**
+      * Reduce an operand for comparison.
+      * @param o Object to reduce
+@@ -154,5 +140,19 @@ public abstract class CoreOperationRelationalExpression extends CoreOperation {
+         }
+         return false;
+     }
+-
++    /**
++     * Compare two values.
++     * @param left left value
++     * @param right right value
++     * @return operation success/failure
++     */
++    private boolean compare(double left, double right) {
++        if (Double.isNaN(left)) {
++            return false;
++        }
++        if (Double.isNaN(right)) {
++            return false;
++        }
++        return evaluateCompare(left == right ? 0 : left < right ? -1 : 1);
++    }
+ }
+\ No newline at end of file

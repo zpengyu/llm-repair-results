@@ -1,0 +1,28 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/AnnotationIntrospector.java b/src/main/java/com/fasterxml/jackson/databind/AnnotationIntrospector.java
+index 624a1fd7e..27e4ed7bb 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/AnnotationIntrospector.java
++++ b/src/main/java/com/fasterxml/jackson/databind/AnnotationIntrospector.java
+@@ -816,7 +813,23 @@ public abstract class AnnotationIntrospector
+                 try {
+                     // 11-Oct-2015, tatu: For deser, we call `TypeFactory.constructSpecializedType()`,
+                     //   may be needed here too in future?
++                    if (type.isArrayType() && serClass.isArray()) {
++                        Class<?> currElem = type.getContentType().getRawClass();
++                        Class<?> newElem = serClass.getComponentType();
++                        if (newElem.isAssignableFrom(currElem)) {
++                            type = tf.constructArrayType(newElem);
++                        } else if (currElem.isAssignableFrom(newElem)) {
++                            type = tf.constructArrayType(currElem);
++                        } else {
++                            throw new JsonMappingException(null,
++                                    String.format("Failed to narrow type %s with annotation (value %s), from '%s': incompatible types",
++                                            type, serClass.getName(), a.getName()));
++                        }
++                        // And either way, have to add static typing...
++                        type = type.withStaticTyping();
++                    } else {
+                         type = tf.constructGeneralizedType(type, serClass);
++                    }
+                 } catch (IllegalArgumentException iae) {
+                     throw new JsonMappingException(null,
+                             String.format("Failed to widen type %s with annotation (value %s), from '%s': %s",

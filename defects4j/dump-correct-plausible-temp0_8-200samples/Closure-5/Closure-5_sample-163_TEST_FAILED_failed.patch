@@ -1,0 +1,51 @@
+diff --git a/src/com/google/javascript/jscomp/InlineObjectLiterals.java b/src/com/google/javascript/jscomp/InlineObjectLiterals.java
+index 2f5a8e10..efd9c4a9 100644
+--- a/src/com/google/javascript/jscomp/InlineObjectLiterals.java
++++ b/src/com/google/javascript/jscomp/InlineObjectLiterals.java
+@@ -155,6 +155,7 @@ class InlineObjectLiterals implements CompilerPass {
+     private boolean isInlinableObject(List<Reference> refs) {
+       boolean ret = false;
+       Set<String> validProperties = Sets.newHashSet();
++      Set<String> undefinedProperties = Sets.newHashSet();
+       for (Reference ref : refs) {
+         Node name = ref.getNode();
+         Node parent = ref.getParent();
+@@ -183,7 +181,8 @@ class InlineObjectLiterals implements CompilerPass {
+           // to a property that isn't defined on the object literal. This
+           // isn't a perfect algorithm, but it should catch most cases.
+           String propName = parent.getLastChild().getString();
+-          if (!validProperties.contains(propName)) {
++          if (!validProperties.contains(propName)
++              && !undefinedProperties.contains(propName)) {
+             if (NodeUtil.isVarOrSimpleAssignLhs(parent, gramps)) {
+               validProperties.add(propName);
+             } else {
+@@ -249,9 +240,27 @@ class InlineObjectLiterals implements CompilerPass {
+         // we can inline.
+         ret = true;
+       }
++      undefinedProperties.clear();
++      for (Reference ref : refs) {
++        Node name = ref.getNode();
++        Node parent = ref.getParent();
++        Node gramps = ref.getGrandparent();
++        if (parent.isGetProp()) {
++          Preconditions.checkState(parent.getFirstChild() == name);
++          String propName = parent.getLastChild().getString();
++          if (validProperties.contains(propName)) {
++            continue;
++          }
++          if (NodeUtil.isVarOrSimpleAssignLhs(parent, gramps)) {
++            undefinedProperties.add(propName);
++          } else {
++            return false;
++          }
++          continue;
++        }
++      }
+       return ret;
+     }
+-
+     private boolean isVarOrAssignExprLhs(Node n) {
+       Node parent = n.getParent();
+       return parent.isVar() ||

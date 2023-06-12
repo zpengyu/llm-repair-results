@@ -1,0 +1,27 @@
+diff --git a/src/main/java/org/jsoup/parser/CharacterReader.java b/src/main/java/org/jsoup/parser/CharacterReader.java
+index c5d91e0..96771c2 100644
+--- a/src/main/java/org/jsoup/parser/CharacterReader.java
++++ b/src/main/java/org/jsoup/parser/CharacterReader.java
+@@ -443,8 +440,20 @@ public final class CharacterReader {
+             if (rangeEquals(charBuf, start, count, cached)) { // hit
+                 return cached;
+             } else { // hashcode conflict
+-                cached = new String(charBuf, start, count);
+-                stringCache[index] = cached; // update the cache, as recently used strings are more likely to show up again
++                int index2 = (hash >>> 7) & stringCache.length - 1;
++                String cached2 = stringCache[index2];
++                if (cached2 == null) { // miss, add
++                    cached2 = new String(charBuf, start, count);
++                    stringCache[index2] = cached2;
++                } else { // hashcode hit, check equality
++                    if (rangeEquals(charBuf, start, count, cached2)) { // hit
++                        return cached2;
++                    } else { // hashcode conflict
++                        cached2 = new String(charBuf, start, count);
++                        stringCache[index2] = cached2; // update the cache, as recently used strings are more likely to show up again
++                    }
++                }
++                return cached2;
+             }
+         }
+         return cached;

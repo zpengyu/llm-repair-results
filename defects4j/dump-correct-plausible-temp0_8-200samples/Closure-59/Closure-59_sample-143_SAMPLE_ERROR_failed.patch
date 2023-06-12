@@ -1,0 +1,26 @@
+diff --git a/src/com/google/javascript/jscomp/Compiler.java b/src/com/google/javascript/jscomp/Compiler.java
+index f96ec5db..d77d4c6c 100644
+--- a/src/com/google/javascript/jscomp/Compiler.java
++++ b/src/com/google/javascript/jscomp/Compiler.java
+@@ -282,11 +276,19 @@ public class Compiler extends AbstractCompiler {
+         !composedGuards.enables(DiagnosticGroups.CHECK_VARIABLES)) {
+       composedGuards.addGuard(new DiagnosticGroupWarningsGuard(
+           DiagnosticGroups.CHECK_VARIABLES, CheckLevel.OFF));
++    } else {
++      // Check the externs file for validity.
++      CompilerDiagnosticGroups groups = getDiagnosticGroups();
++      JSError[] externsErrors = externsRoot.getExternsErrors();
++      for (JSError externsError : externsErrors) {
++        DiagnosticType type = groups.forType(externsError.getType());
++        if (type != null && type.getDefaultLevel() != CheckLevel.OFF) {
++          errorManager.report(externsError);
++        }
++      }
+     }
+-
+     this.warningsGuard = composedGuards;
+   }
+-
+   /**
+    * Initializes the instance state needed for a compile job.
+    */

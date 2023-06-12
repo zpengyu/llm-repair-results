@@ -1,0 +1,51 @@
+diff --git a/src/com/google/javascript/jscomp/ControlFlowAnalysis.java b/src/com/google/javascript/jscomp/ControlFlowAnalysis.java
+index 0f5c5421..69380f2c 100644
+--- a/src/com/google/javascript/jscomp/ControlFlowAnalysis.java
++++ b/src/com/google/javascript/jscomp/ControlFlowAnalysis.java
+@@ -787,7 +783,45 @@ final class ControlFlowAnalysis implements Callback, CompilerPass {
+       return computeFollowNode(fromNode, parent, cfa);
+     }
+   }
+-
++  /**
++   * @param node Node for which the fall through node needs to be found.
++   * @return The fall through node of the given node.
++   */
++  private static Node computeFallThrough(Node node) {
++    if (node.isBlock()) {
++      return node.getFirstChild();
++    } else if (node.isLabel()) {
++      return computeFallThrough(node.getFirstChild());
++    } else if (node.isFunction()) {
++      return null;
++    } else if (node.isIf()) {
++      Node elseBlock = NodeUtil.getElseBlock(node);
++      Node thenBlock = node.getFirstChild().getNext();
++      if (elseBlock != null) {
++        return elseBlock;
++      } else {
++        return thenBlock;
++      }
++    } else if (node.isSwitch()) {
++      return node.getFirstChild().getNext();
++    } else if (node.isDefaultCase()) {
++      return node.getFirstChild();
++    } else if (node.isCase()) {
++      return node.getFirstChild().getNext();
++    } else if (node.isTry()) {
++      return node.getFirstChild();
++    } else if (node.isCatch()) {
++      return node.getFirstChild();
++    } else if (node.isFinally()) {
++      return node.getFirstChild();
++    } else if (NodeUtil.isForIn(node)) {
++      return node.getLastChild();
++    } else if (NodeUtil.isLoopStructure(node)) {
++      return node.getFirstChild().getNext().getNext();
++    } else {
++      return node.getNext();
++    }
++  }
+   /**
+    * Computes the destination node of n when we want to fallthrough into the
+    * subtree of n. We don't always create a CFG edge into n itself because of

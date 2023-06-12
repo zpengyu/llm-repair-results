@@ -1,0 +1,71 @@
+    public void withPattern(final String pattern) {
+        int sz = pattern.length();
+
+        char opt = ' ';
+        char ch = ' ';
+        char type = ' ';
+        boolean required = false;
+
+        for (int i = 0; i < sz; i++) {
+            ch = pattern.charAt(i);
+
+            switch (ch) {
+                case '!' :
+                    required = true;
+                    break;
+                case '@' :
+                case ':' :
+                case '%' :
+                case '+' :
+                case '#' :
+                case '<' :
+                case '>' :
+                case '*' :
+                case '/' :
+                    type = ch;
+                    break;
+                default :
+                    if (opt != ' ') {
+                        createOption(type, required, opt);
+                        required = false;
+                        type = ' ';
+                    }
+
+                    opt = ch;
+            }
+        }
+
+        if (opt != ' ') {
+            createOption(type, required, opt);
+        }
+    }
+
+    private static Validator validator(final char c) {
+        switch (c) {
+            case '@' :
+                final ClassValidator classv = new ClassValidator();
+                classv.setInstance(true);
+                return classv;
+            case '+' :
+                final ClassValidator instancev = new ClassValidator();
+                instancev.setInstance(true);
+                return instancev;
+                //case ':':// no validator needed for a string
+            case '%' :
+                return NumberValidator.getNumberInstance();
+            case '#' :
+                return DateValidator.getDateInstance();
+            case '<' :
+                final FileValidator existingv = new FileValidator();
+                existingv.setExisting(true);
+                existingv.setFile(true);
+                return existingv;
+            case '>' :
+            case '*' :
+                return new FileValidator();
+            case '/' :
+                return new UrlValidator();
+            default :
+                return null;
+        }
+    }

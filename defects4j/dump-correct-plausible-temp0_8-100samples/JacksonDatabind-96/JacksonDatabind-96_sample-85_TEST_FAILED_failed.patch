@@ -1,0 +1,40 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/deser/BasicDeserializerFactory.java b/src/main/java/com/fasterxml/jackson/databind/deser/BasicDeserializerFactory.java
+index 81acbdb27..52acbb0e8 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/deser/BasicDeserializerFactory.java
++++ b/src/main/java/com/fasterxml/jackson/databind/deser/BasicDeserializerFactory.java
+@@ -705,16 +705,6 @@ nonAnnotatedParamIndex, ctor);
+     {
+         // Looks like there's bit of magic regarding 1-parameter creators; others simpler:
+         if (1 != candidate.paramCount()) {
+-            // Ok: for delegates, we want one and exactly one parameter without
+-            // injection AND without name
+-            int oneNotInjected = candidate.findOnlyParamWithoutInjection();
+-            if (oneNotInjected >= 0) {
+-                // getting close; but most not have name
+-                if (candidate.paramName(oneNotInjected) == null) {
+-                    _addExplicitDelegatingCreator(ctxt, beanDesc, creators, candidate);
+-                    return;
+-                }
+-            }
+             _addExplicitPropertyCreator(ctxt, beanDesc, creators, candidate);
+             return;
+         }
+@@ -733,7 +721,7 @@ nonAnnotatedParamIndex, ctor);
+             //    not implicit name, but name with possible strategy-based-rename
+ //            paramName = candidate.findImplicitParamName(0);
+             paramName = candidate.findImplicitParamName(0);
+-            useProps = (paramName != null) && paramDef.couldSerialize();
++            useProps = (paramName != null) && paramDef.couldDeserialize();
+         }
+         if (useProps) {
+             SettableBeanProperty[] properties = new SettableBeanProperty[] {
+@@ -742,8 +730,7 @@ nonAnnotatedParamIndex, ctor);
+             creators.addPropertyCreator(candidate.creator(), true, properties);
+             return;
+         }
+-        _handleSingleArgumentCreator(creators, candidate.creator(), true, true);
+-
++        _handleSingleArgumentCreator(creators, candidate.creator(), true, false);
+         // one more thing: sever link to creator property, to avoid possible later
+         // problems with "unresolved" constructor property
+         if (paramDef != null) {

@@ -1,0 +1,37 @@
+diff --git a/src/java/org/apache/commons/cli/PosixParser.java b/src/java/org/apache/commons/cli/PosixParser.java
+index 2b1bbb1..2a56211 100644
+--- a/src/java/org/apache/commons/cli/PosixParser.java
++++ b/src/java/org/apache/commons/cli/PosixParser.java
+@@ -151,13 +147,29 @@ public class PosixParser extends Parser {
+             {
+                 tokens.add(token);
+             }
+-
+             gobble(iter);
+         }
+-
+         return (String[]) tokens.toArray(new String[tokens.size()]);
+     }
+-
++    /**
++     * Process the token. If stopAtNonOption is set and the token is nonOption,
++     * the processing is stopped. Otherwise, the token is added to the list of
++     * processed tokens
++     *
++     * @param token
++     *            The command line token to be processed
++     * @param stopAtNonOption
++     *            Specifies whether to stop processing at the first nonOption
++     *            token
++     */
++    protected void process(String token)
++    {
++        if (stopAtNonOption && !getOptions().hasOption(token))
++        {
++            this.stopProcessing = true;
++        }
++        tokens.add(token);
++    }
+     /**
+      * Adds the remaining tokens to the processed tokens list.
+      *

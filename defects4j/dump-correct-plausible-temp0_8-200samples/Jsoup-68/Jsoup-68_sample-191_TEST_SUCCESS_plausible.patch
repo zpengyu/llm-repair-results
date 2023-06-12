@@ -1,0 +1,38 @@
+diff --git a/src/main/java/org/jsoup/parser/HtmlTreeBuilder.java b/src/main/java/org/jsoup/parser/HtmlTreeBuilder.java
+index bc70646..5788d88 100644
+--- a/src/main/java/org/jsoup/parser/HtmlTreeBuilder.java
++++ b/src/main/java/org/jsoup/parser/HtmlTreeBuilder.java
+@@ -465,26 +465,20 @@ public class HtmlTreeBuilder extends TreeBuilder {
+ 
+     private boolean inSpecificScope(String[] targetNames, String[] baseTypes, String[] extraTypes) {
+         // https://html.spec.whatwg.org/multipage/parsing.html#has-an-element-in-the-specific-scope
+-        int bottom = stack.size() -1;
+-        if (bottom > MaxScopeSearchDepth) {
+-            bottom = MaxScopeSearchDepth;
+-        }
+-        final int top = bottom > MaxScopeSearchDepth ? bottom - MaxScopeSearchDepth : 0;
+-        // don't walk too far up the tree
+-
+-        for (int pos = bottom; pos >= top; pos--) {
++        for (int pos = stack.size() - 1; pos >= 0; pos--) {
+             final String elName = stack.get(pos).nodeName();
+-            if (inSorted(elName, targetNames))
++            if (inSorted(elName, targetNames)) {
+                 return true;
+-            if (inSorted(elName, baseTypes))
++            }
++            if (inSorted(elName, baseTypes)) {
+                 return false;
+-            if (extraTypes != null && inSorted(elName, extraTypes))
++            }
++            if (extraTypes != null && inSorted(elName, extraTypes)) {
+                 return false;
++            }
+         }
+-        //Validate.fail("Should not be reachable"); // would end up false because hitting 'html' at root (basetypes)
+         return false;
+     }
+-
+     boolean inScope(String[] targetNames) {
+         return inSpecificScope(targetNames, TagsSearchInScope, null);
+     }

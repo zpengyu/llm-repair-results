@@ -1,0 +1,110 @@
+diff --git a/src/com/google/javascript/jscomp/ProcessCommonJSModules.java b/src/com/google/javascript/jscomp/ProcessCommonJSModules.java
+index 6107328b..1392243a 100644
+--- a/src/com/google/javascript/jscomp/ProcessCommonJSModules.java
++++ b/src/com/google/javascript/jscomp/ProcessCommonJSModules.java
+@@ -35,104 +35,10 @@ import java.util.regex.Pattern;
+  * goog.provide and goog.require are emitted for closure compiler automatic
+  * ordering.
+  */
+-public class ProcessCommonJSModules implements CompilerPass {
+-  // According to the spec, the forward slash should be the delimite on
+-  // all platforms.
+-  private static final String MODULE_SLASH = "/";
+-
+-  public static final String DEFAULT_FILENAME_PREFIX = "." + MODULE_SLASH;
+-
+-  private static final String MODULE_NAME_SEPARATOR = "\\$";
+-  private static final String MODULE_NAME_PREFIX = "module$";
+-
+-  private final AbstractCompiler compiler;
+-  private final String filenamePrefix;
+-  private final boolean reportDependencies;
+-  private JSModule module;
+-
+-  ProcessCommonJSModules(AbstractCompiler compiler, String filenamePrefix) {
+-    this(compiler, filenamePrefix, true);
+-  }
+-
+-  ProcessCommonJSModules(AbstractCompiler compiler, String filenamePrefix,
+-      boolean reportDependencies) {
+-    this.compiler = compiler;
+-    this.filenamePrefix = filenamePrefix.endsWith(MODULE_SLASH) ?
+-        filenamePrefix : filenamePrefix + MODULE_SLASH;
+-    this.reportDependencies = reportDependencies;
+-  }
+-
+-  @Override
+-  public void process(Node externs, Node root) {
+-    NodeTraversal
+-        .traverse(compiler, root, new ProcessCommonJsModulesCallback());
+-  }
+-
+-  String guessCJSModuleName(String filename) {
+-    return toModuleName(normalizeSourceName(filename));
+-  }
+-
+-  /**
+-   * For every file that is being processed this returns the module that
+-   * created for it.
+-   */
+-  JSModule getModule() {
+-    return module;
+-  }
+-
+-  /**
+-   * Turns a filename into a JS identifier that is used for moduleNames in
+-   * rewritten code. Removes leading ./, replaces / with $, removes trailing .js
+-   * and replaces - with _. All moduleNames get a "module$" prefix.
+-   */
+-  public static String toModuleName(String filename) {
+-    return MODULE_NAME_PREFIX +
+-        filename.replaceAll("^\\." + Pattern.quote(MODULE_SLASH), "")
+-            .replaceAll(Pattern.quote(MODULE_SLASH), MODULE_NAME_SEPARATOR)
+-            .replaceAll("\\.js$", "").replaceAll("-", "_");
+-  }
+-
+-  /**
+-   * Turn a filename into a moduleName with support for relative addressing
+-   * with ./ and ../ based on currentFilename;
+-   */
+-  public static String toModuleName(String requiredFilename,
+-      String currentFilename) {
+-    requiredFilename = requiredFilename.replaceAll("\\.js$", "");
+-    currentFilename = currentFilename.replaceAll("\\.js$", "");
+-
+-    if (requiredFilename.startsWith("." + MODULE_SLASH) ||
+-        requiredFilename.startsWith(".." + MODULE_SLASH)) {
+-      try {
+-        requiredFilename = (new URI(currentFilename)).resolve(new URI(requiredFilename))
+-            .toString();
+-      } catch (URISyntaxException e) {
+-        throw new RuntimeException(e);
+-      }
+-    }
+-    return toModuleName(requiredFilename);
+-  }
+-
+-  private String normalizeSourceName(String filename) {
+-    // The DOS command shell will normalize "/" to "\", so we have to
+-    // wrestle it back.
+-
+-    if (filename.indexOf(filenamePrefix) == 0) {
+-      filename = filename.substring(filenamePrefix.length());
+-    }
+-
+-    return filename;
+-  }
+-
+-  /**
+-   * Visits require, every "script" and special module.exports assignments.
+-   */
+-  private class ProcessCommonJsModulesCallback extends
++private class ProcessCommonJsModulesCallback extends
+       AbstractPostOrderCallback {
+-
+     private int scriptNodeCount = 0;
+     private Set<String> modulesWithExports = Sets.newHashSet();
+-
+     @Override
+     public void visit(NodeTraversal t, Node n, Node parent) {
+       if (n.isCall() && n.getChildCount() == 2 &&

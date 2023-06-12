@@ -1,0 +1,22 @@
+diff --git a/src/main/java/org/apache/commons/compress/archivers/zip/ZipFile.java b/src/main/java/org/apache/commons/compress/archivers/zip/ZipFile.java
+index fd5d1894..73650682 100644
+--- a/src/main/java/org/apache/commons/compress/archivers/zip/ZipFile.java
++++ b/src/main/java/org/apache/commons/compress/archivers/zip/ZipFile.java
+@@ -814,6 +814,7 @@ public class ZipFile {
+             int fileNameLen = ZipShort.getValue(b);
+             archive.readFully(b);
+             int extraFieldLen = ZipShort.getValue(b);
++            archive.readFully(b);
+             int lenToSkip = fileNameLen;
+             while (lenToSkip > 0) {
+                 int skipped = archive.skipBytes(lenToSkip);
+@@ -827,8 +828,7 @@ public class ZipFile {
+             archive.readFully(localExtraData);
+             ze.setExtra(localExtraData);
+             offsetEntry.dataOffset = offset + LFH_OFFSET_FOR_FILENAME_LENGTH
+-                + SHORT + SHORT + fileNameLen + extraFieldLen;
+-
++                + SHORT + SHORT + SHORT + fileNameLen + extraFieldLen;
+             if (entriesWithoutUTF8Flag.containsKey(ze)) {
+                 String orig = ze.getName();
+                 NameAndComment nc = entriesWithoutUTF8Flag.get(ze);

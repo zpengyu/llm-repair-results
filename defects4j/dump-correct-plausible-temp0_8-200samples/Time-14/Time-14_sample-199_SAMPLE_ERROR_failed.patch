@@ -1,0 +1,43 @@
+diff --git a/src/main/java/org/joda/time/chrono/BasicMonthOfYearDateTimeField.java b/src/main/java/org/joda/time/chrono/BasicMonthOfYearDateTimeField.java
+index 98e6912c..a7269089 100644
+--- a/src/main/java/org/joda/time/chrono/BasicMonthOfYearDateTimeField.java
++++ b/src/main/java/org/joda/time/chrono/BasicMonthOfYearDateTimeField.java
+@@ -206,19 +206,30 @@ class BasicMonthOfYearDateTimeField extends ImpreciseDateTimeField {
+         if (valueToAdd == 0) {
+             return values;
+         }
++        if (fieldIndex == 0) {
+             // month is largest field and being added to, such as month-day
+-        if (DateTimeUtils.isContiguous(partial)) {
+-            long instant = 0L;
+-            for (int i = 0, isize = partial.size(); i < isize; i++) {
+-                instant = partial.getFieldType(i).getField(iChronology).set(instant, values[i]);
++            if (DateTimeUtils.isContiguous(partial)) {
++                long instant = 0L;
++                for (int i = 0, isize = partial.size(); i < isize; i++) {
++                    instant = partial.getFieldType(i).getField(iChronology).set(instant, values[i]);
++                }
++                instant = add(instant, valueToAdd);
++                return iChronology.get(partial, instant);
+             }
+-            instant = add(instant, valueToAdd);
+-            return iChronology.get(partial, instant);
+         } else {
+-            return super.add(partial, fieldIndex, values, valueToAdd);
++            int newValue = values[fieldIndex] + valueToAdd;
++            int[] newValues = values.clone();
++            newValues[fieldIndex] = newValue;
++            int wrappedValue = newValue;
++            int maxValue = getMaximumValue(partial, fieldIndex);
++            if (wrappedValue > maxValue) {
++                wrappedValue = getWrappedValue(newValue, maxValue, partial.getFieldType(fieldIndex).getDurationField().getUnitMillis());
++            }
++            newValues[fieldIndex] = wrappedValue;
++            return set(partial, fieldIndex, newValues, valueToAdd);
+         }
++        return super.add(partial, fieldIndex, values, valueToAdd);
+     }
+-
+     //-----------------------------------------------------------------------
+     /**
+      * Add to the Month component of the specified time instant

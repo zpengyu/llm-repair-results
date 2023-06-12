@@ -1,0 +1,46 @@
+diff --git a/src/main/java/org/jsoup/nodes/LeafNode.java b/src/main/java/org/jsoup/nodes/LeafNode.java
+index 0e068b5..a19b986 100644
+--- a/src/main/java/org/jsoup/nodes/LeafNode.java
++++ b/src/main/java/org/jsoup/nodes/LeafNode.java
+@@ -5,9 +5,6 @@ import org.jsoup.helper.Validate;
+ import java.util.List;
+ 
+ abstract class LeafNode extends Node {
+-
+-    Object value; // either a string value, or an attribute map (in the rare case multiple attributes are set)
+-
+     protected final boolean hasAttributes() {
+         return value instanceof Attributes;
+     }
+@@ -39,23 +31,22 @@ abstract class LeafNode extends Node {
+     @Override
+     public String attr(String key) {
+         Validate.notNull(key);
+-        if (!hasAttributes()) {
+-            return key.equals(nodeName()) ? (String) value : EmptyString;
++        if (key.equals(nodeName()) && value instanceof String) {
++            return (String) value;
+         }
++        ensureAttributes();
+         return super.attr(key);
+     }
+-
+     @Override
+     public Node attr(String key, String value) {
+-        if (!hasAttributes() && key.equals(nodeName())) {
++        Validate.notEmpty(key);
++        if (key.equals(nodeName()) && this.value instanceof String) {
+             this.value = value;
+-        } else {
+-            ensureAttributes();
+-            super.attr(key, value);
++            return this;
+         }
+-        return this;
++        ensureAttributes();
++        return super.attr(key, value);
+     }
+-
+     @Override
+     public boolean hasAttr(String key) {
+         ensureAttributes();

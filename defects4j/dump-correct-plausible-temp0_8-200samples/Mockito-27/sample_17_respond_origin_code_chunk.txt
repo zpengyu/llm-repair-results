@@ -1,0 +1,14 @@
+public <T> void resetMock(T mock) {
+	//mock handler interface
+	MockHandlerInterface<T> oldMockHandler = getMockHandler(mock);
+	
+	//create new mock handler
+	MockHandler<T> newMockHandler = new MockHandler<T>(oldMockHandler);
+	
+	//create new filter
+	MethodInterceptorFilter newFilter = new MethodInterceptorFilter(newMockHandler, 
+			(MockSettingsImpl) org.mockito.Mockito.withSettings().defaultAnswer(org.mockito.Mockito.RETURNS_DEFAULTS));
+	
+	//set new filter
+	((Factory) mock).setCallback(0, newFilter);
+}

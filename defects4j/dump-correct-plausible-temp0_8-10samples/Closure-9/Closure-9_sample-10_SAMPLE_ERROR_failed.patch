@@ -1,0 +1,39 @@
+diff --git a/src/com/google/javascript/jscomp/ProcessCommonJSModules.java b/src/com/google/javascript/jscomp/ProcessCommonJSModules.java
+index 6107328b..668c3536 100644
+--- a/src/com/google/javascript/jscomp/ProcessCommonJSModules.java
++++ b/src/com/google/javascript/jscomp/ProcessCommonJSModules.java
+@@ -35,16 +35,10 @@ import java.util.regex.Pattern;
+  * goog.provide and goog.require are emitted for closure compiler automatic
+  * ordering.
+  */
+-public class ProcessCommonJSModules implements CompilerPass {
+-  // According to the spec, the forward slash should be the delimite on
+-  // all platforms.
+-  private static final String MODULE_SLASH = "/";
+-
++private static final String MODULE_SLASH = "\\";
+   public static final String DEFAULT_FILENAME_PREFIX = "." + MODULE_SLASH;
+-
+-  private static final String MODULE_NAME_SEPARATOR = "\\$";
++  private static final String MODULE_NAME_SEPARATOR = "\\";
+   private static final String MODULE_NAME_PREFIX = "module$";
+-
+   private final AbstractCompiler compiler;
+   private final String filenamePrefix;
+   private final boolean reportDependencies;
+@@ -116,14 +101,8 @@ public class ProcessCommonJSModules implements CompilerPass {
+   private String normalizeSourceName(String filename) {
+     // The DOS command shell will normalize "/" to "\", so we have to
+     // wrestle it back.
+-
+-    if (filename.indexOf(filenamePrefix) == 0) {
+-      filename = filename.substring(filenamePrefix.length());
+-    }
+-
+-    return filename;
++    return filename.replace(MODULE_SLASH, '/');
+   }
+-
+   /**
+    * Visits require, every "script" and special module.exports assignments.
+    */

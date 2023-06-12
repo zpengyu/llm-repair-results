@@ -1,0 +1,79 @@
+diff --git a/src/com/google/javascript/jscomp/CodeGenerator.java b/src/com/google/javascript/jscomp/CodeGenerator.java
+index a9d0a5b0..4f6255d4 100644
+--- a/src/com/google/javascript/jscomp/CodeGenerator.java
++++ b/src/com/google/javascript/jscomp/CodeGenerator.java
+@@ -972,7 +972,7 @@ class CodeGenerator {
+         case '>':                       // Break --> into --\> or ]]> into ]]\>
+           if (i >= 2 &&
+               ((s.charAt(i - 1) == '-' && s.charAt(i - 2) == '-') ||
+-               (s.charAt(i - 1) == ']' && s.charAt(i - 2) == ']'))) {
++                  (s.charAt(i - 1) == ']' && s.charAt(i - 2) == ']'))) {
+             sb.append("\\>");
+           } else {
+             sb.append(c);
+@@ -981,15 +981,13 @@ class CodeGenerator {
+         case '<':
+           // Break </script into <\/script
+           final String END_SCRIPT = "/script";
+-
+           // Break <!-- into <\!--
+           final String START_COMMENT = "!--";
+-
+           if (s.regionMatches(true, i + 1, END_SCRIPT, 0,
+-                              END_SCRIPT.length())) {
++                  END_SCRIPT.length())) {
+             sb.append("<\\");
+           } else if (s.regionMatches(false, i + 1, START_COMMENT, 0,
+-                                     START_COMMENT.length())) {
++                  START_COMMENT.length())) {
+             sb.append("<\\");
+           } else {
+             sb.append(c);
+@@ -1011,11 +1009,46 @@ class CodeGenerator {
+             // check is measurably faster than using the CharsetEncoder.
+             if (c > 0x1f && c <= 0x7f) {
+               sb.append(c);
+-            } else {
++            } else if (c > 0x7f) {
+               // Other characters can be misinterpreted by some js parsers,
+               // or perhaps mangled by proxies along the way,
+               // so we play it safe and unicode escape them.
+               appendHexJavaScriptRepresentation(sb, c);
++            } else {
++              // we need to handle C0 and C1 control characters here
++              switch (c) {
++                case 0x00:  // NULL
++                  sb.append('\\').append('0');
++                  break;
++                case 0x07:  // BELL
++                  sb.append('\\').append('a');
++                  break;
++                case 0x08:  // BACKSPACE
++                  sb.append('\\').append('b');
++                  break;
++                case 0x0C:  // FORM FEED
++                  sb.append('\\').append('f');
++                  break;
++                case 0x0A:  // LINE FEED
++                  sb.append('\\').append('n');
++                  break;
++                case 0x0D:  // CARRIAGE RETURN
++                  sb.append('\\').append('r');
++                  break;
++                case 0x09:  // HORIZONTAL TAB
++                  sb.append('\\').append('t');
++                  break;
++                case 0x0B:  // VERTICAL TAB
++                  sb.append('\\').append('v');
++                  break;
++                default:
++                  // 0x01 - 0x06
++                  // 0x0E - 0x1F
++                  // 0x7F
++                  // 0x80 - 0xFF
++                  // fall through to default escape
++                  appendHexJavaScriptRepresentation(sb, c);
++              }
+             }
+           }
+       }

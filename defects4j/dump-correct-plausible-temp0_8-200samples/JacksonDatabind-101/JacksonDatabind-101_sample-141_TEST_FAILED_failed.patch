@@ -1,0 +1,45 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/deser/BeanDeserializer.java b/src/main/java/com/fasterxml/jackson/databind/deser/BeanDeserializer.java
+index 3c89dc109..0ddfcf839 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/deser/BeanDeserializer.java
++++ b/src/main/java/com/fasterxml/jackson/databind/deser/BeanDeserializer.java
+@@ -736,16 +736,10 @@ public class BeanDeserializer
+     protected Object deserializeUsingPropertyBasedWithUnwrapped(JsonParser p, DeserializationContext ctxt)
+         throws IOException
+     {
+-        // 01-Dec-2016, tatu: Note: This IS legal to call, but only when unwrapped
+-        //    value itself is NOT passed via `CreatorProperty` (which isn't supported).
+-        //    Ok however to pass via setter or field.
+-        
+         final PropertyBasedCreator creator = _propertyBasedCreator;
+         PropertyValueBuffer buffer = creator.startBuilding(p, ctxt, _objectIdReader);
+-
+         TokenBuffer tokens = new TokenBuffer(p, ctxt);
+         tokens.writeStartObject();
+-
+         JsonToken t = p.getCurrentToken();
+         for (; t == JsonToken.FIELD_NAME; t = p.nextToken()) {
+             String propName = p.getCurrentName();
+@@ -757,6 +751,7 @@ public class BeanDeserializer
+                 if (buffer.assignParameter(creatorProp,
+                         _deserializeWithErrorWrapping(p, ctxt, creatorProp))) {
+                     t = p.nextToken(); // to move to following FIELD_NAME/END_OBJECT
++                    // TODO: merge with similar block for managed-objects?
+                     Object bean;
+                     try {
+                         bean = creator.build(ctxt, buffer);
+@@ -765,15 +760,12 @@ public class BeanDeserializer
+                     }
+                     // [databind#631]: Assign current value, to be accessible by custom serializers
+                     p.setCurrentValue(bean);
+-                    // if so, need to copy all remaining tokens into buffer
+                     while (t == JsonToken.FIELD_NAME) {
+                         // NOTE: do NOT skip name as it needs to be copied; `copyCurrentStructure` does that
+                         p.nextToken();
+                         tokens.copyCurrentStructure(p);
+                         t = p.nextToken();
+                     }
+-                    // 28-Aug-2018, tatu: Let's add sanity check here, easier to catch off-by-some
+-                    //    problems if we maintain invariants
+                     tokens.writeEndObject();
+                     if (bean.getClass() != _beanType.getRawClass()) {
+                         // !!! 08-Jul-2011, tatu: Could probably support; but for now

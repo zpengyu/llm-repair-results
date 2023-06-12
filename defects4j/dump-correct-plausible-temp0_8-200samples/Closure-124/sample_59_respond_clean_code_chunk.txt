@@ -1,0 +1,14 @@
+  private boolean isSafeReplacement(Node node, Node replacement) {
+    // No checks are needed for simple names.
+    if (node.isName()) {
+      return true;
+    }
+    Preconditions.checkArgument(node.isGetProp());
+    // For GETPROPs it is safe to replace 'this' with an object literal
+    // that contains a property with the same name, but for NAMEs it is
+    // not. E.g 'this.a = {a: 1};' is fine, but 'a = {a: 1};' is not.
+    if (!isNameAssignedTo(node.getFirstChild().getString(), replacement)) {
+      return true;
+    }
+    return false;
+  }

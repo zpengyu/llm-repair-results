@@ -1,0 +1,22 @@
+diff --git a/src/main/java/org/apache/commons/compress/archivers/ArchiveStreamFactory.java b/src/main/java/org/apache/commons/compress/archivers/ArchiveStreamFactory.java
+index e2847a61..9d857153 100644
+--- a/src/main/java/org/apache/commons/compress/archivers/ArchiveStreamFactory.java
++++ b/src/main/java/org/apache/commons/compress/archivers/ArchiveStreamFactory.java
+@@ -249,7 +245,14 @@ public class ArchiveStreamFactory {
+         } catch (IOException e) {
+             throw new ArchiveException("Could not use reset and mark operations.", e);
+         }
+-
++        try {
++            int signatureLength = in.read(signature);
++            in.reset();
++            if (LzmaAloneArchiveInputStream.matches(signature, signatureLength)) {
++                return new LzmaAloneArchiveInputStream(in);
++            }
++        } catch (IOException e) {
++            throw new ArchiveException("Could not use reset and mark operations.", e);
++        }
+         throw new ArchiveException("No Archiver found for the stream signature");
+-    }
+-}
++    }}

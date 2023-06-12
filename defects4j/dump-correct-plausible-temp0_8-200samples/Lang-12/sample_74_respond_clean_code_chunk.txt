@@ -1,0 +1,32 @@
+    public static String random(int count, int start, int end, boolean letters, boolean numbers,
+                                char[] chars, Random random) {
+        if (count == 0) {
+            return "";
+        } else if (count < 0) {
+            throw new IllegalArgumentException("Requested random string length " + count + " is less than 0.");
+        }
+        if (end <= start) {
+            throw new IllegalArgumentException("Parameter end (" + end + ") must be greater than start (" + start + ")");
+        }
+        if ((start < Character.MIN_RADIX) || (end > Character.MAX_RADIX)) {
+            throw new IllegalArgumentException("Parameter start (" + start + ") or end (" + end + ") is out of range");
+        }
+        if (chars != null && chars.length == 0) {
+            throw new IllegalArgumentException("The chars array must not be empty");
+        }
+        if (end - start == 1) {
+            return pad(random.nextBoolean() ? start : end, count, chars);
+        }
+        char[] buffer = new char[count];
+        if (chars == null) {
+            while (count-- != 0) {
+                buffer[count] = (char)((random.nextInt(end - start)) + start);
+            }
+        } else {
+            int limit = end - start;
+            while (count-- != 0) {
+                buffer[count] = chars[random.nextInt(limit) + start];
+            }
+        }
+        return new String(buffer);
+    }

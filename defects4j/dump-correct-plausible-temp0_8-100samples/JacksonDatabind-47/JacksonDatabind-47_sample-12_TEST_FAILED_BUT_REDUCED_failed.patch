@@ -1,0 +1,36 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/AnnotationIntrospector.java b/src/main/java/com/fasterxml/jackson/databind/AnnotationIntrospector.java
+index 624a1fd7e..2dc3e25b6 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/AnnotationIntrospector.java
++++ b/src/main/java/com/fasterxml/jackson/databind/AnnotationIntrospector.java
+@@ -816,7 +813,13 @@ public abstract class AnnotationIntrospector
+                 try {
+                     // 11-Oct-2015, tatu: For deser, we call `TypeFactory.constructSpecializedType()`,
+                     //   may be needed here too in future?
++                    // 24-May-2016, tatu: As per [databind#1166], need to ensure that
++                    //   specialization (narrowing) can be done
++                    if (serClass.isAssignableFrom(type.getRawClass())) {
+                         type = tf.constructGeneralizedType(type, serClass);
++                    } else {
++                        type = tf.constructSpecializedType(type, serClass);
++                    }
+                 } catch (IllegalArgumentException iae) {
+                     throw new JsonMappingException(null,
+                             String.format("Failed to widen type %s with annotation (value %s), from '%s': %s",
+@@ -840,6 +842,8 @@ public abstract class AnnotationIntrospector
+                         // 19-May-2016, tatu: As per [databind#1231], [databind#1178] may need to actually
+                         //   specialize (narrow) type sometimes, even if more commonly opposite
+                         //   is needed.
++                        // 24-May-2016, tatu: As per [databind#1166], need to ensure that
++                        //   specialization (narrowing) can be done
+                         if (keyClass.isAssignableFrom(currRaw)) { // common case
+                             keyType = tf.constructGeneralizedType(keyType, keyClass);
+                         } else if (currRaw.isAssignableFrom(keyClass)) { // specialization, ok as well
+@@ -871,6 +874,8 @@ public abstract class AnnotationIntrospector
+                    // 03-Apr-2016, tatu: As per [databind#1178], may need to actually
+                    //   specialize (narrow) type sometimes, even if more commonly opposite
+                    //   is needed.
++                   // 24-May-2016, tatu: As per [databind#1166], need to ensure that
++                   //   specialization (narrowing) can be done
+                    Class<?> currRaw = contentType.getRawClass();
+                    try {
+                        if (contentClass.isAssignableFrom(currRaw)) { // common case

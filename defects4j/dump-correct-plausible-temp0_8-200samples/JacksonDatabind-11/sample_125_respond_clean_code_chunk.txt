@@ -1,0 +1,23 @@
+    protected JavaType _fromVariable(TypeVariable<?> type, TypeBindings context)
+    {
+        final String name = type.getName();
+        if (context == null) {
+            return _unknownType();
+        }
+        final JavaType actualType = context.findType(name);
+        if (actualType != null) {
+            return actualType;
+        }
+        final Type[] bounds = type.getBounds();
+        // With type variables we must use bound information.
+        // Theoretically this gets tricky, as there may be multiple
+        // bounds ("... extends A & B"); and optimally we might
+        // want to choose the best match. Also, bounds are optional;
+        // but here we are lucky in that implicit "Object" is
+        // added as bounds if so.
+        // Either way let's just use the first bound, for now, and
+        // worry about better match later on if there is need.
+        context._addPlaceholder(name);
+        // Actually, if no bounds, must use Object.class
+        return _constructType(bounds.length == 0 ? OBJECT_CLASS : bounds[0], context);
+    }

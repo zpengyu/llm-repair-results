@@ -1,0 +1,107 @@
+###Provide a fix for the buggy function
+###Buggy Function
+class FibonacciExample {
+    public static void main(String args[]) {
+        int n1 = 0, n2 = 1, n3, i, count = 10;
+
+        System.out.print(n1 + " " + n2);
+
+        for (i = 2; i < count; ++i) {
+            n3 = n1 - n2;
+            System.out.print(" " + n3);
+            n1 = n2;
+            n2 = n3;
+        }
+    }
+}
+
+###Fixed Function
+class FibonacciExample {
+    public static void main(String args[]) {
+        int n1 = 0, n2 = 1, n3, i, count = 10;
+
+        System.out.print(n1 + " " + n2);
+
+        for (i = 2; i < count; ++i) {
+            n3 = n1 + n2;
+            System.out.print(" " + n3);
+            n1 = n2;
+            n2 = n3;
+        }
+    }
+}
+
+###Provide a fix for the buggy function
+###Buggy Function
+public int getLength() {
+    return ValueUtils.getLength(getBaseValue());
+}
+###Fixed Function
+public int getLength() {
+    Object baseValue = getBaseValue();
+    return baseValue == null ? 1 : ValueUtils.getLength(baseValue);
+}
+###Provide a fix for the buggy function
+###Buggy Function
+public class AttributeContext extends EvalContext {
+
+    private NodeTest nodeTest;
+    private boolean setStarted = false;
+    private NodeIterator iterator;
+    private NodePointer currentNodePointer;
+
+    /**
+     * @param parentContext represents the previous step on the path
+     * @param nodeTest is the name of the attribute we are looking for
+     */
+    public AttributeContext(EvalContext parentContext, NodeTest nodeTest) {
+        super(parentContext);
+        this.nodeTest = nodeTest;
+    }
+
+    public NodePointer getCurrentNodePointer() {
+        return currentNodePointer;
+    }
+
+    public void reset() {
+        setStarted = false;
+        iterator = null;
+        super.reset();
+    }
+
+    public boolean setPosition(int position) {
+        if (position < getCurrentPosition()) {
+            reset();
+        }
+
+        while (getCurrentPosition() < position) {
+            if (!nextNode()) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    public boolean nextNode() {
+        super.setPosition(getCurrentPosition() + 1);
+        if (!setStarted) {
+            setStarted = true;
+            if (!(nodeTest instanceof NodeNameTest)) {
+                return false;
+            }
+            QName name = ((NodeNameTest) nodeTest).getNodeName();
+            iterator =
+                parentContext.getCurrentNodePointer().attributeIterator(name);
+        }
+        if (iterator == null) {
+            return false;
+        }
+        if (!iterator.setPosition(iterator.getPosition() + 1)) {
+            return false;
+        }
+        currentNodePointer = iterator.getNodePointer();
+        return true;
+    }
+}
+
+###Fixed Function

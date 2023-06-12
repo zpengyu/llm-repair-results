@@ -1,0 +1,46 @@
+        public boolean useForType(JavaType t)
+        {
+            switch (_appliesFor) {
+            case NON_CONCRETE_AND_ARRAYS:
+                while (t.isArrayType()) {
+                    t = t.getContentType();
+                }
+                // fall through
+            case OBJECT_AND_NON_CONCRETE:
+                /* As per [databind#436], can not blindly assume that just because
+                 * type is abstract, it must be convertible to Object. So must
+                 * first ensure it's not one of recognized types
+                 */
+                if (t.getRawClass() == Object.class) {
+                    return true;
+                }
+                if (!t.isConcrete()) { // abstract:
+                    Class<?> cls = t.getRawClass();
+                    // First: things that we know are impls of mapped types, skip:
+                    if (cls == HashMap.class) {
+                        return false;
+                    }
+                    if (Map.class.isAssignableFrom(cls)) {
+                        return _classNames.find("java.util.Map") == null;
+                    }
+                    if (Collection.class.isAssignableFrom(cls)) {
+                        return _classNames.find("java.util.Collection") == null;
+                    }
+                    if (Iterator.class.isAssignableFrom(cls)) {
+                        return _classNames.find("java.util.Iterator") == null;
+                    }
+                    return true;
+                }
+                return false;
+            case NON_FINAL:
+                while (t.isArrayType()) {
+                    t = t.getContentType();
+                }
+                // [Issue#88] Should not apply to JSON tree models:
+                return !t.isFinal() && !TreeNode.class.isAssignableFrom(t.getRawClass());
+            default:
+            //case JAVA_LANG_OBJECT:
+                return (t.getRawClass() == Object.class);
+            }
+        }
+

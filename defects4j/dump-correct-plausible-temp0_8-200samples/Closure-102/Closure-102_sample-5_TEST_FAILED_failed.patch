@@ -1,0 +1,23 @@
+diff --git a/src/com/google/javascript/jscomp/Normalize.java b/src/com/google/javascript/jscomp/Normalize.java
+index 8d26fe48..26b9864e 100644
+--- a/src/com/google/javascript/jscomp/Normalize.java
++++ b/src/com/google/javascript/jscomp/Normalize.java
+@@ -169,14 +169,12 @@ class Normalize implements CompilerPass, Callback {
+ 
+     @Override
+     public void process(Node externs, Node root) {
+-      Node externsAndJs = root.getParent();
+-      Preconditions.checkState(externsAndJs != null);
+-      Preconditions.checkState(externsAndJs.hasChild(externs));
+-
++      Node externsAndJs = new Node(Token.BLOCK);
++      externsAndJs.addChildToBack(externs);
++      externsAndJs.addChildToBack(root);
+       NodeTraversal.traverseRoots(
+-          compiler, Lists.newArrayList(externs, root), this);
++          compiler, Lists.newArrayList(externsAndJs), this);
+     }
+-
+     private Map<String,Boolean> constantMap = Maps.newHashMap();
+ 
+     @Override

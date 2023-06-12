@@ -1,0 +1,41 @@
+diff --git a/src/com/google/javascript/jscomp/TypeCheck.java b/src/com/google/javascript/jscomp/TypeCheck.java
+index 6030d48d..6c24f0f7 100644
+--- a/src/com/google/javascript/jscomp/TypeCheck.java
++++ b/src/com/google/javascript/jscomp/TypeCheck.java
+@@ -1541,10 +1541,9 @@ public class TypeCheck implements NodeTraversal.Callback, CompilerPass {
+    * scope chain to use in name lookups as well as error reporting.
+    * @param n The node being visited.
+    */
+-  private void visitCall(NodeTraversal t, Node n) {
++private void visitCall(NodeTraversal t, Node n) {
+     Node child = n.getFirstChild();
+     JSType childType = getJSType(child).restrictByNotNullOrUndefined();
+-
+     if (!childType.canBeCalled()) {
+       report(t, n, NOT_CALLABLE, childType.toString());
+       ensureTyped(t, n);
+@@ -1572,18 +1568,20 @@ public class TypeCheck implements NodeTraversal.Callback, CompilerPass {
+           (functionType.getReturnType().isUnknownType() ||
+            functionType.getReturnType().isVoidType() ||
+            !isExtern)) {
+-        report(t, n, CONSTRUCTOR_NOT_CALLABLE, childType.toString());
++        if(functionType.getReturnType().isUnknownType()) {
++          report(t, n, CONSTRUCTOR_NOT_CALLABLE, childType.toString());
++        }
+       }
+-
+       // Functions with explcit 'this' types must be called in a GETPROP
+       // or GETELEM.
+-
+       visitParameterList(t, n, functionType);
+       ensureTyped(t, n, functionType.getReturnType());
++    } else if (childType.isOrdinaryFunction()) {
++      ensureTyped(t, n);
+     } else {
++      report(t, n, NOT_CALLABLE, childType.toString());
+       ensureTyped(t, n);
+     }
+-
+     // TODO: Add something to check for calls of RegExp objects, which is not
+     // supported by IE.  Either say something about the return type or warn
+     // about the non-portability of the call or both.

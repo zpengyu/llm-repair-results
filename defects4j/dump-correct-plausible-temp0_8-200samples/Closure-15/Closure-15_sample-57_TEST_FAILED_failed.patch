@@ -1,0 +1,35 @@
+diff --git a/src/com/google/javascript/jscomp/FlowSensitiveInlineVariables.java b/src/com/google/javascript/jscomp/FlowSensitiveInlineVariables.java
+index 0a7f29c3..e81f3565 100644
+--- a/src/com/google/javascript/jscomp/FlowSensitiveInlineVariables.java
++++ b/src/com/google/javascript/jscomp/FlowSensitiveInlineVariables.java
+@@ -81,7 +81,7 @@ class FlowSensitiveInlineVariables extends AbstractPostOrderCallback
+   private static final Predicate<Node> SIDE_EFFECT_PREDICATE =
+     new Predicate<Node>() {
+       @Override
+-      public boolean apply(Node n) {
++    public boolean apply(Node n) {
+         // When the node is null it means, we reached the implicit return
+         // where the function returns (possibly without an return statement)
+         if (n == null) {
+@@ -91,10 +90,9 @@ class FlowSensitiveInlineVariables extends AbstractPostOrderCallback
+         // TODO(user): We only care about calls to functions that
+         // passes one of the dependent variable to a non-side-effect free
+         // function.
+-        if (n.isCall() && NodeUtil.functionCallHasSideEffects(n)) {
++        if (n.isCall() && NodeUtil.mayHaveSideEffects(n)) {
+           return true;
+         }
+-
+         if (n.isNew() && NodeUtil.constructorCallHasSideEffects(n)) {
+           return true;
+         }
+@@ -106,8 +102,7 @@ class FlowSensitiveInlineVariables extends AbstractPostOrderCallback
+           }
+         }
+         return false;
+-      }
+-  };
++      }  };
+ 
+   public FlowSensitiveInlineVariables(AbstractCompiler compiler) {
+     this.compiler = compiler;

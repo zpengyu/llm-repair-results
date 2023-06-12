@@ -1,0 +1,25 @@
+    public int parseInto(ReadWritableInstant instant, String text, int position) {
+        DateTimeParser parser = requireParser();
+        if (instant == null) {
+            throw new IllegalArgumentException("Instant must not be null");
+        }
+        long instantMillis = instant.getMillis();
+        Chronology chrono = instant.getChronology();
+        long instantLocal = instantMillis + chrono.getZone().getOffset(instantMillis);
+        chrono = selectChronology(chrono);
+        DateTimeParserBucket bucket = new DateTimeParserBucket(
+            instantLocal, chrono, iLocale, iPivotYear, iDefaultYear);
+        int newPos = parser.parseInto(bucket, text, position);
+        instant.setMillis(bucket.computeMillis(false, text));
+        if (iOffsetParsed && bucket.getOffsetInteger() != null) {
+            // BEGIN GWT IGNORE
+            throw new UnsupportedOperationException("The pattern contains an offset, but parsing is not using a chronology that can handle offsets.");
+            // END GWT IGNORE
+        } else if (bucket.getZone() != null) {
+            instant.setChronology(chrono.withZone(bucket.getZone()));
+        }
+        if (iZone != null) {
+            instant.setZone(iZone);
+        }
+        return newPos;
+    }

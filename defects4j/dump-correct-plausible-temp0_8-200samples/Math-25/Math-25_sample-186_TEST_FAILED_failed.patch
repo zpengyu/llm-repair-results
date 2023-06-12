@@ -1,0 +1,47 @@
+diff --git a/src/main/java/org/apache/commons/math3/optimization/fitting/HarmonicFitter.java b/src/main/java/org/apache/commons/math3/optimization/fitting/HarmonicFitter.java
+index 42399c04d..9cec0d3df 100644
+--- a/src/main/java/org/apache/commons/math3/optimization/fitting/HarmonicFitter.java
++++ b/src/main/java/org/apache/commons/math3/optimization/fitting/HarmonicFitter.java
+@@ -320,14 +314,38 @@ public class HarmonicFitter extends CurveFitter<HarmonicOscillator.Parametric> {
+                 }
+                 a = 0.5 * (yMax - yMin);
+             } else {
+-                    // In some ill-conditioned cases (cf. MATH-844), the guesser
+-                    // procedure cannot produce sensible results.
+-
++                double oldA = a;
++                double oldOmega = omega;
+                 a = FastMath.sqrt(c1 / c2);
+                 omega = FastMath.sqrt(c2 / c3);
++                // Catch cases where the proposed model is significantly larger
++                // than the observations.
++                if (oldA > 0 && a > oldA * 2) {
++                    double xRange = observations[observations.length - 1].getX() - startX;
++                    a = oldA * xRange / (2 * Math.PI);
++                    omega = 2 * Math.PI / xRange;
++                }
++                // Catch cases where the proposed model is significantly smaller
++                // than the observations.
++                if (oldA > 0 && a < oldA / 2) {
++                    double xRange = observations[observations.length - 1].getX() - startX;
++                    a = oldA * xRange / (2 * Math.PI);
++                    omega = 2 * Math.PI / xRange;
++                }
++                // Catch cases where the proposed model is significantly shorter
++                // than the observations.
++                if (oldOmega > 0 && omega > oldOmega * 2) {
++                    double xRange = observations[observations.length - 1].getX() - startX;
++                    omega = oldOmega * xRange / (2 * Math.PI);
++                }
++                // Catch cases where the proposed model is significantly longer
++                // than the observations.
++                if (oldOmega > 0 && omega < oldOmega / 2) {
++                    double xRange = observations[observations.length - 1].getX() - startX;
++                    omega = oldOmega * xRange / (2 * Math.PI);
++                }
+             }
+         }
+-
+         /**
+          * Estimate a first guess of the phase.
+          */

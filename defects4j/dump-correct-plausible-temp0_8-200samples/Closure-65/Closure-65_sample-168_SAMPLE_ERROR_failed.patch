@@ -1,0 +1,55 @@
+diff --git a/src/com/google/javascript/jscomp/CodeGenerator.java b/src/com/google/javascript/jscomp/CodeGenerator.java
+index 5b684191..9045ce43 100644
+--- a/src/com/google/javascript/jscomp/CodeGenerator.java
++++ b/src/com/google/javascript/jscomp/CodeGenerator.java
+@@ -1003,10 +1003,10 @@ class CodeGenerator {
+ 
+   /** Helper to escape javascript string as well as regular expression */
+   static String strEscape(String s, char quote,
+-                          String doublequoteEscape,
+-                          String singlequoteEscape,
+-                          String backslashEscape,
+-                          CharsetEncoder outputCharsetEncoder) {
++        String doublequoteEscape,
++        String singlequoteEscape,
++        String backslashEscape,
++        CharsetEncoder outputCharsetEncoder) {
+     StringBuilder sb = new StringBuilder(s.length() + 2);
+     sb.append(quote);
+     for (int i = 0; i < s.length(); i++) {
+@@ -1073,7 +1071,34 @@ class CodeGenerator {
+     sb.append(quote);
+     return sb.toString();
+   }
+-
++  private static void appendHexJavaScriptRepresentation(
++        StringBuilder sb, char c) {
++    int codePoint = c;
++    if (Character.isSupplementaryCodePoint(codePoint)) {
++      codePoint = Character.highSurrogate(codePoint);
++      sb.append("\\u");
++      sb.append(hexChars[codePoint >>> 12]);
++      sb.append(hexChars[(codePoint >>> 8) & 0xf]);
++      sb.append(hexChars[(codePoint >>> 4) & 0xf]);
++      sb.append(hexChars[codePoint & 0xf]);
++      codePoint = Character.lowSurrogate(c);
++      sb.append("\\u");
++      sb.append(hexChars[codePoint >>> 12]);
++      sb.append(hexChars[(codePoint >>> 8) & 0xf]);
++      sb.append(hexChars[(codePoint >>> 4) & 0xf]);
++      sb.append(hexChars[codePoint & 0xf]);
++    } else {
++      sb.append("\\u");
++      sb.append(hexChars[codePoint >>> 12]);
++      sb.append(hexChars[(codePoint >>> 8) & 0xf]);
++      sb.append(hexChars[(codePoint >>> 4) & 0xf]);
++      sb.append(hexChars[codePoint & 0xf]);
++    }
++  }
++  /** An array of hex characters. */
++  private static final char[] hexChars = {
++      '0', '1', '2', '3', '4', '5', '6', '7',
++      '8', '9', 'a', 'b', 'c', 'd', 'e', 'f' };
+   static String identifierEscape(String s) {
+     // First check if escaping is needed at all -- in most cases it isn't.
+     if (NodeUtil.isLatin(s)) {

@@ -1,0 +1,63 @@
+    public long getDateTimeMillis(int year, int monthOfYear, int dayOfMonth,
+                                  int hourOfDay, int minuteOfHour,
+                                  int secondOfMinute, int millisOfSecond)
+        throws IllegalArgumentException
+    {
+        Chronology base;
+        if ((base = getBase()) != null) {
+            return base.getDateTimeMillis
+                (year, monthOfYear, dayOfMonth,
+                 hourOfDay, minuteOfHour, secondOfMinute, millisOfSecond);
+        }
+        // Assume date is Gregorian.
+        long instant = iGregorianChronology.getDateTimeMillis
+            (year, monthOfYear, dayOfMonth,
+             hourOfDay, minuteOfHour, secondOfMinute, millisOfSecond);
+        if (instant < iCutoverMillis) {
+            // Maybe it's Julian.
+            instant = iJulianChronology.getDateTimeMillis
+                (year, monthOfYear, dayOfMonth,
+                 hourOfDay, minuteOfHour, secondOfMinute, millisOfSecond);
+            if (instant >= iCutoverMillis) {
+                // Okay, it's in the illegal cutover gap.
+                if (iCutoverYear == year) {
+                    // Can only be invalid due to time component.
+                    if (iCutoverYear == 1752 &&
+                        monthOfYear == 9 &&
+                        dayOfMonth == 2) {
+                        if (hourOfDay == 23 &&
+                            (minuteOfHour < 14 ||
+                             (minuteOfHour == 14 &&
+                              (secondOfMinute < 40 ||
+                               (secondOfMinute == 40 &&
+                                millisOfSecond < 0))))) {
+                            // Did fall into gap in local time, but actually
+                            // want midnight.
+                            return instant;
+                        } else if (hourOfDay > 23 ||
+                                   (hourOfDay == 23 &&
+                                    (minuteOfHour > 14 ||
+                                     (minuteOfHour == 14 &&
+                                      (secondOfMinute > 40 ||
+                                       (secondOfMinute == 40 &&
+                                        millisOfSecond > 0)))))) {
+                            // Did miss the cutover, and now after the gap.
+                            return instant;
+                        }
+                    } else if (monthOfYear == 9 &&
+                               dayOfMonth == 14) {
+                        // If in gap, return later instant.
+                        long adj = ((hourOfDay - 23) * DateTimeConstants.MILLIS_PER_HOUR +
+                                    (minuteOfHour - 14) * DateTimeConstants.MILLIS_PER_MINUTE +
+                                    (secondOfMinute - 40) * DateTimeConstants.MILLIS_PER_SECOND +
+                                    millisOfSecond);
+                        if (adj >= 0) {
+                            return instant + adj;
+                        }
+                    }
+                }
+                throw new IllegalArgumentException("Specified date does not exist");
+            }
+        }
+        return instant;
+    }

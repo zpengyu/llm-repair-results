@@ -1,0 +1,30 @@
+diff --git a/src/com/google/javascript/jscomp/InlineVariables.java b/src/com/google/javascript/jscomp/InlineVariables.java
+index 4f045430..d50e2d89 100644
+--- a/src/com/google/javascript/jscomp/InlineVariables.java
++++ b/src/com/google/javascript/jscomp/InlineVariables.java
+@@ -569,12 +565,23 @@ class InlineVariables implements CompilerPass {
+           if (relationship != null) {
+             return false;
+           }
+-
+           // issue 668: Don't inline singleton getter methods
+           // calls as this confused class removing logic.
++          String singletonGetterName = convention.getSingletonGetterClassName(
++              callNode);
++          if (singletonGetterName != null) {
++            for (Node current = callNode.getParent();
++                current != null;
++                current = current.getParent()) {
++              if (current.isCall() &&
++                  singletonGetterName.equals(
++                      convention.getSingletonGetterClassName(current))) {
++                return false;
++              }
++            }
++          }
+         }
+       }
+-
+       return canMoveAggressively(value) ||
+           canMoveModerately(initialization, reference);
+     }

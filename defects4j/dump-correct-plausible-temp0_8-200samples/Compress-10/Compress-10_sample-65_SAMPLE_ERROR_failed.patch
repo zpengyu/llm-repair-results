@@ -1,0 +1,40 @@
+diff --git a/src/main/java/org/apache/commons/compress/archivers/zip/ZipFile.java b/src/main/java/org/apache/commons/compress/archivers/zip/ZipFile.java
+index fd5d1894..b8523399 100644
+--- a/src/main/java/org/apache/commons/compress/archivers/zip/ZipFile.java
++++ b/src/main/java/org/apache/commons/compress/archivers/zip/ZipFile.java
+@@ -798,13 +798,14 @@ public class ZipFile {
+      * <p>Also records the offsets for the data to read from the
+      * entries.</p>
+      */
+-    private void resolveLocalFileHeaderData(Map<ZipArchiveEntry, NameAndComment>
+-                                            entriesWithoutUTF8Flag)
++private void resolveLocalFileHeaderData(Map<ZipArchiveEntry, NameAndComment>
++                                         entriesWithoutUTF8Flag)
+         throws IOException {
+         // changing the name of a ZipArchiveEntry is going to change
+         // the hashcode - see COMPRESS-164
+         // Map needs to be reconstructed in order to keep central
+         // directory order
++        Map<ZipArchiveEntry, OffsetEntry> copy = new LinkedHashMap<ZipArchiveEntry, OffsetEntry>();
+         for (ZipArchiveEntry ze : entries.keySet()) {
+             OffsetEntry offsetEntry = entries.get(ze);
+             long offset = offsetEntry.headerOffset;
+@@ -828,7 +829,7 @@ public class ZipFile {
+             ze.setExtra(localExtraData);
+             offsetEntry.dataOffset = offset + LFH_OFFSET_FOR_FILENAME_LENGTH
+                 + SHORT + SHORT + fileNameLen + extraFieldLen;
+-
++            copy.put(ze, offsetEntry);
+             if (entriesWithoutUTF8Flag.containsKey(ze)) {
+                 String orig = ze.getName();
+                 NameAndComment nc = entriesWithoutUTF8Flag.get(ze);
+@@ -840,8 +841,8 @@ public class ZipFile {
+                 }
+             }
+         }
++        entries = copy;
+     }
+-
+     /**
+      * Checks whether the archive starts with a LFH.  If it doesn't,
+      * it may be an empty archive.

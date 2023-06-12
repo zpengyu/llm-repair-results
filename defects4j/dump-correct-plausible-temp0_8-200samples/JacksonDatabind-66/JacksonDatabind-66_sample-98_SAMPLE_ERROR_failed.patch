@@ -1,0 +1,45 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/deser/std/StdKeyDeserializer.java b/src/main/java/com/fasterxml/jackson/databind/deser/std/StdKeyDeserializer.java
+index d4417f6ad..aadbbd6c9 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/deser/std/StdKeyDeserializer.java
++++ b/src/main/java/com/fasterxml/jackson/databind/deser/std/StdKeyDeserializer.java
+@@ -305,24 +305,23 @@ public class StdKeyDeserializer extends KeyDeserializer
+ 
+         @SuppressWarnings("resource")
+         @Override
+-        public final Object deserializeKey(String key, DeserializationContext ctxt)
+-            throws IOException
+-        {
+-            if (key == null) { // is this even legal call?
+-                return null;
+-            }
+-            try {
+-                // Ugh... should not have to give parser which may or may not be correct one...
+-                Object result = _delegate.deserialize(ctxt.getParser(), ctxt);
+-                if (result != null) {
+-                    return result;
+-                }
+-                return ctxt.handleWeirdKey(_keyClass, key, "not a valid representation");
+-            } catch (Exception re) {
+-                return ctxt.handleWeirdKey(_keyClass, key, "not a valid representation: %s", re.getMessage());
+-            }
++public final Object deserializeKey(String key, DeserializationContext ctxt) throws IOException
++{
++    if (key == null) { // is this legal?
++        return null;
++    }
++    try {
++        // Ugh... should not have to give parser which may or may not be correct one...
++        Object result = _delegate.deserialize(ctxt.getParser(), ctxt);
++        // 22-Apr-2016, tatu: [databind#1249] Should use "JSON null" for `null` result
++        if (result == null) {
++            return JSONNull.getInstance();
+         }
+-
++        return result;
++    } catch (Exception re) {
++        return ctxt.handleWeirdKey(_keyClass, key, "not a valid representation: %s", re.getMessage());
++    }
++}
+         public Class<?> getKeyClass() { return _keyClass; }
+     }
+      

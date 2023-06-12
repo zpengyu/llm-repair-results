@@ -1,0 +1,89 @@
+diff --git a/src/main/java/org/jsoup/nodes/Entities.java b/src/main/java/org/jsoup/nodes/Entities.java
+index 5a2b368..b9deb69 100644
+--- a/src/main/java/org/jsoup/nodes/Entities.java
++++ b/src/main/java/org/jsoup/nodes/Entities.java
+@@ -78,7 +78,7 @@ public class Entities {
+     // this method is ugly, and does a lot. but other breakups cause rescanning and stringbuilder generations
+     static void escape(StringBuilder accum, String string, Document.OutputSettings out,
+                        boolean inAttribute, boolean normaliseWhite, boolean stripLeadingWhite) {
+-
++        StringBuilder sb = new StringBuilder();
+         boolean lastWasWhite = false;
+         boolean reachedNonWhite = false;
+         final EscapeMode escapeMode = out.escapeMode();
+@@ -95,7 +93,7 @@ public class Entities {
+                 if (StringUtil.isWhitespace(codePoint)) {
+                     if ((stripLeadingWhite && !reachedNonWhite) || lastWasWhite)
+                         continue;
+-                    accum.append(' ');
++                    sb.append(' ');
+                     lastWasWhite = true;
+                     continue;
+                 } else {
+@@ -109,51 +107,51 @@ public class Entities {
+                 // html specific and required escapes:
+                 switch (c) {
+                     case '&':
+-                        accum.append("&amp;");
++                        sb.append("&amp;");
+                         break;
+                     case 0xA0:
+                         if (escapeMode != EscapeMode.xhtml)
+-                            accum.append("&nbsp;");
++                            sb.append("&nbsp;");
+                         else
+-                            accum.append("&#xa0;");
++                            sb.append("&#xa0;");
+                         break;
+                     case '<':
+                         // escape when in character data or when in a xml attribue val; not needed in html attr val
+                         if (!inAttribute)
+-                            accum.append("&lt;");
++                            sb.append("&lt;");
+                         else
+-                            accum.append(c);
++                            sb.append(c);
+                         break;
+                     case '>':
+                         if (!inAttribute)
+-                            accum.append("&gt;");
++                            sb.append("&gt;");
+                         else
+-                            accum.append(c);
++                            sb.append(c);
+                         break;
+                     case '"':
+                         if (inAttribute)
+-                            accum.append("&quot;");
++                            sb.append("&quot;");
+                         else
+-                            accum.append(c);
++                            sb.append(c);
+                         break;
+                     default:
+                         if (canEncode(coreCharset, c, encoder))
+-                            accum.append(c);
++                            sb.append(c);
+                         else if (map.containsKey(c))
+-                            accum.append('&').append(map.get(c)).append(';');
++                            sb.append('&').append(map.get(c)).append(';');
+                         else
+-                            accum.append("&#x").append(Integer.toHexString(codePoint)).append(';');
++                            sb.append("&#x").append(Integer.toHexString(codePoint)).append(';');
+                 }
+             } else {
+                 final String c = new String(Character.toChars(codePoint));
+                 if (encoder.canEncode(c)) // uses fallback encoder for simplicity
+-                    accum.append(c);
++                    sb.append(c);
+                 else
+-                    accum.append("&#x").append(Integer.toHexString(codePoint)).append(';');
++                    sb.append("&#x").append(Integer.toHexString(codePoint)).append(';');
+             }
+         }
++        accum.append(sb.toString());
+     }
+-
+     static String unescape(String string) {
+         return unescape(string, false);
+     }

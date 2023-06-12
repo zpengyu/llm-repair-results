@@ -1,0 +1,20 @@
+diff --git a/src/org/mockito/internal/creation/instance/ConstructorInstantiator.java b/src/org/mockito/internal/creation/instance/ConstructorInstantiator.java
+index 972e1a282..9e7c6e72a 100644
+--- a/src/org/mockito/internal/creation/instance/ConstructorInstantiator.java
++++ b/src/org/mockito/internal/creation/instance/ConstructorInstantiator.java
+@@ -23,6 +19,15 @@ public class ConstructorInstantiator implements Instantiator {
+             //however, I know we will be needing it :)
+             Constructor<T> c = cls.getDeclaredConstructor(outerClassInstance.getClass());
+             return c.newInstance(outerClassInstance);
++        } catch (NoSuchMethodException e) {
++        	try{
++        		Constructor<T> c = cls.getDeclaredConstructor(outerClassInstance.getClass().getSuperclass());
++        		return c.newInstance(outerClassInstance);
++        	}catch(NoSuchMethodException e2){
++        		throw paramsException(cls, e);
++        	}catch(Exception e2){
++        		throw paramsException(cls, e2);
++        	}
+         } catch (Exception e) {
+             throw paramsException(cls, e);
+         }

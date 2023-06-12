@@ -1,0 +1,109 @@
+public class ReturnsDeepStubs implements Answer<Object>, Serializable {
+   
+    private static final long serialVersionUID = -7105341425736035847L;
+
+    private MockitoCore mockitoCore = new MockitoCore();
+    private ReturnsEmptyValues delegate = new ReturnsEmptyValues();
+
+    public Object answer(InvocationOnMock invocation) throws Throwable {
+        GenericMetadataSupport returnTypeGenericMetadata =
+                actualParameterizedType(invocation.getMock()).resolveGenericReturnType(invocation.getMethod());
+
+        Class<?> rawType = returnTypeGenericMetadata.rawType();
+        if (!mockitoCore.isTypeMockable(rawType)) {
+            return delegate.returnValueFor(rawType);
+        }
+
+        return getMock(invocation, returnTypeGenericMetadata);
+    }
+
+    /**
+     * <p>
+     * Internally we create a mock using the return type of the mocked method and we wrap it in an Answer.
+     * Then, using the InvocationContainer we add that answer to the list of answers to be returned.
+     * </p>
+     * <p>
+     * The most important part here is how we actually create the mock, as that is the part that may fail if the type
+     * is final or if it has a private constructor. For this we are using the {@link GenericMetadataSupport} to infer
+     * what the type of the mock is and then we pass the information to the {@link org.mockito.internal.creation.settings.CreationSettingsBuilder}.
+     * </p>
+     * <p>
+     * Finally as we want to mock the actual type, but we want to pass along the contextual generics meta-data
+     * that was resolved for the current return type, for this to happen we associate to the mock an new instance of
+     * {@link ReturnsDeepStubs} answer in which we will store the returned type generic metadata.
+     * </p>
+     *
+     * @param invocation The current invocation.
+     * @param returnTypeGenericMetadata The metadata to use to create the new mock.
+     * @return The mock
+     * @throws Throwable
+     */
+    private Object getMock(InvocationOnMock invocation, GenericMetadataSupport returnTypeGenericMetadata) throws Throwable {
+        // matches invocation for verification
+        for (StubbedInvocationMatcher stubbedInvocationMatcher : getInvocationContainer(invocation).getStubbedInvocations()) {
+            if(getInvocationContainer(invocation).getInvocationForStubbing().matches(stubbedInvocationMatcher.getInvocation())) {
+                return stubbedInvocationMatcher.answer(invocation);
+            }
+        }
+
+        // deep stub
+        return recordDeepStubMock(createNewDeepStubMock(returnTypeGenericMetadata), invocation);
+    }
+
+    /**
+     * Creates a mock using the Generics Metadata.
+     *
+     * <li>Finally as we want to mock the actual type, but we want to pass along the contextual generics meta-data
+     * that was resolved for the current return type, for this to happen we associate to the mock an new instance of
+     * {@link ReturnsDeepStubs} answer in which we will store the returned type generic metadata.
+     *
+     * @param returnTypeGenericMetadata The metadata to use to create the new mock.
+     * @return The mock
+     */
+    private Object createNewDeepStubMock(GenericMetadataSupport returnTypeGenericMetadata) {
+        return mockitoCore.mock(
+                returnTypeGenericMetadata.rawType(),
+                withSettingsUsing(returnTypeGenericMetadata)
+        );
+    }
+
+    private MockSettings withSettingsUsing(GenericMetadataSupport returnTypeGenericMetadata) {
+        MockSettings mockSettings =
+                returnTypeGenericMetadata.rawExtraInterfaces().length > 0 ?
+                        withSettings().extraInterfaces(returnTypeGenericMetadata.rawExtraInterfaces())
+                        : withSettings();
+
+        return mockSettings
+                .defaultAnswer(returnsDeepStubsAnswerUsing(returnTypeGenericMetadata));
+    }
+
+    private ReturnsDeepStubs returnsDeepStubsAnswerUsing(final GenericMetadataSupport returnTypeGenericMetadata) {
+        return new ReturnsDeepStubs() {
+            @Override
+            protected GenericMetadataSupport actualParameterizedType(Object mock) {
+                return returnTypeGenericMetadata;
+            }
+        };
+    }
+
+    private Object recordDeepStubMock(final Object mock, InvocationOnMock invocation) throws Throwable {
+        getInvocationContainer(invocation).addAnswer(new Answer<Object>() {
+            public Object answer(InvocationOnMock invocation) throws Throwable {
+                return mock;
+            }
+        }, false);
+
+        return mock;
+    }
+
+    private InvocationContainer getInvocationContainer(InvocationOnMock invocation) {
+        return ((InternalMockHandler) getMockHandler(invocation.getMock())).getInvocationContainer();
+    }
+
+    protected GenericMetadataSupport actualParameterizedType(Object mock) {
+        CreationSettings mockSettings = (CreationSettings) new MockUtil().getMockHandler(mock).getMockSettings();
+        return GenericMetadataSupport.inferFrom(mockSettings.getTypeToMock());
+    }
+}
+
+

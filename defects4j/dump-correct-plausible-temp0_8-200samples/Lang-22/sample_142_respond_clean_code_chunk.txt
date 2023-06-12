@@ -1,0 +1,55 @@
+private static int greatestCommonDivisor(int u, int v) {
+    if ((u | v) > 0xFFFFFFF) {
+        // at least one of the numbers is larger than 2^28
+        // divide both by 2^12 and round down
+        u >>= 12;
+        v >>= 12;
+    }
+    if ((u | v) > 0xFFF) {
+        // at least one of the numbers is larger than 2^12
+        // divide both by 2^6 and round down
+        u >>= 6;
+        v >>= 6;
+    }
+    if ((u | v) > 0x3F) {
+        // at least one of the numbers is larger than 2^6
+        // divide both by 2^3 and round down
+        u >>= 3;
+        v >>= 3;
+    }
+    if ((u | v) > 0xF) {
+        // at least one of the numbers is larger than 2^4
+        // divide both by 2^2 and round down
+        u >>= 2;
+        v >>= 2;
+    }
+    // at this point we have:
+    // u <= 15 and v <= 15
+    return gcdPositiveInt(u, v);
+}
+// Recursive method to compute gcd.  Assumes that neither
+// parameter is zero or negative and that the larger number
+// is not less than 0xFFFF or 1<<15, which would make the
+// cast of the negative number to a short overflow.
+private static int gcdPositiveInt(int u, int v) {
+    if (u == v) {
+        return u;
+    }
+    if ((u & 1) == 0) {
+        if ((v & 1) == 0) {
+            // both are even
+            return gcdPositiveInt(u >> 1, v >> 1) << 1;
+        } else {
+            return gcdPositiveInt(u >> 1, v);
+        }
+    } else if ((v & 1) == 0) {
+        return gcdPositiveInt(u, v >> 1);
+    } else {
+        int t = (u - v) >> 1;
+        if (t > 0) {
+            return gcdPositiveInt(t, v);
+        } else {
+            return gcdPositiveInt((-t) >> 1, u);
+        }
+    }
+}

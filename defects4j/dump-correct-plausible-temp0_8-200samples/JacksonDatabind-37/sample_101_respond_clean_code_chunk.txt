@@ -1,0 +1,11 @@
+    protected JavaType _narrow(Class<?> subclass)
+    {
+        // [databind#892]: Need to allow narrowing of unresolved types as well
+        if (subclass.isAssignableFrom(_class)) { // First: may already be assignable
+            return this;
+        }
+        JavaType newType = _fromClass(subclass, this);
+        newType = newType.withValueHandler(_valueHandler);
+        newType.getClass(); // trigger resolution
+        return newType;
+    }

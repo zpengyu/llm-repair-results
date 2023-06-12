@@ -1,0 +1,26 @@
+diff --git a/src/org/mockito/internal/stubbing/defaultanswers/ReturnsDeepStubs.java b/src/org/mockito/internal/stubbing/defaultanswers/ReturnsDeepStubs.java
+index 6fa773f53..fa30df4f4 100644
+--- a/src/org/mockito/internal/stubbing/defaultanswers/ReturnsDeepStubs.java
++++ b/src/org/mockito/internal/stubbing/defaultanswers/ReturnsDeepStubs.java
+@@ -87,12 +73,17 @@ public class ReturnsDeepStubs implements Answer<Object>, Serializable {
+                 return mock;
+             }
+         }, false);
+-
+         return mock;
+     }
+-
+     protected GenericMetadataSupport actualParameterizedType(Object mock) {
+         CreationSettings mockSettings = (CreationSettings) new MockUtil().getMockHandler(mock).getMockSettings();
+-        return GenericMetadataSupport.inferFrom(mockSettings.getTypeToMock());
++        if(mockSettings.isUsingConstructor()) {
++            return GenericMetadataSupport.inferFrom(mockSettings.getTypeToMock());
++        }
++        Type mockType = mockSettings.getTypeToMock();
++        if(mockType instanceof ParameterizedType) {
++            return GenericMetadataSupport.inferFrom(((ParameterizedType) mockType).getRawType());
++        }
++        return GenericMetadataSupport.inferFrom((Class) mockType);
+     }
+ }
+\ No newline at end of file

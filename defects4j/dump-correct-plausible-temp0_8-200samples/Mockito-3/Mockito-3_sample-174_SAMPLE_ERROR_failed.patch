@@ -1,0 +1,29 @@
+diff --git a/src/org/mockito/internal/invocation/InvocationMatcher.java b/src/org/mockito/internal/invocation/InvocationMatcher.java
+index a3a7c08df..639f64a7a 100644
+--- a/src/org/mockito/internal/invocation/InvocationMatcher.java
++++ b/src/org/mockito/internal/invocation/InvocationMatcher.java
+@@ -24,7 +23,7 @@ public class InvocationMatcher implements DescribedInvocation, CapturesArgumensF
+     private static final long serialVersionUID = -3047126096857467610L;
+     private final Invocation invocation;
+     private final List<Matcher> matchers;
+-
++    private List<Object> capturedArgumentsFromNewAnswer;
+     public InvocationMatcher(Invocation invocation, List<Matcher> matchers) {
+         this.invocation = invocation;
+         if (matchers.isEmpty()) {
+@@ -138,9 +121,13 @@ public class InvocationMatcher implements DescribedInvocation, CapturesArgumensF
+                 }
+             }
+         }
++        if (capturedArgumentsFromNewAnswer != null) {
++            invocation.getArguments().getAllValues().addAll(capturedArgumentsFromNewAnswer);
++        }
++    }
++    public void captureArgumentsFrom(List<Object> arguments) {
++        capturedArgumentsFromNewAnswer = arguments;
+     }
+-
+-
+     public static List<InvocationMatcher> createFrom(List<Invocation> invocations) {
+         LinkedList<InvocationMatcher> out = new LinkedList<InvocationMatcher>();
+         for (Invocation i : invocations) {

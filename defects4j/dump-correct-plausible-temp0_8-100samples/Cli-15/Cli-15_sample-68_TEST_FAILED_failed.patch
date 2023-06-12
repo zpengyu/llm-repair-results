@@ -1,0 +1,32 @@
+diff --git a/src/java/org/apache/commons/cli2/commandline/WriteableCommandLineImpl.java b/src/java/org/apache/commons/cli2/commandline/WriteableCommandLineImpl.java
+index 6220b91..2302ac6 100644
+--- a/src/java/org/apache/commons/cli2/commandline/WriteableCommandLineImpl.java
++++ b/src/java/org/apache/commons/cli2/commandline/WriteableCommandLineImpl.java
+@@ -124,11 +122,23 @@ public class WriteableCommandLineImpl
+         }
+                 // if there are more default values as specified, add them to
+                 // the list.
+-                    // copy the list first
+-
+-        return valueList == null ? Collections.EMPTY_LIST : valueList;
++        // copy the list first
++        List tmp = new ArrayList();
++        if (valueList != null) {
++            for (Iterator i = valueList.iterator(); i.hasNext();) {
++                tmp.add(i.next());
++            }
++        }
++        if (defaultValues != null) {
++            for (Iterator i = defaultValues.iterator(); i.hasNext();) {
++                String value = (String) i.next();
++                if (!tmp.contains(value)) {
++                    tmp.add(value);
++                }
++            }
++        }
++        return tmp;
+     }
+-
+     public List getUndefaultedValues(Option option) {
+       // First grab the command line values
+       List valueList = (List) values.get(option);

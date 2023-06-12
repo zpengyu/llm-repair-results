@@ -1,0 +1,39 @@
+diff --git a/src/main/java/org/joda/time/format/PeriodFormatterBuilder.java b/src/main/java/org/joda/time/format/PeriodFormatterBuilder.java
+index a6bf55c7..25f7e9f1 100644
+--- a/src/main/java/org/joda/time/format/PeriodFormatterBuilder.java
++++ b/src/main/java/org/joda/time/format/PeriodFormatterBuilder.java
+@@ -791,16 +791,33 @@ public class PeriodFormatterBuilder {
+     }
+ 
+     //-----------------------------------------------------------------------
+-    private static PeriodFormatter toFormatter(List<Object> elementPairs, boolean notPrinter, boolean notParser) {
++private static PeriodFormatter toFormatter(List<Object> elementPairs, boolean notPrinter, boolean notParser) {
+         if (notPrinter && notParser) {
+             throw new IllegalStateException("Builder has created neither a printer nor a parser");
+         }
+         int size = elementPairs.size();
+         if (size >= 2 && elementPairs.get(0) instanceof Separator) {
+             Separator sep = (Separator) elementPairs.get(0);
++            if (notPrinter) {
++                if (size == 2) {
++                    return new PeriodFormatter(null, sep.getParser());
++                }
++                PeriodFormatter f = toFormatter(elementPairs.subList(2, size), notPrinter, notParser);
++                return new PeriodFormatter(null, sep.finish(f.getPrinter(), f.getParser()));
++            } else if (notParser) {
++                if (size == 2) {
++                    return new PeriodFormatter(sep.getPrinter(), null);
++                }
++                PeriodFormatter f = toFormatter(elementPairs.subList(2, size), notPrinter, notParser);
++                return new PeriodFormatter(sep.finish(f.getPrinter(), f.getParser()), null);
++            } else {
++                if (size == 2) {
++                    return new PeriodFormatter(sep, sep);
++                }
+                 PeriodFormatter f = toFormatter(elementPairs.subList(2, size), notPrinter, notParser);
+                 sep = sep.finish(f.getPrinter(), f.getParser());
+                 return new PeriodFormatter(sep, sep);
++            }
+         }
+         Object[] comp = createComposite(elementPairs);
+         if (notPrinter) {

@@ -1,0 +1,44 @@
+    protected abstract static class PrimitiveOrWrapperDeserializer<T>
+        extends StdScalarDeserializer<T>
+    {
+        private static final long serialVersionUID = 1L;
+        protected final T _nullValue;
+        protected final boolean _primitive;
+        protected final boolean _allowStringNull;
+        protected PrimitiveOrWrapperDeserializer(Class<T> vc, T nvl, boolean allowNull) {
+            super(vc);
+            _nullValue = nvl;
+            _primitive = vc.isPrimitive();
+            _allowStringNull = allowNull;
+        }
+        @Override
+        public final T getNullValue(DeserializationContext ctxt) throws JsonMappingException
+        {
+            if (_primitive && ctxt.isEnabled(DeserializationFeature.FAIL_ON_NULL_FOR_PRIMITIVES)) {
+                throw ctxt.mappingException(
+                        "Can not map JSON null into type %s (set DeserializationConfig.DeserializationFeature.FAIL_ON_NULL_FOR_PRIMITIVES to 'false' to allow)",
+                        handledType().toString());
+            }
+            return _nullValue;
+        }
+        @Override
+        @Deprecated // remove in 2.7
+        public final T getNullValue() {
+            return _nullValue;
+        }
+        /**
+         * Legacy method that was bit of misnomer: it did not
+         * necessarily return `null`, but rather whatever value
+         * "represented" null.
+         *
+         * @deprecated Since 2.5: use `DeserializationContext.handleUnexpectedToken()`
+         *    instead.
+         */
+        @Deprecated
+        protected T _coerceNullToken(DeserializationContext ctxt) throws JsonMappingException
+        {
+            // // [databind#1095]: Should not allow coercion from into null from Empty String
+            // // either, if `null` not allowed
+            throw ctxt.mappingException("Can not map empty String as null (use `DeserializationConfig.DeserializationFeature.ACCEPT_EMPTY_STRING_AS_NULL_OBJECT` feature to allow)");
+        }
+    }

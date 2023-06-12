@@ -1,0 +1,24 @@
+diff --git a/src/main/java/org/apache/commons/compress/archivers/tar/TarUtils.java b/src/main/java/org/apache/commons/compress/archivers/tar/TarUtils.java
+index 121012d0..c1a47886 100644
+--- a/src/main/java/org/apache/commons/compress/archivers/tar/TarUtils.java
++++ b/src/main/java/org/apache/commons/compress/archivers/tar/TarUtils.java
+@@ -104,13 +99,16 @@ public class TarUtils {
+                 throw new IllegalArgumentException(
+                         exceptionMessage(buffer, offset, length, start, currentByte));
+             }
+-            result = (result << 3) + (currentByte - '0'); // convert from ASCII
++            long nextresult = (result << 3) + (currentByte - '0'); // convert from ASCII
++            if (nextresult <= result) {
++                throw new NumberFormatException("Parsed value " + nextresult +
++                                                " overflows long for buffer '" + new String(buffer) + "'");
++            }
++            result = nextresult;
+             // CheckStyle:MagicNumber ON
+         }
+-
+         return result;
+     }
+-
+     /** 
+      * Compute the value contained in a byte buffer.  If the most
+      * significant bit of the first byte in the buffer is set, this

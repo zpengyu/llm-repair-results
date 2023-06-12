@@ -1,0 +1,31 @@
+diff --git a/src/com/google/javascript/jscomp/TypedScopeCreator.java b/src/com/google/javascript/jscomp/TypedScopeCreator.java
+index 13d8808b..dac3f947 100644
+--- a/src/com/google/javascript/jscomp/TypedScopeCreator.java
++++ b/src/com/google/javascript/jscomp/TypedScopeCreator.java
+@@ -1268,10 +1268,6 @@ final class TypedScopeCreator implements ScopeCreator {
+         Node lValue, @Nullable Node rValue) {
+       if (info != null && info.hasType()) {
+         return getDeclaredTypeInAnnotation(sourceName, lValue, info);
+-      } else if (rValue != null && rValue.isFunction() &&
+-          shouldUseFunctionLiteralType(
+-              JSType.toMaybeFunctionType(rValue.getJSType()), info, lValue)) {
+-        return rValue.getJSType();
+       } else if (info != null) {
+         if (info.hasEnumParameterType()) {
+           if (rValue != null && rValue.isObjectLit()) {
+@@ -1311,11 +1307,13 @@ final class TypedScopeCreator implements ScopeCreator {
+             }
+           }
+         }
++      } else if (rValue != null && rValue.isFunction() &&
++          shouldUseFunctionLiteralType(
++              JSType.toMaybeFunctionType(rValue.getJSType()), info, lValue)) {
++        return rValue.getJSType();
+       }
+-
+       return getDeclaredTypeInAnnotation(sourceName, lValue, info);
+     }
+-
+     private FunctionType getFunctionType(@Nullable Var v) {
+       JSType t = v == null ? null : v.getType();
+       ObjectType o = t == null ? null : t.dereference();

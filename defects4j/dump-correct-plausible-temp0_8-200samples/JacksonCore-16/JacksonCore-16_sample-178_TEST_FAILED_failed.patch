@@ -1,0 +1,47 @@
+diff --git a/src/main/java/com/fasterxml/jackson/core/util/JsonParserSequence.java b/src/main/java/com/fasterxml/jackson/core/util/JsonParserSequence.java
+index bed27f2b..5ae9177d 100644
+--- a/src/main/java/com/fasterxml/jackson/core/util/JsonParserSequence.java
++++ b/src/main/java/com/fasterxml/jackson/core/util/JsonParserSequence.java
+@@ -32,7 +30,7 @@ public class JsonParserSequence extends JsonParserDelegate
+      *
+      * @since 2.8
+      */
+-
++    protected boolean _hasToken;
+     /*
+      *******************************************************
+      * Construction
+@@ -103,6 +95,10 @@ public class JsonParserSequence extends JsonParserDelegate
+     @Override
+     public JsonToken nextToken() throws IOException, JsonParseException
+     {
++        if (_hasToken) {
++            _hasToken = false;
++            return delegate.getCurrentToken();
++        }
+         JsonToken t = delegate.nextToken();
+         if (t != null) return t;
+         while (switchToNext()) {
+@@ -111,7 +107,21 @@ public class JsonParserSequence extends JsonParserDelegate
+         }
+         return null;
+     }
+-
++    @Override
++    public JsonParser skipChildren() throws IOException, JsonParseException {
++        JsonParser current = delegate;
++        if (current != null) {
++            current.skipChildren();
++        } else { // if not set, we need to handle first
++            JsonToken t = nextToken();
++            if (t == JsonToken.START_OBJECT || t == JsonToken.START_ARRAY) {
++                current = delegate;
++                current.skipChildren();
++            }
++        }
++        _hasToken = true;
++        return this;
++    }
+     /*
+     /*******************************************************
+     /* Additional extended API

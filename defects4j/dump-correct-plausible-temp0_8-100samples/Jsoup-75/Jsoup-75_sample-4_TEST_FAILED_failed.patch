@@ -1,0 +1,23 @@
+diff --git a/src/main/java/org/jsoup/nodes/Attributes.java b/src/main/java/org/jsoup/nodes/Attributes.java
+index 1a2e840..ea76dcb 100644
+--- a/src/main/java/org/jsoup/nodes/Attributes.java
++++ b/src/main/java/org/jsoup/nodes/Attributes.java
+@@ -312,14 +312,12 @@ public class Attributes implements Iterable<Attribute>, Cloneable {
+         for (int i = 0; i < sz; i++) {
+             // inlined from Attribute.html()
+             final String key = keys[i];
+-            final String val = vals[i];
++            String val = vals[i];
++            if (val == null) continue; // skip nulls
+             accum.append(' ').append(key);
+-
+-            // collapse checked=null, checked="", checked=checked; write out others
+-            if (!(out.syntax() == Document.OutputSettings.Syntax.html
+-                && (val == null || val.equals(key) && Attribute.isBooleanAttribute(key)))) {
++            if (val != null) {
+                 accum.append("=\"");
+-                Entities.escape(accum, val == null ? EmptyString : val, out, true, false, false);
++                Entities.escape(accum, val, out, true, false, false);
+                 accum.append('"');
+             }
+         }

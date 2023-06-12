@@ -1,0 +1,29 @@
+    public ZipArchiveInputStream(InputStream inputStream,
+                                 String encoding,
+                                 boolean useUnicodeExtraFields,
+                                 boolean allowStoredEntriesWithDataDescriptor) {
+        this(inputStream, encoding, useUnicodeExtraFields,
+             allowStoredEntriesWithDataDescriptor, "UTF-8");
+    }
+
+    /**
+     * Constructor that allows specifying the encoding to use for file names and comments.
+     *
+     * <p>Assumes the platform default encoding for file content.</p>
+     *
+     * @param encoding encoding to use for file names, use null for the platform default encoding
+     * @since 1.7
+     */
+    public ZipArchiveInputStream(InputStream inputStream,
+                                 String encoding,
+                                 boolean useUnicodeExtraFields,
+                                 boolean allowStoredEntriesWithDataDescriptor,
+                                 String entryEncoding) {
+        zipEncoding = ZipEncodingHelper.getZipEncoding(encoding);
+        this.useUnicodeExtraFields = useUnicodeExtraFields;
+        in = new PushbackInputStream(inputStream, buf.capacity());
+        this.allowStoredEntriesWithDataDescriptor =
+            allowStoredEntriesWithDataDescriptor;
+        this.entryEncoding = ZipEncodingHelper.getZipEncoding(entryEncoding);
+        // haven't read anything so far
+    }

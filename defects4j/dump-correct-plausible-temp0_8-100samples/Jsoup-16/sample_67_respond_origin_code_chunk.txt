@@ -1,0 +1,44 @@
+public class DocumentType extends Node {
+    // todo: quirk mode from publicId and systemId
+
+    /**
+     * Create a new doctype element.
+     * @param name the doctype's name
+     * @param publicId the doctype's public ID
+     * @param systemId the doctype's system ID
+     * @param baseUri the doctype's base URI
+     */
+    public DocumentType(String name, String publicId, String systemId, String baseUri) {
+        super(baseUri);
+
+        attr("name", name);
+        attr("publicId", publicId);
+        attr("systemId", systemId);
+    }
+
+    @Override
+    public String nodeName() {
+        return "#doctype";
+    }
+
+    @Override
+    void outerHtmlHead(StringBuilder accum, int depth, Document.OutputSettings out) {
+        if (out.syntax() == Document.OutputSettings.Syntax.html && !has(Attribute.PUBLIC_ID) && !has(Attribute.SYSTEM_ID)) {
+            accum.append("<!DOCTYPE html>"); // looks like a html doctype, go for short form
+            return;
+        }
+        accum.append("<!DOCTYPE");
+        if (!StringUtil.isBlank(name()))
+            accum.append(" ").append(name());
+        if (!StringUtil.isBlank(publicIdentifier()))
+            accum.append(" PUBLIC \"").append(publicIdentifier()).append("\"");
+        if (!StringUtil.isBlank(systemIdentifier()))
+            accum.append(" \"").append(systemIdentifier()).append("\"");
+        accum.append('>');
+    }
+
+    @Override
+    void outerHtmlTail(StringBuilder accum, int depth, Document.OutputSettings out) {
+    }
+}
+

@@ -1,0 +1,18 @@
+    private boolean isPrototypePropertyAssign(Node assign) {
+      Node lhs = NodeUtil.getAssignmentLhs(assign);
+      if (lhs != null && NodeUtil.isGet(lhs)) {
+        // We want to exclude the assignment itself from the usage list
+        boolean isChainedProperty = NodeUtil.isGet(lhs.getFirstChild());
+
+        if (isChainedProperty) {
+          Node child = lhs.getFirstChild().getFirstChild().getNext();
+
+          if (child.getType() == Token.STRING &&
+              child.getString().equals("prototype")) {
+            return true;
+          }
+        }
+      }
+
+      return false;
+    }

@@ -1,0 +1,78 @@
+diff --git a/src/main/java/org/joda/time/Period.java b/src/main/java/org/joda/time/Period.java
+index 8fce39c6..a802ec09 100644
+--- a/src/main/java/org/joda/time/Period.java
++++ b/src/main/java/org/joda/time/Period.java
+@@ -1616,25 +1616,61 @@ public final class Period
+     public Period normalizedStandard(PeriodType type) {
+         type = DateTimeUtils.getPeriodType(type);
+         long millis = getMillis();  // no overflow can happen, even with Integer.MAX_VALUEs
+-        millis += (((long) getSeconds()) * ((long) DateTimeConstants.MILLIS_PER_SECOND));
+-        millis += (((long) getMinutes()) * ((long) DateTimeConstants.MILLIS_PER_MINUTE));
+-        millis += (((long) getHours()) * ((long) DateTimeConstants.MILLIS_PER_HOUR));
+-        millis += (((long) getDays()) * ((long) DateTimeConstants.MILLIS_PER_DAY));
+-        millis += (((long) getWeeks()) * ((long) DateTimeConstants.MILLIS_PER_WEEK));
+-        Period result = new Period(millis, type, ISOChronology.getInstanceUTC());
++        int seconds = getSeconds();
++        int minutes = getMinutes();
++        int hours = getHours();
++        int days = getDays();
++        int weeks = getWeeks();
+         int years = getYears();
+         int months = getMonths();
++        if (months != 0 && weeks != 0) {
++            throw new IllegalArgumentException("Cannot mix weeks and months");
++        }
++        if (months != 0 && days == 0) {
++            // This is just to keep the calculation simple and so the division
++            // and modulo do not do negative arithmetic.
++            if (months > 0) {
++                months += 1;
++            } else {
++                months -= 1;
++            }
++        }
++        if (months == 0 && weeks != 0) {
++            years = FieldUtils.safeAdd(years, weeks / 52);
++            weeks = weeks % 52;
++            days = FieldUtils.safeAdd(days, weeks * 7);
++            weeks = 0;
++        }
+         if (years != 0 || months != 0) {
+             years = FieldUtils.safeAdd(years, months / 12);
+             months = months % 12;
+-            if (years != 0) {
+-                result = result.withYears(years);
+-            }
+-            if (months != 0) {
+-                result = result.withMonths(months);
++            if (months < 0) {
++                years = FieldUtils.safeAdd(years, -1);
++                months += 12;
+             }
+         }
++        Period result = new Period(millis, type, ISOChronology.getInstanceUTC());
++        if (years != 0) {
++            result = result.withYears(years);
++        }
++        if (months != 0) {
++            result = result.withMonths(months);
++        }
++        if (weeks != 0) {
++            result = result.withWeeks(weeks);
++        }
++        if (days != 0) {
++            result = result.withDays(days);
++        }
++        if (hours != 0) {
++            result = result.withHours(hours);
++        }
++        if (minutes != 0) {
++            result = result.withMinutes(minutes);
++        }
++        if (seconds != 0) {
++            result = result.withSeconds(seconds);
++        }
+         return result;
+     }
+-
+ }

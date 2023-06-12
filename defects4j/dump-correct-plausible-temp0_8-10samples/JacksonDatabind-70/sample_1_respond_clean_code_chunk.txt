@@ -1,0 +1,38 @@
+	public void remove(SettableBeanProperty propToRm)
+    {
+        ArrayList<SettableBeanProperty> props = new ArrayList<SettableBeanProperty>(_size);
+        boolean found = false;
+        int insertPoint = 0;
+        // We must be careful not to reorder properties, since the bean class may rely on
+        // constructor parameter order to match the declared order of properties.
+        // So we need to re-initialize the hash table in the same order, unless the
+        // element to be removed is the last one.
+        for (int i = 1, end = _hashArea.length; i < end; i += 2) {
+            Object key = _hashArea[i - 1];
+            if (key == null) {
+                continue;
+            }
+            if (!found) {
+                // 09-Jan-2017, tatu: Important: must check name slot and NOT property name,
+                //   as only former is lower-case in case-insensitive case
+                found = key.equals(propToRm.getName());
+                if (found) {
+                    // need to leave a hole here
+                    _propsInOrder[_findFromOrdered(propToRm)] = null;
+                    continue;
+                }
+            }
+            SettableBeanProperty prop = (SettableBeanProperty) _hashArea[i];
+            if (prop == null) {
+                continue;
+            }
+            props.add(prop);
+            _hashArea[insertPoint] = key;
+            _hashArea[insertPoint+1] = prop;
+            insertPoint += 2;
+        }
+        if (!found) {
+            throw new NoSuchElementException("No entry '"+propToRm.getName()+"' found, can't remove");
+        }
+        init(props);
+    }

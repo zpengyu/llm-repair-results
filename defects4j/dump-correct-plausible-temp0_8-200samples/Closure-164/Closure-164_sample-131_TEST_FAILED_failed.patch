@@ -1,0 +1,58 @@
+diff --git a/src/com/google/javascript/rhino/jstype/ArrowType.java b/src/com/google/javascript/rhino/jstype/ArrowType.java
+index 0c0ef637..8ca3ca28 100644
+--- a/src/com/google/javascript/rhino/jstype/ArrowType.java
++++ b/src/com/google/javascript/rhino/jstype/ArrowType.java
+@@ -122,17 +118,34 @@ final class ArrowType extends JSType {
+           return false;
+         }
+       }
+-
+       boolean thisIsVarArgs = thisParam.isVarArgs();
+       boolean thatIsVarArgs = thatParam.isVarArgs();
+-
+       // "that" can't be a supertype, because it's missing a required argument.
++      if (thisParamType == null && !thatIsVarArgs) {
++        return false;
++      }
++      // if "this" is var_args, then "that" must also be var_args.
++      if (thisIsVarArgs) {
++        if (!thatIsVarArgs) {
++          return false;
++        }
+         // NOTE(nicksantos): In our type system, we use {function(...?)} and
+         // {function(...NoType)} to to indicate that arity should not be
+         // checked. Strictly speaking, this is not a correct formulation,
+         // because now a sub-function can required arguments that are var_args
+         // in the super-function. So we special-case this.
+-
++        if (thisParamType != null && thisParamType.isNoType()) {
++          return true;
++        }
++      }
++      // NOTE(nicksantos): In our type system, we use {function(...?)} and
++      // {function(...NoType)} to to indicate that arity should not be
++      // checked. Strictly speaking, this is not a correct formulation,
++      // because now a sub-function can required arguments that are var_args
++      // in the super-function. So we special-case this.
++      if (thatIsVarArgs && thatParamType != null && thatParamType.isNoType()) {
++        return true;
++      }
+       // don't advance if we have variable arguments
+       if (!thisIsVarArgs) {
+         thisParam = thisParam.getNext();
+@@ -147,12 +159,12 @@ final class ArrowType extends JSType {
+         thatParam = null;
+       }
+     }
+-
+     // "that" can't be a supertype, because it's missing a required arguement.
+-
++    if (thisParam != null && thisParam.getJSType() == null) {
++      return false;
++    }
+     return true;
+   }
+-
+   /**
+    * @return True if our parameter spec is equal to {@code that}'s parameter
+    *     spec.

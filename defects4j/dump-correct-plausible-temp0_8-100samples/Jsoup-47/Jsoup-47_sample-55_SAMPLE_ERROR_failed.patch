@@ -1,0 +1,37 @@
+diff --git a/src/main/java/org/jsoup/nodes/Entities.java b/src/main/java/org/jsoup/nodes/Entities.java
+index 5a2b368..5baa338 100644
+--- a/src/main/java/org/jsoup/nodes/Entities.java
++++ b/src/main/java/org/jsoup/nodes/Entities.java
+@@ -139,8 +136,6 @@ public class Entities {
+                     default:
+                         if (canEncode(coreCharset, c, encoder))
+                             accum.append(c);
+-                        else if (map.containsKey(c))
+-                            accum.append('&').append(map.get(c)).append(';');
+                         else
+                             accum.append("&#x").append(Integer.toHexString(codePoint)).append(';');
+                 }
+@@ -153,7 +148,22 @@ public class Entities {
+             }
+         }
+     }
+-
++    // Fixed Function
++    private static boolean canEncode(CoreCharset coreCharset, char c, CharsetEncoder fallback) {
++        switch (coreCharset) {
++            case ascii:
++                return c <= 0x7F;
++            case utf8:
++                return true;
++            case utf16be:
++            case utf16le:
++                return true;
++            case utf16:
++                return true;
++            default:
++                return fallback.canEncode(c);
++        }
++    }
+     static String unescape(String string) {
+         return unescape(string, false);
+     }

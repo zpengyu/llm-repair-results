@@ -1,0 +1,37 @@
+diff --git a/src/main/java/org/apache/commons/math3/analysis/differentiation/DSCompiler.java b/src/main/java/org/apache/commons/math3/analysis/differentiation/DSCompiler.java
+index fc9944c36..ea892cda8 100644
+--- a/src/main/java/org/apache/commons/math3/analysis/differentiation/DSCompiler.java
++++ b/src/main/java/org/apache/commons/math3/analysis/differentiation/DSCompiler.java
+@@ -1379,10 +1379,9 @@ public class DSCompiler {
+      * be the input array)
+      * @param resultOffset offset of the result in its array
+      */
+-    public void atan2(final double[] y, final int yOffset,
++  public void atan2(final double[] y, final int yOffset,
+                       final double[] x, final int xOffset,
+                       final double[] result, final int resultOffset) {
+-
+         // compute r = sqrt(x^2+y^2)
+         double[] tmp1 = new double[getSize()];
+         multiply(x, xOffset, x, xOffset, tmp1, 0);      // x^2
+@@ -1412,13 +1407,16 @@ public class DSCompiler {
+             for (int i = 1; i < tmp2.length; ++i) {
+                 result[resultOffset + i] = -2 * tmp2[i]; // +/-pi - 2 * atan(y / (r - x))
+             }
+-
+         }
+-
+         // fix value to take special cases (+0/+0, +0/-0, -0/+0, -0/-0, +/-infinity) correctly
+-
++        for (int i = 0; i < result.length; ++i) {
++            if (isNaN(x[i]) || (Double.isInfinite(x[i]) && !Double.isInfinite(y[i]))) {
++                result[i] = Double.NaN;
++            } else if (Double.isInfinite(x[i]) && Double.isInfinite(y[i])) {
++                result[i] = ((x[i] < 0) ? -FastMath.PI / 2 : FastMath.PI / 2) * y[i];
++            }
++        }
+     }
+-
+     /** Compute hyperbolic cosine of a derivative structure.
+      * @param operand array holding the operand
+      * @param operandOffset offset of the operand in its array

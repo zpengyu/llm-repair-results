@@ -1,0 +1,24 @@
+    public byte[] getBinaryValue(Base64Variant b64variant)
+        throws IOException, JsonParseException
+    {
+        // Multiple possibilities...
+        JsonNode n = currentNod();
+        if (n != null) {
+            byte[] data = n.binaryValue();
+            if (data != null) {
+                return data;
+            }
+            if (n.isPojo()) {
+                Object ob = ((POJONode) n).getPojo();
+                if (ob instanceof byte[]) {
+                    return (byte[]) ob;
+                }
+            }
+            // Only other options are textual:
+            if (n.isTextual()) {
+                return getBinaryValue(b64variant);
+            }
+        }
+        // otherwise return null to mark we have no binary content
+        return null;
+    }

@@ -1,0 +1,34 @@
+diff --git a/src/main/java/org/apache/commons/compress/archivers/tar/TarArchiveInputStream.java b/src/main/java/org/apache/commons/compress/archivers/tar/TarArchiveInputStream.java
+index 52bb7455..2f662d58 100644
+--- a/src/main/java/org/apache/commons/compress/archivers/tar/TarArchiveInputStream.java
++++ b/src/main/java/org/apache/commons/compress/archivers/tar/TarArchiveInputStream.java
+@@ -173,23 +173,18 @@ public class TarArchiveInputStream extends ArchiveInputStream {
+         if (hasHitEOF) {
+             return null;
+         }
+-
+         if (currEntry != null) {
+             long numToSkip = entrySize - entryOffset;
+-
+-            while (numToSkip > 0) {
+-                long skipped = skip(numToSkip);
+-                if (skipped <= 0) {
+-                    throw new RuntimeException("failed to skip current tar entry");
+-                }
+-                numToSkip -= skipped;
++            if (numToSkip > 0) {
++                //numToSkip = skip(numToSkip);
++                numToSkip = (numToSkip < size() ? numToSkip : size());
++            }
++            if (numToSkip > 0) {
++                throw new IOException("failed to skip current tar entry");
+             }
+-
+             readBuf = null;
+         }
+-
+         byte[] headerBuf = getRecord();
+-
+         if (hasHitEOF) {
+             currEntry = null;
+             return null;

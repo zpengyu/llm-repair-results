@@ -1,0 +1,14 @@
+    public void serialize(Object value, JsonGenerator jgen, SerializerProvider provider) throws IOException {
+        String str;
+        if (value instanceof Date) {
+            provider.defaultSerializeDateKey((Date) value, jgen);
+            return;
+        } else {
+            str = value.toString();
+            if (str.length() == 0) { // [JACKSON-203]
+                jgen.writeFieldName(_emptyAsNull ? "" : getEmptyValue());
+                return;
+            }
+        }
+        jgen.writeFieldName(str);
+    }

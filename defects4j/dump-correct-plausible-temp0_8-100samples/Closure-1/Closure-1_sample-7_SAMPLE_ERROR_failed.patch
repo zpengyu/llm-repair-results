@@ -1,0 +1,25 @@
+diff --git a/src/com/google/javascript/jscomp/RemoveUnusedVars.java b/src/com/google/javascript/jscomp/RemoveUnusedVars.java
+index 41175cf3..969f2f9a 100644
+--- a/src/com/google/javascript/jscomp/RemoveUnusedVars.java
++++ b/src/com/google/javascript/jscomp/RemoveUnusedVars.java
+@@ -403,9 +400,19 @@ class RemoveUnusedVars
+     } else {
+       callSiteOptimizer.optimize(fnScope, referenced);
+     }
++    // If we are not in advanced mode, remove all arguments that are not
++    // referenced.
++    if (compiler.getLifeCycleStage().isNormalized()) {
++      for (Argument arg : getArgsInOrder(argList)) {
++        Var var = arg.getVar();
++        if (var != null && !referenced.contains(var)) {
++          argList.removeChild(arg.node);
++          compiler.reportCodeChange();
++        }
++      }
++    }
+   }
+ 
+-
+   /**
+    * @return the LP node containing the function parameters.
+    */

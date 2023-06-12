@@ -1,0 +1,36 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/ser/std/NumberSerializers.java b/src/main/java/com/fasterxml/jackson/databind/ser/std/NumberSerializers.java
+index 6d0db8734..6b6cbcc03 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/ser/std/NumberSerializers.java
++++ b/src/main/java/com/fasterxml/jackson/databind/ser/std/NumberSerializers.java
+@@ -30,11 +29,10 @@ public class NumberSerializers
+         allDeserializers.put(Integer.TYPE.getName(), intS);
+         allDeserializers.put(Long.class.getName(), LongSerializer.instance);
+         allDeserializers.put(Long.TYPE.getName(), LongSerializer.instance);
+-        allDeserializers.put(Byte.class.getName(), IntLikeSerializer.instance);
+-        allDeserializers.put(Byte.TYPE.getName(), IntLikeSerializer.instance);
++        allDeserializers.put(Byte.class.getName(), ByteSerializer.instance);
++        allDeserializers.put(Byte.TYPE.getName(), ByteSerializer.instance);
+         allDeserializers.put(Short.class.getName(), ShortSerializer.instance);
+         allDeserializers.put(Short.TYPE.getName(), ShortSerializer.instance);
+-
+         // Numbers, limited length floating point
+         allDeserializers.put(Float.class.getName(), FloatSerializer.instance);
+         allDeserializers.put(Float.TYPE.getName(), FloatSerializer.instance);
+@@ -113,7 +103,16 @@ public class NumberSerializers
+     /* Concrete serializers, numerics
+     /**********************************************************
+      */
+-
++    @JacksonStdImpl
++    public final static class ByteSerializer extends Base<Byte>
++    {
++        final static ByteSerializer instance = new ByteSerializer();
++        public ByteSerializer() { super(Byte.class, JsonParser.NumberType.INT, "number"); }
++        @Override
++        public void serialize(Byte value, JsonGenerator gen, SerializerProvider provider) throws IOException {
++            gen.writeNumber(value.byteValue());
++        }
++    }
+     @JacksonStdImpl
+     public final static class ShortSerializer extends Base<Short>
+     {

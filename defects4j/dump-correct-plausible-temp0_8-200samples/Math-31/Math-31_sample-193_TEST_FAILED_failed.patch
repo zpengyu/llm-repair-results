@@ -1,0 +1,58 @@
+diff --git a/src/main/java/org/apache/commons/math3/util/ContinuedFraction.java b/src/main/java/org/apache/commons/math3/util/ContinuedFraction.java
+index ff2906836..7f2066c46 100644
+--- a/src/main/java/org/apache/commons/math3/util/ContinuedFraction.java
++++ b/src/main/java/org/apache/commons/math3/util/ContinuedFraction.java
+@@ -143,32 +139,43 @@ public abstract class ContinuedFraction {
+             double cN = a * hPrev + b * p0;
+             double q2 = a * q1 + b * dPrev;
+             if (Double.isInfinite(cN) || Double.isInfinite(q2)) {
+-                double scaleFactor = 1d;
+-                double lastScaleFactor = 1d;
+                 final int maxPower = 5;
+                 final double scale = FastMath.max(a,b);
+                 if (scale <= 0) {  // Can't scale
+                     throw new ConvergenceException(LocalizedFormats.CONTINUED_FRACTION_INFINITY_DIVERGENCE, x);
+                 }
++                double hPrev2 = hPrev;
++                double p0_2 = p0;
++                double q1_2 = q1;
++                double cPrev2 = cPrev;
++                double hN2 = hN;
++                double lastScaleFactor = 1d;
+                 for (int i = 0; i < maxPower; i++) {
+-                    lastScaleFactor = scaleFactor;
+-                    scaleFactor *= scale;
++                    lastScaleFactor = lastScaleFactor * scale;
++                    hPrev2 = hPrev2 / lastScaleFactor;
++                    p0_2 = p0_2 / lastScaleFactor;
++                    q1_2 = q1_2 / lastScaleFactor;
++                    cPrev2 = cPrev2 / lastScaleFactor;
++                    hN2 = hN2 / lastScaleFactor;
+                     if (a != 0.0 && a > b) {
+-                        cN = hPrev / lastScaleFactor + (b / scaleFactor * p0);
+-                        q2 = q1 / lastScaleFactor + (b / scaleFactor * dPrev);
++                        cN = hPrev2 + (b * p0_2);
++                        q2 = q1_2 + (b * dPrev);
+                     } else if (b != 0) {
+-                        cN = (a / scaleFactor * hPrev) + p0 / lastScaleFactor;
+-                        q2 = (a / scaleFactor * q1) + dPrev / lastScaleFactor;
++                        cN = (a * hPrev2) + p0_2;
++                        q2 = (a * q1_2) + dPrev;
+                     }
+                     if (!(Double.isInfinite(cN) || Double.isInfinite(q2))) {
+                         break;
+                     }
+                 }
++                hPrev = hPrev2;
++                p0 = p0_2;
++                q1 = q1_2;
++                cPrev = cPrev2;
++                hN = hN2;
+             }
+-
+             final double deltaN = cN / q2 / cPrev;
+             hN = cPrev * deltaN;
+-
+             if (Double.isInfinite(hN)) {
+                 throw new ConvergenceException(LocalizedFormats.CONTINUED_FRACTION_INFINITY_DIVERGENCE,
+                                                x);

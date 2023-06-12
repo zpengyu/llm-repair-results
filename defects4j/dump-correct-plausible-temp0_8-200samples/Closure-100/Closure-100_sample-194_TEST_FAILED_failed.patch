@@ -1,0 +1,41 @@
+diff --git a/src/com/google/javascript/jscomp/CheckGlobalThis.java b/src/com/google/javascript/jscomp/CheckGlobalThis.java
+index 42c1411a..4d80ac1d 100644
+--- a/src/com/google/javascript/jscomp/CheckGlobalThis.java
++++ b/src/com/google/javascript/jscomp/CheckGlobalThis.java
+@@ -97,36 +90,8 @@ final class CheckGlobalThis implements Callback {
+       // function a() {} // or
+       // a.x = function() {};
+     }
+-
+-    if (parent != null && parent.getType() == Token.ASSIGN) {
+-      Node lhs = parent.getFirstChild();
+-      Node rhs = lhs.getNext();
+-      
+-      if (n == lhs) {
+-        // Always traverse the left side of the assignment. To handle
+-        // nested assignments properly (e.g., (a = this).property = c;),
+-        // assignLhsChild should not be overridden.
+-        if (assignLhsChild == null) {
+-          assignLhsChild = lhs;
+-        }
+-      } else {
+-        // Only traverse the right side if it's not an assignment to a prototype
+-        // property or subproperty.
+-        if (lhs.getType() == Token.GETPROP) {
+-          if (lhs.getLastChild().getString().equals("prototype")) {
+-            return false;
+-          }
+-          String leftName = lhs.getQualifiedName();
+-          if (leftName != null && leftName.contains(".prototype.")) {
+-            return false;
+-          }
+-        }
+-      }
+-    }
+-
+     return true;
+   }
+-
+   public void visit(NodeTraversal t, Node n, Node parent) {
+     if (n.getType() == Token.THIS && shouldReportThis(n, parent)) {
+       compiler.report(t.makeError(n, level, GLOBAL_THIS));

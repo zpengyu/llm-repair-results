@@ -1,0 +1,37 @@
+diff --git a/src/main/java/org/apache/commons/math3/optimization/direct/CMAESOptimizer.java b/src/main/java/org/apache/commons/math3/optimization/direct/CMAESOptimizer.java
+index 140e9d4f9..fb624dd52 100644
+--- a/src/main/java/org/apache/commons/math3/optimization/direct/CMAESOptimizer.java
++++ b/src/main/java/org/apache/commons/math3/optimization/direct/CMAESOptimizer.java
+@@ -501,7 +501,7 @@ public class CMAESOptimizer
+     /**
+      * Checks dimensions and values of boundaries and inputSigma if defined.
+      */
+-    private void checkParameters() {
++     private void checkParameters() {
+         final double[] init = getStartPoint();
+         final double[] lB = getLowerBound();
+         final double[] uB = getUpperBound();
+@@ -535,8 +533,22 @@ public class CMAESOptimizer
+                 boundaries = new double[2][];
+                 boundaries[0] = lB;
+                 boundaries[1] = uB;
+-
+                 // Abort early if the normalization will overflow (cf. "encode" method).
++                double normFac = 0;
++                for (int i = 0; i < init.length; i++) {
++                    final double range = boundaries[1][i] - boundaries[0][i];
++                    if (range == 0) {
++                        // Will cause an overflow in encode function.
++                        throw new ZeroException(LocalizedFormats.UPPER_BOUND_NOT_STRICTLY_GREATER_THAN_LOWER_BOUND,
++                                                boundaries[1][i], boundaries[0][i]);
++                    }
++                    final double ri = 1.0 / range;
++                    normFac += ri * ri;
++                }
++                if (normFac > Double.MAX_VALUE / init.length ||
++                    normFac < Double.MIN_VALUE / init.length) {
++                    throw new MathArithmeticException();
++                }
+             }
+         } else {
+             // Convert API to internal handling of boundaries.

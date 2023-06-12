@@ -1,0 +1,34 @@
+diff --git a/src/main/java/com/fasterxml/jackson/core/util/JsonParserSequence.java b/src/main/java/com/fasterxml/jackson/core/util/JsonParserSequence.java
+index bed27f2b..95735e48 100644
+--- a/src/main/java/com/fasterxml/jackson/core/util/JsonParserSequence.java
++++ b/src/main/java/com/fasterxml/jackson/core/util/JsonParserSequence.java
+@@ -111,7 +102,28 @@ public class JsonParserSequence extends JsonParserDelegate
+         }
+         return null;
+     }
+-
++    @Override
++    public JsonToken nextValue() throws IOException, JsonParseException
++    {
++        JsonToken t = delegate.nextValue();
++        if (t != null) return t;
++        while (switchToNext()) {
++            t = delegate.nextValue();
++            if (t != null) return t;
++        }
++        return null;
++    }
++    @Override
++    public JsonToken nextFieldName(SerializableString cached) throws IOException, JsonParseException
++    {
++        JsonToken t = delegate.nextFieldName(cached);
++        if (t != null) return t;
++        while (switchToNext()) {
++            t = delegate.nextFieldName(cached);
++            if (t != null) return t;
++        }
++        return null;
++    }
+     /*
+     /*******************************************************
+     /* Additional extended API

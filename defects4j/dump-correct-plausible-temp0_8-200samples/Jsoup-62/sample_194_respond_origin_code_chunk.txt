@@ -1,0 +1,43 @@
+        boolean anyOtherEndTag(Token t, HtmlTreeBuilder tb) {
+            String name = t.asEndTag().normalName();
+            ArrayList<Element> stack = tb.getStack();
+            for (int pos = stack.size() -1; pos >= 0; pos--) {
+                Element node = stack.get(pos);
+                if (node.nodeName().equals(name)) {
+                    tb.generateImpliedEndTags(name);
+                    if (!name.equals(tb.currentElement().nodeName()))
+                        tb.error(this);
+                    tb.popStackToClose(name);
+                    break;
+                } else {
+                    if (tb.isSpecial(node)) {
+                        tb.error(this);
+                        return false;
+                    } else {
+                        if(node.nodeName().equals("select") &&
+                                !EnumSet.of(ElementCategories.InTable, ElementCategories.InCaption,
+                                        ElementCategories.InTableBody, ElementCategories.InRow,
+                                        ElementCategories.InCell).contains(ElementCategories.from(tb.currentElement()))){
+                            tb.error(this);
+                            return false;
+                        }
+                        if(node.nodeName().equals("td") || node.nodeName().equals("th") ){
+                            if(!tb.currentElement().nodeName().equals("tr")){
+                                tb.error(this);
+                                return false;
+                            }
+                        }
+                        if(node.nodeName().equals("tr")){
+                            if(!tb.currentElement().nodeName().equals("tbody") &&
+                                    !tb.currentElement().nodeName().equals("tfoot") &&
+                                    !tb.currentElement().nodeName().equals("thead")){
+                                tb.error(this);
+                                return false;
+                            }
+                        }
+                    }
+                }
+            }
+            return true;
+        }
+

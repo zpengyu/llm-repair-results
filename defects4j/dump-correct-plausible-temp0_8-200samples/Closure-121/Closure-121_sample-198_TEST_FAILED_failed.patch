@@ -1,0 +1,39 @@
+diff --git a/src/com/google/javascript/jscomp/InlineVariables.java b/src/com/google/javascript/jscomp/InlineVariables.java
+index 03f4fcf3..f4667222 100644
+--- a/src/com/google/javascript/jscomp/InlineVariables.java
++++ b/src/com/google/javascript/jscomp/InlineVariables.java
+@@ -302,9 +300,31 @@ class InlineVariables implements CompilerPass {
+           !staleVars.contains(v) &&
+           referenceInfo.isWellDefined() &&
+           referenceInfo.isAssignedOnceInLifetime()) {
+-          // Inlining the variable based solely on well-defined and assigned
+-          // once is *NOT* correct. We relax the correctness requirement if
+-          // the variable is declared constant.
++        // Inlining the variable based solely on well-defined and assigned
++        // once is *NOT* correct. We relax the correctness requirement if
++        // the variable is declared constant.
++        //     final x = 3;
++        //     var y;
++        //     function f(a) {
++        //         if (a) { y = x; }
++        //         return y;
++        //     }
++        //     f(true);
++        //     f(false); // this will throw on y if inlined
++        //
++        // We can safely inline y in this example, because we know that
++        // y can only be ever assigned to from "x".
++        //
++        // If we were to inline variables without any restrictions, we
++        // would transform the above code into:
++        //
++        //     function f(a) {
++        //         if (a) { 3; }
++        //         return 3; // this will throw
++        //     }
++        //     f(true);
++        //     f(false);
++        //
+         List<Reference> refs = referenceInfo.references;
+         for (int i = 1 /* start from a read */; i < refs.size(); i++) {
+           Node nameNode = refs.get(i).getNode();

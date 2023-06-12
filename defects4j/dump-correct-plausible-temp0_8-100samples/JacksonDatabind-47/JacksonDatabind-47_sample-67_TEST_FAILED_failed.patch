@@ -1,0 +1,67 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/AnnotationIntrospector.java b/src/main/java/com/fasterxml/jackson/databind/AnnotationIntrospector.java
+index 624a1fd7e..eddaca81e 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/AnnotationIntrospector.java
++++ b/src/main/java/com/fasterxml/jackson/databind/AnnotationIntrospector.java
+@@ -863,34 +858,34 @@ public abstract class AnnotationIntrospector
+         JavaType contentType = type.getContentType();
+         if (contentType != null) { // collection[like], map[like], array, reference
+             // And then value types for all containers:
+-           Class<?> contentClass = findSerializationContentType(a, contentType);
+-           if (contentClass != null) {
+-               if (contentType.hasRawClass(contentClass)) {
+-                   contentType = contentType.withStaticTyping();
+-               } else {
+-                   // 03-Apr-2016, tatu: As per [databind#1178], may need to actually
+-                   //   specialize (narrow) type sometimes, even if more commonly opposite
+-                   //   is needed.
+-                   Class<?> currRaw = contentType.getRawClass();
+-                   try {
+-                       if (contentClass.isAssignableFrom(currRaw)) { // common case
+-                           contentType = tf.constructGeneralizedType(contentType, contentClass);
+-                       } else if (currRaw.isAssignableFrom(contentClass)) { // specialization, ok as well
+-                           contentType = tf.constructSpecializedType(contentType, contentClass);
+-                       } else {
+-                           throw new JsonMappingException(null,
+-                                   String.format("Can not refine serialization content type %s into %s; types not related",
+-                                           contentType, contentClass.getName()));
+-                       }
+-                   } catch (IllegalArgumentException iae) { // shouldn't really happen
+-                       throw new JsonMappingException(null,
+-                               String.format("Internal error: failed to refine value type of %s with concrete-type annotation (value %s), from '%s': %s",
+-                                       type, contentClass.getName(), a.getName(), iae.getMessage()),
+-                                       iae);
+-                   }
+-               }
+-               type = type.withContentType(contentType);
+-           }
++            Class<?> contentClass = findSerializationContentType(a, contentType);
++            if (contentClass != null) {
++                if (contentType.hasRawClass(contentClass)) {
++                    contentType = contentType.withStaticTyping();
++                } else {
++                    // 03-Apr-2016, tatu: As per [databind#1178], may need to actually
++                    //   specialize (narrow) type sometimes, even if more commonly opposite
++                    //   is needed.
++                    Class<?> currRaw = contentType.getRawClass();
++                    try {
++                        if (contentClass.isAssignableFrom(currRaw)) { // common case
++                            contentType = tf.constructGeneralizedType(contentType, contentClass);
++                        } else if (currRaw.isAssignableFrom(contentClass)) { // specialization, ok as well
++                            contentType = tf.constructSpecializedType(contentType, contentClass);
++                        } else {
++                            throw new JsonMappingException(null,
++                                    String.format("Can not refine serialization content type %s into %s; types not related",
++                                            contentType, contentClass.getName()));
++                        }
++                    } catch (IllegalArgumentException iae) { // shouldn't really happen
++                        throw new JsonMappingException(null,
++                                String.format("Internal error: failed to refine value type of %s with concrete-type annotation (value %s), from '%s': %s",
++                                        type, contentClass.getName(), a.getName(), iae.getMessage()),
++                                        iae);
++                    }
++                }
++                type = type.withContentType(contentType);
++            }
+         }
+         return type;
+     }

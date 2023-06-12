@@ -1,0 +1,30 @@
+diff --git a/src/main/java/org/apache/commons/compress/archivers/zip/ZipArchiveInputStream.java b/src/main/java/org/apache/commons/compress/archivers/zip/ZipArchiveInputStream.java
+index fc7b80d5..2c47d979 100644
+--- a/src/main/java/org/apache/commons/compress/archivers/zip/ZipArchiveInputStream.java
++++ b/src/main/java/org/apache/commons/compress/archivers/zip/ZipArchiveInputStream.java
+@@ -237,7 +236,24 @@ public class ZipArchiveInputStream extends ArchiveInputStream {
+                 throw new ZipException(e.getMessage());
+             }
+             if (read == 0 && inf.finished()) {
+-                return -1;
++                if (offsetInBuffer >= lengthOfLastRead) {
++                    offsetInBuffer = 0;
++                    if ((lengthOfLastRead = in.read(buf)) == -1) {
++                        return -1;
++                    }
++                    count(lengthOfLastRead);
++                    bytesReadFromStream += lengthOfLastRead;
++                }
++                // If we are at the end of the entry, we need to check
++                // if the 12 extra bytes at the end of the entry were
++                // used as a dummy buffer for ZipEncoding.
++                if (readBytesOfEntry >= current.getSize()) {
++                    inf.setInput(buf, offsetInBuffer, lengthOfLastRead - offsetInBuffer);
++                    offsetInBuffer = lengthOfLastRead;
++                    if (inf.inflate(buf, 0, buf.length) == 0) {
++                        return -1;
++                    }
++                }
+             }
+             crc.update(buffer, start, read);
+             return read;

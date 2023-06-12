@@ -1,0 +1,15 @@
+diff --git a/src/main/java/org/apache/commons/compress/archivers/tar/TarArchiveOutputStream.java b/src/main/java/org/apache/commons/compress/archivers/tar/TarArchiveOutputStream.java
+index da6bbfde..89938034 100644
+--- a/src/main/java/org/apache/commons/compress/archivers/tar/TarArchiveOutputStream.java
++++ b/src/main/java/org/apache/commons/compress/archivers/tar/TarArchiveOutputStream.java
+@@ -482,6 +481,10 @@ public class TarArchiveOutputStream extends ArchiveOutputStream {
+                 actualLength = line.getBytes(CharsetNames.UTF_8).length;
+             }
+             w.write(line);
++            if (actualLength > TarConstants.MAX_PAX_RECORD_LEN) {
++                String msg = "Header value length too long: " + actualLength;
++                throw new IllegalArgumentException(msg);
++            }
+         }
+         byte[] data = w.toString().getBytes(CharsetNames.UTF_8);
+         pex.setSize(data.length);

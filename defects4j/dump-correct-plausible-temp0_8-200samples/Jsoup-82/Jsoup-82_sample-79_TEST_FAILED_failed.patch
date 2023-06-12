@@ -1,0 +1,22 @@
+diff --git a/src/main/java/org/jsoup/helper/DataUtil.java b/src/main/java/org/jsoup/helper/DataUtil.java
+index e4fa18c..55ff006 100644
+--- a/src/main/java/org/jsoup/helper/DataUtil.java
++++ b/src/main/java/org/jsoup/helper/DataUtil.java
+@@ -169,6 +163,17 @@ public final class DataUtil {
+             Charset charset = Charset.forName(charsetName);
+             doc.outputSettings().charset(charset);
+                 // some charsets can read but not encode; switch to an encodable charset and update the meta el
++            String foundCharset = getCharsetFromContentType(doc.select("meta[http-equiv=content-type]").attr("content"));
++            if (foundCharset == null)
++                foundCharset = getCharsetFromContentType(doc.select("meta[charset]").attr("charset"));
++            if (foundCharset != null && !foundCharset.equalsIgnoreCase(charset.name())) {
++                foundCharset = foundCharset.trim().replaceAll("[\"']", "");
++                foundCharset = validateCharset(foundCharset);
++                if (foundCharset != null && !foundCharset.equals(charset.name())) {
++                    charsetName = foundCharset;
++                    doc.outputSettings().charset(Charset.forName(foundCharset));
++                }
++            }
+         }
+         input.close();
+         return doc;

@@ -1,0 +1,54 @@
+diff --git a/src/java/org/apache/commons/cli/PosixParser.java b/src/java/org/apache/commons/cli/PosixParser.java
+index 2b1bbb1..a589c20 100644
+--- a/src/java/org/apache/commons/cli/PosixParser.java
++++ b/src/java/org/apache/commons/cli/PosixParser.java
+@@ -133,14 +129,43 @@ public class PosixParser extends Parser {
+                 {
+                     processOptionToken(token, stopAtNonOption);
+                 }
+-                else if (options.hasOption(token))
+-                {
+-                    tokens.add(token);
+-                }
+-                // requires bursting
+                 else
+                 {
+-                    burstToken(token, stopAtNonOption);
++                    // process the -foo bar, --foo bar, -f bar, -f=bar and
++                    // --foo=bar
++                    // cases
++                    if (options.hasOption(token))
++                    {
++                        tokens.add(token);
++                    }
++                    else
++                    {
++                        final String optName = token.substring(0, 2);
++                        final Option option = options.getOption(optName);
++                        if (option != null)
++                        {
++                            final String optValue = token.substring(2);
++                            if (option.hasArg())
++                            {
++                                tokens.add(optName);
++                                tokens.add(optValue);
++                            }
++                            else
++                            {
++                                // don't add the arg to the tokens list because
++                                // the option doesn't take an arg.
++                                // instead add the tokens from the "burst" of
++                                // the option value (see
++                                // burstToken(String, boolean))
++                                burstToken(token, stopAtNonOption);
++                            }
++                        }
++                        else
++                        {
++                            // requires bursting
++                            burstToken(token, stopAtNonOption);
++                        }
++                    }
+                 }
+             }
+             else if (stopAtNonOption)

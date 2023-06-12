@@ -1,0 +1,39 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/ser/PropertyBuilder.java b/src/main/java/com/fasterxml/jackson/databind/ser/PropertyBuilder.java
+index 9a9d91ebf..b5992c95e 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/ser/PropertyBuilder.java
++++ b/src/main/java/com/fasterxml/jackson/databind/ser/PropertyBuilder.java
+@@ -118,10 +113,20 @@ public class PropertyBuilder
+             } else {
+                 valueToSuppress = getDefaultValue(actualType);
+             }
+-            if (valueToSuppress == null) {
+-                suppressNulls = true;
++            // 11-Nov-2015, tatu: As per [databind#1214], "empty" values also need to be
++            //   suppressed.
++            if (isDefaultValueEmpty(valueToSuppress)) {
++                if (propDef.isRequired()) { // but not if required prop
++                    break;
++                }
++                if (actualType.isContainerType()) {
++                    suppressNulls = true;
++                    valueToSuppress = BeanPropertyWriter.MARKER_FOR_EMPTY;
++                }
+             } else {
+-                if (valueToSuppress.getClass().isArray()) {
++                if (valueToSuppress == null) {
++                    suppressNulls = true;
++                } else if (valueToSuppress.getClass().isArray()) {
+                     valueToSuppress = ArrayBuilders.getArrayComparator(valueToSuppress);
+                 }
+             }
+@@ -169,7 +172,9 @@ public class PropertyBuilder
+         }
+         return bpw;
+     }
+-
++    protected boolean isDefaultValueEmpty(Object defaultValue) {
++        return (defaultValue == null) || (defaultValue == BeanPropertyWriter.MARKER_FOR_EMPTY);
++    }
+     /*
+     /**********************************************************
+     /* Helper methods; annotation access

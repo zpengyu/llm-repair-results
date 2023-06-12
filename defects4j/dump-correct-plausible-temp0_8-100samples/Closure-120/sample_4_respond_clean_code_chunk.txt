@@ -1,0 +1,26 @@
+    boolean isAssignedOnceInLifetime() {
+      Reference ref = getOneAndOnlyAssignment();
+      if (ref == null) {
+        return false;
+      }
+      // Make sure this assignment is not in a loop.
+      for (BasicBlock block = ref.getBasicBlock();
+           block != null; block = block.getParent()) {
+        if (block.isFunction) {
+          break;
+        } else if (block.isLoop) {
+          return false;
+        }
+      }
+      // Check that there aren't any intervening writes.
+      if (ref.nextReference != null) {
+        Reference nextRef = ref.nextReference;
+        while (nextRef != null) {
+          if (nextRef.getBasicBlock() == ref.getBasicBlock()) {
+            return false;
+          }
+          nextRef = nextRef.nextReference;
+        }
+      }
+      return true;
+    }

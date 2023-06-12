@@ -1,0 +1,38 @@
+diff --git a/src/com/google/javascript/jscomp/TypeCheck.java b/src/com/google/javascript/jscomp/TypeCheck.java
+index 6030d48d..f90bff1a 100644
+--- a/src/com/google/javascript/jscomp/TypeCheck.java
++++ b/src/com/google/javascript/jscomp/TypeCheck.java
+@@ -1574,12 +1570,31 @@ public class TypeCheck implements NodeTraversal.Callback, CompilerPass {
+            !isExtern)) {
+         report(t, n, CONSTRUCTOR_NOT_CALLABLE, childType.toString());
+       }
+-
+       // Functions with explcit 'this' types must be called in a GETPROP
+       // or GETELEM.
+-
+       visitParameterList(t, n, functionType);
+       ensureTyped(t, n, functionType.getReturnType());
++    } else if (childType.isObjectType()) {
++      ObjectType objType = childType.toObjectType();
++      // Check if there are any enumerable properties on the object.
++      boolean hasEnumProps = false;
++      if (objType.getTemplateTypeMap().hasTemplateKeys() ||
++          objType.hasProperty("call") ||
++          objType.hasProperty("apply")) {
++        hasEnumProps = true;
++      }
++      if (!hasEnumProps) {
++        for (String prop : objType.getEnumeratedType().getPropertyNames()) {
++          if (objType.hasProperty(prop)) {
++            hasEnumProps = true;
++            break;
++          }
++        }
++      }
++      if (!hasEnumProps) {
++        report(t, n, CALL_FUNCTION_NOT_FUNCTION);
++      }
++      ensureTyped(t, n);
+     } else {
+       ensureTyped(t, n);
+     }

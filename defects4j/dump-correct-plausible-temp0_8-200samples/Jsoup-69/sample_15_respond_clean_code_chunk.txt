@@ -1,0 +1,155 @@
+public class FormElement extends Element {
+    private final Elements elements = new Elements();
+    private final Map<String, Element> elementMap = new LinkedHashMap<>();
+    /**
+     * Create a new, standalone form element.
+     *
+     * @param tag        tag of this element
+     * @param baseUri    the base URI
+     * @param attributes initial attributes
+     */
+    public FormElement(Tag tag, String baseUri, Attributes attributes) {
+        super(tag, baseUri, attributes);
+    }
+    /**
+     * Get the list of form control elements associated with this form.
+     * @return form controls associated with this element.
+     */
+    public Elements elements() {
+        return elements;
+    }
+    /**
+     * Add a form control element to this form.
+     * @param element form control to add
+     * @return this form element, for chaining
+     */
+    public FormElement addElement(Element element) {
+        elements.add(element);
+        return this;
+    }
+    /**
+     * Add all of the form control elements to this form from the supplied collection.
+     * @param elements form controls to add
+     * @return this form element, for chaining
+     */
+    public FormElement addAll(Collection<Element> elements) {
+        for (Element e: elements) {
+            addElement(e);
+        }
+        return this;
+    }
+    /**
+     * Prepares the form for submission. A Connection object is created with the request set up from the form values.
+     * You can then set up other options (like user-agent, timeout, cookies), then execute it.
+     * @return a connection prepared from the values of this form.
+     * @throws IllegalArgumentException if the form's absolute action URL cannot be determined. Make sure you pass the
+     * document's base URI when parsing.
+     */
+    public Connection submit() {
+        String action = hasAttr("action") ? absUrl("action") : baseUri();
+        Validate.notEmpty(action, "Could not determine a form action URL for submit. Ensure you set a base URI when parsing.");
+        Connection.Method method = attr("method").toUpperCase().equals("POST") ?
+                Connection.Method.POST : Connection.Method.GET;
+        Connection con = Jsoup.connect(action)
+                .data(formData())
+                .method(method);
+        for (Element el: elements()) {
+            // is input "submit" or image? add to query to submit form (if not disabled)
+            if (el.tag().getName().equals("input") &&
+                    ("submit".equalsIgnoreCase(el.attr("type")) || "image".equalsIgnoreCase(el.attr("type")))) {
+                if (!el.hasAttr("disabled")) {
+                    String name = el.attr("name");
+                    if (name.length() == 0)
+                        name = el.id(); // use the ID if no name
+                    con.data(name, el.val());
+                }
+            }
+        }
+        return con;
+    }
+    /**
+     * Prepare to submit this form. A Connection object is created with the request set up from the form values. You
+     * can then set up other options (like user-agent, timeout, cookies), then execute it.
+     * @param button The submit button that was pressed. If set, only the values from this button will be submitted
+     * with the form.
+     * @return a connection prepared from the values of this form.
+     * @throws IllegalArgumentException if the form's absolute action URL cannot be determined. Make sure you pass the
+     * document's base URI when parsing.
+     */
+    public Connection submit(Element button) {
+        Validate.notNull(button);
+        Validate.isTrue(button.tag().getName().equals("button"));
+        String name = button.attr("name");
+        if (name.length() == 0)
+            name = button.id(); // use the ID if no name
+        if (name.length() == 0)
+            throw new IllegalArgumentException("No name or ID on submit button");
+        Connection con = submit();
+        con.data(name, button.val());
+        return con;
+    }
+    /**
+     * Get the data that this form submits. The returned list is a copy of the data, and changes to the contents of the
+     * list will not be reflected in the DOM.
+     * @return a list of key vals
+     */
+    public List<Connection.KeyVal> formData() {
+        ArrayList<Connection.KeyVal> data = new ArrayList<>();
+        // iterate the form control elements and accumulate their values
+        for (Element el: elements) {
+            if (!el.tag().isFormSubmittable()) continue; // contents are form listable, superset of submitable
+            if (el.hasAttr("disabled")) continue; // skip disabled form inputs
+            String name = el.attr("name");
+            if (name.length() == 0) continue; // no name = no value
+            String type = el.attr("type");
+            if ("select".equals(el.tagName())) {
+                Elements options = el.select("option[selected]");
+                boolean set = false;
+                for (Element option: options) {
+                    data.add(HttpConnection.KeyVal.create(name, option.val()));
+                    set = true;
+                }
+                if (!set) {
+                    Element option = el.select("option").first();
+                    if (option != null)
+                        data.add(HttpConnection.KeyVal.create(name, option.val()));
+                }
+            } else if ("checkbox".equalsIgnoreCase(type) || "radio".equalsIgnoreCase(type)) {
+                // only add checkbox or radio if they have the checked attribute
+                if (el.hasAttr("checked")) {
+                    final String val = el.val().length() >  0 ? el.val() : "on";
+                    data.add(HttpConnection.KeyVal.create(name, val));
+                }
+            } else {
+                data.add(HttpConnection.KeyVal.create(name, el.val()));
+            }
+        }
+        return data;
+    }
+    /**
+     * Get the form element's value of the element with the supplied name.
+     * <p>
+     * If more than one element has this name, the first (in HTML) is returned.
+     * </p>
+     * @param name name of the element to find
+     * @return the value of the first element found, or empty string if none found.
+     */
+    public String getElementById(String name) {
+        Elements els = elements.select("[name="+name+"]");
+        if (els.size() > 0)
+            return els.first().val();
+        else
+            return "";
+    }
+    /**
+     * Update the value of an element associated with this form, by ID.
+     * @param id ID of element to update
+     * @param value new value of element
+     * @return this form element, for chaining
+     */
+    public FormElement setElementById(String id, String value) {
+        Element el = getElementById(id);
+        el.attr("value", value);
+        return this;
+    }
+}

@@ -1,0 +1,64 @@
+  private static boolean isUnavailableName(String name) {
+    return "alert".equals(name);
+  }
+
+  private static boolean isLazilyLoadedName(String name) {
+    return "eval".equals(name);
+  }
+
+  private boolean processProvide(Node n) {
+    Preconditions.checkArgument(n.getType() == Token.CALL);
+    Node callee = n.getFirstChild();
+    Preconditions.checkArgument(callee.getType() == Token.NAME);
+    String name = callee.getString();
+    if (!name.equals("goog.provide")) {
+      return false;
+    }
+
+    for (Node arg = callee.getNext(); arg != null; arg = arg.getNext()) {
+      if (arg.getType() != Token.STRING) {
+        errorReporter.error(
+            "Invalid argument to goog.provide(string)", arg.getSourceFileName(),
+            arg.getLineno(), arg.getCharno());
+        return false;
+      }
+      String inputName = arg.getString();
+
+      if (isUnavailableName(inputName)) {
+        errorReporter.error(
+            "goog.provide can not be used to declare '" + inputName + "'.",
+            arg.getSourceFileName(),
+            arg.getLineno(), arg.getCharno());
+        return false;
+      }
+
+      if (isLazilyLoadedName(inputName)) {
+        String msg = "goog.provide can not be used to declare '"
+            + inputName + "' because it is lazily loaded.";
+        // TODO(user) Replace with a warning when goog.require is called on
+        // lazily loaded names.
+        errorReporter.error(msg, arg.getSourceFileName(),
+            arg.getLineno(), arg.getCharno());
+        return false;
+      }
+
+      if (!options.closurePass && inputName.equals("goog")) {
+        String msg = "goog.provide can not be used to declare 'goog'";
+        errorReporter.error(msg, arg.getSourceFileName(),
+            arg.getLineno(), arg.getCharno());
+        return false;
+      }
+
+      if (providedNames.containsKey(inputName)) {
+        String msg = "\"" + inputName
+            + "\" cannot be both provided and required";
+        errorReporter.error(msg, arg.getSourceFileName(),
+            arg.getLineno(), arg.getCharno());
+        return false;
+      }
+
+      providedNames.put(inputName, arg);
+    }
+
+    return true;
+  }

@@ -1,0 +1,23 @@
+diff --git a/src/com/google/javascript/jscomp/ReferenceCollectingCallback.java b/src/com/google/javascript/jscomp/ReferenceCollectingCallback.java
+index fefd3926..49572e63 100644
+--- a/src/com/google/javascript/jscomp/ReferenceCollectingCallback.java
++++ b/src/com/google/javascript/jscomp/ReferenceCollectingCallback.java
+@@ -433,10 +432,16 @@ class ReferenceCollectingCallback implements ScopedCallback,
+           return false;
+         }
+       }
+-
++      // Make sure the value is not changed by a SETELEM/SETPROP.
++      Node value = getValue();
++      for (Node cursor = value;
++           cursor != null; cursor = cursor.getParent()) {
++        if (cursor.isAssign()) {
++          return false;
++        }
++      }
+       return true;
+     }
+-
+     /**
+      * @return The one and only assignment. Returns if there are 0 or 2+
+      *    assignments.

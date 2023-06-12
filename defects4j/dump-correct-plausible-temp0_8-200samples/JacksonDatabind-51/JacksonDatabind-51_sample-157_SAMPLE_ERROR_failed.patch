@@ -1,0 +1,61 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/jsontype/impl/TypeDeserializerBase.java b/src/main/java/com/fasterxml/jackson/databind/jsontype/impl/TypeDeserializerBase.java
+index 339362e1e..d4ad83de8 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/jsontype/impl/TypeDeserializerBase.java
++++ b/src/main/java/com/fasterxml/jackson/databind/jsontype/impl/TypeDeserializerBase.java
+@@ -149,17 +149,38 @@ public abstract class TypeDeserializerBase
+              */
+             JavaType type = _idResolver.typeFromId(ctxt, typeId);
+             if (type == null) {
+-                // As per [JACKSON-614], use the default impl if no type id available:
+-                deser = _findDefaultImplDeserializer(ctxt);
+-                if (deser == null) {
+-                    // 10-May-2016, tatu: We may get some help...
+-                    JavaType actual = _handleUnknownTypeId(ctxt, typeId, _idResolver, _baseType);
+-                    if (actual == null) { // what should this be taken to mean?
+-                        // TODO: try to figure out something better
++                if (_defaultImpl != null) {
++                    /* Can not use default implementation if we are trying
++                     * to instantiate an interface or abstract class.
++                     */
++                    Class<?> raw = ClassUtil.rawClass(_baseType);
++                    if (raw.isInterface() || Modifier.isAbstract(raw.getModifiers())) {
++                        ctxt.reportInputMismatch(handledType(),
++                                "Can not find a deserializer for non-concrete type %s; does not have a default deserializer",
++                                _baseType);
+                         return null;
+                     }
+-                    // ... would this actually work?
+-                    deser = ctxt.findContextualValueDeserializer(actual, _property);
++                    // 16-Feb-2018, tatu: As per [databind#1896] we really should only use the
++                    //    default impl if no type info is available; if type info IS available,
++                    //    we must use it.
++                    if (ctxt.isEnabled(DeserializationFeature.FAIL_ON_INVALID_SUBTYPE)) {
++                        ctxt.reportInputMismatch(handledType(),
++                                "Missing type id when one is required for polymorphic type handling");
++                    }
++                    deser = _findDefaultImplDeserializer(ctxt);
++                } else {
++                    // As per [JACKSON-614], use the default impl if no type id available:
++                    deser = _findDefaultImplDeserializer(ctxt);
++                    if (deser == null) {
++                        // 10-May-2016, tatu: We may get some help...
++                        JavaType actual = _handleUnknownTypeId(ctxt, typeId, _idResolver, _baseType);
++                        if (actual == null) { // what should this be taken to mean?
++                            // TODO: try to figure out something better
++                            return null;
++                        }
++                        // ... would this actually work?
++                        deser = ctxt.findContextualValueDeserializer(actual, _property);
++                    }
+                 }
+             } else {
+                 /* 16-Dec-2010, tatu: Since nominal type we get here has no (generic) type parameters,
+@@ -181,7 +202,7 @@ public abstract class TypeDeserializerBase
+                     //   generic type with custom type resolvers. If so, should try to retain them.
+                     //  Whether this is sufficient to avoid problems remains to be seen, but for
+                     //  now it should improve things.
+-                        type = ctxt.getTypeFactory().constructSpecializedType(_baseType, type.getRawClass());
++                    type = _baseType.narrowBy(type.getRawClass());
+                 }
+                 deser = ctxt.findContextualValueDeserializer(type, _property);
+             }

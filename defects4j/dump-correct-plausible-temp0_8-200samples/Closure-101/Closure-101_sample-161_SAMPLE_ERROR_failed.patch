@@ -1,0 +1,23 @@
+diff --git a/src/com/google/javascript/jscomp/CommandLineRunner.java b/src/com/google/javascript/jscomp/CommandLineRunner.java
+index 00e3e1ba..696e22a3 100644
+--- a/src/com/google/javascript/jscomp/CommandLineRunner.java
++++ b/src/com/google/javascript/jscomp/CommandLineRunner.java
+@@ -433,11 +432,15 @@ public class CommandLineRunner extends
+     if (flags.process_closure_primitives) {
+       options.closurePass = true;
+     }
+-
+-    initOptionsFromFlags(options);
++    boolean createSourceMap = flags.create_source_map;
++    boolean sourceMapFormatV3 = flags.source_map_format == SourceMap.Format.V3;
++    if (createSourceMap && sourceMapFormatV3) {
++      options.sourceMapFormat = SourceMap.Format.V3;
++    } else if (createSourceMap) {
++      options.sourceMapFormat = SourceMap.Format.DEFAULT;
++    }
+     return options;
+   }
+-
+   @Override
+   protected Compiler createCompiler() {
+     return new Compiler(getErrorPrintStream());

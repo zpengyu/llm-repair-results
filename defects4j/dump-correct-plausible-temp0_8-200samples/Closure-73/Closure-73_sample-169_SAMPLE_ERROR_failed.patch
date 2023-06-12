@@ -1,0 +1,66 @@
+diff --git a/src/com/google/javascript/jscomp/CodeGenerator.java b/src/com/google/javascript/jscomp/CodeGenerator.java
+index b58df9b3..b206f880 100644
+--- a/src/com/google/javascript/jscomp/CodeGenerator.java
++++ b/src/com/google/javascript/jscomp/CodeGenerator.java
+@@ -986,10 +986,10 @@ class CodeGenerator {
+ 
+   /** Helper to escape javascript string as well as regular expression */
+   static String strEscape(String s, char quote,
+-                          String doublequoteEscape,
+-                          String singlequoteEscape,
+-                          String backslashEscape,
+-                          CharsetEncoder outputCharsetEncoder) {
++      String doublequoteEscape,
++      String singlequoteEscape,
++      String backslashEscape,
++      CharsetEncoder outputCharsetEncoder) {
+     StringBuilder sb = new StringBuilder(s.length() + 2);
+     sb.append(quote);
+     for (int i = 0; i < s.length(); i++) {
+@@ -1005,7 +1005,7 @@ class CodeGenerator {
+         case '>':                       // Break --> into --\> or ]]> into ]]\>
+           if (i >= 2 &&
+               ((s.charAt(i - 1) == '-' && s.charAt(i - 2) == '-') ||
+-               (s.charAt(i - 1) == ']' && s.charAt(i - 2) == ']'))) {
++                  (s.charAt(i - 1) == ']' && s.charAt(i - 2) == ']'))) {
+             sb.append("\\>");
+           } else {
+             sb.append(c);
+@@ -1014,15 +1014,13 @@ class CodeGenerator {
+         case '<':
+           // Break </script into <\/script
+           final String END_SCRIPT = "/script";
+-
+           // Break <!-- into <\!--
+           final String START_COMMENT = "!--";
+-
+           if (s.regionMatches(true, i + 1, END_SCRIPT, 0,
+-                              END_SCRIPT.length())) {
++              END_SCRIPT.length())) {
+             sb.append("<\\");
+           } else if (s.regionMatches(false, i + 1, START_COMMENT, 0,
+-                                     START_COMMENT.length())) {
++              START_COMMENT.length())) {
+             sb.append("<\\");
+           } else {
+             sb.append(c);
+@@ -1056,7 +1054,18 @@ class CodeGenerator {
+     sb.append(quote);
+     return sb.toString();
+   }
+-
++  /**
++   * Appends the hex-escaped javascript representation of the given
++   * character to the given StringBuilder.
++   */
++  static void appendHexJavaScriptRepresentation(StringBuilder sb, char c) {
++    sb.append("\\u");
++    String hex = Integer.toHexString(c);
++    for (int j = hex.length(); j < 4; j++) {
++      sb.append('0');
++    }
++    sb.append(hex);
++  }
+   static String identifierEscape(String s) {
+     // First check if escaping is needed at all -- in most cases it isn't.
+     if (NodeUtil.isLatin(s)) {

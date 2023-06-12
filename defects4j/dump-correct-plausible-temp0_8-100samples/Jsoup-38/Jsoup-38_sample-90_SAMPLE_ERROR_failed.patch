@@ -1,0 +1,22 @@
+diff --git a/src/main/java/org/jsoup/parser/HtmlTreeBuilderState.java b/src/main/java/org/jsoup/parser/HtmlTreeBuilderState.java
+index 20d0b78..86d396d 100644
+--- a/src/main/java/org/jsoup/parser/HtmlTreeBuilderState.java
++++ b/src/main/java/org/jsoup/parser/HtmlTreeBuilderState.java
+@@ -1436,10 +1436,14 @@ enum HtmlTreeBuilderState {
+     },
+     ForeignContent {
+         boolean process(Token t, HtmlTreeBuilder tb) {
++            if (!tb.inTableScope("table")) {
++                tb.error(this);
++                return false;
++            }
++            tb.clearStackToTableBodyContext();
++            tb.insert(new HtmlElement("tbody"));
+             return true;
+-            // todo: implement. Also; how do we get here?
+-        }
+-    };
++        }    };
+ 
+     private static String nullString = String.valueOf('\u0000');
+ 

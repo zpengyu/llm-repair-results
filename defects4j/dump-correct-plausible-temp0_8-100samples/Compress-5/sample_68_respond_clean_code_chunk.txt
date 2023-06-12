@@ -1,0 +1,29 @@
+    public int read(byte[] buffer, int start, int length) throws IOException {
+        if (buffer == null) {
+            throw new NullPointerException();
+        } else if (start < 0 || length < 0 || length > buffer.length - start) {
+            throw new IndexOutOfBoundsException();
+        } else if (length == 0) {
+            return 0;
+        }
+        if (closed) {
+            throw new IOException("The stream is closed");
+        }
+        if (inf.finished()) {
+            return -1;
+        }
+        if (inf.needsInput()) {
+            fill();
+            if (lengthOfLastRead == -1) {
+                return -1;
+            }
+        }
+        int read = 0;
+        try {
+            read = inf.inflate(buffer, start, length);
+        } catch (DataFormatException dfe) {
+            throw new ZipException(dfe.getMessage());
+        }
+        crc.update(buffer, start, read);
+        return read;
+    }

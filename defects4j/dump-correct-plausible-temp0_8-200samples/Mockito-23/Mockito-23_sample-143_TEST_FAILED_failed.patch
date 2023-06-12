@@ -1,0 +1,19 @@
+diff --git a/src/org/mockito/internal/stubbing/defaultanswers/ReturnsDeepStubs.java b/src/org/mockito/internal/stubbing/defaultanswers/ReturnsDeepStubs.java
+index c4384f7fc..5588246d8 100644
+--- a/src/org/mockito/internal/stubbing/defaultanswers/ReturnsDeepStubs.java
++++ b/src/org/mockito/internal/stubbing/defaultanswers/ReturnsDeepStubs.java
+@@ -68,7 +59,13 @@ public class ReturnsDeepStubs implements Answer<Object>, Serializable {
+     			return stubbedInvocationMatcher.answer(invocation);
+     		}
+ 		}
+-
++		// if there is a stubbed invocation return it
++        for (StubbedInvocationMatcher stubbedInvocationMatcher : container.getStubbedInvocations()) {
++            if (stubbedInvocationMatcher.getInvocation().getMethod().equals(invocation.getMethod())
++                    && stubbedInvocationMatcher.getInvocation().getMock().getClass().equals(invocation.getMock().getClass())) {
++                return stubbedInvocationMatcher.answer(invocation);
++            }
++        }
+         // deep stub
+         return recordDeepStubMock(createNewDeepStubMock(returnTypeGenericMetadata), container);
+     }

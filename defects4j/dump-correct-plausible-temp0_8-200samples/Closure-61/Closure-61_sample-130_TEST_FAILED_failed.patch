@@ -1,0 +1,39 @@
+diff --git a/src/com/google/javascript/jscomp/NodeUtil.java b/src/com/google/javascript/jscomp/NodeUtil.java
+index 53389622..19e26487 100644
+--- a/src/com/google/javascript/jscomp/NodeUtil.java
++++ b/src/com/google/javascript/jscomp/NodeUtil.java
+@@ -923,7 +923,7 @@ public final class NodeUtil {
+    * @param compiler A compiler object to provide program state changing
+    *     context information. Can be null.
+    */
+-  static boolean functionCallHasSideEffects(
++static boolean functionCallHasSideEffects(
+       Node callNode, @Nullable AbstractCompiler compiler) {
+     if (callNode.getType() != Token.CALL) {
+       throw new IllegalStateException(
+@@ -953,20 +949,14 @@ public final class NodeUtil {
+           && evaluatesToLocalValue(nameNode.getFirstChild())) {
+         return false;
+       }
+-
+       // Functions in the "Math" namespace have no side effects.
+-
++      // Functions in the "RegExp" namespace have no side effects.
+       if (compiler != null && !compiler.hasRegExpGlobalReferences()) {
+-        if (nameNode.getFirstChild().getType() == Token.REGEXP
+-            && REGEXP_METHODS.contains(nameNode.getLastChild().getString())) {
+-          return false;
+-        } else if (nameNode.getFirstChild().getType() == Token.STRING
++        if ((nameNode.getFirstChild().getType() == Token.REGEXP
++            && REGEXP_METHODS.contains(nameNode.getLastChild().getString()))
++            || (nameNode.getFirstChild().getType() == Token.STRING
+             && STRING_REGEXP_METHODS.contains(
+-                nameNode.getLastChild().getString())) {
+-          Node param = nameNode.getNext();
+-          if (param != null &&
+-              (param.getType() == Token.STRING
+-                  || param.getType() == Token.REGEXP))
++                nameNode.getLastChild().getString()))) {
+           return false;
+         }
+       }

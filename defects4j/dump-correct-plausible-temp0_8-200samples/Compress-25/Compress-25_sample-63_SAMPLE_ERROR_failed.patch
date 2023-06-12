@@ -1,0 +1,23 @@
+diff --git a/src/main/java/org/apache/commons/compress/archivers/zip/ZipArchiveInputStream.java b/src/main/java/org/apache/commons/compress/archivers/zip/ZipArchiveInputStream.java
+index 84eb7403..b0364b5b 100644
+--- a/src/main/java/org/apache/commons/compress/archivers/zip/ZipArchiveInputStream.java
++++ b/src/main/java/org/apache/commons/compress/archivers/zip/ZipArchiveInputStream.java
+@@ -181,8 +181,17 @@ public class ZipArchiveInputStream extends ArchiveInputStream {
+         this.allowStoredEntriesWithDataDescriptor =
+             allowStoredEntriesWithDataDescriptor;
+         // haven't read anything so far
++        if (!readStream()) {
++            // Has EOF been reached? If not, continue reading
++            // until end of stream is detected.
++            final byte[] b = new byte[1024];
++            int len = 0;
++            do {
++                len = this.in.read(b, 0, b.length);
++            } while (len != -1);
++            throw new EOFException();
++        }
+     }
+-
+     public ZipArchiveEntry getNextZipEntry() throws IOException {
+         boolean firstEntry = true;
+         if (closed || hitCentralDirectory) {

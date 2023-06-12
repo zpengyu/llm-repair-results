@@ -1,0 +1,21 @@
+diff --git a/gson/src/main/java/com/google/gson/stream/JsonReader.java b/gson/src/main/java/com/google/gson/stream/JsonReader.java
+index 4541941d..b4f231e3 100644
+--- a/gson/src/main/java/com/google/gson/stream/JsonReader.java
++++ b/gson/src/main/java/com/google/gson/stream/JsonReader.java
+@@ -734,6 +725,16 @@ public class JsonReader implements Closeable {
+       return peeked = PEEKED_LONG;
+     } else if (last == NUMBER_CHAR_DIGIT || last == NUMBER_CHAR_FRACTION_DIGIT
+         || last == NUMBER_CHAR_EXP_DIGIT) {
++      if (last == NUMBER_CHAR_FRACTION_DIGIT) {
++        double asDouble = (double) value / (double) FRACTION_MAGNITUDE[i];
++        double ceil = Math.ceil(asDouble);
++        double floor = Math.floor(asDouble);
++        if (ceil == floor) {
++          peekedLong = (long) asDouble;
++          pos += i;
++          return peeked = PEEKED_LONG;
++        }
++      }
+       peekedNumberLength = i;
+       return peeked = PEEKED_NUMBER;
+     } else {

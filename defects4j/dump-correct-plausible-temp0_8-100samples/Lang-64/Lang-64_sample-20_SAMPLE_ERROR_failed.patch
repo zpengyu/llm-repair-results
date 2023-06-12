@@ -1,0 +1,30 @@
+diff --git a/src/java/org/apache/commons/lang/enums/ValuedEnum.java b/src/java/org/apache/commons/lang/enums/ValuedEnum.java
+index 0823e77d..aff7f647 100644
+--- a/src/java/org/apache/commons/lang/enums/ValuedEnum.java
++++ b/src/java/org/apache/commons/lang/enums/ValuedEnum.java
+@@ -189,10 +182,21 @@ public abstract class ValuedEnum extends Enum {
+      * @param other  the object to determine the value for
+      * @return the value
+      */
+-            // ignore - should never happen
+-            // ignore - should never happen
+-            // ignore - should never happen
+-
++    private int getValue(Object other) {
++        if (iValueFrom == null) {
++            Class cls = other.getClass();
++            try {
++                iValueFrom = cls.getMethod("getValue", (Class[]) null);
++            } catch (Exception e) {
++                throw new IllegalArgumentException("The Enum must implement the getValue() method");
++            }
++        }
++        try {
++            return ((Integer) iValueFrom.invoke(other, (Object[]) null)).intValue();
++        } catch (Exception e) {
++            throw new ClassCastException("Unable to compare: " + other.getClass());
++        }
++    }
+     /**
+      * <p>Human readable description of this <code>Enum</code> item.</p>
+      *

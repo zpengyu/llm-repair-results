@@ -1,0 +1,54 @@
+diff --git a/src/com/google/javascript/jscomp/ProcessClosurePrimitives.java b/src/com/google/javascript/jscomp/ProcessClosurePrimitives.java
+index d1d12a3c..10a0d197 100644
+--- a/src/com/google/javascript/jscomp/ProcessClosurePrimitives.java
++++ b/src/com/google/javascript/jscomp/ProcessClosurePrimitives.java
+@@ -780,34 +778,43 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback
+         }
+       } else {
+         // Handle the case where there's not a duplicate definition.
+-        replacementNode = createDeclarationNode();
+         if (firstModule == minimumModule) {
++          replacementNode = createDeclarationNode();
+           firstNode.getParent().addChildBefore(replacementNode, firstNode);
++          if (explicitNode != null) {
++            explicitNode.detachFromParent();
++          }
++          compiler.reportCodeChange();
+         } else {
+           // In this case, the name was implicitly provided by two independent
+           // modules. We need to move this code up to a common module.
+           int indexOfDot = namespace.indexOf('.');
+           if (indexOfDot == -1) {
+             // Any old place is fine.
++            replacementNode = createDeclarationNode();
+             compiler.getNodeForCodeInsertion(minimumModule)
+                 .addChildToBack(replacementNode);
++            if (explicitNode != null) {
++              explicitNode.detachFromParent();
++            }
++            compiler.reportCodeChange();
+           } else {
+             // Add it after the parent namespace.
+             ProvidedName parentName =
+                 providedNames.get(namespace.substring(0, indexOfDot));
+             Preconditions.checkNotNull(parentName);
+             Preconditions.checkNotNull(parentName.replacementNode);
++            replacementNode = createDeclarationNode();
+             parentName.replacementNode.getParent().addChildAfter(
+                 replacementNode, parentName.replacementNode);
++            if (explicitNode != null) {
++              explicitNode.detachFromParent();
++            }
++            compiler.reportCodeChange();
+           }
+         }
+-        if (explicitNode != null) {
+-          explicitNode.detachFromParent();
+-        }
+-        compiler.reportCodeChange();
+       }
+     }
+-
+     /**
+      * Create the declaration node for this name, without inserting it
+      * into the AST.

@@ -1,0 +1,159 @@
+/**
+ * Creates a new <code>Object</code> from the specified <code>Class</code>.
+ *
+ * @param clazz the <code>Class</code> to create
+ * @return the newly created <code>Object</code>
+ * @throws ParseException if there are any problems instantiating the object
+ * @throws IllegalArgumentException if the class is null
+ */
+public static Object createObject(final Class clazz) throws ParseException
+{
+    if (clazz == null)
+    {
+        throw new IllegalArgumentException("The class must not be null");
+    }
+
+    try
+    {
+        return clazz.newInstance();
+    }
+    catch (final Exception e)
+    {
+        throw new ParseException(e.getClass().getName() + "; Unable to create an instance of: " + clazz);
+    }
+}
+
+/**
+ * Creates a new <code>Object</code> from the specified <code>Class</code>.
+ *
+ * @param classname the fully qualified class name to create
+ * @return the newly created <code>Object</code>
+ * @throws ParseException if there are any problems instantiating the object
+ * @throws IllegalArgumentException if the classname is null or empty
+ */
+public static Object createObject(final String classname) throws ParseException
+{
+    if (classname == null)
+    {
+        throw new IllegalArgumentException("The class name must not be null");
+    }
+    if (classname.length() == 0)
+    {
+        throw new IllegalArgumentException("The class name must not be empty");
+    }
+
+    try
+    {
+        final Class clazz = Class.forName(classname);
+        return createObject(clazz);
+    }
+    catch (final Exception e)
+    {
+        throw new ParseException(e.getClass().getName() + "; Unable to create an instance of: " + classname);
+    }
+}
+
+/**
+ * Create a number from a String.
+ *
+ * @param str the string to convert
+ * @param clazz the class type to create
+ * @return the newly created <code>Number</code>
+ * @throws ParseException if there are any problems instantiating the class
+ * @throws IllegalArgumentException if the class is null or the string is null or empty
+ */
+public static Number createNumber(final String str, final Class clazz) throws ParseException
+{
+    if (str == null)
+    {
+        throw new IllegalArgumentException("The string must not be null");
+    }
+    if (clazz == null)
+    {
+        throw new IllegalArgumentException("The class must not be null");
+    }
+
+    try
+    {
+        if (clazz.getName().equals("java.lang.Byte"))
+        {
+            return Byte.decode(str);
+        }
+        else if (clazz.getName().equals("java.lang.Short"))
+        {
+            return Short.decode(str);
+        }
+        else if (clazz.getName().equals("java.lang.Integer"))
+        {
+            return Integer.decode(str);
+        }
+        else if (clazz.getName().equals("java.lang.Long"))
+        {
+            return Long.decode(str);
+        }
+        else if (clazz.getName().equals("java.lang.Float"))
+        {
+            return Float.valueOf(str);
+        }
+        else if (clazz.getName().equals("java.lang.Double"))
+        {
+            return Double.valueOf(str);
+        }
+        else
+        {
+            throw new ParseException("Cannot convert the string [" + str + "] to class: " + clazz);
+        }
+    }
+    catch (final NumberFormatException e)
+    {
+        throw new ParseException("Unable to convert the string [" + str + "] to class: " + clazz);
+    }
+}
+
+/**
+ * Create a File from a String.
+ *
+ * @param str the string to convert
+ * @return the newly created <code>File</code>
+ * @throws IllegalArgumentException if the string is null or empty
+ */
+public static File createFile(final String str)
+{
+    if (str == null)
+    {
+        throw new IllegalArgumentException("The string must not be null");
+    }
+    if (str.length() == 0)
+    {
+        throw new IllegalArgumentException("The string must not be empty");
+    }
+
+    return new File(str);
+}
+
+/**
+ * Create an array of Files from a String.
+ *
+ * @param str the string to convert
+ * @return the newly created <code>File[]</code>
+ * @throws IllegalArgumentException if the string is null or empty
+ */
+public static File[] createFileArray(final String str)
+{
+    if (str == null)
+    {
+        throw new IllegalArgumentException("The string must not be null");
+    }
+    if (str.length() == 0)
+    {
+        throw new IllegalArgumentException("The string must not be empty");
+    }
+
+    final ArrayList files = new ArrayList();
+    final String[] tokens = str.split(",");
+    for (int i = 0; i < tokens.length; i++)
+    {
+        files.add(createFile(tokens[i]));
+    }
+    return (File[]) files.toArray(new File[files.size()]);
+}

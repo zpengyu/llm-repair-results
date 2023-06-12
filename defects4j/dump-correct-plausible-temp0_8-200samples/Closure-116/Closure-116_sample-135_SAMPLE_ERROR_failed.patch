@@ -1,0 +1,25 @@
+diff --git a/src/com/google/javascript/jscomp/FunctionInjector.java b/src/com/google/javascript/jscomp/FunctionInjector.java
+index c17b3cb3..4adbe63a 100644
+--- a/src/com/google/javascript/jscomp/FunctionInjector.java
++++ b/src/com/google/javascript/jscomp/FunctionInjector.java
+@@ -729,8 +723,19 @@ class FunctionInjector {
+                   block, fnParam.getString()) > 1) {
+             return CanInlineResult.NO;
+           }
++        } else {
++          // The call has fewer arguments than there are parameters.
++          // Allow inlining if the parameter has a default value.
++          Node param = fnParam;
++          Node next = param.getNext();
++          while (next != null) {
++            if (!next.isDefaultValue()) {
++              return CanInlineResult.NO;
++            }
++            param = next;
++            next = param.getNext();
++          }
+         }
+-
+         // Move to the next name.
+         fnParam = fnParam.getNext();
+       }

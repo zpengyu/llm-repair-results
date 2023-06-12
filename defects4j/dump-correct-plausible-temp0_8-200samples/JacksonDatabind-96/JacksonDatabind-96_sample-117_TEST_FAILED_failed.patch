@@ -1,0 +1,18 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/deser/BasicDeserializerFactory.java b/src/main/java/com/fasterxml/jackson/databind/deser/BasicDeserializerFactory.java
+index 81acbdb27..5bd786aa7 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/deser/BasicDeserializerFactory.java
++++ b/src/main/java/com/fasterxml/jackson/databind/deser/BasicDeserializerFactory.java
+@@ -742,8 +740,12 @@ nonAnnotatedParamIndex, ctor);
+             creators.addPropertyCreator(candidate.creator(), true, properties);
+             return;
+         }
++        if (param.hasAnnotation(JacksonInject.class)) {
++            String name = candidate.creator().getDeclaringClass().getName();
++            throw new IllegalArgumentException("Argument #0 of constructor " + name
++                    + " has @JacksonInject, but argument is not injectable");
++        }
+         _handleSingleArgumentCreator(creators, candidate.creator(), true, true);
+-
+         // one more thing: sever link to creator property, to avoid possible later
+         // problems with "unresolved" constructor property
+         if (paramDef != null) {

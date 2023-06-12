@@ -1,0 +1,57 @@
+diff --git a/src/main/java/org/joda/time/Period.java b/src/main/java/org/joda/time/Period.java
+index 8fce39c6..7de429df 100644
+--- a/src/main/java/org/joda/time/Period.java
++++ b/src/main/java/org/joda/time/Period.java
+@@ -1615,26 +1615,32 @@ public final class Period
+      */
+     public Period normalizedStandard(PeriodType type) {
+         type = DateTimeUtils.getPeriodType(type);
+-        long millis = getMillis();  // no overflow can happen, even with Integer.MAX_VALUEs
+-        millis += (((long) getSeconds()) * ((long) DateTimeConstants.MILLIS_PER_SECOND));
+-        millis += (((long) getMinutes()) * ((long) DateTimeConstants.MILLIS_PER_MINUTE));
+-        millis += (((long) getHours()) * ((long) DateTimeConstants.MILLIS_PER_HOUR));
+-        millis += (((long) getDays()) * ((long) DateTimeConstants.MILLIS_PER_DAY));
+-        millis += (((long) getWeeks()) * ((long) DateTimeConstants.MILLIS_PER_WEEK));
+-        Period result = new Period(millis, type, ISOChronology.getInstanceUTC());
+-        int years = getYears();
+-        int months = getMonths();
+-        if (years != 0 || months != 0) {
+-            years = FieldUtils.safeAdd(years, months / 12);
+-            months = months % 12;
+-            if (years != 0) {
+-                result = result.withYears(years);
+-            }
+-            if (months != 0) {
+-                result = result.withMonths(months);
+-            }
++        int[] values = new int[type.size()];
++        int current = 0;
++        if (type.isSupported(DurationFieldType.years())) {
++            values[current++] = FieldUtils.safeAdd(getYears(), getMonths() / 12);
+         }
+-        return result;
++        if (type.isSupported(DurationFieldType.months())) {
++            values[current++] = getMonths() % 12;
++        }
++        if (type.isSupported(DurationFieldType.weeks())) {
++            values[current++] = getWeeks();
++        }
++        if (type.isSupported(DurationFieldType.days())) {
++            values[current++] = getDays();
++        }
++        if (type.isSupported(DurationFieldType.hours())) {
++            values[current++] = getHours();
++        }
++        if (type.isSupported(DurationFieldType.minutes())) {
++            values[current++] = getMinutes();
++        }
++        if (type.isSupported(DurationFieldType.seconds())) {
++            values[current++] = getSeconds();
++        }
++        if (type.isSupported(DurationFieldType.millis())) {
++            values[current++] = getMillis();
++        }
++        return new Period(values, type, getChronology());
+     }
+-
+ }

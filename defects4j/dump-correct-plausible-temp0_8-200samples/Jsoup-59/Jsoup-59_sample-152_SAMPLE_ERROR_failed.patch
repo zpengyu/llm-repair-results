@@ -1,0 +1,91 @@
+diff --git a/src/main/java/org/jsoup/parser/Token.java b/src/main/java/org/jsoup/parser/Token.java
+index 85d7ec8..1c664b1 100644
+--- a/src/main/java/org/jsoup/parser/Token.java
++++ b/src/main/java/org/jsoup/parser/Token.java
+@@ -97,30 +97,64 @@ abstract class Token {
+             return this;
+         }
+ 
+-        final void newAttribute() {
+-            if (attributes == null)
+-                attributes = new Attributes();
+-
+-            if (pendingAttributeName != null) {
+-                // the tokeniser has skipped whitespace control chars, but trimming could collapse to empty for other control codes, so verify here
+-                pendingAttributeName = pendingAttributeName.trim();
+-                    Attribute attribute;
+-                    if (hasPendingAttributeValue)
+-                        attribute = new Attribute(pendingAttributeName,
+-                            pendingAttributeValue.length() > 0 ? pendingAttributeValue.toString() : pendingAttributeValueS);
+-                    else if (hasEmptyAttributeValue)
+-                        attribute = new Attribute(pendingAttributeName, "");
+-                    else
+-                        attribute = new BooleanAttribute(pendingAttributeName);
+-                    attributes.put(attribute);
++public class Checker {
++    public static void main(String[] args) {
++        int[][] board = new int[8][8];
++        boolean o = false;
++        int x;
++        int y;
++        int x2;
++        int y2;
++        int w;
++        while(true) {
++            x = (int)(Math.random() * 8);
++            y = (int)(Math.random() * 8);
++            x2 = (int)(Math.random() * 8);
++            y2 = (int)(Math.random() * 8);
++            w = (int)(Math.random() * 2);
++            if (w == 0) {
++                board[x][y] = 0;
++                board[x2][y2] = 0;
++            } else {
++                board[x][y] = 1;
++                board[x2][y2] = 1;
++            }
++            if (x == x2 && y == y2) {
++                continue;
++            }
++            if (!o) {
++                if (x == x2 && y != y2) {
++                    o = true;
++                    continue;
++                }
++                if (y == y2 && x != x2) {
++                    o = true;
++                    continue;
++                }
++                if (x != x2 && y != y2) {
++                    o = true;
++                    continue;
++                }
++            } else {
++                if (x == x2 && y != y2) {
++                    continue;
++                }
++                if (y == y2 && x != x2) {
++                    continue;
++                }
++                if (x != x2 && y != y2) {
++                    continue;
++                }
++                o = false;
++            }
++            if (o) {
++                System.out.println("Pass");
++            } else {
++                System.out.println("Fail");
+             }
+-            pendingAttributeName = null;
+-            hasEmptyAttributeValue = false;
+-            hasPendingAttributeValue = false;
+-            reset(pendingAttributeValue);
+-            pendingAttributeValueS = null;
+         }
+-
++    }
++}
+         final void finaliseTag() {
+             // finalises for emit
+             if (pendingAttributeName != null) {

@@ -1,0 +1,27 @@
+diff --git a/src/main/java/org/apache/commons/compress/utils/IOUtils.java b/src/main/java/org/apache/commons/compress/utils/IOUtils.java
+index f5fd0bd4..615d1f05 100644
+--- a/src/main/java/org/apache/commons/compress/utils/IOUtils.java
++++ b/src/main/java/org/apache/commons/compress/utils/IOUtils.java
+@@ -100,10 +100,20 @@ public final class IOUtils {
+             }
+             numToSkip -= skipped;
+         }
+-
++        if (numToSkip > 0) {
++            //InputStream.skip() returns 0 if the end of stream was reached.
++            //This will happen if the total number of bytes skipped is less than
++            //'numToSkip', or if the stream is not seekable.
++            //BufferingInputStream supports the mark() and reset() methods and
++            //is therefore seekable. 
++            while (numToSkip > 0) {
++                //skip remaining bytes by reading them
++                input.read();
++                numToSkip--;
++            }
++        }
+         return available - numToSkip;
+     }
+-
+     /**
+      * Reads as much from input as possible to fill the given array.
+      *

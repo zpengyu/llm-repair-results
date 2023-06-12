@@ -1,0 +1,27 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/jsontype/impl/TypeDeserializerBase.java b/src/main/java/com/fasterxml/jackson/databind/jsontype/impl/TypeDeserializerBase.java
+index 339362e1e..3c6ad8abf 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/jsontype/impl/TypeDeserializerBase.java
++++ b/src/main/java/com/fasterxml/jackson/databind/jsontype/impl/TypeDeserializerBase.java
+@@ -148,19 +148,12 @@ public abstract class TypeDeserializerBase
+              * to the interface, assuming deprecation at base class helps.
+              */
+             JavaType type = _idResolver.typeFromId(ctxt, typeId);
++            if (type == null) {
++                type = _handleUnknownTypeId(ctxt, typeId, _idResolver, _baseType);
++            }
+             if (type == null) {
+                 // As per [JACKSON-614], use the default impl if no type id available:
+                 deser = _findDefaultImplDeserializer(ctxt);
+-                if (deser == null) {
+-                    // 10-May-2016, tatu: We may get some help...
+-                    JavaType actual = _handleUnknownTypeId(ctxt, typeId, _idResolver, _baseType);
+-                    if (actual == null) { // what should this be taken to mean?
+-                        // TODO: try to figure out something better
+-                        return null;
+-                    }
+-                    // ... would this actually work?
+-                    deser = ctxt.findContextualValueDeserializer(actual, _property);
+-                }
+             } else {
+                 /* 16-Dec-2010, tatu: Since nominal type we get here has no (generic) type parameters,
+                  *   we actually now need to explicitly narrow from base type (which may have parameterization)

@@ -1,0 +1,43 @@
+diff --git a/src/main/java/org/apache/commons/compress/archivers/tar/TarUtils.java b/src/main/java/org/apache/commons/compress/archivers/tar/TarUtils.java
+index 19d68e84..6a031717 100644
+--- a/src/main/java/org/apache/commons/compress/archivers/tar/TarUtils.java
++++ b/src/main/java/org/apache/commons/compress/archivers/tar/TarUtils.java
+@@ -148,10 +143,36 @@ public class TarUtils {
+             result = (result << 3) + (currentByte - '0'); // convert from ASCII
+             // CheckStyle:MagicNumber ON
+         }
+-
+         return result;
+     }
+-
++    private static String exceptionMessage(final byte[] buffer, final int offset, final int length, final int illegalByte, final byte value) {
++        final StringBuilder msg = new StringBuilder("Illegal byte ");
++        if ((value & 0x80) == 0) {
++            msg.append("0x");
++            if (value < 0x10) {
++                msg.append("0");
++            }
++            msg.append(Integer.toHexString(value));
++        } else {
++            msg.append("'").append((char) value).append("'");
++        }
++        msg.append(" at offset ").append(illegalByte-offset);
++        msg.append(" in '");
++        for (int i = offset; i < offset + length; ++i) {
++            final byte b = buffer[i];
++            if (b >= 32 && b < 127) {
++                msg.append((char) b);
++            } else {
++                msg.append("0x");
++                if (b < 0x10) {
++                    msg.append("0");
++                }
++                msg.append(Integer.toHexString(b));
++            }
++        }
++        msg.append("'");
++        return msg.toString();
++    }
+     /** 
+      * Compute the value contained in a byte buffer.  If the most
+      * significant bit of the first byte in the buffer is set, this

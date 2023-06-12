@@ -1,0 +1,30 @@
+public void testStringObjectConversionForRoot() {
+    String[] propertyNames = new String[] {
+        "a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n"};
+    JSModule[] modules =
+        new JSModule[] {
+            new JSModule("m1"),
+            new JSModule("m2"),
+            new JSModule("m3"),
+            new JSModule("m4"),
+            new JSModule("m5")};
+    modules[1].addDependency(modules[0]);
+    modules[2].addDependency(modules[1]);
+    modules[3].addDependency(modules[1]);
+    modules[4].addDependency(modules[2]);
+    modules[4].addDependency(modules[3]);
+    int i = 0;
+    for (String name : propertyNames) {
+      i++;
+      modules[i % modules.length].add(
+          SourceFile.fromCode(name, "var " + name + " = {};"));
+    }
+    GlobalNamespace globalNamespace = new GlobalNamespace(compiler, modules);
+    ReferenceCollectingCallback callback =
+        new ReferenceCollectingCallback(compiler, globalNamespace);
+    callback.process(null, globalNamespace.getRoot().getScope());
+    for (String name : propertyNames) {
+      assertEquals(name,
+          callback.getReferences(name).iterator().next().getSourceName());
+    }
+  }

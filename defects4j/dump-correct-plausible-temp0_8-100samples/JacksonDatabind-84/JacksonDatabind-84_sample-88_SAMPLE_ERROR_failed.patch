@@ -1,0 +1,19 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/type/ResolvedRecursiveType.java b/src/main/java/com/fasterxml/jackson/databind/type/ResolvedRecursiveType.java
+index 7b8c69af7..9511c2ad3 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/type/ResolvedRecursiveType.java
++++ b/src/main/java/com/fasterxml/jackson/databind/type/ResolvedRecursiveType.java
+@@ -111,4 +93,13 @@ public class ResolvedRecursiveType extends TypeBase
+         return (o.getClass() == getClass()
+                 && _referencedType.equals(((ResolvedRecursiveType) o).getSelfReferencedType()));
+     }
++    @Override
++    public int hashCode() {
++        // [databind#1301]: Loops should have hash codes matching so that
++        //   equality comparisons work.
++        if (_referencedType == null) {
++            return super.hashCode();
++        }
++        return _referencedType.hashCode();
++    }
+ }
+\ No newline at end of file

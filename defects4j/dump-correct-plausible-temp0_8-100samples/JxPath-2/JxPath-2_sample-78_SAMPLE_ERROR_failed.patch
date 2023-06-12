@@ -1,0 +1,42 @@
+diff --git a/src/java/org/apache/commons/jxpath/ri/compiler/Expression.java b/src/java/org/apache/commons/jxpath/ri/compiler/Expression.java
+index 927f617..6491f21 100644
+--- a/src/java/org/apache/commons/jxpath/ri/compiler/Expression.java
++++ b/src/java/org/apache/commons/jxpath/ri/compiler/Expression.java
+@@ -94,26 +86,28 @@ public abstract class Expression {
+         private Iterator iterator;
+         private QName qname;
+         private Locale locale;
+-
+-        //to what method does the following comment refer?
++        private NamespaceManager namespaceContext;
++        public PointerIterator(Iterator it, QName qname, Locale locale,
++                               NamespaceManager namespaceContext) {
++            this.iterator = it;
++            this.qname = qname;
++            this.locale = locale;
++            this.namespaceContext = namespaceContext;
++        }
+         /**
+          * @deprecated Use the method that takes a NamespaceManager
+          */
+         public PointerIterator(Iterator it, QName qname, Locale locale) {
+-            this.iterator = it;
+-            this.qname = qname;
+-            this.locale = locale;
++            this(it, qname, locale, null);
+         }
+-
+         public boolean hasNext() {
+             return iterator.hasNext();
+         }
+-
+         public Object next() {
+             Object o = iterator.next();
+-            return o instanceof Pointer ? o : NodePointer.newNodePointer(qname, o, locale);
++            return o instanceof Pointer ? o : NodePointer.newNodePointer(qname, o, locale,
++                    namespaceContext);
+         }
+-
+         public void remove() {
+             throw new UnsupportedOperationException();
+         }

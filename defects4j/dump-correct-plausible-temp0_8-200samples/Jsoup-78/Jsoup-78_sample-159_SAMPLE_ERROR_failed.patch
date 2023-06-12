@@ -1,0 +1,34 @@
+diff --git a/src/main/java/org/jsoup/helper/DataUtil.java b/src/main/java/org/jsoup/helper/DataUtil.java
+index bbbd8fb..f0f7100 100644
+--- a/src/main/java/org/jsoup/helper/DataUtil.java
++++ b/src/main/java/org/jsoup/helper/DataUtil.java
+@@ -148,8 +142,28 @@ public final class DataUtil {
+             if (charsetName == null)
+                 charsetName = defaultCharset;
+             BufferedReader reader = new BufferedReader(new InputStreamReader(input, charsetName), bufferSize);
++            if (fullyRead) {
+                 doc = parser.parseInput(reader, baseUri);
+-                // io exception when parsing (not seen before because reading the stream as we go)
++            } else { // a chunked web page, put the first bytes into a buffer, and push that through for parsing.
++                StringBuilder sb = new StringBuilder();
++                CharsetDecoder decoder = Charset.forName(charsetName).newDecoder();
++                decoder.onMalformedInput(CodingErrorAction.REPLACE);
++                decoder.onUnmappableCharacter(CodingErrorAction.REPLACE);
++                CharBuffer cbuf = CharBuffer.allocate(firstBytes.remaining());
++                decoder.decode(firstBytes, cbuf, true);
++                decoder.flush(cbuf);
++                cbuf.flip();
++                sb.append(cbuf);
++                Reader in = new BufferedReader(reader, bufferSize);
++                // transfer bytes into char buffer
++                cbuf = CharBuffer.allocate(bufferSize);
++                while (in.read(cbuf) >= 0) {
++                    cbuf.flip();
++                    sb.append(cbuf);
++                    cbuf.clear();
++                }
++                doc = parser.parseInput(sb.toString(), baseUri);
++            }
+             doc.outputSettings().charset(charsetName);
+         }
+         input.close();

@@ -1,0 +1,61 @@
+diff --git a/src/main/java/org/apache/commons/math3/optimization/fitting/HarmonicFitter.java b/src/main/java/org/apache/commons/math3/optimization/fitting/HarmonicFitter.java
+index 42399c04d..dacbcbda2 100644
+--- a/src/main/java/org/apache/commons/math3/optimization/fitting/HarmonicFitter.java
++++ b/src/main/java/org/apache/commons/math3/optimization/fitting/HarmonicFitter.java
+@@ -322,12 +316,52 @@ public class HarmonicFitter extends CurveFitter<HarmonicOscillator.Parametric> {
+             } else {
+                     // In some ill-conditioned cases (cf. MATH-844), the guesser
+                     // procedure cannot produce sensible results.
+-
+-                a = FastMath.sqrt(c1 / c2);
+-                omega = FastMath.sqrt(c2 / c3);
++                double minimumA = Double.POSITIVE_INFINITY;
++                double minimumOmega = Double.POSITIVE_INFINITY;
++                double minimum = Double.POSITIVE_INFINITY;
++                double maxX = 0;
++                for (int i = 0; i < observations.length; i++) {
++                    maxX = Math.max(maxX, observations[i].getX());
++                }
++                final double xRange = maxX - startX;
++                final double omegaLowerBound = 2 * Math.PI / (maxX - startX);
++                // The following brute force search is optimized for speed,
++                // not for accuracy.
++                final int numberOfSteps = 101;
++                for (int step = 0; step < numberOfSteps; ++step) {
++                    final double stepSize = xRange / (numberOfSteps - 1);
++                    final double currentA = stepSize * step;
++                    final double currentOmega = omegaLowerBound * step;
++                    double hSum = 0;
++                    double kSum = 0;
++                    double currentX = startX;
++                    double currentY = a * FastMath.sin(omega * currentX);
++                    for (int i = 1; i < observations.length; ++i) {
++                        final double previousX = currentX;
++                        final double previousY = currentY;
++                        currentX = observations[i].getX();
++                        currentY = a * FastMath.sin(omega * currentX);
++                        // update the integrals of f<sup>2</sup> and f'<sup>2</sup>
++                        // considering a linear model for f (and therefore constant f')
++                        final double dx = currentX - previousX;
++                        final double dy = currentY - previousY;
++                        final double f2StepIntegral =
++                            dx * (previousY * previousY + previousY * currentY + currentY * currentY) / 3;
++                        final double fPrime2StepIntegral = dy * dy / dx;
++                        hSum += f2StepIntegral;
++                        kSum += fPrime2StepIntegral;
++                    }
++                    final double current = FastMath.abs(hSum - kSum);
++                    if (current < minimum) {
++                        minimum = current;
++                        minimumA = currentA;
++                        minimumOmega = currentOmega;
++                    }
++                }
++                a = minimumA;
++                omega = minimumOmega;
+             }
+         }
+-
+         /**
+          * Estimate a first guess of the phase.
+          */

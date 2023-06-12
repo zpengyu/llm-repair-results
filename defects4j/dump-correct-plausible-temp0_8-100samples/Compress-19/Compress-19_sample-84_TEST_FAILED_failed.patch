@@ -1,0 +1,43 @@
+diff --git a/src/main/java/org/apache/commons/compress/archivers/zip/Zip64ExtendedInformationExtraField.java b/src/main/java/org/apache/commons/compress/archivers/zip/Zip64ExtendedInformationExtraField.java
+index 430232a7..3daf76a5 100644
+--- a/src/main/java/org/apache/commons/compress/archivers/zip/Zip64ExtendedInformationExtraField.java
++++ b/src/main/java/org/apache/commons/compress/archivers/zip/Zip64ExtendedInformationExtraField.java
+@@ -266,22 +266,30 @@ public class Zip64ExtendedInformationExtraField implements ZipExtraField {
+             }
+             int offset = 0;
+             if (hasUncompressedSize) {
+-                size = new ZipEightByteInteger(rawCentralDirectoryData, offset);
+-                offset += DWORD;
++                if (offset + DWORD < rawCentralDirectoryData.length) {
++                    size = new ZipEightByteInteger(rawCentralDirectoryData, offset);
++                    offset += DWORD;
++                }
+             }
+             if (hasCompressedSize) {
+-                compressedSize = new ZipEightByteInteger(rawCentralDirectoryData,
++                if (offset + DWORD < rawCentralDirectoryData.length) {
++                    compressedSize = new ZipEightByteInteger(rawCentralDirectoryData,
+                                                          offset);
+-                offset += DWORD;
++                    offset += DWORD;
++                }
+             }
+             if (hasRelativeHeaderOffset) {
+-                relativeHeaderOffset =
++                if (offset + DWORD < rawCentralDirectoryData.length) {
++                    relativeHeaderOffset =
+                     new ZipEightByteInteger(rawCentralDirectoryData, offset);
+-                offset += DWORD;
++                    offset += DWORD;
++                }
+             }
+             if (hasDiskStart) {
+-                diskStart = new ZipLong(rawCentralDirectoryData, offset);
+-                offset += WORD;
++                if (offset + WORD < rawCentralDirectoryData.length) {
++                    diskStart = new ZipLong(rawCentralDirectoryData, offset);
++                    offset += WORD;
++                }
+             }
+         }
+     }

@@ -1,0 +1,56 @@
+diff --git a/src/main/java/org/apache/commons/math/optimization/direct/MultiDirectional.java b/src/main/java/org/apache/commons/math/optimization/direct/MultiDirectional.java
+index 2fa8c34bf..a4ead4836 100644
+--- a/src/main/java/org/apache/commons/math/optimization/direct/MultiDirectional.java
++++ b/src/main/java/org/apache/commons/math/optimization/direct/MultiDirectional.java
+@@ -76,28 +71,40 @@ public class MultiDirectional extends DirectSearchOptimizer {
+                 // compute the expanded simplex
+                 final RealPointValuePair[] reflectedSimplex = simplex;
+                 final RealPointValuePair expanded = evaluateNewSimplex(original, khi, comparator);
+-                if (comparator.compare(reflected, expanded) <= 0) {
++                if (comparator.compare(reflected, expanded) < 0) {
+                     // accept the reflected simplex
+                     simplex = reflectedSimplex;
++                } else {
++                    // accept the expanded simplex
++                    simplex[simplex.length - 1] = expanded;
+                 }
+-
+                 return;
+-
+             }
+-
+             // compute the contracted simplex
+             final RealPointValuePair contracted = evaluateNewSimplex(original, gamma, comparator);
+-            if (comparator.compare(contracted, best) < 0) {
++            if (comparator.compare(contracted, best) <= 0) {
+                 // accept the contracted simplex
+-
+-            // check convergence
+-                return;
++                simplex[simplex.length - 1] = contracted;
++            } else {
++                // perform a reduction step
++                for (int i = 1; i < simplex.length; ++i) {
++                    for (int j = 0; j < simplex[i].getPoint().length; ++j) {
++                        final double[] v = simplex[i].getPointRef();
++                        v[j] = best.getPoint()[j] + sigma * (v[j] - best.getPoint()[j]);
++                        simplex[i] = new RealPointValuePair(v, Double.NaN, false);
++                    }
++                }
++                evaluate(simplex, comparator);
+             }
+-
+         }
+-
+     }
+-
++Unit testing is a development process that is used to test the correctness of isolated units (components) of a software system.
++The primary benefit of unit testing is that it helps in finding defects early in the development cycle.
++It is performed by developers with white-box testing techniques.
++These tests can be automated and run as part of integration and build processes.
++Unit testing ensures that each program module runs as expected and performs its functions correctly.
++The most commonly used unit testing frameworks are JUnit, TestNG, etc.
++The section below lists some of the most common unit testing techniques.
+     /** Compute and evaluate a new simplex.
+      * @param original original simplex (to be preserved)
+      * @param coeff linear coefficient

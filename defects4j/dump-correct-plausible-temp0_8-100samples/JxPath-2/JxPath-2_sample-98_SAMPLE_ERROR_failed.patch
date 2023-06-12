@@ -1,0 +1,36 @@
+diff --git a/src/java/org/apache/commons/jxpath/ri/compiler/Expression.java b/src/java/org/apache/commons/jxpath/ri/compiler/Expression.java
+index 927f617..5d48fb7 100644
+--- a/src/java/org/apache/commons/jxpath/ri/compiler/Expression.java
++++ b/src/java/org/apache/commons/jxpath/ri/compiler/Expression.java
+@@ -94,7 +86,8 @@ public abstract class Expression {
+         private Iterator iterator;
+         private QName qname;
+         private Locale locale;
+-
++        private int i;
++        private NodePointer ptr;
+         //to what method does the following comment refer?
+         /**
+          * @deprecated Use the method that takes a NamespaceManager
+@@ -108,12 +100,18 @@ public abstract class Expression {
+         public boolean hasNext() {
+             return iterator.hasNext();
+         }
+-
+         public Object next() {
+             Object o = iterator.next();
+-            return o instanceof Pointer ? o : NodePointer.newNodePointer(qname, o, locale);
++            if (o instanceof Pointer) {
++                return o;
++            }
++            if (o instanceof Node) {
++                ptr = new NodePointer(qname, (Node) o, locale);
++            } else {
++                ptr = new NodePointer(qname, i++, o, locale);
++            }
++            return ptr;
+         }
+-
+         public void remove() {
+             throw new UnsupportedOperationException();
+         }

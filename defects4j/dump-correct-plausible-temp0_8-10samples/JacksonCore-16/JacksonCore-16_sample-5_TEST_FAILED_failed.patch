@@ -1,0 +1,59 @@
+diff --git a/src/main/java/com/fasterxml/jackson/core/util/JsonParserSequence.java b/src/main/java/com/fasterxml/jackson/core/util/JsonParserSequence.java
+index bed27f2b..0aed7af8 100644
+--- a/src/main/java/com/fasterxml/jackson/core/util/JsonParserSequence.java
++++ b/src/main/java/com/fasterxml/jackson/core/util/JsonParserSequence.java
+@@ -111,7 +102,53 @@ public class JsonParserSequence extends JsonParserDelegate
+         }
+         return null;
+     }
+-
++    @Override
++    public boolean hasTokenId(int id) {
++        return delegate.hasTokenId(id) || (switchToNext() && delegate.hasTokenId(id));
++    }
++    @Override
++    public boolean hasToken(JsonToken t) {
++        return delegate.hasToken(t) || (switchToNext() && delegate.hasToken(t));
++    }
++    @Override
++    public String getCurrentName() throws IOException {
++        String name = delegate.getCurrentName();
++        if (name != null) {
++            return name;
++        }
++        if (switchToNext()) {
++            return delegate.getCurrentName();
++        }
++        return null;
++    }
++    @Override
++    public JsonLocation getCurrentLocation() {
++        // 26-Jan-2015, tatu: Should not be exposed, but we can make it work
++        //    bit better at least
++        return delegate.getCurrentLocation();
++    }
++    @Override
++    public JsonStreamContext getParsingContext() {
++        // 26-Jan-2015, tatu: Should not be exposed, but we can make it work
++        //    bit better at least
++        return delegate.getParsingContext();
++    }
++    @Override
++    public JsonLocation getTokenLocation() {
++        // 26-Jan-2015, tatu: Should not be exposed, but we can make it work
++        //    bit better at least
++        return delegate.getTokenLocation();
++    }
++    @Override
++    public Object getEmbeddedObject() throws IOException {
++        Object ob = delegate.getEmbeddedObject();
++        if (ob == null) {
++            if (switchToNext()) {
++                return delegate.getEmbeddedObject();
++            }
++        }
++        return ob;
++    }
+     /*
+     /*******************************************************
+     /* Additional extended API

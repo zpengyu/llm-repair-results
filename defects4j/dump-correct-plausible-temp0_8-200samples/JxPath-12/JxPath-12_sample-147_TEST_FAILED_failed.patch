@@ -1,0 +1,44 @@
+diff --git a/src/java/org/apache/commons/jxpath/ri/model/dom/DOMNodePointer.java b/src/java/org/apache/commons/jxpath/ri/model/dom/DOMNodePointer.java
+index a5bb202..be65eef 100644
+--- a/src/java/org/apache/commons/jxpath/ri/model/dom/DOMNodePointer.java
++++ b/src/java/org/apache/commons/jxpath/ri/model/dom/DOMNodePointer.java
+@@ -89,23 +89,15 @@ public class DOMNodePointer extends NodePointer {
+             return true;
+         }
+         if (test instanceof NodeNameTest) {
+-            if (node.getNodeType() != Node.ELEMENT_NODE) {
+-                return false;
+-            }
+-
+             NodeNameTest nodeNameTest = (NodeNameTest) test;
+             QName testName = nodeNameTest.getNodeName();
+-            String namespaceURI = nodeNameTest.getNamespaceURI();
+             boolean wildcard = nodeNameTest.isWildcard();
+-            String testPrefix = testName.getPrefix();
+-            if (wildcard && testPrefix == null) {
++            if (wildcard && testName.getPrefix() == null) {
+                 return true;
+             }
+             if (wildcard
+-                || testName.getName()
+-                        .equals(DOMNodePointer.getLocalName(node))) {
+-                String nodeNS = DOMNodePointer.getNamespaceURI(node);
+-                return equalStrings(namespaceURI, nodeNS);
++                || testName.getName().equals(DOMNodePointer.getLocalName(node))) {
++                return true;
+             }
+             return false;
+         }
+@@ -114,7 +106,11 @@ public class DOMNodePointer extends NodePointer {
+             switch (((NodeTypeTest) test).getNodeType()) {
+                 case Compiler.NODE_TYPE_NODE :
+                     return nodeType == Node.ELEMENT_NODE
+-                            || nodeType == Node.DOCUMENT_NODE;
++                            || nodeType == Node.DOCUMENT_NODE
++                            || nodeType == Node.COMMENT_NODE
++                            || nodeType == Node.PROCESSING_INSTRUCTION_NODE
++                            || nodeType == Node.TEXT_NODE
++                            || nodeType == Node.CDATA_SECTION_NODE;
+                 case Compiler.NODE_TYPE_TEXT :
+                     return nodeType == Node.CDATA_SECTION_NODE
+                         || nodeType == Node.TEXT_NODE;

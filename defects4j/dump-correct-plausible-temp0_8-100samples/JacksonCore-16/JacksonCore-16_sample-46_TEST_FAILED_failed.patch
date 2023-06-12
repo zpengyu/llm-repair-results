@@ -1,0 +1,35 @@
+diff --git a/src/main/java/com/fasterxml/jackson/core/util/JsonParserSequence.java b/src/main/java/com/fasterxml/jackson/core/util/JsonParserSequence.java
+index bed27f2b..30ef4b6c 100644
+--- a/src/main/java/com/fasterxml/jackson/core/util/JsonParserSequence.java
++++ b/src/main/java/com/fasterxml/jackson/core/util/JsonParserSequence.java
+@@ -32,7 +30,7 @@ public class JsonParserSequence extends JsonParserDelegate
+      *
+      * @since 2.8
+      */
+-
++    protected boolean _hasToken;
+     /*
+      *******************************************************
+      * Construction
+@@ -103,6 +95,21 @@ public class JsonParserSequence extends JsonParserDelegate
+     @Override
+     public JsonToken nextToken() throws IOException, JsonParseException
+     {
++        /* This is a bit tricky. In many cases, underlying parsers will
++         * return null from nextToken(). This occurs either if they have
++         * no more tokens, or after closing.
++         * But for some sub-types, null may also be returned for other
++         * reasons; most notably for JsonNodeReaders (which never advance
++         * token but just return current node from getCurrentToken())
++         *
++         * Note, too, that we will call delegate.nextToken() for the first
++         * parser in sequence, since we can not rely on it having been called
++         * yet.
++         */
++        if (_hasToken) {
++            _hasToken = false;
++            return delegate.getCurrentToken();
++        }
+         JsonToken t = delegate.nextToken();
+         if (t != null) return t;
+         while (switchToNext()) {

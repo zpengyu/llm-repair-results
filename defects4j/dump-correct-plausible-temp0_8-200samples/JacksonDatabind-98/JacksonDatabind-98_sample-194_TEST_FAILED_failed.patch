@@ -1,0 +1,57 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/deser/impl/ExternalTypeHandler.java b/src/main/java/com/fasterxml/jackson/databind/deser/impl/ExternalTypeHandler.java
+index b0797059f..f44935c94 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/deser/impl/ExternalTypeHandler.java
++++ b/src/main/java/com/fasterxml/jackson/databind/deser/impl/ExternalTypeHandler.java
+@@ -260,42 +260,23 @@ public class ExternalTypeHandler
+         final int len = _properties.length;
+         Object[] values = new Object[len];
+         for (int i = 0; i < len; ++i) {
+-            String typeId = _typeIds[i];
+-            final ExtTypedProperty extProp = _properties[i];
+-            if (typeId == null) {
+-                // let's allow missing both type and property (may already have been set, too)
+-                if (_tokens[i] == null) {
+-                    continue;
+-                }
+-                // but not just one
+-                // 26-Oct-2012, tatu: As per [databind#94], must allow use of 'defaultImpl'
+-                if (!extProp.hasDefaultType()) {
+-                    ctxt.reportInputMismatch(_beanType,
+-                            "Missing external type id property '%s'",
+-                            extProp.getTypePropertyName());
+-                } else {
+-                    typeId = extProp.getDefaultTypeId();
+-                }
+-            } else if (_tokens[i] == null) {
+-                SettableBeanProperty prop = extProp.getProperty();
+-                ctxt.reportInputMismatch(_beanType,
+-                        "Missing property '%s' for external type id '%s'",
+-                        prop.getName(), _properties[i].getTypePropertyName());
++            final ExtTypedProperty prop = _properties[i];
++            // let's allow missing both type and property (may already have been set, too)
++            if (_tokens[i] == null) {
++                continue;
+             }
+-            values[i] = _deserialize(p, ctxt, i, typeId);
+-
+-            final SettableBeanProperty prop = extProp.getProperty();
++            values[i] = _deserialize(p, ctxt, i, _typeIds[i]);
++            SettableBeanProperty actualProp = prop.getProperty();
+             // also: if it's creator prop, fill in
+-            if (prop.getCreatorIndex() >= 0) {
+-                buffer.assignParameter(prop, values[i]);
+-
++            if (actualProp.getCreatorIndex() >= 0) {
++                buffer.assignParameter(actualProp, values[i]);
+                 // [databind#999] And maybe there's creator property for type id too?
+-                SettableBeanProperty typeProp = extProp.getTypeProperty();
++                SettableBeanProperty typeProp = prop.getTypeProperty();
+                 // for now, should only be needed for creator properties, too
+                 if ((typeProp != null) && (typeProp.getCreatorIndex() >= 0)) {
+                     // 31-May-2018, tatu: [databind#1328] if id is NOT plain `String`, need to
+                     //    apply deserializer... fun fun.
+-                    buffer.assignParameter(typeProp, typeId);
++                    buffer.assignParameter(typeProp, _typeIds[i]);
+                 }
+             }
+         }

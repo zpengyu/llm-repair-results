@@ -1,0 +1,57 @@
+diff --git a/src/main/java/org/apache/commons/codec/binary/BaseNCodecInputStream.java b/src/main/java/org/apache/commons/codec/binary/BaseNCodecInputStream.java
+index 78f4d67e..9e62df64 100644
+--- a/src/main/java/org/apache/commons/codec/binary/BaseNCodecInputStream.java
++++ b/src/main/java/org/apache/commons/codec/binary/BaseNCodecInputStream.java
+@@ -139,20 +131,41 @@ public class BaseNCodecInputStream extends FilterInputStream {
+      *
+      * @throws IllegalArgumentException if the provided skip length is negative
+      */
+-
+-        // skip in chunks of 512 bytes
+-
+-
++    @Override
++    public long skip(long n) throws IOException {
++        if (n < 0) {
++            throw new IllegalArgumentException("Negative skip length: " + n);
++        }
++        int nn = (int) Math.min(n, Integer.MAX_VALUE);
++        final byte[] skipBuffer = new byte[512];
++        int toRead = nn;
++        while (toRead > 0) {
++            final int readNow = Math.min(skipBuffer.length, toRead);
++            final int numRead = read(skipBuffer, 0, readNow);
++            if (numRead == EOF) {
++                break;
++            }
++            toRead -= numRead;
++        }
++        return n - toRead;
++    }
+     /**
+      * {@inheritDoc}
+      *
+      * @return <code>0</code> if the {@link InputStream} has reached <code>EOF</code>,
+      * <code>1</code> otherwise
+      */
+-        // Note: the logic is similar to the InflaterInputStream:
+-        //       as long as we have not reached EOF, indicate that there is more
+-        //       data available. As we do not know for sure how much data is left,
+-        //       just return 1 as a safe guess.
+-
+-        // use the EOF flag of the underlying codec instance
++    @Override
++    public int available() throws IOException {
++        return baseNCodec.hasData() ? 1 : 0; // use the EOF flag of the underlying codec instance
++    }
++    /**
++     * Closes this input stream and releases any system resources associated with the stream.
++     *
++     * @throws IOException if an I/O error occurs.
++     */
++    @Override
++    public void close() throws IOException {
++        in.close();
++    }
+ }
+\ No newline at end of file

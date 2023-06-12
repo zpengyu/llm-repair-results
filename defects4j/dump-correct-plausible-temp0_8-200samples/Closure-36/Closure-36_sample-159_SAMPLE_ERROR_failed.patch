@@ -1,0 +1,37 @@
+diff --git a/src/com/google/javascript/jscomp/InlineVariables.java b/src/com/google/javascript/jscomp/InlineVariables.java
+index 4f045430..0f4733dc 100644
+--- a/src/com/google/javascript/jscomp/InlineVariables.java
++++ b/src/com/google/javascript/jscomp/InlineVariables.java
+@@ -557,10 +554,9 @@ class InlineVariables implements CompilerPass {
+           && reference.getParent().getFirstChild() == reference.getNode()) {
+         return false;
+       }
+-
+       if (value.isFunction()) {
+         Node callNode = reference.getParent();
+-        if (reference.getParent().isCall()) {
++        if (callNode.isCall()) {
+           CodingConvention convention = compiler.getCodingConvention();
+           // Bug 2388531: Don't inline subclass definitions into class defining
+           // calls as this confused class removing logic.
+@@ -569,12 +565,18 @@ class InlineVariables implements CompilerPass {
+           if (relationship != null) {
+             return false;
+           }
+-
+           // issue 668: Don't inline singleton getter methods
+           // calls as this confused class removing logic.
++          if (callNode.getFirstChild() == reference.getNode()) {
++            String calleeName = relationship.subclassName;
++            String singletonGetterClassName =
++                convention.getSingletonGetterClassName(calleeName);
++            if (singletonGetterClassName != null) {
++              return false;
++            }
++          }
+         }
+       }
+-
+       return canMoveAggressively(value) ||
+           canMoveModerately(initialization, reference);
+     }

@@ -1,0 +1,27 @@
+diff --git a/src/main/java/com/fasterxml/jackson/core/json/JsonGeneratorImpl.java b/src/main/java/com/fasterxml/jackson/core/json/JsonGeneratorImpl.java
+index 81b90fed..4ba76035 100644
+--- a/src/main/java/com/fasterxml/jackson/core/json/JsonGeneratorImpl.java
++++ b/src/main/java/com/fasterxml/jackson/core/json/JsonGeneratorImpl.java
+@@ -194,4 +168,21 @@ public abstract class JsonGeneratorImpl extends GeneratorBase
+         writeFieldName(fieldName);
+         writeString(value);
+     }
++    // // Internal methods for outputting escaped text content
++    protected final void _writeStringCustom(char[] text, int offset, int len) throws IOException {
++        final int[] escCodes = _outputEscapes;
++        final int end = offset+len;
++        int outputPtr = 0;
++        output_loop:
++        while (offset < end) {
++            int ch = (int) text[offset++];
++            if (ch <= 0x7F) { // if it's ascii, can do more efficient check
++                int escape = escCodes[ch];
++                // no escape (i.e. 0)?
++                if (escape == 0) {
++                    continue;
++                }
++            }
++        }
++    }
+ }
+\ No newline at end of file

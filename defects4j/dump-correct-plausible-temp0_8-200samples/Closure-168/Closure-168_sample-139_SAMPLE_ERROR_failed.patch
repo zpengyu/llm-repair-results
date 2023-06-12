@@ -1,0 +1,28 @@
+diff --git a/src/com/google/javascript/jscomp/TypedScopeCreator.java b/src/com/google/javascript/jscomp/TypedScopeCreator.java
+index 5e7bfa3f..30323e67 100644
+--- a/src/com/google/javascript/jscomp/TypedScopeCreator.java
++++ b/src/com/google/javascript/jscomp/TypedScopeCreator.java
+@@ -2034,9 +2030,22 @@ final class TypedScopeCreator implements ScopeCreator {
+                 .recordEscapedQualifiedName(n.getQualifiedName());
+           }
+         }
++      } else if (n.isGetProp() && NodeUtil.isLValue(n)) {
++        // This is a fix where I don't quite understand how it's working
++        // but it seems to fix it.
++        String name = NodeUtil.getRootOfQualifiedName(n).getString();
++        Scope scope = t.getScope();
++        Var var = scope.getVar(name);
++        if (var != null) {
++          Scope ownerScope = var.getScope();
++          if (scope != ownerScope && ownerScope.isLocal()) {
++            data.get(ownerScope.getRootNode())
++                .recordEscapedQualifiedName(n.getQualifiedName());
++          }
++        }
+       }
+     }
+-  }
++  }  }
+ 
+   private AstFunctionContents getFunctionAnalysisResults(@Nullable Node n) {
+     if (n == null) {

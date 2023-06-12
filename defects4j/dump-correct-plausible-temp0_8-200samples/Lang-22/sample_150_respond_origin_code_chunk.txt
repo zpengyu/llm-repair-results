@@ -1,0 +1,29 @@
+    private static int greatestCommonDivisor(int u, int v) {
+        if (Math.abs(u) <= 1 || Math.abs(v) <= 1) {
+            return 1;
+        }
+        if (u>0) { u=-u; } // make u negative
+        if (v>0) { v=-v; } // make v negative
+        int t = ((u&1)==1) ? v : -(u/2)/*B3*/;
+        // t negative: u was odd, v may be even (t replaces v)
+        // t positive: u was even, v is odd (t replaces u)
+        do {
+            /* assert u<0 && v<0; */
+            // B4/B3: cast out twos from t.
+            while ((t&1)==0) { // while t is even..
+                t/=2; // cast out twos
+            }
+            // B5 [reset max(u,v)]
+            if (t>0) {
+                u = -t;
+            } else {
+                v = t;
+            }
+            // B6/B3. at this point both u and v should be odd.
+            t = (v - u)/2;
+            // |u| larger: t positive (replace u)
+            // |v| larger: t negative (replace v)
+        } while (t!=0);
+        return -u; // gcd is u*2^k
+    }
+

@@ -1,0 +1,31 @@
+    protected abstract static class PrimitiveOrWrapperDeserializer<T>
+        extends StdScalarDeserializer<T>
+    {
+        private static final long serialVersionUID = 1L;
+
+        protected final T _nullValue;
+        protected final boolean _primitive;
+
+        protected PrimitiveOrWrapperDeserializer(Class<T> vc, T nvl) {
+            super(vc);
+            _nullValue = nvl;
+            _primitive = vc.isPrimitive();
+        }
+
+        @Override
+        public final T getNullValue(DeserializationContext ctxt) throws JsonMappingException
+        {
+            // Primitive can not be set to null, must return default value
+            return _nullValue;
+        }
+
+        @Override
+        @Deprecated // remove in 2.7
+        public final T getNullValue() {
+            return _nullValue;
+        }
+
+            // [databind#1095]: Should not allow coercion from into null from Empty String
+            // either, if `null` not allowed
+    }
+

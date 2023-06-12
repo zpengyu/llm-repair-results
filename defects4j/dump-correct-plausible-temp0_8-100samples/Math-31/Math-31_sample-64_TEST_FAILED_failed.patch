@@ -1,0 +1,42 @@
+diff --git a/src/main/java/org/apache/commons/math3/util/ContinuedFraction.java b/src/main/java/org/apache/commons/math3/util/ContinuedFraction.java
+index ff2906836..ec3218240 100644
+--- a/src/main/java/org/apache/commons/math3/util/ContinuedFraction.java
++++ b/src/main/java/org/apache/commons/math3/util/ContinuedFraction.java
+@@ -120,10 +120,9 @@ public abstract class ContinuedFraction {
+      * @return the value of the continued fraction evaluated at x.
+      * @throws ConvergenceException if the algorithm fails to converge.
+      */
+-    public double evaluate(double x, double epsilon, int maxIterations) {
++     public double evaluate(double x, double epsilon, int maxIterations) {
+         final double small = 1e-50;
+         double hPrev = getA(0, x);
+-
+         // use the value of small as epsilon criteria for zero checks
+         if (Precision.equals(hPrev, 0.0, small)) {
+             hPrev = small;
+@@ -165,10 +161,8 @@ public abstract class ContinuedFraction {
+                     }
+                 }
+             }
+-
+-            final double deltaN = cN / q2 / cPrev;
+-            hN = cPrev * deltaN;
+-
++            final double deltaN = cN / q2;
++            hN = hPrev * deltaN;
+             if (Double.isInfinite(hN)) {
+                 throw new ConvergenceException(LocalizedFormats.CONTINUED_FRACTION_INFINITY_DIVERGENCE,
+                                                x);
+@@ -181,11 +174,9 @@ public abstract class ContinuedFraction {
+             if (FastMath.abs(deltaN - 1.0) < epsilon) {
+                 break;
+             }
+-
+             dPrev = q1;
+-            cPrev = cN / q2;
+             p0 = hPrev;
+-            hPrev = cN;
++            hPrev = cN / q2;
+             q1 = q2;
+             n++;
+         }

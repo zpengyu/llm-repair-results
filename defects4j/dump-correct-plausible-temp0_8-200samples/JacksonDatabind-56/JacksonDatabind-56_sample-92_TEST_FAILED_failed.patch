@@ -1,0 +1,68 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/deser/std/FromStringDeserializer.java b/src/main/java/com/fasterxml/jackson/databind/deser/std/FromStringDeserializer.java
+index 01a819a9f..7506a75b2 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/deser/std/FromStringDeserializer.java
++++ b/src/main/java/com/fasterxml/jackson/databind/deser/std/FromStringDeserializer.java
+@@ -250,31 +246,33 @@ public abstract class FromStringDeserializer<T> extends StdScalarDeserializer<T>
+             case STD_INET_SOCKET_ADDRESS:
+                 if (value.startsWith("[")) {
+                     // bracketed IPv6 (with port number)
+-
+-                    int i = value.lastIndexOf(']');
+-                    if (i == -1) {
+-                        throw new InvalidFormatException(ctxt.getParser(),
+-                                "Bracketed IPv6 address must contain closing bracket",
+-                                value, InetSocketAddress.class);
+-                    }
+-
+-                    int j = value.indexOf(':', i);
+-                    int port = j > -1 ? Integer.parseInt(value.substring(j + 1)) : 0;
+-                    return new InetSocketAddress(value.substring(0, i + 1), port);
+-                } else {
+-                    int ix = value.indexOf(':');
+-                    if (ix >= 0 && value.indexOf(':', ix + 1) < 0) {
+-                        // host:port
+-                        int port = Integer.parseInt(value.substring(ix+1));
+-                        return new InetSocketAddress(value.substring(0, ix), port);
+-                    }
+-                    // host or unbracketed IPv6, without port number
+-                    return new InetSocketAddress(value, 0);
++                    return parseBracketedIPv6(value, ctxt);
+                 }
++                return parseIPv4(value, ctxt);
+             }
+             throw new IllegalArgumentException();
+         }
+-
++        private Object parseIPv4(String value, DeserializationContext ctxt) throws IOException {
++            int ix = value.indexOf(':');
++            if (ix >= 0 && value.indexOf(':', ix + 1) < 0) {
++                // host:port
++                int port = Integer.parseInt(value.substring(ix+1));
++                return new InetSocketAddress(value.substring(0, ix), port);
++            }
++            // host or unbracketed IPv6, without port number
++            return new InetSocketAddress(value, 0);
++        }
++        private Object parseBracketedIPv6(String value, DeserializationContext ctxt) throws IOException {
++            int i = value.lastIndexOf(']');
++            if (i == -1) {
++                throw new InvalidFormatException(ctxt.getParser(),
++                        "Bracketed IPv6 address must contain closing bracket",
++                        value, InetSocketAddress.class);
++            }
++            int j = value.indexOf(':', i);
++            int port = j > -1 ? Integer.parseInt(value.substring(j + 1)) : 0;
++            return new InetSocketAddress(value.substring(0, i + 1), port);
++        }
+         @Override
+         protected Object _deserializeFromEmptyString() throws IOException {
+             // As per [databind#398], URI requires special handling
+@@ -287,7 +285,4 @@ public abstract class FromStringDeserializer<T> extends StdScalarDeserializer<T>
+             }
+             return super._deserializeFromEmptyString();
+         }
+-
+-
+-    }
+-}
++    }}

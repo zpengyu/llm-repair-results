@@ -1,0 +1,37 @@
+diff --git a/src/java/org/apache/commons/cli/HelpFormatter.java b/src/java/org/apache/commons/cli/HelpFormatter.java
+index 972d49a..78f1a3e 100644
+--- a/src/java/org/apache/commons/cli/HelpFormatter.java
++++ b/src/java/org/apache/commons/cli/HelpFormatter.java
+@@ -829,7 +825,11 @@ public class HelpFormatter
+         // all following lines must be padded with nextLineTabStop space 
+         // characters
+         final String padding = createPadding(nextLineTabStop);
+-
++        int lastLine = sb.lastIndexOf(defaultNewLine);
++        String lastLineStr = null;
++        if(lastLine != -1){
++            lastLineStr = sb.substring(lastLine+1, sb.length());
++        }
+         while (true)
+         {
+             text = padding + text.substring(pos).trim();
+@@ -846,11 +843,17 @@ public class HelpFormatter
+             {
+                 pos = width;
+             }
+-
+             sb.append(rtrim(text.substring(0, pos))).append(defaultNewLine);
++            if(lastLine != -1){
++                lastLineStr = sb.substring(lastLine+1, sb.length());
++            }
++            if(lastLineStr != null && lastLineStr.length() > 0 && lastLineStr.charAt(lastLineStr.length()-1) != ' ')
++                lastLineStr = lastLineStr + ' ';
++            if(pos == lastLineStr.length()){
++                sb.setLength(sb.length()-1);
++            }
+         }
+     }
+-
+     /**
+      * Finds the next text wrap position after <code>startPos</code> for the
+      * text in <code>text</code> with the column width <code>width</code>.

@@ -1,0 +1,39 @@
+diff --git a/src/com/google/javascript/jscomp/FoldConstants.java b/src/com/google/javascript/jscomp/FoldConstants.java
+index 003743b3..eab107ac 100644
+--- a/src/com/google/javascript/jscomp/FoldConstants.java
++++ b/src/com/google/javascript/jscomp/FoldConstants.java
+@@ -1511,23 +1506,27 @@ class FoldConstants extends AbstractPostOrderCallback
+         Node emptyStringNode = Node.newString("");
+         parent.replaceChild(n, emptyStringNode);
+         break;
+-
+       case 1:
+         Node foldedStringNode = arrayFoldedChildren.remove(0);
+-        if (foldedSize > originalSize) {
+-          return;
+-        }
+-        arrayNode.detachChildren();
+         if (foldedStringNode.getType() != Token.STRING) {
++          if (foldedSize > originalSize) {
++            return;
++          }
++          arrayNode.detachChildren();
+           // If the Node is not a string literal, ensure that
+           // it is coerced to a string.
+           Node replacement = new Node(Token.ADD,
+               Node.newString(""), foldedStringNode);
+           foldedStringNode = replacement;
++          parent.replaceChild(n, foldedStringNode);
++        } else {
++          if (foldedSize >= originalSize) {
++            return;
++          }
++          arrayNode.detachChildren();
++          parent.replaceChild(n, foldedStringNode);
+         }
+-        parent.replaceChild(n, foldedStringNode);
+         break;
+-
+       default:
+         // No folding could actually be performed.
+         if (arrayFoldedChildren.size() == arrayNode.getChildCount()) {

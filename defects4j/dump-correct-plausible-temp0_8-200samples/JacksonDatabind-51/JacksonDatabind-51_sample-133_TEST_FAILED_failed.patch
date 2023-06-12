@@ -1,0 +1,37 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/jsontype/impl/TypeDeserializerBase.java b/src/main/java/com/fasterxml/jackson/databind/jsontype/impl/TypeDeserializerBase.java
+index 339362e1e..207876f53 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/jsontype/impl/TypeDeserializerBase.java
++++ b/src/main/java/com/fasterxml/jackson/databind/jsontype/impl/TypeDeserializerBase.java
+@@ -137,7 +137,7 @@ public abstract class TypeDeserializerBase
+     /**********************************************************
+      */
+ 
+-    protected final JsonDeserializer<Object> _findDeserializer(DeserializationContext ctxt,
++protected final JsonDeserializer<Object> _findDeserializer(DeserializationContext ctxt,
+             String typeId) throws IOException
+     {
+         JsonDeserializer<Object> deser = _deserializers.get(typeId);
+@@ -156,7 +156,7 @@ public abstract class TypeDeserializerBase
+                     JavaType actual = _handleUnknownTypeId(ctxt, typeId, _idResolver, _baseType);
+                     if (actual == null) { // what should this be taken to mean?
+                         // TODO: try to figure out something better
+-                        return null;
++                        throw ctxt.mappingException("Could not resolve type id '%s' into a subtype of %s", typeId, _baseType);
+                     }
+                     // ... would this actually work?
+                     deser = ctxt.findContextualValueDeserializer(actual, _property);
+@@ -181,7 +181,14 @@ public abstract class TypeDeserializerBase
+                     //   generic type with custom type resolvers. If so, should try to retain them.
+                     //  Whether this is sufficient to avoid problems remains to be seen, but for
+                     //  now it should improve things.
++                    /* 26-Jan-2018, tatu: Actually, that is not enough -- sometimes we get the
++                     *   default implementation of some container type, instead of one that is
++                     *   aware of actual type parameters. In such case we need to replace type, not
++                     *   just narrow it.
++                     */
++                    if (type.hasRawClass(_baseType.getRawClass())) {
+                         type = ctxt.getTypeFactory().constructSpecializedType(_baseType, type.getRawClass());
++                    }
+                 }
+                 deser = ctxt.findContextualValueDeserializer(type, _property);
+             }

@@ -1,0 +1,40 @@
+diff --git a/src/main/java/org/apache/commons/compress/archivers/tar/TarUtils.java b/src/main/java/org/apache/commons/compress/archivers/tar/TarUtils.java
+index 19d68e84..ab1be32d 100644
+--- a/src/main/java/org/apache/commons/compress/archivers/tar/TarUtils.java
++++ b/src/main/java/org/apache/commons/compress/archivers/tar/TarUtils.java
+@@ -148,10 +143,33 @@ public class TarUtils {
+             result = (result << 3) + (currentByte - '0'); // convert from ASCII
+             // CheckStyle:MagicNumber ON
+         }
+-
+         return result;
+     }
+-
++    /**
++     * Constructs an exception message for invalid octal values.
++     *
++     * @param buffer The buffer containing the invalid value
++     * @param offset The start offset of the value in the buffer
++     * @param length The length of the value in the buffer
++     * @param badbyte The offset of the invalid byte relative to the start of
++     * the field
++     * @param value The invalid value
++     * @return An exception message
++     */
++    private static String exceptionMessage(final byte[] buffer, final int offset,
++                                           final int length, final int badbyte, final byte value) {
++        final StringBuilder sb = new StringBuilder("Invalid byte ");
++        sb.append(value);
++        sb.append(" in octal value at offset ");
++        sb.append(badbyte);
++        sb.append(" of ");
++        sb.append(length);
++        sb.append(" byte field starting at offset ");
++        sb.append(offset);
++        sb.append(": 0x");
++        sb.append(HexUtils.toHexString(buffer, offset, length));
++        return sb.toString();
++    }
+     /** 
+      * Compute the value contained in a byte buffer.  If the most
+      * significant bit of the first byte in the buffer is set, this

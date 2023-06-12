@@ -1,0 +1,76 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/deser/BeanDeserializer.java b/src/main/java/com/fasterxml/jackson/databind/deser/BeanDeserializer.java
+index 3c89dc109..09c42261b 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/deser/BeanDeserializer.java
++++ b/src/main/java/com/fasterxml/jackson/databind/deser/BeanDeserializer.java
+@@ -736,16 +736,10 @@ public class BeanDeserializer
+     protected Object deserializeUsingPropertyBasedWithUnwrapped(JsonParser p, DeserializationContext ctxt)
+         throws IOException
+     {
+-        // 01-Dec-2016, tatu: Note: This IS legal to call, but only when unwrapped
+-        //    value itself is NOT passed via `CreatorProperty` (which isn't supported).
+-        //    Ok however to pass via setter or field.
+-        
+         final PropertyBasedCreator creator = _propertyBasedCreator;
+         PropertyValueBuffer buffer = creator.startBuilding(p, ctxt, _objectIdReader);
+-
+         TokenBuffer tokens = new TokenBuffer(p, ctxt);
+         tokens.writeStartObject();
+-
+         JsonToken t = p.getCurrentToken();
+         for (; t == JsonToken.FIELD_NAME; t = p.nextToken()) {
+             String propName = p.getCurrentName();
+@@ -761,21 +755,44 @@ public class BeanDeserializer
+                     try {
+                         bean = creator.build(ctxt, buffer);
+                     } catch (Exception e) {
+-                        bean = wrapInstantiationProblem(e, ctxt);
++                        wrapAndThrow(e, _beanType.getRawClass(), propName, ctxt);
++                        continue; // never gets here
+                     }
+                     // [databind#631]: Assign current value, to be accessible by custom serializers
+                     p.setCurrentValue(bean);
+                     // if so, need to copy all remaining tokens into buffer
+                     while (t == JsonToken.FIELD_NAME) {
+-                        // NOTE: do NOT skip name as it needs to be copied; `copyCurrentStructure` does that
+-                        p.nextToken();
+-                        tokens.copyCurrentStructure(p);
+-                        t = p.nextToken();
+-                    }
+-                    // 28-Aug-2018, tatu: Let's add sanity check here, easier to catch off-by-some
+-                    //    problems if we maintain invariants
+-                    tokens.writeEndObject();
+-                    if (bean.getClass() != _beanType.getRawClass()) {
++                        String propName2 = p.getCurrentName();
++                        p.nextToken(); // to point to value
++                        // Object Id property?
++                        SettableBeanProperty idProp = _objectIdReader.property;
++                        if (idProp.getName().equals(propName2)) {
++                            buffer.bufferProperty(idProp, idProp.deserialize(p, ctxt));
++                            continue;
++                        }
++                        // regular property? needs buffering
++                        SettableBeanProperty prop = _beanProperties.find(propName2);
++                        if (prop != null) {
++                            buffer.bufferProperty(prop, _deserializeWithErrorWrapping(p, ctxt, prop));
++                            continue;
++                        }
++                        // Things marked as ignorable should not be passed to any setter
++                        if (_ignorableProps != null && _ignorableProps.contains(propName2)) {
++                            handleIgnoredProperty(p, ctxt, bean, propName2);
++                            continue;
++                        }
++                        // 29-Nov-2016, tatu: probably should try to avoid sending content
++                        //    both to any setter AND buffer... but, for now, the only thing
++                        //    we can do.
++                        // how about any setter? We'll get copies but...
++                        if (_anySetter != null) {
++                            try {
++                                buffer.bufferAnyProperty(_anySetter, propName2, _anySetter.deserialize(p, ctxt));
++                            } catch (Exception e) {
++                                wrapAndThrow(e, _beanType.getRawClass(), propName2, ctxt);
++                            }
++                            continue;
++                        }
+                         // !!! 08-Jul-2011, tatu: Could probably support; but for now
+                         //   it's too complicated, so bail out
+                         ctxt.reportInputMismatch(creatorProp,

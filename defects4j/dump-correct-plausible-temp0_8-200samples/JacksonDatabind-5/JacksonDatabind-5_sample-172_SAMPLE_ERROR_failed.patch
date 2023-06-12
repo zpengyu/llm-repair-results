@@ -1,0 +1,25 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/introspect/AnnotatedClass.java b/src/main/java/com/fasterxml/jackson/databind/introspect/AnnotatedClass.java
+index 929076729..cf72a9b20 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/introspect/AnnotatedClass.java
++++ b/src/main/java/com/fasterxml/jackson/databind/introspect/AnnotatedClass.java
+@@ -654,8 +654,18 @@ public final class AnnotatedClass
+                      * just placeholder, can't be called)
+                      */
+                 } else {
+-                    // Well, or, as per [Issue#515], multi-level merge within mixins...
+-                        mixIns.add(_constructMethod(m));
++                    if (am == null) { // Well, or, as per [Issue#515], multi-level merge within mixins...
++                        am = _constructMethod(m);
++                        AnnotationIntrospector intr = _annotationIntrospector;
++                        if (intr != null) {
++                            AnnotationCollector ac = new AnnotationCollector();
++                            ac.collect(am.getAnnotated(), m);
++                            am.fixAccess(m);
++                            am.fixAccess(am.getAnnotated());
++                            am = ac.firstWithIgnorable();
++                        }
++                    }
++                    mixIns.add(am);
+                 }
+             }
+         }

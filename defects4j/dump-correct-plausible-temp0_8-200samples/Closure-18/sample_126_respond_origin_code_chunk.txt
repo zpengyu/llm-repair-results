@@ -1,0 +1,19 @@
+  private void hoistNoCompileFiles() {
+    if (options.externExportsPath != null) {
+      // Since these files are not to be compiled, they need to be removed
+      // from the inputs. But, they do contain type information, so we need
+      // to add them to the externs.
+      for (Iterator<CompilerInput> it = inputs.iterator(); it.hasNext();) {
+        CompilerInput input = it.next();
+        if (options.externExportsPath.equals(input.getName())) {
+          Node n = input.getAstRoot(this);
+          if (hasErrors()) {
+            return;
+          }
+
+          it.remove();
+          externsRoot.addChildToBack(n);
+        }
+      }
+    }
+  }

@@ -1,0 +1,54 @@
+private static Node computeFollowNode(
+    Node fromNode, Node node, ControlFlowAnalysis cfa) {
+  Node parent = node.getParent();
+  if (parent == null || NodeUtil.isControlStructure(parent) ||
+      (cfa != null && node == cfa.root)) {
+    return null;
+  }
+  if (parent.isFor() && NodeUtil.isForIn(parent) && node == parent) {
+    return parent;
+  } else if (parent.isCase() || parent.isDefaultCase()) {
+    Node body;
+    if (parent.isCase()) {
+      body = parent.getFirstChild().getNext();
+    } else {
+      body = parent.getFirstChild();
+    }
+    if (body == node) {
+      return computeFollowNode(fromNode, parent, cfa);
+    }
+    return body;
+  } else if (parent.isTry()) {
+    if (parent.getFirstChild() == node) {
+      if (NodeUtil.hasFinally(parent)) {
+        return parent.getLastChild();
+      } else {
+        return computeFollowNode(fromNode, parent, cfa);
+      }
+    } else if (NodeUtil.getCatchBlock(parent) == node) {
+      if (NodeUtil.hasFinally(parent)) {
+        return parent.getLastChild();
+      } else {
+        return computeFollowNode(fromNode, parent, cfa);
+      }
+    } else if (parent.getLastChild() == node) {
+      if (cfa != null) {
+        for (Node finallyNode : cfa.finallyMap.get(parent)) {
+          cfa.createEdge(fromNode, Branch.UNCOND, finallyNode);
+        }
+      }
+      return computeFollowNode(fromNode, parent, cfa);
+    }
+  } else if (parent.isFunction()) {
+    return computeFollowNode(fromNode, parent, cfa);
+  }
+  Node nextSibling = node.getNext();
+  while (nextSibling != null && nextSibling.isFunction()) {
+    nextSibling = nextSibling.getNext();
+  }
+  if (nextSibling != null) {
+    return nextSibling;
+  } else {
+    return computeFollowNode(fromNode, parent, cfa);
+  }
+}

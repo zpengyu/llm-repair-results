@@ -1,0 +1,50 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/ser/std/DateTimeSerializerBase.java b/src/main/java/com/fasterxml/jackson/databind/ser/std/DateTimeSerializerBase.java
+index 7709acdcd..16dde3fed 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/ser/std/DateTimeSerializerBase.java
++++ b/src/main/java/com/fasterxml/jackson/databind/ser/std/DateTimeSerializerBase.java
+@@ -53,28 +53,26 @@ public abstract class DateTimeSerializerBase<T>
+         if (property != null) {
+             JsonFormat.Value format = serializers.getAnnotationIntrospector().findFormat((Annotated)property.getMember());
+             if (format != null) {
+-
+-            	// Simple case first: serialize as numeric timestamp?
+-                JsonFormat.Shape shape = format.getShape();
+-                if (shape.isNumeric()) {
+-                    return withFormat(Boolean.TRUE, null);
+-                }
+-
+-                if (format.getShape() == JsonFormat.Shape.STRING) {
+-                    TimeZone tz = format.getTimeZone();
+-                    final String pattern = format.hasPattern()
+-                                    ? format.getPattern()
+-                                    : StdDateFormat.DATE_FORMAT_STR_ISO8601;
+-                    final Locale loc = format.hasLocale()
+-                                    ? format.getLocale()
+-                                    : serializers.getLocale();
+-                    SimpleDateFormat df = new SimpleDateFormat(pattern, loc);
+-                    if (tz == null) {
+-                        tz = serializers.getTimeZone();
++                SimpleDateFormat df = null;
++                if (format.hasPattern()) {
++                    df = new SimpleDateFormat(format.getPattern(),
++                            format.hasLocale() ? format.getLocale() : serializers.getLocale());
++                    if (format.hasTimeZone()) {
++                        df.setTimeZone(format.getTimeZone());
++                    } else {
++                        df.setTimeZone(serializers.getTimeZone());
+                     }
+-                    df.setTimeZone(tz);
++                }
++                JsonFormat.Shape shape = format.getShape();
++                if (shape == JsonFormat.Shape.STRING) {
+                     return withFormat(Boolean.FALSE, df);
+                 }
++                if (shape == JsonFormat.Shape.NUMBER || shape == JsonFormat.Shape.NUMBER_INT) {
++                    return withFormat(Boolean.TRUE, df);
++                }
++                if (shape == JsonFormat.Shape.NUMBER_FLOAT) {
++                    return withFormat(Boolean.TRUE, df);
++                }
+             }
+         }
+         return this;

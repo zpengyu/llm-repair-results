@@ -1,0 +1,19 @@
+diff --git a/src/main/java/org/jsoup/helper/DataUtil.java b/src/main/java/org/jsoup/helper/DataUtil.java
+index 6de0c40..f35f69e 100644
+--- a/src/main/java/org/jsoup/helper/DataUtil.java
++++ b/src/main/java/org/jsoup/helper/DataUtil.java
+@@ -115,7 +112,13 @@ public final class DataUtil {
+                     foundCharset = foundCharset.trim().replaceAll("[\"']", "");
+                     charsetName = foundCharset;
+                     byteData.rewind();
+-                    docData = Charset.forName(foundCharset).decode(byteData).toString();
++                    Charset charset = Charset.forName(foundCharset);
++                    ByteBuffer byteBuffer = byteData.asReadOnlyBuffer();
++                    byteBuffer.position(0);
++                    byteBuffer.limit(byteBuffer.capacity());
++                    CharsetDecoder decoder = charset.newDecoder();
++                    CharBuffer charBuffer = decoder.decode(byteBuffer);
++                    docData = charBuffer.toString();
+                     doc = null;
+                 }
+             }

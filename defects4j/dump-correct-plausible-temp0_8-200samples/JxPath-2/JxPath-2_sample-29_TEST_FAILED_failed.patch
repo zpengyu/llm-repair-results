@@ -1,0 +1,43 @@
+diff --git a/src/java/org/apache/commons/jxpath/ri/compiler/Expression.java b/src/java/org/apache/commons/jxpath/ri/compiler/Expression.java
+index 927f617..24d3447 100644
+--- a/src/java/org/apache/commons/jxpath/ri/compiler/Expression.java
++++ b/src/java/org/apache/commons/jxpath/ri/compiler/Expression.java
+@@ -36,8 +36,8 @@ import java.util.Locale;
+  * @author Dmitri Plotnikov
+  * @version $Revision$ $Date$
+  */
++import java.util.Locale;
+ public abstract class Expression {
+-
+     protected static final Double ZERO = new Double(0);
+     protected static final Double ONE = new Double(1);
+     protected static final Double NOT_A_NUMBER = new Double(Double.NaN);
+@@ -94,11 +87,6 @@ public abstract class Expression {
+         private Iterator iterator;
+         private QName qname;
+         private Locale locale;
+-
+-        //to what method does the following comment refer?
+-        /**
+-         * @deprecated Use the method that takes a NamespaceManager
+-         */
+         public PointerIterator(Iterator it, QName qname, Locale locale) {
+             this.iterator = it;
+             this.qname = qname;
+@@ -108,12 +95,13 @@ public abstract class Expression {
+         public boolean hasNext() {
+             return iterator.hasNext();
+         }
+-
+         public Object next() {
+             Object o = iterator.next();
+-            return o instanceof Pointer ? o : NodePointer.newNodePointer(qname, o, locale);
++            if (o instanceof Pointer) {
++                return o;
++            }
++            return NodePointer.newNodePointer(qname, o, locale);
+         }
+-
+         public void remove() {
+             throw new UnsupportedOperationException();
+         }

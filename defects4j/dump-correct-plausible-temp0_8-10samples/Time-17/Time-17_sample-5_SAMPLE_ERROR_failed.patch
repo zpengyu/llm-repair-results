@@ -1,0 +1,52 @@
+diff --git a/src/main/java/org/joda/time/DateTimeZone.java b/src/main/java/org/joda/time/DateTimeZone.java
+index 5c7a348c..e2a0481e 100644
+--- a/src/main/java/org/joda/time/DateTimeZone.java
++++ b/src/main/java/org/joda/time/DateTimeZone.java
+@@ -1161,24 +1161,35 @@ public abstract class DateTimeZone implements Serializable {
+      * @return the adjusted instant millis
+      */
+     public long adjustOffset(long instant, boolean earlierOrLater) {
+-        // a bit messy, but will work in all non-pathological cases
+-
+-        // evaluate 3 hours before and after to work out if anything is happening
++        long[] transitions = getTransitions();
+         long instantBefore = convertUTCToLocal(instant - 3 * DateTimeConstants.MILLIS_PER_HOUR);
+         long instantAfter = convertUTCToLocal(instant + 3 * DateTimeConstants.MILLIS_PER_HOUR);
+         if (instantBefore == instantAfter) {
+             return instant;  // not an overlap (less than is a gap, equal is normal case)
+         }
+-
+-        // work out range of instants that have duplicate local times
+         long local = convertUTCToLocal(instant);
+-        return convertLocalToUTC(local, false, earlierOrLater ? instantAfter : instantBefore);
+-
+-        // calculate result
+-          // currently in later offset
+-          // currently in earlier offset
+-    }
+-//    System.out.println(new DateTime(transitionStart, DateTimeZone.UTC) + " " + new DateTime(transitionStart, this));
++        if (earlierOrLater) {
++            // currently in later offset
++            int index = Arrays.binarySearch(transitions, instant + 1);
++            if (index < 0) {
++                index = -index - 2;
++            }
++            if (index < 0 || index >= transitions.length) {
++                return instant;
++            }
++            return transitions[index] - 1;
++        } else {
++            // currently in earlier offset
++            int index = Arrays.binarySearch(transitions, instant);
++            if (index < 0) {
++                index = -index - 1;
++            }
++            if (index < 0 || index >= transitions.length) {
++                return instant;
++            }
++            return transitions[index];
++        }
++    }//    System.out.println(new DateTime(transitionStart, DateTimeZone.UTC) + " " + new DateTime(transitionStart, this));
+ 
+     //-----------------------------------------------------------------------
+     /**

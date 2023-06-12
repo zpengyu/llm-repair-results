@@ -1,0 +1,29 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/deser/BeanDeserializer.java b/src/main/java/com/fasterxml/jackson/databind/deser/BeanDeserializer.java
+index 3c89dc109..4c9462cf8 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/deser/BeanDeserializer.java
++++ b/src/main/java/com/fasterxml/jackson/databind/deser/BeanDeserializer.java
+@@ -736,16 +736,10 @@ public class BeanDeserializer
+     protected Object deserializeUsingPropertyBasedWithUnwrapped(JsonParser p, DeserializationContext ctxt)
+         throws IOException
+     {
+-        // 01-Dec-2016, tatu: Note: This IS legal to call, but only when unwrapped
+-        //    value itself is NOT passed via `CreatorProperty` (which isn't supported).
+-        //    Ok however to pass via setter or field.
+-        
+         final PropertyBasedCreator creator = _propertyBasedCreator;
+         PropertyValueBuffer buffer = creator.startBuilding(p, ctxt, _objectIdReader);
+-
+         TokenBuffer tokens = new TokenBuffer(p, ctxt);
+         tokens.writeStartObject();
+-
+         JsonToken t = p.getCurrentToken();
+         for (; t == JsonToken.FIELD_NAME; t = p.nextToken()) {
+             String propName = p.getCurrentName();
+@@ -806,7 +800,6 @@ public class BeanDeserializer
+             //    we can do.
+             // how about any setter? We'll get copies but...
+             if (_anySetter == null) {
+-                // but... others should be passed to unwrapped property deserializers
+                 tokens.writeFieldName(propName);
+                 tokens.copyCurrentStructure(p);
+             } else {

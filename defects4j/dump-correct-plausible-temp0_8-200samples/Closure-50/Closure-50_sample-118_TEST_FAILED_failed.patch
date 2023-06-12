@@ -1,0 +1,80 @@
+diff --git a/src/com/google/javascript/jscomp/PeepholeReplaceKnownMethods.java b/src/com/google/javascript/jscomp/PeepholeReplaceKnownMethods.java
+index c64b2ffd..c7f62a77 100644
+--- a/src/com/google/javascript/jscomp/PeepholeReplaceKnownMethods.java
++++ b/src/com/google/javascript/jscomp/PeepholeReplaceKnownMethods.java
+@@ -428,53 +421,31 @@ class PeepholeReplaceKnownMethods extends AbstractPeepholeOptimization{
+     }
+     // one for each comma.
+     foldedSize += arrayFoldedChildren.size() - 1;
+-
+     int originalSize = InlineCostEstimator.getCost(n);
+-    switch (arrayFoldedChildren.size()) {
+-      case 0:
+-        Node emptyStringNode = Node.newString("");
+-        n.getParent().replaceChild(n, emptyStringNode);
+-        reportCodeChange();
+-        return emptyStringNode;
+-      case 1:
+-        Node foldedStringNode = arrayFoldedChildren.remove(0);
+-        if (foldedSize > originalSize) {
+-          return n;
+-        }
+-        arrayNode.detachChildren();
+-        if (foldedStringNode.getType() != Token.STRING) {
+-          // If the Node is not a string literal, ensure that
+-          // it is coerced to a string.
+-          Node replacement = new Node(Token.ADD,
+-              Node.newString("").copyInformationFrom(n),
+-              foldedStringNode);
+-          foldedStringNode = replacement;
+-        }
+-        n.getParent().replaceChild(n, foldedStringNode);
+-        reportCodeChange();
+-        return foldedStringNode;
+-      default:
+-        // No folding could actually be performed.
+-        if (arrayFoldedChildren.size() == arrayNode.getChildCount()) {
+-          return n;
+-        }
+-        int kJoinOverhead = "[].join()".length();
+-        foldedSize += kJoinOverhead;
+-        foldedSize += (right != null) ? InlineCostEstimator.getCost(right) : 0;
+-        if (foldedSize > originalSize) {
+-          return n;
+-        }
+-        arrayNode.detachChildren();
+-        for (Node node : arrayFoldedChildren) {
+-          arrayNode.addChildToBack(node);
+-        }
+-        reportCodeChange();
+-        break;
++    if (arrayFoldedChildren.size() > 0) {
++      Node foldedStringNode = arrayFoldedChildren.remove(0);
++      if (foldedSize > originalSize) {
++        return n;
++      }
++      arrayNode.detachChildren();
++      if (foldedStringNode.getType() != Token.STRING) {
++        // If the Node is not a string literal, ensure that
++        // it is coerced to a string.
++        Node replacement = new Node(Token.ADD,
++            Node.newString("").copyInformationFrom(n),
++            foldedStringNode);
++        foldedStringNode = replacement;
++      }
++      n.getParent().replaceChild(n, foldedStringNode);
++      reportCodeChange();
++      return foldedStringNode;
++    } else {
++      Node emptyStringNode = Node.newString("");
++      n.getParent().replaceChild(n, emptyStringNode);
++      reportCodeChange();
++      return emptyStringNode;
+     }
+-
+-    return n;
+   }
+-
+   /**
+    * Try to fold .substr() calls on strings
+    */

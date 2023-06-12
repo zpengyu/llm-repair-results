@@ -1,0 +1,38 @@
+diff --git a/src/org/mockito/internal/stubbing/answers/AnswersValidator.java b/src/org/mockito/internal/stubbing/answers/AnswersValidator.java
+index 5d8057846..0920c9715 100644
+--- a/src/org/mockito/internal/stubbing/answers/AnswersValidator.java
++++ b/src/org/mockito/internal/stubbing/answers/AnswersValidator.java
+@@ -24,10 +20,10 @@ public class AnswersValidator {
+         if (answer instanceof DoesNothing) {
+             validateDoNothing((DoesNothing) answer, invocation);
+         }
+-        
++        if (answer instanceof CallsRealMethod) {
++            validateCallsRealMethod((CallsRealMethod) answer, invocation);
++        }
+     }
+-
+-
+     private void validateDoNothing(DoesNothing answer, Invocation invocation) {
+         if (!invocation.isVoid()) {
+             reporter.onlyVoidMethodsCanBeSetToDoNothing();
+@@ -62,4 +52,18 @@ public class AnswersValidator {
+             reporter.checkedExceptionInvalid(throwable);
+         }
+     }
++    private void validateCallsRealMethod(CallsRealMethod answer, Invocation invocation) {
++        if (invocation.isVoid()) {
++            reporter.cannotCallRealMethodOnVoidMethod();
++        }
++        if (invocation.getMethod().getDeclaringClass().isInterface()) {
++            reporter.cannotCallRealMethodOnInterface();
++        }
++        if (invocation.getMethod().isNative()) {
++            reporter.cannotCallRealMethodOnNativeMethod();
++        }
++        if (!invocation.getMethod().isAccessible()) {
++            reporter.cannotCallRealMethodOnInaccessibleMethod();
++        }
++    }
+ }
+\ No newline at end of file

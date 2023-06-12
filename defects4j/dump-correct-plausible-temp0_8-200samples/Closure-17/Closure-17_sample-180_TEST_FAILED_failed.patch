@@ -1,0 +1,48 @@
+diff --git a/src/com/google/javascript/jscomp/TypedScopeCreator.java b/src/com/google/javascript/jscomp/TypedScopeCreator.java
+index 13d8808b..c78d08cc 100644
+--- a/src/com/google/javascript/jscomp/TypedScopeCreator.java
++++ b/src/com/google/javascript/jscomp/TypedScopeCreator.java
+@@ -1268,19 +1268,15 @@ final class TypedScopeCreator implements ScopeCreator {
+         Node lValue, @Nullable Node rValue) {
+       if (info != null && info.hasType()) {
+         return getDeclaredTypeInAnnotation(sourceName, lValue, info);
+-      } else if (rValue != null && rValue.isFunction() &&
+-          shouldUseFunctionLiteralType(
+-              JSType.toMaybeFunctionType(rValue.getJSType()), info, lValue)) {
+-        return rValue.getJSType();
++      } else if (info != null && info.hasEnumParameterType()) {
++        if (rValue != null && rValue.isObjectLit()) {
++          return rValue.getJSType();
++        } else {
++          return createEnumTypeFromNodes(
++              rValue, lValue.getQualifiedName(), info, lValue);
++        }
+       } else if (info != null) {
+-        if (info.hasEnumParameterType()) {
+-          if (rValue != null && rValue.isObjectLit()) {
+-            return rValue.getJSType();
+-          } else {
+-            return createEnumTypeFromNodes(
+-                rValue, lValue.getQualifiedName(), info, lValue);
+-          }
+-        } else if (info.isConstructor() || info.isInterface()) {
++        if (info.isConstructor() || info.isInterface()) {
+           return createFunctionTypeFromNodes(
+               rValue, lValue.getQualifiedName(), info, lValue);
+         } else {
+@@ -1311,11 +1307,13 @@ final class TypedScopeCreator implements ScopeCreator {
+             }
+           }
+         }
++      } else if (rValue != null && rValue.isFunction() &&
++          shouldUseFunctionLiteralType(
++              JSType.toMaybeFunctionType(rValue.getJSType()), info, lValue)) {
++        return rValue.getJSType();
+       }
+-
+       return getDeclaredTypeInAnnotation(sourceName, lValue, info);
+     }
+-
+     private FunctionType getFunctionType(@Nullable Var v) {
+       JSType t = v == null ? null : v.getType();
+       ObjectType o = t == null ? null : t.dereference();

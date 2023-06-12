@@ -1,0 +1,21 @@
+    public Class getGenericType(Field field) {        
+        Type generic = field.getGenericType();
+        if (generic != null && generic instanceof ParameterizedType) {
+            Type actual = ((ParameterizedType) generic).getActualTypeArguments()[0];
+            if (actual instanceof Class) {
+                return (Class) actual;
+            }
+            else if (actual instanceof ParameterizedType) {
+                return (Class) ((ParameterizedType) actual).getRawType();
+            }
+            else if (actual instanceof WildcardType) {
+                Type[] upper = ((WildcardType) actual).getUpperBounds();
+                if (upper != null && upper.length > 0) {
+                    return (Class) upper[0];
+                }
+            }
+        }
+        
+        return Object.class;
+    }
+

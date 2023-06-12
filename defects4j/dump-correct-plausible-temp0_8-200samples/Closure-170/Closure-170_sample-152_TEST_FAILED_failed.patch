@@ -1,0 +1,39 @@
+diff --git a/src/com/google/javascript/jscomp/FlowSensitiveInlineVariables.java b/src/com/google/javascript/jscomp/FlowSensitiveInlineVariables.java
+index 73531dc5..4d30866e 100644
+--- a/src/com/google/javascript/jscomp/FlowSensitiveInlineVariables.java
++++ b/src/com/google/javascript/jscomp/FlowSensitiveInlineVariables.java
+@@ -471,8 +471,7 @@ class FlowSensitiveInlineVariables extends AbstractPostOrderCallback
+      * Computes the number of uses of the variable varName and store it in
+      * numUseWithinUseCfgNode.
+      */
+-    private void getNumUseInUseCfgNode(final Node cfgNode) {
+-
++      private void getNumUseInUseCfgNode(final Node cfgNode) {
+       numUsesWithinCfgNode = 0;
+       AbstractCfgNodeTraversalCallback gatherCb =
+           new AbstractCfgNodeTraversalCallback() {
+@@ -489,14 +487,20 @@ class FlowSensitiveInlineVariables extends AbstractPostOrderCallback
+                (parent.getFirstChild() == n))) {
+               // Don't count lhs of top-level assignment chain
+               numUsesWithinCfgNode++;
++            }
++          if (NodeUtil.isForIn(n)) {
++            // Don't count variable declarations in a for-in. Otherwise,
++            // if (foo.bar) { for (var p in foo); } p = 0; would block
++            // inlining of p because there would be a variable use in the
++            // cfgNode that contains the for loop, which is not really a use.
++            // TODO(user): This is a temporary patch; we should really have
++            // a way of comparing cfgNodes and not re-counting them.
++            return;
+           }
+         }
+-
+       };
+-
+       NodeTraversal.traverse(compiler, cfgNode, gatherCb);
+-    }
+-  }
++    }  }
+ 
+   /**
+    * Given an expression by its root and sub-expression n, return true if there

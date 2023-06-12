@@ -1,0 +1,39 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/ser/BeanPropertyWriter.java b/src/main/java/com/fasterxml/jackson/databind/ser/BeanPropertyWriter.java
+index 781cacf84..ae0b7cfb6 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/ser/BeanPropertyWriter.java
++++ b/src/main/java/com/fasterxml/jackson/databind/ser/BeanPropertyWriter.java
+@@ -583,14 +583,16 @@ public class BeanPropertyWriter
+         throws Exception
+     {
+         Object value = get(bean);
+-        if (value == null) { // nulls need specialized handling
++        // Null handling is bit different, check that first
++        if (value == null) {
+             if (_nullSerializer != null) {
+                 _nullSerializer.serialize(null, jgen, prov);
+-            } else { // can NOT suppress entries in tabular output
+-                jgen.writeNull();
++            } else {
++                prov.defaultSerializeNull(jgen);
+             }
++            return;
+         }
+-        // otherwise find serializer to use
++        // then find serializer to use
+         JsonSerializer<Object> ser = _serializer;
+         if (ser == null) {
+             Class<?> cls = value.getClass();
+@@ -603,11 +605,11 @@ public class BeanPropertyWriter
+         // and then see if we must suppress certain values (default, empty)
+         if (_suppressableValue != null) {
+             if (MARKER_FOR_EMPTY == _suppressableValue) {
+-                if (ser.isEmpty(value)) { // can NOT suppress entries in tabular output
++                if (ser.isEmpty(value)) {
+                     serializeAsPlaceholder(bean, jgen, prov);
+                     return;
+                 }
+-            } else if (_suppressableValue.equals(value)) { // can NOT suppress entries in tabular output
++            } else if (_suppressableValue.equals(value)) {
+                 serializeAsPlaceholder(bean, jgen, prov);
+                 return;
+             }

@@ -1,0 +1,40 @@
+diff --git a/src/com/google/javascript/jscomp/CodeGenerator.java b/src/com/google/javascript/jscomp/CodeGenerator.java
+index 5b684191..7bd28ce0 100644
+--- a/src/com/google/javascript/jscomp/CodeGenerator.java
++++ b/src/com/google/javascript/jscomp/CodeGenerator.java
+@@ -1059,7 +1057,7 @@ class CodeGenerator {
+             // No charsetEncoder provided - pass straight latin characters
+             // through, and escape the rest.  Doing the explicit character
+             // check is measurably faster than using the CharsetEncoder.
+-            if (c > 0x1f && c < 0x7f) {
++            if ((c > 0x1f && c < 0x7f) || (c == quote)) {
+               sb.append(c);
+             } else {
+               // Other characters can be misinterpreted by some js parsers,
+@@ -1073,7 +1071,25 @@ class CodeGenerator {
+     sb.append(quote);
+     return sb.toString();
+   }
+-
++  static void appendHexJavaScriptRepresentation(
++      StringBuilder sb, char c) {
++    // We could use Integer.toHexString here, but that would give us
++    // uppercase letters and we want lowercase.  Plus, it would give us
++    // leading 0s and we don't want those either.
++    // See if we can just get away with a 2-digit hex value.
++    if (c <= 0xff) {
++      sb.append("\\x");
++      sb.append(HEX_CHARS.charAt((c >> 4) & 0xf));
++      sb.append(HEX_CHARS.charAt(c & 0xf));
++    } else {
++      // 4-digit hex value.
++      sb.append("\\u");
++      sb.append(HEX_CHARS.charAt((c >> 12) & 0xf));
++      sb.append(HEX_CHARS.charAt((c >> 8) & 0xf));
++      sb.append(HEX_CHARS.charAt((c >> 4) & 0xf));
++      sb.append(HEX_CHARS.charAt(c & 0xf));
++    }
++  }
+   static String identifierEscape(String s) {
+     // First check if escaping is needed at all -- in most cases it isn't.
+     if (NodeUtil.isLatin(s)) {

@@ -1,0 +1,31 @@
+diff --git a/src/org/mockito/internal/stubbing/defaultanswers/ReturnsDeepStubs.java b/src/org/mockito/internal/stubbing/defaultanswers/ReturnsDeepStubs.java
+index 6fa773f53..2d5f59923 100644
+--- a/src/org/mockito/internal/stubbing/defaultanswers/ReturnsDeepStubs.java
++++ b/src/org/mockito/internal/stubbing/defaultanswers/ReturnsDeepStubs.java
+@@ -81,7 +68,10 @@ public class ReturnsDeepStubs implements Answer<Object>, Serializable {
+     private Object recordDeepStubMock(InvocationOnMock invocation, InvocationContainerImpl container) {
+         Class<?> clz = invocation.getMethod().getReturnType();
+         final Object mock = org.mockito.Mockito.mock(clz, this);
+-
++        Object realMock = getRealMock(invocation);
++        if(realMock!=null){
++        	mock = realMock;
++        }
+         container.addAnswer(new Answer<Object>() {
+             public Object answer(InvocationOnMock invocation) throws Throwable {
+                 return mock;
+@@ -95,4 +83,13 @@ public class ReturnsDeepStubs implements Answer<Object>, Serializable {
+         CreationSettings mockSettings = (CreationSettings) new MockUtil().getMockHandler(mock).getMockSettings();
+         return GenericMetadataSupport.inferFrom(mockSettings.getTypeToMock());
+     }
++    private Object getRealMock(InvocationOnMock invocation) {
++		Object[] args = invocation.getArguments();
++		for (Object arg : args) {
++			if(arg instanceof Class){
++				return org.mockito.Mockito.mock((Class)arg);
++			}
++		}
++		return null;
++	}
+ }
+\ No newline at end of file

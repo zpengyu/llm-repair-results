@@ -1,0 +1,48 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/jsontype/impl/TypeDeserializerBase.java b/src/main/java/com/fasterxml/jackson/databind/jsontype/impl/TypeDeserializerBase.java
+index 339362e1e..892e56188 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/jsontype/impl/TypeDeserializerBase.java
++++ b/src/main/java/com/fasterxml/jackson/databind/jsontype/impl/TypeDeserializerBase.java
+@@ -158,8 +158,31 @@ public abstract class TypeDeserializerBase
+                         // TODO: try to figure out something better
+                         return null;
+                     }
+-                    // ... would this actually work?
+-                    deser = ctxt.findContextualValueDeserializer(actual, _property);
++                    if (actual.isAbstract() || actual.isMapLikeType() || actual.isCollectionLikeType()) {
++                        // TODO: 19-Feb-2016, tatu: May be able to do better here...
++                        JavaType actualType;
++                        if (_baseType == null) {
++                            actualType = actual;
++                        } else {
++                            actualType = ctxt.getTypeFactory().constructSpecializedType(_baseType, actual.getRawClass());
++                        }
++                        deser = ctxt.findContextualValueDeserializer(actualType, _property);
++                        // This'll do, too, but seems not quite as elegant
++                        /*
++                        deser = ctxt.findContextualValueDeserializer(actual, _property);
++                        */
++                    } else {
++                        /* ... would this actually work?
++                        deser = ctxt.findContextualValueDeserializer(actual, _property);
++                        */
++                        // but this one is better, when we can do it
++                        if (_baseType == null) {
++                            deser = ctxt.findContextualValueDeserializer(actual, _property);
++                        } else {
++                            JavaType actualType = ctxt.getTypeFactory().constructSpecializedType(_baseType, actual.getRawClass());
++                            deser = ctxt.findContextualValueDeserializer(actualType, _property);
++                        }
++                    }
+                 }
+             } else {
+                 /* 16-Dec-2010, tatu: Since nominal type we get here has no (generic) type parameters,
+@@ -181,7 +204,9 @@ public abstract class TypeDeserializerBase
+                     //   generic type with custom type resolvers. If so, should try to retain them.
+                     //  Whether this is sufficient to avoid problems remains to be seen, but for
+                     //  now it should improve things.
++                    if (_baseType.getRawClass().isAssignableFrom(type.getRawClass())) {
+                         type = ctxt.getTypeFactory().constructSpecializedType(_baseType, type.getRawClass());
++                    }
+                 }
+                 deser = ctxt.findContextualValueDeserializer(type, _property);
+             }

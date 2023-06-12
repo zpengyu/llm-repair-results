@@ -1,0 +1,24 @@
+    public void captureArgumentsFrom(Invocation invocation) {
+        if (invocation.getMethod().isVarArgs()) {
+            Object[] rawArguments = invocation.getRawArguments();
+            int indexOfVararg = rawArguments.length - 1;
+            Object vararg = rawArguments[indexOfVararg];
+            if (vararg != null && vararg.getClass().isArray()) {
+                Object[] varargArray = (Object[]) vararg;
+                Matcher m;
+                for (int i = 0; i < varargArray.length; i++) {
+                    m = matchers.get(indexOfVararg + i);
+                    if (m instanceof CapturesArguments) {
+                        ((CapturesArguments) m).captureFrom(varargArray[i]);
+                    }
+                }
+            }
+        } else {
+            for (int position = 0; position < matchers.size(); position++) {
+                Matcher m = matchers.get(position);
+                if (m instanceof CapturesArguments) {
+                    ((CapturesArguments) m).captureFrom(invocation.getArgumentAt(position, Object.class));
+                }
+            }
+        }
+    }

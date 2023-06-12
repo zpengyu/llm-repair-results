@@ -1,0 +1,48 @@
+diff --git a/src/org/mockito/internal/MockHandler.java b/src/org/mockito/internal/MockHandler.java
+index 9452f1664..61a37fbee 100644
+--- a/src/org/mockito/internal/MockHandler.java
++++ b/src/org/mockito/internal/MockHandler.java
+@@ -56,7 +56,7 @@ public class MockHandler<T> implements MockitoInvocationHandler, MockHandlerInte
+     }
+ 
+     public Object handle(Invocation invocation) throws Throwable {
+-        if (invocationContainerImpl.hasAnswersForStubbing()) {
++    	if (invocationContainerImpl.hasAnswersForStubbing()) {
+             // stubbing voids with stubVoid() or doAnswer() style
+             InvocationMatcher invocationMatcher = matchersBinder.bindMatchers(mockingProgress
+                             .getArgumentMatcherStorage(), invocation);
+@@ -64,25 +64,23 @@ public class MockHandler<T> implements MockitoInvocationHandler, MockHandlerInte
+             return null;
+         }
+         VerificationMode verificationMode = mockingProgress.pullVerificationMode();
+-
+-        InvocationMatcher invocationMatcher = matchersBinder.bindMatchers(mockingProgress.getArgumentMatcherStorage(),
+-                        invocation);
+-
+-        mockingProgress.validateState();
+-
+-        //if verificationMode is not null then someone is doing verify()        
+         if (verificationMode != null) {
+-            //We need to check if verification was started on the correct mock 
+-            // - see VerifyingWithAnExtraCallToADifferentMockTest (bug 138)
+             if (verificationMode instanceof MockAwareVerificationMode && ((MockAwareVerificationMode) verificationMode).getMock() == invocation.getMock()) {
+-                VerificationDataImpl data = new VerificationDataImpl(invocationContainerImpl, invocationMatcher);            
++                VerificationDataImpl data = new VerificationDataImpl(invocationContainerImpl, new InvocationMatcher(invocation));
++                //We need to check if verification was started on the correct mock 
++                // - see VerifyingWithAnExtraCallToADifferentMockTest (bug 138)
++                // Here we're using a new InvocationMatcher that is not stubbed
++                // this assures that the stubbed invocations won't be considered
++                // without changing the signature of the VerificationData interface
+                 verificationMode.verify(data);
+                 return null;
+                 // this means there is an invocation on a different mock. Re-adding verification mode 
+                 // - see VerifyingWithAnExtraCallToADifferentMockTest (bug 138)
+             }
+         }
+-        
++        InvocationMatcher invocationMatcher = matchersBinder.bindMatchers(mockingProgress.getArgumentMatcherStorage(),
++                        invocation);
++        mockingProgress.validateState();
+         invocationContainerImpl.setInvocationForPotentialStubbing(invocationMatcher);
+         OngoingStubbingImpl<T> ongoingStubbing = new OngoingStubbingImpl<T>(invocationContainerImpl);
+         mockingProgress.reportOngoingStubbing(ongoingStubbing);

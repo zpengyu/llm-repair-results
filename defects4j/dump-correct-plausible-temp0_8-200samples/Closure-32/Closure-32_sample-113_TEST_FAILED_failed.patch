@@ -1,0 +1,30 @@
+diff --git a/src/com/google/javascript/jscomp/parsing/JsDocInfoParser.java b/src/com/google/javascript/jscomp/parsing/JsDocInfoParser.java
+index ad292c02..23893e7b 100644
+--- a/src/com/google/javascript/jscomp/parsing/JsDocInfoParser.java
++++ b/src/com/google/javascript/jscomp/parsing/JsDocInfoParser.java
+@@ -1355,12 +1348,13 @@ public final class JsDocInfoParser {
+     // Track the start of the line to count whitespace that
+     // the tokenizer skipped. Because this case is rare, it's easier
+     // to do this here than in the tokenizer.
+-
++    int lineStartCharno = stream.getCharno();
+     do {
+       switch (token) {
+         case STAR:
+           if (ignoreStar) {
+             // Mark the position after the star as the new start of the line.
++            lineStartCharno = stream.getCharno() + 1;
+           } else {
+             // The star is part of the comment.
+             if (builder.length() > 0) {
+@@ -1385,9 +1374,8 @@ public final class JsDocInfoParser {
+         default:
+           ignoreStar = false;
+           state = State.SEARCHING_ANNOTATION;
+-
+               // All tokens must be separated by a space.
+-
++          int lineEndCharno = stream.getCharno();
+           if (token == JsDocToken.EOC ||
+               token == JsDocToken.EOF ||
+               // When we're capturing a license block, annotations

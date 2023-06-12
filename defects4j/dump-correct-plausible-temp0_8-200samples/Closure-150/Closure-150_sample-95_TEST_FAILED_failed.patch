@@ -1,0 +1,43 @@
+diff --git a/src/com/google/javascript/jscomp/TypedScopeCreator.java b/src/com/google/javascript/jscomp/TypedScopeCreator.java
+index 051f5c8e..be82288b 100644
+--- a/src/com/google/javascript/jscomp/TypedScopeCreator.java
++++ b/src/com/google/javascript/jscomp/TypedScopeCreator.java
+@@ -1447,24 +1446,23 @@ final class TypedScopeCreator implements ScopeCreator {
+         handleFunctionInputs(parent);
+         return;
+       }
+-
+       attachLiteralTypes(n);
+-      switch (n.getType()) {
+-        case Token.FUNCTION:
+-          if (parent.getType() == Token.NAME) {
+-            return;
+-          }
+-          defineDeclaredFunction(n, parent);
+-          break;
+-        case Token.CATCH:
+-          defineCatch(n, parent);
+-          break;
+-        case Token.VAR:
+-          defineVar(n, parent);
+-          break;
++      if (n.getType() == Token.VAR) {
++        defineVar(n, parent);
++      } else {
++        switch (n.getType()) {
++          case Token.FUNCTION:
++            if (parent.getType() == Token.NAME) {
++              return;
++            }
++            defineDeclaredFunction(n, parent);
++            break;
++          case Token.CATCH:
++            defineCatch(n, parent);
++            break;
++        }
+       }
+     }
+-
+     /** Handle bleeding functions and function parameters. */
+     private void handleFunctionInputs(Node fnNode) {
+       // Handle bleeding functions.

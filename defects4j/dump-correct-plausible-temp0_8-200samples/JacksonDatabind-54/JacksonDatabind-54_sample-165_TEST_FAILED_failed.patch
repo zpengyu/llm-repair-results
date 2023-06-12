@@ -1,0 +1,24 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/ser/PropertyBuilder.java b/src/main/java/com/fasterxml/jackson/databind/ser/PropertyBuilder.java
+index 9a9d91ebf..aa05d2a33 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/ser/PropertyBuilder.java
++++ b/src/main/java/com/fasterxml/jackson/databind/ser/PropertyBuilder.java
+@@ -92,11 +91,17 @@ public class PropertyBuilder
+             }
+             serializationType = serializationType.withContentTypeHandler(contentTypeSer);
+             ct = serializationType.getContentType();
++            if (ct.getRawClass() == Object.class) {
++                /* 14-Mar-2011, tatu: [JACKSON-513] We actually need to know actual
++                 *    type here; can't just assume it's Object.class.
++                 */
++                ct = _config.getTypeFactory().constructType(am.getGenericType(), _beanDesc.bindingsForBeanType());
++                serializationType = serializationType.withContentType(ct);
++            }
+         }
+-        
++        // As per [JACKSON-452], need to allow suppressing of null values
+         Object valueToSuppress = null;
+         boolean suppressNulls = false;
+-
+         JsonInclude.Value inclV = _defaultInclusion.withOverrides(propDef.findInclusion());
+         JsonInclude.Include inclusion = inclV.getValueInclusion();
+         if (inclusion == JsonInclude.Include.USE_DEFAULTS) { // should not occur but...

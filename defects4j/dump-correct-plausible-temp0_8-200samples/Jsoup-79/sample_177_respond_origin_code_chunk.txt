@@ -1,0 +1,91 @@
+abstract class LeafNode extends Node {
+
+    private Attributes attributes;
+    Object value; // either a string value, or an attribute map (in the rare case multiple attributes are set)
+
+    private Attributes attributes() {
+        if (attributes == null) {
+            attributes = new Attributes();
+            if (!(value instanceof Attributes)) {
+                attributes.put(nodeName(), coreValue());
+            }
+        }
+        return attributes;
+    }
+
+    private void ensureAttributes() {
+        if (attributes == null && value instanceof Attributes) {
+            attributes = (Attributes) value;
+            value = null;
+        }
+    }
+
+    String coreValue() {
+        return attr(nodeName());
+    }
+
+    void coreValue(String value) {
+        attr(nodeName(), value);
+    }
+
+    @Override
+    public String attr(String key) {
+        Validate.notNull(key);
+        if (value == null) {
+            return attributes().hasKey(key) ? attributes.get(key) : EmptyString;
+        } else if (key.equals(nodeName())) {
+            return (String) value;
+        } else {
+            return EmptyString;
+        }
+    }
+
+    @Override
+    public Node attr(String key, String value) {
+        if (value == null) {
+            attributes().remove(key);
+        } else {
+            attributes().put(key, value);
+        }
+        return this;
+    }
+
+    @Override
+    public boolean hasAttr(String key) {
+        ensureAttributes();
+        return attributes().hasKey(key);
+    }
+
+    @Override
+    public Node removeAttr(String key) {
+        ensureAttributes();
+        attributes.remove(key);
+        return this;
+    }
+
+    @Override
+    public String absUrl(String key) {
+        ensureAttributes();
+        return super.absUrl(key);
+    }
+
+    @Override
+    public String baseUri() {
+        return hasParent() ? parent().baseUri() : "";
+    }
+
+    @Override
+    protected void doSetBaseUri(String baseUri) {
+        // noop
+    }
+
+    @Override
+    public int childNodeSize() {
+        return 0;
+    }
+
+    @Override
+    protected List<Node> ensureChildNodes() {
+        throw new UnsupportedOperationException("Leaf Nodes do not have child nodes.");
+    }
+}

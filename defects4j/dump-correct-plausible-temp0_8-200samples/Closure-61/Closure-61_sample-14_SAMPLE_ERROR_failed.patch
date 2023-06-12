@@ -1,0 +1,22 @@
+diff --git a/src/com/google/javascript/jscomp/NodeUtil.java b/src/com/google/javascript/jscomp/NodeUtil.java
+index 53389622..75582a49 100644
+--- a/src/com/google/javascript/jscomp/NodeUtil.java
++++ b/src/com/google/javascript/jscomp/NodeUtil.java
+@@ -971,10 +965,14 @@ public final class NodeUtil {
+         }
+       }
+     }
+-
+-    return true;
++    if (!isFunctionCall(nameNode)) {
++      return true;
++    }
++    // Recurse to the target function, so that we properly handle cases
++    // like "f()()" and "f(x)()".
++    Node targetFunction = NodeUtil.getFunctionNode(nameNode);
++    return targetFunction.isNoSideEffectsCall();
+   }
+-
+   /**
+    * @return Whether the call has a local result.
+    */

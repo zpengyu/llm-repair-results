@@ -1,0 +1,23 @@
+diff --git a/src/org/mockito/internal/util/reflection/GenericMetadataSupport.java b/src/org/mockito/internal/util/reflection/GenericMetadataSupport.java
+index 152e9424e..7c6e47dc9 100644
+--- a/src/org/mockito/internal/util/reflection/GenericMetadataSupport.java
++++ b/src/org/mockito/internal/util/reflection/GenericMetadataSupport.java
+@@ -77,6 +76,18 @@ public abstract class GenericMetadataSupport {
+             if (actualTypeArgument instanceof WildcardType) {
+                 contextualActualTypeParameters.put(typeParameter, boundsOf((WildcardType) actualTypeArgument));
+             } else {
++                if(typeParameter.getBounds() != null && typeParameter.getBounds().length > 0){
++                	if(actualTypeArgument instanceof TypeVariable){
++                		Type[] bounds = typeParameter.getBounds();
++                		for (int j = 0; j < bounds.length; j++) {
++                			TypeVariable typeVariable = (TypeVariable) bounds[j];
++                			if(!typeVariable.getName().equals(actualTypeArgument)){
++                				typeParameter = typeVariable;
++                				break;
++                			}
++						}
++                	}
++                }
+                 contextualActualTypeParameters.put(typeParameter, actualTypeArgument);
+             }
+             // logger.log("For '" + parameterizedType + "' found type variable : { '" + typeParameter + "(" + System.identityHashCode(typeParameter) + ")" + "' : '" + actualTypeArgument + "(" + System.identityHashCode(typeParameter) + ")" + "' }");

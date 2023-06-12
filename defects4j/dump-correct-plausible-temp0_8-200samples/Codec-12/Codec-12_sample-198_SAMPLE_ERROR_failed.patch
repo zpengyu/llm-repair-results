@@ -1,0 +1,76 @@
+diff --git a/src/main/java/org/apache/commons/codec/binary/BaseNCodecInputStream.java b/src/main/java/org/apache/commons/codec/binary/BaseNCodecInputStream.java
+index 78f4d67e..434af907 100644
+--- a/src/main/java/org/apache/commons/codec/binary/BaseNCodecInputStream.java
++++ b/src/main/java/org/apache/commons/codec/binary/BaseNCodecInputStream.java
+@@ -113,6 +106,9 @@ public class BaseNCodecInputStream extends FilterInputStream {
+                 if (!baseNCodec.hasData()) {
+                     byte[] buf = new byte[doEncode ? 4096 : 8192];
+                     int c = in.read(buf);
++                    if (c == -1) {
++                        break;
++                    }
+                     if (doEncode) {
+                         baseNCodec.encode(buf, 0, c);
+                     } else {
+@@ -139,20 +134,50 @@ public class BaseNCodecInputStream extends FilterInputStream {
+      *
+      * @throws IllegalArgumentException if the provided skip length is negative
+      */
+-
+-        // skip in chunks of 512 bytes
+-
+-
++    @Override
++    public synchronized long skip(long n) throws IOException {
++        if (n < 0) {
++            throw new IllegalArgumentException();
++        }
++        final byte[] skipBuffer = new byte[512];
++        long remaining = n;
++        while (remaining > 0) {
++            final long skipped = read(skipBuffer, 0, (int) Math.min(skipBuffer.length, remaining));
++            if (skipped == -1) {
++                break;
++            }
++            remaining -= skipped;
++        }
++        return n - remaining;
++    }
+     /**
+      * {@inheritDoc}
+      *
+      * @return <code>0</code> if the {@link InputStream} has reached <code>EOF</code>,
+      * <code>1</code> otherwise
+      */
+-        // Note: the logic is similar to the InflaterInputStream:
+-        //       as long as we have not reached EOF, indicate that there is more
+-        //       data available. As we do not know for sure how much data is left,
+-        //       just return 1 as a safe guess.
+-
+-        // use the EOF flag of the underlying codec instance
++    @Override
++    public synchronized int available() throws IOException {
++        return baseNCodec.hasData() ? 1 : 0; // use the EOF flag of the underlying codec instance
++    }
++    /**
++     * {@inheritDoc}
++     *
++     * @throws IOException if an I/O error occurs
++     */
++    @Override
++    public void close() throws IOException {
++        if (in != null) {
++            try {
++                if (doEncode) {
++                    baseNCodec.encode((byte[]) null, 0, -1);
++                } else {
++                    baseNCodec.decode((byte[]) null, 0, -1);
++                }
++            } finally {
++                in.close();
++                in = null;
++            }
++        }
++    }
+ }
+\ No newline at end of file

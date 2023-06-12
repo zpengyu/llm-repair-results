@@ -1,0 +1,34 @@
+    public static Locale toLocale(String str) {
+        if (str == null) {
+            return null;
+        }
+        if (str.isEmpty()) {
+            throw new IllegalArgumentException("Invalid locale format: " + str);
+        }
+        char ch0 = str.charAt(0);
+        if (ch0 == '_') {
+            if (str.length() < 2 || str.charAt(1) != '_') {
+                throw new IllegalArgumentException("Invalid locale format: " + str);
+            }
+        } else if (ch0 < 'a' || ch0 > 'z') {
+            throw new IllegalArgumentException("Invalid locale format: " + str);
+        }
+        if (str.equals("ja_JP_JP")) {
+            str = "ja_JP";
+        }
+        String[] parts = str.split("_", -1);
+        String language = parts.length > 0 ? parts[0] : "";
+        String country = parts.length > 1 ? parts[1] : "";
+        String variant = "";
+        if (parts.length > 2) {
+            // There is definitely a variant, and it is everything after the country
+            // code sans the separator between the country code and the variant.
+            int endIndexOfCountryCode = str.lastIndexOf(country) + country.length();
+            // Strip off any leading '_' and whitespace, what's left is the variant.
+            variant = str.substring(endIndexOfCountryCode).replaceAll("_", "");
+            if (variant.isEmpty()) {
+                variant = null;
+            }
+        }
+        return language.isEmpty() ? null : new Locale(language, country, variant);
+    }

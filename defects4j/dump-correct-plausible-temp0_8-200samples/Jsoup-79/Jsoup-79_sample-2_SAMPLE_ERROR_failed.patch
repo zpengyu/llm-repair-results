@@ -1,0 +1,28 @@
+diff --git a/src/main/java/org/jsoup/nodes/LeafNode.java b/src/main/java/org/jsoup/nodes/LeafNode.java
+index 0e068b5..c74c92a 100644
+--- a/src/main/java/org/jsoup/nodes/LeafNode.java
++++ b/src/main/java/org/jsoup/nodes/LeafNode.java
+@@ -93,4 +78,22 @@ abstract class LeafNode extends Node {
+     protected List<Node> ensureChildNodes() {
+         throw new UnsupportedOperationException("Leaf Nodes do not have child nodes.");
+     }
++    @Override
++    public String attr(String attributeKey) {
++        Validate.notNull(attributeKey);
++        if (!hasAttributes() && attributeKey.equals(nodeName())) {
++            return value == null ? EmptyString : (String) value;
++        }
++        return super.attr(attributeKey);
++    }
++    @Override
++    public Node attr(String attributeKey, String attributeValue) {
++        if (!hasAttributes() && attributeKey.equals(nodeName())) {
++            value = attributeValue;
++        } else {
++            ensureAttributes();
++            super.attr(attributeKey, attributeValue);
++        }
++        return this;
++    }
+ }
+\ No newline at end of file

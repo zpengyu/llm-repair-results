@@ -1,0 +1,28 @@
+diff --git a/src/main/java/com/fasterxml/jackson/core/sym/ByteQuadsCanonicalizer.java b/src/main/java/com/fasterxml/jackson/core/sym/ByteQuadsCanonicalizer.java
+index 20d72c04..208d58bf 100644
+--- a/src/main/java/com/fasterxml/jackson/core/sym/ByteQuadsCanonicalizer.java
++++ b/src/main/java/com/fasterxml/jackson/core/sym/ByteQuadsCanonicalizer.java
+@@ -884,7 +884,22 @@ public final class ByteQuadsCanonicalizer
+             rehash();
+         }
+     }
+-
++    private void rehash()
++    {
++        int ptr = 0;
++        int len = _hashSize;
++        int[] hashes = _hashArea;
++        for (int i = 0; i < len; ++i) {
++            int hash = hashes[i];
++            if (hash != 0) {
++                hashes[i] = 0;
++                _hashArea[ptr++] = hash;
++            }
++        }
++        _needRehash = false;
++        _spilloverEnd = _spilloverStart() + _hashSize;
++        _longestCollisionList = 0;
++    }
+     /**
+      * Method called to find the location within hash table to add a new symbol in.
+      */

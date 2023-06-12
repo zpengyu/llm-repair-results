@@ -1,0 +1,31 @@
+diff --git a/src/org/mockito/internal/stubbing/answers/AnswersValidator.java b/src/org/mockito/internal/stubbing/answers/AnswersValidator.java
+index 5d8057846..0175e864a 100644
+--- a/src/org/mockito/internal/stubbing/answers/AnswersValidator.java
++++ b/src/org/mockito/internal/stubbing/answers/AnswersValidator.java
+@@ -24,10 +20,10 @@ public class AnswersValidator {
+         if (answer instanceof DoesNothing) {
+             validateDoNothing((DoesNothing) answer, invocation);
+         }
+-        
++        if (answer instanceof ReturnsArgumentAt) {
++            validateReturnValueAt((ReturnsArgumentAt) answer, invocation);
++        }
+     }
+-
+-
+     private void validateDoNothing(DoesNothing answer, Invocation invocation) {
+         if (!invocation.isVoid()) {
+             reporter.onlyVoidMethodsCanBeSetToDoNothing();
+@@ -47,7 +40,11 @@ public class AnswersValidator {
+             reporter.wrongTypeOfReturnValue(invocation.printMethodReturnType(), answer.printReturnType(), invocation.getMethodName());
+         }
+     }
+-
++    private void validateReturnValueAt(ReturnsArgumentAt answer, Invocation invocation) {
++    	if (invocation.getMethod().getParameterTypes().length == 0) {
++    		reporter.cannotReturnArgumentForMethodWithoutParameters(invocation.getMethod().getName());
++    	}
++    }
+     private void validateException(ThrowsException answer, Invocation invocation) {
+         Throwable throwable = answer.getThrowable();
+         if (throwable == null) {

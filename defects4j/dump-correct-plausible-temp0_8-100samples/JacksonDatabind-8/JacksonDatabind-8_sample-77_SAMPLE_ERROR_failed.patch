@@ -1,0 +1,30 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/deser/impl/CreatorCollector.java b/src/main/java/com/fasterxml/jackson/databind/deser/impl/CreatorCollector.java
+index fd590d628..5f3a614ca 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/deser/impl/CreatorCollector.java
++++ b/src/main/java/com/fasterxml/jackson/databind/deser/impl/CreatorCollector.java
+@@ -293,11 +291,21 @@ public class CreatorCollector
+             // one more thing: ok to override in sub-class
+             if (oldOne.getClass() == newOne.getClass()) {
+                 // [databind#667]: avoid one particular class of bogus problems
+-
+-                    throw new IllegalArgumentException("Conflicting "+TYPE_DESCS[typeIndex]
+-                            +" creators: already had explicitly marked "+oldOne+", encountered "+newOne);
++                if (typeIndex == CREATOR_CONSTRUCTOR && oldOne.getClass() == com.fasterxml.jackson.databind.util.ClassUtil.Ctor.class) {
++                    com.fasterxml.jackson.databind.util.ClassUtil.Ctor<?> ctor = (com.fasterxml.jackson.databind.util.ClassUtil.Ctor<?>) oldOne;
++                    // 13-Jan-2017, tatu: Also ok if they are ctor from same class, differing
++                    //   only by parameter type (since we can not reliably tell difference
++                    //   by annotations etc)
++                    if (!ctor._ctor.getDeclaringClass().isAssignableFrom(newOne.getDeclaringClass())) {
++                        throw new IllegalArgumentException("Conflicting "+TYPE_DESCS[typeIndex]
++                                +" creators: already had "+ctor._ctor+", encountered "+newOne);
++                    }
++                    return;
++                }
++                throw new IllegalArgumentException("Conflicting "+TYPE_DESCS[typeIndex]
++                        +" creators: already had "+oldOne+", encountered "+newOne);
+                 // otherwise, which one to choose?
+-                    // new type more generic, use old
++                // new type more generic, use old
+                 // new type more specific, use it
+             }
+         }

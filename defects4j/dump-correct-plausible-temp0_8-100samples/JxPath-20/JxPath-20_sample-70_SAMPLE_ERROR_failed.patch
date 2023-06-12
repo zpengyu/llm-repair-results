@@ -1,0 +1,38 @@
+diff --git a/src/java/org/apache/commons/jxpath/ri/compiler/CoreOperationRelationalExpression.java b/src/java/org/apache/commons/jxpath/ri/compiler/CoreOperationRelationalExpression.java
+index cd4ceac..05e3e32 100644
+--- a/src/java/org/apache/commons/jxpath/ri/compiler/CoreOperationRelationalExpression.java
++++ b/src/java/org/apache/commons/jxpath/ri/compiler/CoreOperationRelationalExpression.java
+@@ -154,5 +143,31 @@ public abstract class CoreOperationRelationalExpression extends CoreOperation {
+         }
+         return false;
+     }
+-
++    /**
++     * Learn whether there is an intersection between two Iterators.
++     * @param lit left Iterator
++     * @param rit right Iterator
++     * @return whether a match was found
++     */
++    private boolean findMatch(Iterator lit, Iterator rit) {
++        HashSet left = new HashSet();
++        while (lit.hasNext()) {
++            Object l = lit.next();
++            if (!(l instanceof NodePointer)) {
++                return false;
++            }
++            left.add(((NodePointer) l).asPath().toString());
++        }
++        while (rit.hasNext()) {
++            Object r = rit.next();
++            if (!(r instanceof NodePointer)) {
++                return false;
++            }
++            String rp = ((NodePointer) r).asPath().toString();
++            if (containsMatch(left.iterator(), rp)) {
++                return true;
++            }
++        }
++        return false;
++    }
+ }
+\ No newline at end of file

@@ -1,0 +1,39 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/deser/std/StringArrayDeserializer.java b/src/main/java/com/fasterxml/jackson/databind/deser/std/StringArrayDeserializer.java
+index f8cb03e1c..d00dfa2d8 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/deser/std/StringArrayDeserializer.java
++++ b/src/main/java/com/fasterxml/jackson/databind/deser/std/StringArrayDeserializer.java
+@@ -50,13 +45,10 @@ public final class StringArrayDeserializer
+         if (_elementDeserializer != null) {
+             return _deserializeCustom(jp, ctxt);
+         }
+-
+-        final ObjectBuffer buffer = ctxt.leaseObjectBuffer();
+-        Object[] chunk = buffer.resetAndStart();
+-        
++        ArrayBuilders.StringBuilder builder = ctxt.getArrayBuilders().getStringBuilder();
++        String[] chunk = builder.resetAndStart();
+         int ix = 0;
+         JsonToken t;
+-        
+         while ((t = jp.nextToken()) != JsonToken.END_ARRAY) {
+             // Ok: no need to convert Strings, but must recognize nulls
+             String value;
+@@ -68,16 +60,14 @@ public final class StringArrayDeserializer
+                 value = _parseString(jp, ctxt);
+             }
+             if (ix >= chunk.length) {
+-                chunk = buffer.appendCompletedChunk(chunk);
++                chunk = builder.appendCompletedChunk(chunk, ix);
+                 ix = 0;
+             }
+             chunk[ix++] = value;
+         }
+-        String[] result = buffer.completeAndClearBuffer(chunk, ix, String.class);
+-        ctxt.returnObjectBuffer(buffer);
++        String[] result = builder.completeAndClearBuffer(chunk, ix);
+         return result;
+     }
+-
+     /**
+      * Offlined version used when we do not use the default deserialization method.
+      */

@@ -1,0 +1,98 @@
+###Provide a fix for the buggy function
+###Buggy Function
+class FibonacciExample {
+    public static void main(String args[]) {
+        int n1 = 0, n2 = 1, n3, i, count = 10;
+
+        System.out.print(n1 + " " + n2);
+
+        for (i = 2; i < count; ++i) {
+            n3 = n1 - n2;
+            System.out.print(" " + n3);
+            n1 = n2;
+            n2 = n3;
+        }
+    }
+}
+
+###Fixed Function
+class FibonacciExample {
+    public static void main(String args[]) {
+        int n1 = 0, n2 = 1, n3, i, count = 10;
+
+        System.out.print(n1 + " " + n2);
+
+        for (i = 2; i < count; ++i) {
+            n3 = n1 + n2;
+            System.out.print(" " + n3);
+            n1 = n2;
+            n2 = n3;
+        }
+    }
+}
+
+###Provide a fix for the buggy function
+###Buggy Function
+public Object answer(InvocationOnMock invocation) throws Throwable {
+    return invocation.callRealMethod();
+}
+###Fixed Function
+public Object answer(InvocationOnMock invocation) throws Throwable {
+	if (Modifier.isAbstract(invocation.getMethod().getModifiers())) {
+		return new GloballyConfiguredAnswer().answer(invocation);
+	}
+    return invocation.callRealMethod();
+}
+###Provide a fix for the buggy function
+###Buggy Function
+    public Object handle(Invocation invocation) throws Throwable {
+        if (invocationContainerImpl.hasAnswersForStubbing()) {
+            // stubbing voids with stubVoid() or doAnswer() style
+            InvocationMatcher invocationMatcher = matchersBinder.bindMatchers(mockingProgress
+                            .getArgumentMatcherStorage(), invocation);
+            invocationContainerImpl.setMethodForStubbing(invocationMatcher);
+            return null;
+        }
+        VerificationMode verificationMode = mockingProgress.pullVerificationMode();
+
+        InvocationMatcher invocationMatcher = matchersBinder.bindMatchers(mockingProgress.getArgumentMatcherStorage(),
+                        invocation);
+
+        mockingProgress.validateState();
+
+        //if verificationMode is not null then someone is doing verify()        
+        if (verificationMode != null) {
+            //We need to check if verification was started on the correct mock 
+            // - see VerifyingWithAnExtraCallToADifferentMockTest (bug 138)
+            if (verificationMode instanceof MockAwareVerificationMode && ((MockAwareVerificationMode) verificationMode).getMock() == invocation.getMock()) {
+                VerificationDataImpl data = new VerificationDataImpl(invocationContainerImpl, invocationMatcher);            
+                verificationMode.verify(data);
+                return null;
+                // this means there is an invocation on a different mock. Re-adding verification mode 
+                // - see VerifyingWithAnExtraCallToADifferentMockTest (bug 138)
+            }
+        }
+        
+        invocationContainerImpl.setInvocationForPotentialStubbing(invocationMatcher);
+        OngoingStubbingImpl<T> ongoingStubbing = new OngoingStubbingImpl<T>(invocationContainerImpl);
+        mockingProgress.reportOngoingStubbing(ongoingStubbing);
+
+        StubbedInvocationMatcher stubbedInvocation = invocationContainerImpl.findAnswerFor(invocation);
+
+        if (stubbedInvocation != null) {
+            stubbedInvocation.captureArgumentsFrom(invocation);
+            return stubbedInvocation.answer(invocation);
+        } else {
+            Object ret = mockSettings.getDefaultAnswer().answer(invocation);
+
+            // redo setting invocation for potential stubbing in case of partial
+            // mocks / spies.
+            // Without it, the real method inside 'when' might have delegated
+            // to other self method and overwrite the intended stubbed method
+            // with a different one. The reset is required to avoid runtime exception that validates return type with stubbed method signature.
+            invocationContainerImpl.resetInvocationForPotentialStubbing(invocationMatcher);
+            return ret;
+        }
+    }
+
+###Fixed Function

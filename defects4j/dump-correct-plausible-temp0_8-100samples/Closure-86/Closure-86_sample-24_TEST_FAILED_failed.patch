@@ -1,0 +1,32 @@
+diff --git a/src/com/google/javascript/jscomp/NodeUtil.java b/src/com/google/javascript/jscomp/NodeUtil.java
+index 933d4ffa..ed689da8 100644
+--- a/src/com/google/javascript/jscomp/NodeUtil.java
++++ b/src/com/google/javascript/jscomp/NodeUtil.java
+@@ -2435,10 +2435,10 @@ public final class NodeUtil {
+       case Token.AND:
+       case Token.OR:
+         return evaluatesToLocalValue(value.getFirstChild(), locals)
+-           && evaluatesToLocalValue(value.getLastChild(), locals);
++            && evaluatesToLocalValue(value.getLastChild(), locals);
+       case Token.HOOK:
+         return evaluatesToLocalValue(value.getFirstChild().getNext(), locals)
+-           && evaluatesToLocalValue(value.getLastChild(), locals);
++            && evaluatesToLocalValue(value.getLastChild(), locals);
+       case Token.INC:
+       case Token.DEC:
+         if (value.getBooleanProp(Node.INCRDECR_PROP)) {
+@@ -2455,11 +2455,13 @@ public final class NodeUtil {
+         // There is no information about the locality of object properties.
+         return locals.apply(value);
+       case Token.CALL:
++        // TODO(user): We should not rely on the way we name functions to
++        // determine if it is a local function.
+         return callHasLocalResult(value)
+             || isToStringMethodCall(value)
+             || locals.apply(value);
+       case Token.NEW:
+-        // TODO(nicksantos): This needs to be changed so that it
++        // TODO(user): This needs to be changed so that it
+         // returns true iff we're sure the value was never aliased from inside
+         // the constructor (similar to callHasLocalResult)
+         return true;

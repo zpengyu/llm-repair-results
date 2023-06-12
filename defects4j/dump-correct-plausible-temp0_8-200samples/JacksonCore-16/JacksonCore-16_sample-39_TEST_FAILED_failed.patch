@@ -1,0 +1,93 @@
+diff --git a/src/main/java/com/fasterxml/jackson/core/util/JsonParserSequence.java b/src/main/java/com/fasterxml/jackson/core/util/JsonParserSequence.java
+index bed27f2b..4ec5e2eb 100644
+--- a/src/main/java/com/fasterxml/jackson/core/util/JsonParserSequence.java
++++ b/src/main/java/com/fasterxml/jackson/core/util/JsonParserSequence.java
+@@ -32,7 +30,7 @@ public class JsonParserSequence extends JsonParserDelegate
+      *
+      * @since 2.8
+      */
+-
++    protected boolean _hasToken;
+     /*
+      *******************************************************
+      * Construction
+@@ -44,8 +41,8 @@ public class JsonParserSequence extends JsonParserDelegate
+         super(parsers[0]);
+         _parsers = parsers;
+         _nextParser = 1;
++        _hasToken = false;
+     }
+-
+     /**
+      * Method that will construct a parser (possibly a sequence) that
+      * contains all given sub-parsers.
+@@ -103,6 +96,10 @@ public class JsonParserSequence extends JsonParserDelegate
+     @Override
+     public JsonToken nextToken() throws IOException, JsonParseException
+     {
++        if (_hasToken) {
++            _hasToken = false;
++            return delegate.currentToken();
++        }
+         JsonToken t = delegate.nextToken();
+         if (t != null) return t;
+         while (switchToNext()) {
+@@ -111,7 +108,48 @@ public class JsonParserSequence extends JsonParserDelegate
+         }
+         return null;
+     }
+-
++    @Override
++    public JsonToken currentToken() {
++        if (_hasToken) {
++            return delegate.currentToken();
++        }
++        return super.currentToken();
++    }
++    @Override
++    public int currentTokenId() {
++        if (_hasToken) {
++            return delegate.currentTokenId();
++        }
++        return super.currentTokenId();
++    }
++    @Override
++    public boolean hasCurrentToken() {
++        if (_hasToken) {
++            return true;
++        }
++        return super.hasCurrentToken();
++    }
++    @Override
++    public boolean hasTokenId(int id) {
++        if (_hasToken) {
++            return delegate.hasTokenId(id);
++        }
++        return super.hasTokenId(id);
++    }
++    @Override
++    public boolean hasToken(JsonToken t) {
++        if (_hasToken) {
++            return delegate.hasToken(t);
++        }
++        return super.hasToken(t);
++    }
++    @Override
++    public boolean isExpectedStartArrayToken() {
++        if (_hasToken) {
++            return delegate.isExpectedStartArrayToken();
++        }
++        return super.isExpectedStartArrayToken();
++    }
+     /*
+     /*******************************************************
+     /* Additional extended API
+@@ -147,6 +182,7 @@ public class JsonParserSequence extends JsonParserDelegate
+             return false;
+         }
+         delegate = _parsers[_nextParser++];
++        _hasToken = true;
+         return true;
+     }
+ }
+\ No newline at end of file

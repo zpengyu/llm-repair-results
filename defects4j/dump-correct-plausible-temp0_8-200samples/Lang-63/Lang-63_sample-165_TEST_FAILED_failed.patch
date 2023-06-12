@@ -1,0 +1,37 @@
+diff --git a/src/java/org/apache/commons/lang/time/DurationFormatUtils.java b/src/java/org/apache/commons/lang/time/DurationFormatUtils.java
+index 8ced282e..518919a0 100644
+--- a/src/java/org/apache/commons/lang/time/DurationFormatUtils.java
++++ b/src/java/org/apache/commons/lang/time/DurationFormatUtils.java
+@@ -302,19 +297,23 @@ public class DurationFormatUtils {
+             hours += 24;
+             days -= 1;
+         }
+-        while (days < 0) {
+-            days += 31;
+-//days += 31; // TODO: Need tests to show this is bad and the new code is good.
+-// HEN: It's a tricky subject. Jan 15th to March 10th. If I count days-first it is
+-// 1 month and 26 days, but if I count month-first then it is 1 month and 23 days.
+-// Also it's contextual - if asked for no M in the format then I should probably
+-// be doing no calculating here.
+-            months -= 1;
+-        }
++//        while (days < 0) {
++//            days += 31;
++//            months -= 1;
++//        }
+         while (months < 0) {
+             months += 12;
+             years -= 1;
+         }
++        while (days < 0) {
++            int previousMonth = ((end.get(Calendar.MONTH) == Calendar.JANUARY) ? Calendar.DECEMBER : end.get(Calendar.MONTH) - 1);
++            int year = end.get(Calendar.YEAR);
++            if(previousMonth == Calendar.DECEMBER) {
++                year--;
++            }
++            days += end.getActualMaximum(Calendar.DAY_OF_MONTH);
++            months -= 1;
++        }
+         milliseconds -= reduceAndCorrect(start, end, Calendar.MILLISECOND, milliseconds);
+         seconds -= reduceAndCorrect(start, end, Calendar.SECOND, seconds);
+         minutes -= reduceAndCorrect(start, end, Calendar.MINUTE, minutes);

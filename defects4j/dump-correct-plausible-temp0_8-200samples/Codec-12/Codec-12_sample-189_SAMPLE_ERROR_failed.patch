@@ -1,0 +1,49 @@
+diff --git a/src/main/java/org/apache/commons/codec/binary/BaseNCodecInputStream.java b/src/main/java/org/apache/commons/codec/binary/BaseNCodecInputStream.java
+index 78f4d67e..151d0453 100644
+--- a/src/main/java/org/apache/commons/codec/binary/BaseNCodecInputStream.java
++++ b/src/main/java/org/apache/commons/codec/binary/BaseNCodecInputStream.java
+@@ -139,20 +131,34 @@ public class BaseNCodecInputStream extends FilterInputStream {
+      *
+      * @throws IllegalArgumentException if the provided skip length is negative
+      */
+-
+-        // skip in chunks of 512 bytes
+-
+-
++    public long skip(long n) throws IOException {
++        if (n < 0) {
++            throw new IllegalArgumentException("Negative skip length: " + n);
++        }
++        int skipped = 0;
++        byte[] skipBuffer = new byte[SKIP_BUFFER_SIZE];
++        while (skipped < n) {
++            int readLen = read(skipBuffer, 0, (int) Math.min(SKIP_BUFFER_SIZE, n - skipped));
++            if (readLen == EOF) {
++                break;
++            }
++            skipped += readLen;
++        }
++        return skipped;
++    }
++    // skip in chunks of 512 bytes
++    private static final int SKIP_BUFFER_SIZE = 512;
+     /**
+      * {@inheritDoc}
+      *
+      * @return <code>0</code> if the {@link InputStream} has reached <code>EOF</code>,
+      * <code>1</code> otherwise
+      */
+-        // Note: the logic is similar to the InflaterInputStream:
+-        //       as long as we have not reached EOF, indicate that there is more
+-        //       data available. As we do not know for sure how much data is left,
+-        //       just return 1 as a safe guess.
+-
++    public int available() throws IOException {
++        if (baseNCodec.hasData()) {
++            return 1;
++        }
+         // use the EOF flag of the underlying codec instance
++        return baseNCodec.isEOF() ? 0 : 1;
++    }
+ }
+\ No newline at end of file

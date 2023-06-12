@@ -1,0 +1,25 @@
+diff --git a/src/main/java/org/apache/commons/compress/archivers/tar/TarArchiveOutputStream.java b/src/main/java/org/apache/commons/compress/archivers/tar/TarArchiveOutputStream.java
+index da6bbfde..8c08ba1f 100644
+--- a/src/main/java/org/apache/commons/compress/archivers/tar/TarArchiveOutputStream.java
++++ b/src/main/java/org/apache/commons/compress/archivers/tar/TarArchiveOutputStream.java
+@@ -469,8 +468,10 @@ public class TarArchiveOutputStream extends ArchiveOutputStream {
+             int len = key.length() + value.length()
+                 + 3 /* blank, equals and newline */
+                 + 2 /* guess 9 < actual length < 100 */;
++            // The length must be in ASCII, so use the US-ASCII Charset.
++            Charset ascii = Charset.forName("US-ASCII");
+             String line = len + " " + key + "=" + value + "\n";
+-            int actualLength = line.getBytes(CharsetNames.UTF_8).length;
++            int actualLength = line.getBytes(ascii).length;
+             while (len != actualLength) {
+                 // Adjust for cases where length < 10 or > 100
+                 // or where UTF-8 encoding isn't a single octet
+@@ -479,7 +480,7 @@ public class TarArchiveOutputStream extends ArchiveOutputStream {
+                 // first pass so we'd need a second.
+                 len = actualLength;
+                 line = len + " " + key + "=" + value + "\n";
+-                actualLength = line.getBytes(CharsetNames.UTF_8).length;
++                actualLength = line.getBytes(ascii).length;
+             }
+             w.write(line);
+         }

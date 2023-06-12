@@ -1,0 +1,56 @@
+diff --git a/src/main/java/org/apache/commons/math3/util/MathArrays.java b/src/main/java/org/apache/commons/math3/util/MathArrays.java
+index 9ef28e3d8..01d34858c 100644
+--- a/src/main/java/org/apache/commons/math3/util/MathArrays.java
++++ b/src/main/java/org/apache/commons/math3/util/MathArrays.java
+@@ -817,12 +817,8 @@ public class MathArrays {
+         if (len != b.length) {
+             throw new DimensionMismatchException(len, b.length);
+         }
+-
+-            // Revert to scalar multiplication.
+-
+         final double[] prodHigh = new double[len];
+         double prodLowSum = 0;
+-
+         for (int i = 0; i < len; i++) {
+             final double ai = a[i];
+             final double ca = SPLIT_FACTOR * ai;
+@@ -840,8 +835,36 @@ public class MathArrays {
+                                                   aHigh * bLow);
+             prodLowSum += prodLow;
+         }
+-
+-
++        final double[] aHigh = new double[len];
++        final double[] bHigh = new double[len];
++        for (int i = 0; i < len; i++) {
++            final double ai = a[i];
++            final double ca = SPLIT_FACTOR * ai;
++            aHigh[i] = ca - (ca - ai);
++            final double bi = b[i];
++            final double cb = SPLIT_FACTOR * bi;
++            bHigh[i] = cb - (cb - bi);
++        }
++        final double[] prodHighClone = prodHigh.clone();
++        Arrays.sort(prodHighClone);
++        final double[] naive = new double[len];
++        for (int i = 0; i < len; ++i) {
++            naive[i] = a[i] * b[i];
++        }
++        Arrays.sort(naive);
++        if ((prodHighClone[0] != naive[0]) || (prodHighClone[len - 1] != naive[len - 1])) {
++            // either we have split infinite numbers or some coefficients were NaNs,
++            // just rely on the naive implementation and let IEEE754 handle this
++            double result = 0;
++            for (int i = 0; i < len; ++i) {
++                result += a[i] * b[i];
++            }
++            return result;
++        }
++        final double[] sortedAHigh = aHigh.clone();
++        Arrays.sort(sortedAHigh);
++        final double[] sortedBHigh = bHigh.clone();
++        Arrays.sort(sortedBHigh);
+         final double prodHighCur = prodHigh[0];
+         double prodHighNext = prodHigh[1];
+         double sHighPrev = prodHighCur + prodHighNext;

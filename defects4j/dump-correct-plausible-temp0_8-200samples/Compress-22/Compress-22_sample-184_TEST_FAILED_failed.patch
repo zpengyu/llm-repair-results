@@ -1,0 +1,62 @@
+diff --git a/src/main/java/org/apache/commons/compress/compressors/bzip2/BZip2CompressorInputStream.java b/src/main/java/org/apache/commons/compress/compressors/bzip2/BZip2CompressorInputStream.java
+index bfedfd0b..40d0311c 100644
+--- a/src/main/java/org/apache/commons/compress/compressors/bzip2/BZip2CompressorInputStream.java
++++ b/src/main/java/org/apache/commons/compress/compressors/bzip2/BZip2CompressorInputStream.java
+@@ -197,36 +197,31 @@ public class BZip2CompressorInputStream extends CompressorInputStream implements
+ 
+     private int read0() throws IOException {
+         final int retChar = this.currentChar;
+-        switch (currentState) {
+-        case EOF:
+-            return -1;
+-
+-        case START_BLOCK_STATE:
+-            throw new IllegalStateException();
+-
+-        case RAND_PART_A_STATE:
+-            throw new IllegalStateException();
+-
+-        case RAND_PART_B_STATE:
++        if (currentState == NO_RAND_PART_A_STATE) {
+             setupRandPartB();
+-            break;
+-
+-        case RAND_PART_C_STATE:
++        }
++        else if (currentState == NO_RAND_PART_B_STATE) {
+             setupRandPartC();
+-            break;
+-
+-        case NO_RAND_PART_A_STATE:
+-            throw new IllegalStateException();
+-
+-        case NO_RAND_PART_B_STATE:
++        }
++        else if (currentState == NO_RAND_PART_C_STATE) {
++            setupNoRandPartA();
++        }
++        else if (currentState == START_BLOCK_STATE) {
++            setupNoRandPartA();
++        }
++        else if (currentState == RAND_PART_A_STATE) {
+             setupNoRandPartB();
+-            break;
+-
+-        case NO_RAND_PART_C_STATE:
++        }
++        else if (currentState == RAND_PART_B_STATE) {
+             setupNoRandPartC();
+-            break;
+-
+-        default:
++        }
++        else if (currentState == RAND_PART_C_STATE) {
++            throw new IllegalStateException();
++        }
++        else if (currentState == EOF) {
++            return -1;
++        }
++        else {
+             throw new IllegalStateException();
+         }
+         return retChar;

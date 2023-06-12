@@ -1,0 +1,38 @@
+diff --git a/src/com/google/javascript/jscomp/Compiler.java b/src/com/google/javascript/jscomp/Compiler.java
+index e0dc0d38..cbaf549a 100644
+--- a/src/com/google/javascript/jscomp/Compiler.java
++++ b/src/com/google/javascript/jscomp/Compiler.java
+@@ -1293,12 +1283,8 @@ public class Compiler extends AbstractCompiler {
+             getTypeRegistry().forwardDeclareType(provide);
+           }
+         }
+-
+         try {
+-          inputs =
+-              (moduleGraph == null ? new JSModuleGraph(modules) : moduleGraph)
+-              .manageDependencies(options.dependencyOptions, inputs);
+-          staleInputs = true;
++          staleInputs = manageDependencies();
+         } catch (CircularDependencyException e) {
+           report(JSError.make(
+               JSModule.CIRCULAR_DEPENDENCY_ERROR, e.getMessage()));
+@@ -1360,7 +1336,18 @@ public class Compiler extends AbstractCompiler {
+       stopTracer(tracer, "parseInputs");
+     }
+   }
+-
++  /**
++   * Returns whether a dependency management occurred.
++   */
++  private boolean manageDependencies() throws CircularDependencyException,
++      MissingProvideException {
++    if (options.closurePass) {
++      inputs =
++          (moduleGraph == null ? new JSModuleGraph(modules) : moduleGraph)
++          .manageDependencies(options.dependencyOptions, inputs);
++    }
++    return true;
++  }
+   /**
+    * Hoists inputs with the @externs annotation into the externs list.
+    */

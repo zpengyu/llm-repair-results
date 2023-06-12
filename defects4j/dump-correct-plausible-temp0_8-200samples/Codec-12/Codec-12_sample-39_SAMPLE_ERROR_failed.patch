@@ -1,0 +1,31 @@
+diff --git a/src/main/java/org/apache/commons/codec/binary/BaseNCodecInputStream.java b/src/main/java/org/apache/commons/codec/binary/BaseNCodecInputStream.java
+index 78f4d67e..51441829 100644
+--- a/src/main/java/org/apache/commons/codec/binary/BaseNCodecInputStream.java
++++ b/src/main/java/org/apache/commons/codec/binary/BaseNCodecInputStream.java
+@@ -113,10 +106,12 @@ public class BaseNCodecInputStream extends FilterInputStream {
+                 if (!baseNCodec.hasData()) {
+                     byte[] buf = new byte[doEncode ? 4096 : 8192];
+                     int c = in.read(buf);
+-                    if (doEncode) {
+-                        baseNCodec.encode(buf, 0, c);
+-                    } else {
+-                        baseNCodec.decode(buf, 0, c);
++                    if (c > 0) {
++                        if (doEncode) {
++                            baseNCodec.encode(buf, 0, c);
++                        } else {
++                            baseNCodec.decode(buf, 0, c);
++                        }
+                     }
+                 }
+                 readLen = baseNCodec.readResults(b, offset, len);
+@@ -153,6 +144,7 @@ public class BaseNCodecInputStream extends FilterInputStream {
+         //       as long as we have not reached EOF, indicate that there is more
+         //       data available. As we do not know for sure how much data is left,
+         //       just return 1 as a safe guess.
+-
+         // use the EOF flag of the underlying codec instance
++        return !baseNCodec.isEof();
++    }
+ }
+\ No newline at end of file

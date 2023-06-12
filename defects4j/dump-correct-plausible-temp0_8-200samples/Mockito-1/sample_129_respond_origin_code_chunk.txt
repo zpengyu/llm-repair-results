@@ -1,0 +1,25 @@
+    public void captureArgumentsFrom(Invocation invocation) {
+        if (invocation.getMethod().isVarArgs()) {
+            //If the method is a vararg method, then the last parameter is an array
+            int indexOfVararg = invocation.getRawArguments().length - 1;
+            //If the invocation was made with no varargs arguments at all, then the last argument is null
+            // and the index of the array will be -1
+            if(indexOfVararg >= 0) {
+                Object array = invocation.getRawArguments()[indexOfVararg];
+                for (int i = 0; i < Array.getLength(array); i++) {
+                    ((CapturesArguments) matchers.get(indexOfVararg)).captureFrom(Array.get(array, i));
+                }
+            }
+            //since we've captured all varargs already, it does not make sense to process other matchers.
+            return;
+
+        } else {
+            for (int position = 0; position < matchers.size(); position++) {
+                Matcher m = matchers.get(position);
+                if (m instanceof CapturesArguments) {
+                    ((CapturesArguments) m).captureFrom(invocation.getArgumentAt(position, Object.class));
+                }
+            }
+        }
+    }
+

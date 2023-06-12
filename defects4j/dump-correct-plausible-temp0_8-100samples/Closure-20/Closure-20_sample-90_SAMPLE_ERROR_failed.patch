@@ -1,0 +1,34 @@
+diff --git a/src/com/google/javascript/jscomp/PeepholeSubstituteAlternateSyntax.java b/src/com/google/javascript/jscomp/PeepholeSubstituteAlternateSyntax.java
+index dee765a1..71cfe312 100644
+--- a/src/com/google/javascript/jscomp/PeepholeSubstituteAlternateSyntax.java
++++ b/src/com/google/javascript/jscomp/PeepholeSubstituteAlternateSyntax.java
+@@ -209,21 +209,17 @@ class PeepholeSubstituteAlternateSyntax
+     Preconditions.checkState(n.isCall());
+     Node callTarget = n.getFirstChild();
+     if (callTarget != null && callTarget.isName() &&
+-          callTarget.getString().equals("String")) {
+-      // Fold String(a) to '' + (a) on immutable literals,
+-      // which allows further optimizations
+-      //
+-      // We can't do this in the general case, because String(a) has
+-      // slightly different semantics than '' + (a). See
+-      // http://code.google.com/p/closure-compiler/issues/detail?id=759
++        callTarget.getString().equals("String") &&
++        n.getChildCount() == 2 && n.getLastChild().isString()) {
++      // If a simple call to the string constructor is being used to create
++      // a string object from a literal, just use the literal.
+       Node value = callTarget.getNext();
+       if (value != null) {
+-        Node addition = IR.add(
+-            IR.string("").srcref(callTarget),
+-            value.detachFromParent());
+-        n.getParent().replaceChild(n, addition);
++        Node result = NodeUtil.newStringNode(
++            value.getString(), value.getSourcePosition());
++        n.getParent().replaceChild(n, result);
+         reportCodeChange();
+-        return addition;
++        return result;
+       }
+     }
+     return n;

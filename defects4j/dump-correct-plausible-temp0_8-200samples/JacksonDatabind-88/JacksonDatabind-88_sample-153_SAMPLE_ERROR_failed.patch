@@ -1,0 +1,41 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/jsontype/impl/ClassNameIdResolver.java b/src/main/java/com/fasterxml/jackson/databind/jsontype/impl/ClassNameIdResolver.java
+index 112c00b5c..edb4bd82d 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/jsontype/impl/ClassNameIdResolver.java
++++ b/src/main/java/com/fasterxml/jackson/databind/jsontype/impl/ClassNameIdResolver.java
+@@ -51,11 +51,18 @@ public class ClassNameIdResolver
+         TypeFactory tf = ctxt.getTypeFactory();
+         if (id.indexOf('<') > 0) {
+             // note: may want to try combining with specialization (esp for EnumMap)?
++            JavaType t = tf.constructFromCanonical(id);
+             // 17-Aug-2017, tatu: As per [databind#1735] need to ensure assignment
+             //    compatibility -- needed later anyway, and not doing so may open
+             //    security issues.
+-            JavaType t = tf.constructFromCanonical(id);
+-                // Probably cleaner to have a method in `TypeFactory` but can't add in patch
++            if (_baseType != null && _baseType.getClass() == Class.class) {
++                Class<?> raw = _baseType.getRawClass();
++                if (!raw.isAssignableFrom(t.getRawClass())) {
++                    throw new IllegalArgumentException("Class "+t.getRawClass().getName()+" not subtype of "
++                            +raw.getName());
++                }
++            }
++            // Probably cleaner to have a method in `TypeFactory` but can't add in patch
+             return t;
+         }
+         Class<?> cls;
+@@ -74,9 +81,14 @@ public class ClassNameIdResolver
+         } catch (Exception e) {
+             throw new IllegalArgumentException("Invalid type id '"+id+"' (for id type 'Id.class'): "+e.getMessage(), e);
+         }
++        if (_baseType != null && _baseType.getClass() == Class.class) {
++            Class<?> raw = _baseType.getRawClass();
++            if (!raw.isAssignableFrom(cls)) {
++                throw new IllegalArgumentException("Class "+cls.getName()+" not subtype of "+raw.getName());
++            }
++        }
+         return tf.constructSpecializedType(_baseType, cls);
+     }    
+-    
+     /*
+     /**********************************************************
+     /* Internal methods

@@ -1,0 +1,47 @@
+diff --git a/src/com/google/javascript/jscomp/InlineObjectLiterals.java b/src/com/google/javascript/jscomp/InlineObjectLiterals.java
+index 2f5a8e10..9d4e7370 100644
+--- a/src/com/google/javascript/jscomp/InlineObjectLiterals.java
++++ b/src/com/google/javascript/jscomp/InlineObjectLiterals.java
+@@ -231,19 +222,10 @@ class InlineObjectLiterals implements CompilerPass {
+           // Check if childVal is the parent of any of the passed in
+           // references, as that is how self-referential assignments
+           // will happen.
+-          for (Reference t : refs) {
+-            Node refNode = t.getParent();
+-            while (!NodeUtil.isStatementBlock(refNode)) {
+-              if (refNode == childVal) {
+-                // There's a self-referential assignment
+-                return false;
+-              }
+-              refNode = refNode.getParent();
+-            }
++          if (isSelfReference(refs, childVal)) {
++              return false;
+           }
+         }
+-
+-
+         // We have found an acceptable object literal assignment. As
+         // long as there are no other assignments that mess things up,
+         // we can inline.
+@@ -251,7 +233,19 @@ class InlineObjectLiterals implements CompilerPass {
+       }
+       return ret;
+     }
+-
++    private static boolean isSelfReference(List<Reference> refs, Node childVal) {
++        for (Reference t : refs) {
++          Node refNode = t.getParent();
++          while (!NodeUtil.isStatementBlock(refNode)) {
++            if (refNode == childVal) {
++              // There's a self-referential assignment
++              return true;
++            }
++            refNode = refNode.getParent();
++          }
++        }
++        return false;
++    }
+     private boolean isVarOrAssignExprLhs(Node n) {
+       Node parent = n.getParent();
+       return parent.isVar() ||

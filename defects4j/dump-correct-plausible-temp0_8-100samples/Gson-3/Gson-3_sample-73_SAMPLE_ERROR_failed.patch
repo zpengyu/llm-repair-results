@@ -1,0 +1,29 @@
+diff --git a/gson/src/main/java/com/google/gson/internal/ConstructorConstructor.java b/gson/src/main/java/com/google/gson/internal/ConstructorConstructor.java
+index cd5c2f6c..0c267254 100644
+--- a/gson/src/main/java/com/google/gson/internal/ConstructorConstructor.java
++++ b/gson/src/main/java/com/google/gson/internal/ConstructorConstructor.java
+@@ -193,10 +192,22 @@ public final class ConstructorConstructor {
+         };
+       }
+     }
+-
++    if (rawType.isInterface()) {
++      return new ObjectConstructor<T>() {
++        @Override public T construct() {
++          return (T) Proxy.newProxyInstance(rawType.getClassLoader(), new Class[] { rawType },
++              new InvocationHandler() {
++                @Override
++                public Object invoke(Object proxy, Method method, Object[] args)
++                    throws Throwable {
++                  return null;
++                }
++              });
++        }
++      };
++    }
+     return null;
+   }
+-
+   private <T> ObjectConstructor<T> newUnsafeAllocator(
+       final Type type, final Class<? super T> rawType) {
+     return new ObjectConstructor<T>() {

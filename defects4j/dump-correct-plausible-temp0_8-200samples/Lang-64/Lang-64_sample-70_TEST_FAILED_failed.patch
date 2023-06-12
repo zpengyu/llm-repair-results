@@ -1,0 +1,47 @@
+diff --git a/src/java/org/apache/commons/lang/enums/ValuedEnum.java b/src/java/org/apache/commons/lang/enums/ValuedEnum.java
+index 0823e77d..73cca5a9 100644
+--- a/src/java/org/apache/commons/lang/enums/ValuedEnum.java
++++ b/src/java/org/apache/commons/lang/enums/ValuedEnum.java
+@@ -109,8 +108,7 @@ public abstract class ValuedEnum extends Enum {
+      * 
+      * @see java.io.Serializable
+      */
+-    private static final long serialVersionUID = -7129650521543789085L;
+-    
++    private static final long serialVersionUID = -7447721783908519085L;
+     /**
+      * The value contained in enum.
+      */
+@@ -139,7 +135,7 @@ public abstract class ValuedEnum extends Enum {
+      * @return the enum object, or null if the enum does not exist
+      * @throws IllegalArgumentException if the enum class is <code>null</code>
+      */
+-    protected static Enum getEnum(Class enumClass, int value) {
++    protected static ValuedEnum getEnum(Class enumClass, int value) {
+         if (enumClass == null) {
+             throw new IllegalArgumentException("The Enum Class must not be null");
+         }
+@@ -189,10 +182,19 @@ public abstract class ValuedEnum extends Enum {
+      * @param other  the object to determine the value for
+      * @return the value
+      */
+-            // ignore - should never happen
+-            // ignore - should never happen
+-            // ignore - should never happen
+-
++    private int checkOtherClass(Object other) {
++        try {
++            Method method = other.getClass().getMethod("getValue", null);
++            Integer value = (Integer) method.invoke(other, null);
++            return value.intValue();
++        } catch (NoSuchMethodException e) {
++            throw new ClassCastException("The " + other.getClass().getName() + " class object is not an instance of ValuedEnum");
++        } catch (IllegalAccessException e) {
++            throw new ClassCastException("The " + other.getClass().getName() + " class cannot access a member of class " + getClass() + " with modifiers \"private\"");
++        } catch (InvocationTargetException e) {
++            throw new ClassCastException("The " + other.getClass().getName() + " class object is not an instance of ValuedEnum");
++        }
++    }
+     /**
+      * <p>Human readable description of this <code>Enum</code> item.</p>
+      *

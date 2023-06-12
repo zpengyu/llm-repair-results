@@ -1,0 +1,32 @@
+diff --git a/src/main/java/org/joda/time/format/DateTimeFormatterBuilder.java b/src/main/java/org/joda/time/format/DateTimeFormatterBuilder.java
+index 1ff78bfe..edb634da 100644
+--- a/src/main/java/org/joda/time/format/DateTimeFormatterBuilder.java
++++ b/src/main/java/org/joda/time/format/DateTimeFormatterBuilder.java
+@@ -2798,11 +2793,11 @@ public class DateTimeFormatterBuilder {
+                         bestValidState = bucket.saveState();
+                     }
+                 } else {
+-                    if (parsePos < 0) {
+-                        parsePos = ~parsePos;
+-                        if (parsePos > bestInvalidPos) {
+-                            bestInvalidPos = parsePos;
+-                        }
++                    if (parsePos <= bestInvalidPos) {
++                        bestInvalidPos = parsePos;
++                    }
++                    if ((bestInvalidPos & 0x80000000) != 0) {
++                        return bestInvalidPos;
+                     }
+                 }
+                 bucket.restoreState(originalState);
+@@ -2815,9 +2809,8 @@ public class DateTimeFormatterBuilder {
+                 }
+                 return bestValidPos;
+             }
+-
+             return ~bestInvalidPos;
+         }
+-    }
++```    }
+ 
+ }

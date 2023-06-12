@@ -1,0 +1,76 @@
+###Provide a fix for the buggy function
+###Buggy Function
+class FibonacciExample {
+    public static void main(String args[]) {
+        int n1 = 0, n2 = 1, n3, i, count = 10;
+
+        System.out.print(n1 + " " + n2);
+
+        for (i = 2; i < count; ++i) {
+            n3 = n1 - n2;
+            System.out.print(" " + n3);
+            n1 = n2;
+            n2 = n3;
+        }
+    }
+}
+
+###Fixed Function
+class FibonacciExample {
+    public static void main(String args[]) {
+        int n1 = 0, n2 = 1, n3, i, count = 10;
+
+        System.out.print(n1 + " " + n2);
+
+        for (i = 2; i < count; ++i) {
+            n3 = n1 + n2;
+            System.out.print(" " + n3);
+            n1 = n2;
+            n2 = n3;
+        }
+    }
+}
+
+###Provide a fix for the buggy function
+###Buggy Function
+private static boolean isReduceableFunctionExpression(Node n) {
+  return NodeUtil.isFunctionExpression(n);
+}
+###Fixed Function
+private static boolean isReduceableFunctionExpression(Node n) {
+  return NodeUtil.isFunctionExpression(n)
+      && !NodeUtil.isGetOrSetKey(n.getParent());
+}
+###Provide a fix for the buggy function
+###Buggy Function
+  private FlowScope traverseNew(Node n, FlowScope scope) {
+
+    Node constructor = n.getFirstChild();
+    scope = traverse(constructor, scope);
+    JSType constructorType = constructor.getJSType();
+    JSType type = null;
+    if (constructorType != null) {
+      constructorType = constructorType.restrictByNotNullOrUndefined();
+      if (constructorType.isUnknownType()) {
+        type = getNativeType(UNKNOWN_TYPE);
+      } else {
+        FunctionType ct = constructorType.toMaybeFunctionType();
+        if (ct == null && constructorType instanceof FunctionType) {
+          // If constructorType is a NoObjectType, then toMaybeFunctionType will
+          // return null. But NoObjectType implements the FunctionType
+          // interface, precisely because it can validly construct objects.
+          ct = (FunctionType) constructorType;
+        }
+        if (ct != null && ct.isConstructor()) {
+          type = ct.getInstanceType();
+        }
+      }
+    }
+    n.setJSType(type);
+    for (Node arg = constructor.getNext(); arg != null; arg = arg.getNext()) {
+      scope = traverse(arg, scope);
+    }
+    return scope;
+  }
+
+###Fixed Function

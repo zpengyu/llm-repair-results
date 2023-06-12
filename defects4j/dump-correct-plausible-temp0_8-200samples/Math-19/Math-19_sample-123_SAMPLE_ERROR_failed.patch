@@ -1,0 +1,30 @@
+diff --git a/src/main/java/org/apache/commons/math3/optimization/direct/CMAESOptimizer.java b/src/main/java/org/apache/commons/math3/optimization/direct/CMAESOptimizer.java
+index 140e9d4f9..3a86ddb07 100644
+--- a/src/main/java/org/apache/commons/math3/optimization/direct/CMAESOptimizer.java
++++ b/src/main/java/org/apache/commons/math3/optimization/direct/CMAESOptimizer.java
+@@ -535,8 +533,24 @@ public class CMAESOptimizer
+                 boundaries = new double[2][];
+                 boundaries[0] = lB;
+                 boundaries[1] = uB;
+-
+                 // Abort early if the normalization will overflow (cf. "encode" method).
++                double max = 0;
++                for (int i = 0; i < init.length; i++) {
++                    final double d = boundaries[1][i] - boundaries[0][i];
++                    max = FastMath.max(max, FastMath.abs(init[i]), d);
++                }
++                // Normalization is too large if "max" overflows.
++                if (Double.isInfinite(max)) {
++                    throw new MathArithmeticException(LocalizedFormats.OVERFLOW_IN_MULTIPLY_OPERATION, max);
++                }
++                // Normalization is too large if it overflows when divided by "max".
++                for (int i = 0; i < init.length; i++) {
++                    final double d = (boundaries[1][i] - boundaries[0][i]) / max;
++                    if (Double.isInfinite(d)) {
++                        throw new MathArithmeticException(LocalizedFormats.OVERFLOW_IN_DIVISION,
++                                boundaries[1][i] - boundaries[0][i], max);
++                    }
++                }
+             }
+         } else {
+             // Convert API to internal handling of boundaries.

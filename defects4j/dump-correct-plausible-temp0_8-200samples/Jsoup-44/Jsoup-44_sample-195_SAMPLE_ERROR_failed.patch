@@ -1,0 +1,37 @@
+diff --git a/src/main/java/org/jsoup/parser/TreeBuilder.java b/src/main/java/org/jsoup/parser/TreeBuilder.java
+index f4faad4..9c65523 100644
+--- a/src/main/java/org/jsoup/parser/TreeBuilder.java
++++ b/src/main/java/org/jsoup/parser/TreeBuilder.java
+@@ -76,4 +63,31 @@ abstract class TreeBuilder {
+         int size = stack.size();
+         return size > 0 ? stack.get(size-1) : null;
+     }
++    Element pop() {
++        int size = stack.size();
++        return size > 0 ? stack.remove(size-1) : null;
++    }
++    void push(Element element) {
++        stack.add(element);
++    }
++    Element insert(StartTag startTag) {
++        Element element = new Element(Tag.valueOf(startTag.name(), ParseSettings.preserveCase), baseUri, startTag.attributes);
++        insert(element);
++        return element;
++    }
++    void insert(Element element) {
++        currentElement().appendChild(element);
++        stack.add(element);
++    }
++    void insert(Character character) {
++        currentElement().appendChild(new TextNode(character.getData(), baseUri));
++    }
++    void error(Token token) {
++        if (errors.canAddError())
++            errors.add(new ParseError(reader.pos(), "Unexpected character '%s' in input state [%s]", token.getData(), tokeniser.getState()));
++    }
++    void eofError(Token token) {
++        if (errors.canAddError())
++            errors.add(new ParseError(reader.pos(), "Unexpectedly reached end of file (EOF) in input state [%s]", tokeniser.getState()));
++    }
+ }
+\ No newline at end of file

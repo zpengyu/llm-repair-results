@@ -1,0 +1,58 @@
+diff --git a/src/java/org/apache/commons/cli/PosixParser.java b/src/java/org/apache/commons/cli/PosixParser.java
+index 2b1bbb1..12228a2 100644
+--- a/src/java/org/apache/commons/cli/PosixParser.java
++++ b/src/java/org/apache/commons/cli/PosixParser.java
+@@ -111,38 +108,34 @@ public class PosixParser extends Parser {
+             // handle long option --foo or --foo=bar
+             if (token.startsWith("--"))
+             {
+-                if (token.indexOf('=') != -1)
++                int pos = token.indexOf('=');
++                String opt = token.substring(2, token.length());
++                if ((pos == -1) || (options.hasOption(opt)))
+                 {
+-                    tokens.add(token.substring(0, token.indexOf('=')));
+-                    tokens.add(token.substring(token.indexOf('=') + 1, token.length()));
++                    tokens.add(token);
+                 }
+                 else
+                 {
+-                    tokens.add(token);
++                    tokens.add(token.substring(0, pos));
++                    tokens.add(token.substring(pos + 1, token.length()));
+                 }
+             }
+-
+             // single hyphen
+             else if ("-".equals(token))
+             {
+                 tokens.add(token);
+             }
+-            else if (token.startsWith("-"))
++            // handle a cluster of short options -foo -bar etc
++            else if (token.startsWith("-") && token.length() > 2)
+             {
+-                if (token.length() == 2)
+-                {
+-                    processOptionToken(token, stopAtNonOption);
+-                }
+-                else if (options.hasOption(token))
+-                {
+-                    tokens.add(token);
+-                }
+-                // requires bursting
+-                else
+-                {
+-                    burstToken(token, stopAtNonOption);
+-                }
++                burstToken(token, stopAtNonOption);
+             }
++            // handle a single short option -f
++            else if (token.startsWith("-") && token.length() == 2)
++            {
++                processOptionToken(token, stopAtNonOption);
++            }
++            // the token is either a non-option or an option requiring an argument
+             else if (stopAtNonOption)
+             {
+                 process(token);

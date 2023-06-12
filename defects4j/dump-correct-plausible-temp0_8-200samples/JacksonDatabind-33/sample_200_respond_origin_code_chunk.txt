@@ -1,0 +1,27 @@
+    public PropertyName findNameForSerialization(Annotated a)
+    {
+        JsonGetter jg = _findAnnotation(a, JsonGetter.class);
+        if (jg != null) {
+            // 26-Jul-2015, tatu: As per [databind#822], allow override with empty String
+            String s = jg.value();
+            if (s.isEmpty()) {
+                return PropertyName.USE_DEFAULT;
+            }
+            return PropertyName.construct(s);
+        }
+        JsonProperty pann = _findAnnotation(a, JsonProperty.class);
+        if (pann != null) {
+            // 28-Apr-2016, tatu: As per [databind#1192], allow override with empty String
+            String s = pann.value();
+            if (s.isEmpty()) {
+                return PropertyName.USE_DEFAULT;
+            }
+            return PropertyName.construct(s);
+        }
+        if (_hasAnnotation(a, JsonSerialize.class)
+                || _hasAnnotation(a, JsonView.class)
+                || _hasAnnotation(a, JsonRawValue.class)) {
+            return PropertyName.USE_DEFAULT;
+        }
+        return null;
+    }

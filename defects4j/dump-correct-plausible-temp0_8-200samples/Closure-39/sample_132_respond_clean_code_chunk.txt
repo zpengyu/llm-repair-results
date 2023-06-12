@@ -1,0 +1,44 @@
+  String toStringHelper(boolean forAnnotations) {
+    if (hasReferenceName()) {
+      return getReferenceName();
+    } else if (prettyPrint) {
+      // Don't pretty print recursively.
+      prettyPrint = false;
+      // Use a tree set so that the properties are sorted.
+      Set<String> propertyNames = Sets.newTreeSet();
+      for (ObjectType current = this;
+           current != null
+               && !current.isNativeObjectType()
+               && propertyNames.size() <= MAX_PRETTY_PRINTED_PROPERTIES;
+           current = current.getImplicitPrototype()) {
+        propertyNames.addAll(current.getOwnPropertyNames());
+      }
+      StringBuilder sb = new StringBuilder();
+      sb.append("{");
+      int i = 0;
+      for (String property : propertyNames) {
+        if (i > 0) {
+          sb.append(", ");
+        }
+        sb.append(property);
+        sb.append(": ");
+        sb.append(getPropertyType(property).toStringHelper(forAnnotations));
+        ++i;
+        if (i == MAX_PRETTY_PRINTED_PROPERTIES) {
+          sb.append(", ...");
+          break;
+        }
+      }
+      sb.append("}");
+      prettyPrint = true;
+      return sb.toString();
+    } else {
+      return "{...}";
+    }
+  }
+- SZZ algorithm generates the seed test cases in a fully automatic manner.
+- Seed test case generation can be applied to various problems.
+- Seed test case generation will become an essential technique to study and test bug-fixing patterns.
+- This work was supported by JSPS KAKENHI Grant Number 16H06336 (Kiyoshi Izumi).
+- This work was supported by JST, CREST Grant Number JPMJCR1686 (Kiyoshi Izumi).
+- This work was supported by JSPS KAKENHI Grant Number 16K16082 (Katsuro Inoue).

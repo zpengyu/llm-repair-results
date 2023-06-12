@@ -1,0 +1,49 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/deser/impl/JavaUtilCollectionsDeserializers.java b/src/main/java/com/fasterxml/jackson/databind/deser/impl/JavaUtilCollectionsDeserializers.java
+index ddadb9ea8..b707a8246 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/deser/impl/JavaUtilCollectionsDeserializers.java
++++ b/src/main/java/com/fasterxml/jackson/databind/deser/impl/JavaUtilCollectionsDeserializers.java
+@@ -134,19 +114,26 @@ public abstract class JavaUtilCollectionsDeserializers
+             case TYPE_SINGLETON_SET:
+                 {
+                     Set<?> set = (Set<?>) value;
+-                    _checkSingleton(set.size());
++                    if (set.size() != 1) {
++                        // not the best error ever but... has to do
++                        throw new IllegalArgumentException("Can not deserialize Singleton container from "+set.size()+" entries");
++                    }
+                     return Collections.singleton(set.iterator().next());
+                 }
+             case TYPE_SINGLETON_LIST:
+                 {
+                     List<?> list = (List<?>) value;
+-                    _checkSingleton(list.size());
++                    if (list.size() != 1) {
++                        throw new IllegalArgumentException("Can not deserialize Singleton container from "+list.size()+" entries");
++                    }
+                     return Collections.singletonList(list.get(0));
+                 }
+             case TYPE_SINGLETON_MAP:
+                 {
+                     Map<?,?> map = (Map<?,?>) value;
+-                    _checkSingleton(map.size());
++                    if (map.size() != 1) {
++                        throw new IllegalArgumentException("Can not deserialize Singleton container from "+map.size()+" entries");
++                    }
+                     Map.Entry<?,?> entry = map.entrySet().iterator().next();
+                     return Collections.singletonMap(entry.getKey(), entry.getValue());
+                 }
+@@ -175,13 +158,5 @@ public abstract class JavaUtilCollectionsDeserializers
+             // we don't actually care, so:
+             return _inputType;
+         }
+-
+-        private void _checkSingleton(int size) {
+-            if (size != 1) {
+-                // not the best error ever but... has to do
+-                throw new IllegalArgumentException("Can not deserialize Singleton container from "+size+" entries");
+-            }
+-        }
+     }
+-    
+ }
+\ No newline at end of file

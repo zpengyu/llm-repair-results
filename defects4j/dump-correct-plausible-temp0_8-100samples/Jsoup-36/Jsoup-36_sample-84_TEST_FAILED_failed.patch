@@ -1,0 +1,31 @@
+diff --git a/src/main/java/org/jsoup/helper/DataUtil.java b/src/main/java/org/jsoup/helper/DataUtil.java
+index 3626928..7336a1a 100644
+--- a/src/main/java/org/jsoup/helper/DataUtil.java
++++ b/src/main/java/org/jsoup/helper/DataUtil.java
+@@ -87,13 +81,25 @@ public class DataUtil {
+                 } else {
+                     foundCharset = meta.attr("charset");
+                 }
+-
++                // found in meta
+                 if (foundCharset != null && foundCharset.length() != 0 && !foundCharset.equals(defaultCharset)) { // need to re-decode
+                     charsetName = foundCharset;
+                     byteData.rewind();
+                     docData = Charset.forName(foundCharset).decode(byteData).toString();
+                     doc = null;
+                 }
++            } else {
++                //check for xml charset
++                Matcher xmlMatcher = charsetPattern.matcher(docData);
++                if (xmlMatcher.find()) { // found in <?xml encoding='ISO-8859-1'?>
++                    String foundCharset = xmlMatcher.group(1);
++                    if (foundCharset != null && foundCharset.length() != 0 && !foundCharset.equals(defaultCharset)) {
++                        charsetName = foundCharset;
++                        byteData.rewind();
++                        docData = Charset.forName(foundCharset).decode(byteData).toString();
++                        doc = null;
++                    }
++                }
+             }
+         } else { // specified by content type header (or by user on file load)
+             Validate.notEmpty(charsetName, "Must set charset arg to character set of file to parse. Set to null to attempt to detect from HTML");

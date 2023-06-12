@@ -1,0 +1,22 @@
+    private Map<String, Integer> initializeHeader() throws IOException {
+        final String[] formatHeader = this.format.getHeader();
+        if (formatHeader == null || formatHeader.length == 0) {
+            // read the header from the first line of the file
+            final CSVRecord nextRecord = this.nextRecord();
+            if (nextRecord == null) {
+                return null;
+            }
+            this.header = nextRecord.values();
+        } else {
+            if (this.format.getSkipHeaderRecord()) {
+                this.nextRecord();
+            }
+            this.header = formatHeader;
+        }
+        // build the name to index mappings
+        final Map<String, Integer> hdrMap = new LinkedHashMap<String, Integer>();
+        for (int i = 0; i < this.header.length; i++) {
+            hdrMap.put(this.header[i], Integer.valueOf(i));
+        }
+        return hdrMap;
+    }

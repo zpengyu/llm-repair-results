@@ -1,0 +1,41 @@
+diff --git a/src/java/org/apache/commons/cli/GnuParser.java b/src/java/org/apache/commons/cli/GnuParser.java
+index 14a9cc0..128b60a 100644
+--- a/src/java/org/apache/commons/cli/GnuParser.java
++++ b/src/java/org/apache/commons/cli/GnuParser.java
+@@ -71,8 +68,13 @@ public class GnuParser extends Parser {
+             else if (arg.startsWith("-"))
+             {
+                 String opt = Util.stripLeadingHyphens(arg);
+-
+-                if (options.hasOption(opt))
++                if (opt.startsWith("D"))
++                {
++                    // the format is -Dproperty=value
++                    tokens.add(arg.substring(0, 2)); // -D
++                    tokens.add(arg.substring(2)); // property=value
++                }
++                else if (options.hasOption(opt))
+                 {
+                     tokens.add(arg);
+                 }
+@@ -81,9 +83,8 @@ public class GnuParser extends Parser {
+                     if (options.hasOption(arg.substring(0, 2)))
+                     {
+                         // the format is --foo=value or -foo=value
+-                        // the format is a special properties option (-Dproperty=value)
+-                        tokens.add(arg.substring(0, 2)); // -D
+-                        tokens.add(arg.substring(2)); // property=value
++                        tokens.add(arg.substring(0, 2)); // --
++                        tokens.add(arg.substring(2)); // foo=value
+                     }
+                     else
+                     {
+@@ -105,7 +105,5 @@ public class GnuParser extends Parser {
+                 }
+             }
+         }
+-
+         return (String[]) tokens.toArray(new String[tokens.size()]);
+-    }
+-}
++    }}

@@ -1,0 +1,34 @@
+diff --git a/src/org/mockito/internal/stubbing/defaultanswers/ReturnsDeepStubs.java b/src/org/mockito/internal/stubbing/defaultanswers/ReturnsDeepStubs.java
+index 6fa773f53..a8760881a 100644
+--- a/src/org/mockito/internal/stubbing/defaultanswers/ReturnsDeepStubs.java
++++ b/src/org/mockito/internal/stubbing/defaultanswers/ReturnsDeepStubs.java
+@@ -74,10 +65,25 @@ public class ReturnsDeepStubs implements Answer<Object>, Serializable {
+      * @param returnTypeGenericMetadata The metadata to use to create the new mock.
+      * @return The mock
+      */
+-
+-
+-
+-
++    protected Object createMock(GenericMetadataSupport returnTypeGenericMetadata) {
++        if (returnTypeGenericMetadata.rawType() == null) {
++            throw new MockitoException("Unable to create the mock. Raw type of the generic class is null.");
++        }
++        return newInstanceUsingMockMaker(returnTypeGenericMetadata);
++    }
++    protected Object newInstanceUsingMockMaker(GenericMetadataSupport returnTypeGenericMetadata) {
++        MockCreationSettings settings = new MockCreationSettings()
++                .setTypeToMock(returnTypeGenericMetadata.rawType())
++                .setExtraInterfaces(returnTypeGenericMetadata.rawExtraInterfaces())
++                .setMockSettings(new MockSettingsImpl().defaultAnswer(this));
++        Class<?>[] typeParameters = returnTypeGenericMetadata.actualTypeArguments();
++        if (typeParameters.length > 0) {
++            settings.setSerializable(false);
++            settings.setTypeToMock(Mockito.class);
++            settings.setTypeParameters(typeParameters);
++        }
++        return new MockMaker().createMock(settings, new PluginSwitch());
++    }
+     private Object recordDeepStubMock(InvocationOnMock invocation, InvocationContainerImpl container) {
+         Class<?> clz = invocation.getMethod().getReturnType();
+         final Object mock = org.mockito.Mockito.mock(clz, this);

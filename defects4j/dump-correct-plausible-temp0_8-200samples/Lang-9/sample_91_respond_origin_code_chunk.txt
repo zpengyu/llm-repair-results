@@ -1,0 +1,68 @@
+    private void init() {
+        thisYear= Calendar.getInstance(timeZone, locale).get(Calendar.YEAR);
+
+        nameValues= new ConcurrentHashMap<Integer, KeyValue[]>();
+
+        StringBuilder regex= new StringBuilder();
+        List<Strategy> collector = new ArrayList<Strategy>();
+
+        Matcher patternMatcher= formatPattern.matcher(pattern);
+        if(!patternMatcher.lookingAt()) {
+            throw new IllegalArgumentException("Invalid pattern");
+        }
+
+        currentFormatField= patternMatcher.group();
+        Strategy currentStrategy= getStrategy(currentFormatField, null);
+        for(;;) {
+            patternMatcher.region(patternMatcher.end(), patternMatcher.regionEnd());
+            if(!patternMatcher.lookingAt()) {
+                nextStrategy = null;
+                break;
+            }
+            String nextFormatField= patternMatcher.group();
+            nextStrategy = getStrategy(nextFormatField, currentStrategy);
+            if(currentStrategy.addRegex(this, regex)) {
+                collector.add(currentStrategy);
+            }
+            currentFormatField= nextFormatField;
+            currentStrategy= nextStrategy;
+        }
+        if(currentStrategy.addRegex(this, regex)) {
+            collector.add(currentStrategy);
+        }
+        currentFormatField= null;
+        strategies= collector.toArray(new Strategy[collector.size()]);
+        parsePattern= Pattern.compile(regex.toString());
+    }
+
+    private Strategy getStrategy(String formatField, Strategy nextStrategy) {
+        switch (formatField.charAt(0)) {
+            case '\'':
+                return new CopyQuotedStrategy(formatField);
+            case 'G':
+                return new GStrategy(formatField, nextStrategy);
+            case 'y':
+            case 'M':
+            case 'w':
+            case 'W':
+            case 'D':
+            case 'd':
+            case 'F':
+            case 'E':
+            case 'a':
+                return new TextStrategy(formatField);
+            case 'H':
+            case 'k':
+            case 'K':
+            case 'h':
+            case 'm':
+            case 's':
+            case 'S':
+            case 'Z':
+                return new NumberStrategy(formatField);
+            case 'z':
+                return new TimeZoneStrategy(formatField);
+            default:
+                throw new IllegalArgumentException("Format '" + formatField + "' not supported");
+        }
+    }

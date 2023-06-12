@@ -1,0 +1,31 @@
+    public long getDateTimeMillis(int year, int monthOfYear, int dayOfMonth,
+                                  int hourOfDay, int minuteOfHour,
+                                  int secondOfMinute, int millisOfSecond)
+        throws IllegalArgumentException
+    {
+        Chronology base;
+        if ((base = getBase()) != null) {
+            return base.getDateTimeMillis
+                (year, monthOfYear, dayOfMonth,
+                 hourOfDay, minuteOfHour, secondOfMinute, millisOfSecond);
+        }
+
+        long instant = iCutoverInstant + iJulianChronology.getDateTimeMillis
+            (year, monthOfYear, dayOfMonth,
+             hourOfDay, minuteOfHour, secondOfMinute, millisOfSecond);
+
+        if (instant >= iCutoverInstant &&
+            instant < iCutoverInstant + iGapDuration) {
+            instant = iCutoverInstant + iGregorianChronology.getDateTimeMillis
+                (year, monthOfYear, dayOfMonth,
+                 hourOfDay, minuteOfHour, secondOfMinute, millisOfSecond);
+            if (instant < iCutoverInstant) {
+                // Either it's in the skipped type, or the instant is beyond the cutover.
+                instant = iCutoverInstant + iJulianChronology.getDateTimeMillis
+                    (year, monthOfYear, dayOfMonth,
+                     hourOfDay, minuteOfHour, secondOfMinute, millisOfSecond);
+            }
+        }
+
+        return instant;
+    }

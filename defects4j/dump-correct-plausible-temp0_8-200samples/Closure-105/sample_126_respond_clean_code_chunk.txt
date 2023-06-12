@@ -1,0 +1,18 @@
+  /**
+   * Try to fold JSCompiler_renameProperty("prototype", "c") to "c".
+   */
+  void tryFoldRenameProperty(NodeTraversal t, Node n) {
+    Preconditions.checkArgument(n.getType() == Token.CALL);
+    Node left = n.getFirstChild();
+    Node right = left.getNext();
+    if (left.getType() != Token.GETPROP
+        || !left.getFirstChild().matchesQualifiedName("JSCompiler_renameProperty")) {
+      return;
+    }
+    if (!right.isString()) {
+      return;
+    }
+    Node parent = n.getParent();
+    parent.replaceChild(n, right);
+    t.getCompiler().reportCodeChange();
+  }

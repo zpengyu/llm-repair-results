@@ -1,0 +1,48 @@
+diff --git a/src/com/google/javascript/jscomp/TypedScopeCreator.java b/src/com/google/javascript/jscomp/TypedScopeCreator.java
+index 13d8808b..599d234c 100644
+--- a/src/com/google/javascript/jscomp/TypedScopeCreator.java
++++ b/src/com/google/javascript/jscomp/TypedScopeCreator.java
+@@ -1310,12 +1310,41 @@ final class TypedScopeCreator implements ScopeCreator {
+               }
+             }
+           }
++          if (info.isConstant()) {
++            JSType knownType = null;
++            if (rValue != null) {
++              if (rValue.getJSType() != null && !rValue.getJSType().isUnknownType()) {
++                // If rValue has a type-cast, we use the type in the type-cast.
++                // If rValue's type was already computed during scope creation,
++                // then we can safely use that.
++                knownType = rValue.getJSType();
++              } else if (rValue.isOr()) {
++                // Check for a very specific JS idiom:
++                // var x = x || TYPE;
++                // This is used by Closure's base namespace for esoteric
++                // reasons.
++                Node firstClause = rValue.getFirstChild();
++                Node secondClause = firstClause.getNext();
++                boolean namesMatch = firstClause.isName()
++                    && lValue.isName()
++                    && firstClause.getString().equals(lValue.getString());
++                if (namesMatch && secondClause.getJSType() != null
++                    && !secondClause.getJSType().isUnknownType()) {
++                  knownType = secondClause.getJSType();
++                }
++              }
++            }
++            if (knownType != null) {
++              info.setType(new Node(Token.BANG,
++                  new Node(Token.BANG,
++                  Node.newString(Token.STRING, knownType.toString()))));
++              return knownType;
++            }
++          }
+         }
+       }
+-
+       return getDeclaredTypeInAnnotation(sourceName, lValue, info);
+     }
+-
+     private FunctionType getFunctionType(@Nullable Var v) {
+       JSType t = v == null ? null : v.getType();
+       ObjectType o = t == null ? null : t.dereference();

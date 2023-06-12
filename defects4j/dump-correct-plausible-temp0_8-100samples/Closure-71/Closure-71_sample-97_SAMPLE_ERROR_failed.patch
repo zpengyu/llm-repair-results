@@ -1,0 +1,36 @@
+diff --git a/src/com/google/javascript/jscomp/CheckAccessControls.java b/src/com/google/javascript/jscomp/CheckAccessControls.java
+index c4ecc477..c56fef07 100644
+--- a/src/com/google/javascript/jscomp/CheckAccessControls.java
++++ b/src/com/google/javascript/jscomp/CheckAccessControls.java
+@@ -494,11 +488,30 @@ class CheckAccessControls implements ScopedCallback, HotSwapCompilerPass {
+                     validator.getReadableJSTypeName(
+                         getprop.getFirstChild(), true)));
+           }
++        } else if(visibility == Visibility.PACKAGE){
++            if(!isSamePackage(t,getprop)){
++                compiler.report(
++                t.makeError(getprop,  BAD_PROTECTED_PROPERTY_ACCESS,
++                    propertyName,
++                    validator.getReadableJSTypeName(
++                        getprop.getFirstChild(), true)));
++            }
+         }
+       }
+     }
+   }
+-
++  private boolean isSamePackage(NodeTraversal t, Node n){
++      String thisPackage = t.getInput().getName().replaceAll("/", ".");
++      String curPackage = n.getJSDocInfo().getSourceName().replaceAll("/", ".");
++      String[] thisPackageSplit = thisPackage.split("\\.");
++      String[] curPackageSplit = curPackage.split("\\.");
++      String thisPackageName = thisPackageSplit[thisPackageSplit.length - 2];
++      String curPackageName = curPackageSplit[curPackageSplit.length - 2];
++      if(thisPackageName.equals(curPackageName)){
++          return true;
++      }
++      return false;
++  }
+   /**
+    * Whether the given access of a private constructor is legal.
+    *

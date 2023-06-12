@@ -1,0 +1,39 @@
+diff --git a/src/com/google/javascript/jscomp/CodeGenerator.java b/src/com/google/javascript/jscomp/CodeGenerator.java
+index 5b684191..4df4a172 100644
+--- a/src/com/google/javascript/jscomp/CodeGenerator.java
++++ b/src/com/google/javascript/jscomp/CodeGenerator.java
+@@ -1073,7 +1071,33 @@ class CodeGenerator {
+     sb.append(quote);
+     return sb.toString();
+   }
+-
++  /**
++   * Unicode escapes a character.
++   *
++   * @param sb The destination buffer.
++   * @param c The character to append.
++   */
++  private static void appendHexJavaScriptRepresentation(
++      StringBuilder sb, char c) {
++    // JavaScript handles unicode characters
++    // without a problem, but we need to be careful
++    // to escape non-printing characters, since there
++    // is no other way to enter them into a string
++    // literal other than using an escape sequence.
++    if (c >= 0x7f || c < 0x20) {
++      // We don't use Integer.toHexString() because that
++      // uses lowercase letters, and the JS spec doesn't
++      // specify case sensitivity for hex escapes.
++      sb.append("\\u");
++      String hexChars = "0123456789ABCDEF";
++      int b = c & 0x000f;
++      int a = (c & 0x00f0) >> 4;
++      sb.append(hexChars.charAt(a));
++      sb.append(hexChars.charAt(b));
++    } else {
++      sb.append(c);
++    }
++  }
+   static String identifierEscape(String s) {
+     // First check if escaping is needed at all -- in most cases it isn't.
+     if (NodeUtil.isLatin(s)) {

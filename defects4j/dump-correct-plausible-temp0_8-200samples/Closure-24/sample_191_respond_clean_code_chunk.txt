@@ -1,0 +1,25 @@
+    private void findAliases(NodeTraversal t) {
+      Scope scope = t.getScope();
+      for (Var v : scope.getVarIterable()) {
+        Node n = v.getNode();
+        int type = n.getType();
+        Node parent = n.getParent();
+        if (parent.isVar()) {
+          if (n.hasChildren() && n.getFirstChild().isQualifiedName()) {
+          String name = n.getString();
+          Var aliasVar = scope.getVar(name);
+          aliases.put(name, aliasVar);
+          String qualifiedName =
+              aliasVar.getInitialValue().getQualifiedName();
+          transformation.addAlias(name, qualifiedName);
+        } else {
+          // If a local is bleeding, it should be OK, since it will be re-declared
+          // in the scope function.
+          // TODO(robbyw): Support using locals for private variables.
+          if (!isBleedingFunction(n)) {
+            report(t, n, GOOG_SCOPE_NON_ALIAS_LOCAL, n.getString());
+          }
+        }
+        }
+      }
+    }

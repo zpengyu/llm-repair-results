@@ -1,0 +1,28 @@
+diff --git a/src/com/google/javascript/jscomp/CodeConsumer.java b/src/com/google/javascript/jscomp/CodeConsumer.java
+index 74978330..1d9751ed 100644
+--- a/src/com/google/javascript/jscomp/CodeConsumer.java
++++ b/src/com/google/javascript/jscomp/CodeConsumer.java
+@@ -196,11 +194,21 @@ abstract class CodeConsumer {
+       // REGEXP DIV REGEXP
+       // is valid and should print like
+       // / // / /
++    } else if (c == '/') {
++      char prevChar = getLastChar();
++      if (prevChar == '*') {
++        // End a multiline comment.
++        newline();
++      } else if (prevChar == '/') {
++        // End a single-line comment.
++        maybeEndStatement();
++      } else if (prevChar == '(') {
++        // Start a regular expression.
++        maybeEndStatement();
++      }
+     }
+-
+     append(newcode);
+   }
+-
+   void appendOp(String op, boolean binOp) {
+     append(op);
+   }

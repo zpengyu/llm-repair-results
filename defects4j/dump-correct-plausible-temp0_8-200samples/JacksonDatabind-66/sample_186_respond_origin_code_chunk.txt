@@ -1,0 +1,20 @@
+        public final Object deserializeKey(String key, DeserializationContext ctxt)
+            throws IOException
+        {
+            if (key == null) {
+                return null;
+            }
+            try {
+                // 25-Apr-2017, tatu: [databind#1586] May need to use raw type here since
+                //    scalar deserializers may not accept generic types
+                JavaType t = _keyClass;
+                if (t == null) {
+                    t = ctxt.constructType(Object.class);
+                }
+                return ctxt.findKeyDeserializer(_keyClass, _property).deserializeKey(key, ctxt);
+            } catch (Exception re) {
+                return ctxt.handleWeirdKey(_keyClass, key, "not a valid representation: %s", re.getMessage());
+            }
+        }
+
+

@@ -1,0 +1,77 @@
+diff --git a/src/main/java/org/apache/commons/codec/binary/BaseNCodecInputStream.java b/src/main/java/org/apache/commons/codec/binary/BaseNCodecInputStream.java
+index 78f4d67e..f08b0418 100644
+--- a/src/main/java/org/apache/commons/codec/binary/BaseNCodecInputStream.java
++++ b/src/main/java/org/apache/commons/codec/binary/BaseNCodecInputStream.java
+@@ -113,7 +106,20 @@ public class BaseNCodecInputStream extends FilterInputStream {
+                 if (!baseNCodec.hasData()) {
+                     byte[] buf = new byte[doEncode ? 4096 : 8192];
+                     int c = in.read(buf);
+-                    if (doEncode) {
++                    if (c == -1) {
++                        // BEGIN android-changed: Use read() to get EOF.
++                        //if (doEncode) {
++                        //    baseNCodec.encode(buf, 0, c);
++                        //} else {
++                        //    baseNCodec.decode(buf, 0, c);
++                        //}
++                        //break;
++                        if (doEncode) {
++                            baseNCodec.encode(buf, 0, 0);
++                        } else {
++                            baseNCodec.decode(buf, 0, 0);
++                        }
++                    } else if (doEncode) {
+                         baseNCodec.encode(buf, 0, c);
+                     } else {
+                         baseNCodec.decode(buf, 0, c);
+@@ -139,20 +144,39 @@ public class BaseNCodecInputStream extends FilterInputStream {
+      *
+      * @throws IllegalArgumentException if the provided skip length is negative
+      */
+-
+-        // skip in chunks of 512 bytes
+-
+-
++    @Override
++    public long skip(long n) throws IOException {
++        if (n < 0) {
++            throw new IllegalArgumentException("Negative skip length: " + n);
++        }
++        final int chunkSize = 512;
++        final byte[] skipBuffer = new byte[chunkSize];
++        long remaining = n;
++        while (remaining > 0) {
++            final int returned = read(skipBuffer, 0, (int) Math.min(chunkSize, remaining));
++            if (returned == EOF) {
++                break; // we reached EOF
++            }
++            remaining -= returned;
++        }
++        return n - remaining;
++    }
+     /**
+      * {@inheritDoc}
+      *
+      * @return <code>0</code> if the {@link InputStream} has reached <code>EOF</code>,
+      * <code>1</code> otherwise
+      */
+-        // Note: the logic is similar to the InflaterInputStream:
+-        //       as long as we have not reached EOF, indicate that there is more
+-        //       data available. As we do not know for sure how much data is left,
+-        //       just return 1 as a safe guess.
+-
+-        // use the EOF flag of the underlying codec instance
++    @Override
++    public int available() throws IOException {
++        return baseNCodec.hasData() ? 1 : 0;
++    }
++    /**
++     * {@inheritDoc}
++     */
++    @Override
++    public void close() throws IOException {
++        baseNCodec.reset();
++        in.close();
++    }
+ }
+\ No newline at end of file

@@ -1,0 +1,26 @@
+diff --git a/src/main/java/org/joda/time/Period.java b/src/main/java/org/joda/time/Period.java
+index 8fce39c6..cb406956 100644
+--- a/src/main/java/org/joda/time/Period.java
++++ b/src/main/java/org/joda/time/Period.java
+@@ -1620,7 +1620,6 @@ public final class Period
+         millis += (((long) getMinutes()) * ((long) DateTimeConstants.MILLIS_PER_MINUTE));
+         millis += (((long) getHours()) * ((long) DateTimeConstants.MILLIS_PER_HOUR));
+         millis += (((long) getDays()) * ((long) DateTimeConstants.MILLIS_PER_DAY));
+-        millis += (((long) getWeeks()) * ((long) DateTimeConstants.MILLIS_PER_WEEK));
+         Period result = new Period(millis, type, ISOChronology.getInstanceUTC());
+         int years = getYears();
+         int months = getMonths();
+@@ -1634,7 +1633,12 @@ public final class Period
+                 result = result.withMonths(months);
+             }
+         }
++        //The bug is here!
++        //the weeks should be normalized.
++        int weeks = getWeeks();
++        if (weeks != 0) {
++            result = result.withWeeks(weeks);
++        }
+         return result;
+     }
+-
+ }

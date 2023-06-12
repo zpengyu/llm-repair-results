@@ -1,0 +1,49 @@
+diff --git a/src/main/java/org/jsoup/helper/DataUtil.java b/src/main/java/org/jsoup/helper/DataUtil.java
+index 3626928..c56cae1 100644
+--- a/src/main/java/org/jsoup/helper/DataUtil.java
++++ b/src/main/java/org/jsoup/helper/DataUtil.java
+@@ -124,20 +115,24 @@ public class DataUtil {
+         final boolean capped = maxSize > 0;
+         byte[] buffer = new byte[bufferSize];
+         ByteArrayOutputStream outStream = new ByteArrayOutputStream(bufferSize);
+-        int read;
+         int remaining = maxSize;
+-
+-        while (true) {
+-            read = inStream.read(buffer);
+-            if (read == -1) break;
+-            if (capped) {
+-                if (read > remaining) {
+-                    outStream.write(buffer, 0, remaining);
+-                    break;
++        try {
++            while (true) {
++                int read = inStream.read(buffer);
++                if (read == -1) break;
++                if (capped) {
++                    if (read > remaining) {
++                        outStream.write(buffer, 0, remaining);
++                        break;
++                    }
++                    remaining -= read;
+                 }
+-                remaining -= read;
++                outStream.write(buffer, 0, read);
+             }
+-            outStream.write(buffer, 0, read);
++        }
++        finally {
++            if (inStream != null)
++                inStream.close();
+         }
+         ByteBuffer byteData = ByteBuffer.wrap(outStream.toByteArray());
+         return byteData;
+@@ -165,6 +158,5 @@ public class DataUtil {
+         }
+         return null;
+     }
+-    
+-    
+ }
++<div style="text-align:center"><img src="pic/d4j.png" width="800"/></div>
+\ No newline at end of file

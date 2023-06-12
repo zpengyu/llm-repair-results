@@ -1,0 +1,30 @@
+diff --git a/src/java/org/apache/commons/jxpath/ri/compiler/CoreOperationCompare.java b/src/java/org/apache/commons/jxpath/ri/compiler/CoreOperationCompare.java
+index cc45a8f..4cc9cc5 100644
+--- a/src/java/org/apache/commons/jxpath/ri/compiler/CoreOperationCompare.java
++++ b/src/java/org/apache/commons/jxpath/ri/compiler/CoreOperationCompare.java
+@@ -69,19 +64,17 @@ public abstract class CoreOperationCompare extends CoreOperation {
+         if (r instanceof Collection) {
+             r = ((Collection) r).iterator();
+         }
+-
+-        if ((l instanceof Iterator) && !(r instanceof Iterator)) {
+-            return contains((Iterator) l, r);
++        if (l instanceof Iterator) {
++            if (r instanceof Iterator)
++                return findMatch((Iterator) l, (Iterator) r);
++            else
++                return contains((Iterator) l, r);
+         }
+-        if (!(l instanceof Iterator) && (r instanceof Iterator)) {
++        if (r instanceof Iterator) {
+             return contains((Iterator) r, l);
+         }
+-        if (l instanceof Iterator && r instanceof Iterator) {
+-            return findMatch((Iterator) l, (Iterator) r);
+-        }
+         return equal(l, r);
+     }
+-
+     protected boolean contains(Iterator it, Object value) {
+         while (it.hasNext()) {
+             Object element = it.next();

@@ -1,0 +1,49 @@
+diff --git a/src/com/google/javascript/jscomp/TypeCheck.java b/src/com/google/javascript/jscomp/TypeCheck.java
+index 83a73c74..5a37e20e 100644
+--- a/src/com/google/javascript/jscomp/TypeCheck.java
++++ b/src/com/google/javascript/jscomp/TypeCheck.java
+@@ -1409,26 +1408,31 @@ public class TypeCheck implements NodeTraversal.Callback, CompilerPass {
+            parameters.hasNext()) {
+       // If there are no parameters left in the list, then the while loop
+       // above implies that this must be a var_args function.
+-        parameter = parameters.next();
++      parameter = parameters.next();
+       argument = arguments.next();
+       ordinal++;
+-
+       validator.expectArgumentMatchesParameter(t, argument,
+           getJSType(argument), getJSType(parameter), call, ordinal);
+     }
+-
+-    int numArgs = call.getChildCount() - 1;
+-    int minArgs = functionType.getMinArguments();
+-    int maxArgs = functionType.getMaxArguments();
+-    if (minArgs > numArgs || maxArgs < numArgs) {
+-      report(t, call, WRONG_ARGUMENT_COUNT,
+-              validator.getReadableJSTypeName(call.getFirstChild(), false),
+-              String.valueOf(numArgs), String.valueOf(minArgs),
+-              maxArgs != Integer.MAX_VALUE ?
+-              " and no more than " + maxArgs + " argument(s)" : "");
++    if (functionType.isVarArgsEnabled()) {
++      while (arguments.hasNext()) {
++        argument = arguments.next();
++        validator.expectArgumentMatchesParameter(t, argument,
++            getJSType(argument), getJSType(parameter), call, ++ordinal);
++      }
++    } else {
++      int numArgs = call.getChildCount() - 1;
++      int minArgs = functionType.getMinArguments();
++      int maxArgs = functionType.getMaxArguments();
++      if (minArgs > numArgs || maxArgs < numArgs) {
++        report(t, call, WRONG_ARGUMENT_COUNT,
++                validator.getReadableJSTypeName(call.getFirstChild(), false),
++                String.valueOf(numArgs), String.valueOf(minArgs),
++                maxArgs != Integer.MAX_VALUE ?
++                " and no more than " + maxArgs + " argument(s)" : "");
++      }
+     }
+   }
+-
+   /**
+    * Visits a RETURN node.
+    *

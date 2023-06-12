@@ -1,0 +1,58 @@
+    public void process(Class<?> context, Object testClass) {
+        Field[] fields = context.getDeclaredFields();
+        for (Field field : fields) {
+            if (field.isAnnotationPresent(Spy.class)) {
+                assertNoAnnotations(Spy.class, field, Mock.class, org.mockito.MockitoAnnotations.Mock.class, Captor.class);
+                boolean wasAccessible = field.isAccessible();
+                field.setAccessible(true);
+                try {
+                    Object instance = field.get(testClass);
+                    if (instance == null) {
+                        try {
+                            instance = newInstanceUsingMockitoConstructor(field, testClass);
+                        } catch (Exception e) {
+                            throw new MockitoException("Cannot create a @Spy for '" + field.getName() + "' field because the *instance* is missing\n" +
+                            		  "The instance must be created *before* initMocks();\n" +
+                                      "Example of correct usage of @Spy:\n" +
+                            		  "   @Spy List mock = new LinkedList();\n" +
+                            		  "   //also, don't forget about MockitoAnnotations.initMocks();", e);
+                        }
+                    }
+                    if (new MockUtil().isMock(instance)) { 
+                        // instance has been spied earlier
+                        Mockito.reset(instance);
+                    } else {
+                        field.set(testClass, Mockito.spy(instance));
+                    }
+                } catch (IllegalAccessException e) {
+                    throw new MockitoException("Problems initiating spied field " + field.getName(), e);
+                } finally {
+                    field.setAccessible(wasAccessible);
+                }
+            }
+        }
+    }
+    private Object newInstanceUsingMockitoConstructor(Field field, Object testClass) throws Exception {
+        MockitoAnnotations.Mock mockAnnotation = field.getAnnotation(MockitoAnnotations.Mock.class);
+        if (mockAnnotation == null) {
+            throw new IllegalStateException("Mock annotation should not be null here");
+        }
+        Class<?> typeToMock = mockAnnotation.value();
+        if (typeToMock == Void.class) {
+            typeToMock = field.getType();
+        }
+        return createDefaultInstanceUsingMockitoConstructor(typeToMock, field, testClass);
+    }
+    private Object createDefaultInstanceUsingMockitoConstructor(Class<?> typeToMock, Field field, Object testClass) throws Exception {
+        if (typeToMock.isEnum()) {
+            Field enumConstants = Enum.class.getDeclaredField("$VALUES");
+            enumConstants.setAccessible(true);
+            Object[] enumValues = (Object[]) enumConstants.get(null);
+            return enumValues[0];
+        }
+        if (typeToMock.isInterface()) {
+            return Mockito.mock(typeToMock);
+        } else {
+            return new ConstructorInjection().getConstructorFor(typeToMock).newInstance();
+        }
+    }

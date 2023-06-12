@@ -1,0 +1,26 @@
+diff --git a/src/com/google/javascript/jscomp/PeepholeFoldConstants.java b/src/com/google/javascript/jscomp/PeepholeFoldConstants.java
+index 0f2a6d44..99abbdb7 100644
+--- a/src/com/google/javascript/jscomp/PeepholeFoldConstants.java
++++ b/src/com/google/javascript/jscomp/PeepholeFoldConstants.java
+@@ -705,13 +698,18 @@ public class PeepholeFoldConstants extends AbstractPeepholeOptimization {
+       Node newNumber = Node.newNumber(result);
+       n.getParent().replaceChild(n, newNumber);
+       reportCodeChange();
+-
+       return newNumber;
+     }
+-
++    if (NodeUtil.isLiteralValue(left, NodeUtil.SHORT_ZERO)
++        && NodeUtil.isLiteralValue(right, NodeUtil.SHORT_ZERO)
++        && (n.getType() == Token.LSH || n.getType() == Token.RSH)) {
++      Node newNumber = Node.newNumber(0);
++      n.getParent().replaceChild(n, newNumber);
++      reportCodeChange();
++      return newNumber;
++    }
+     return n;
+   }
+-
+   /**
+    * Try to fold comparison nodes, e.g ==
+    */

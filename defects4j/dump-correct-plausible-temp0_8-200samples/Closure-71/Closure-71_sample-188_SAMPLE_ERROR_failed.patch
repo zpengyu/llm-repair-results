@@ -1,0 +1,53 @@
+diff --git a/src/com/google/javascript/jscomp/CheckAccessControls.java b/src/com/google/javascript/jscomp/CheckAccessControls.java
+index c4ecc477..2c1a32f4 100644
+--- a/src/com/google/javascript/jscomp/CheckAccessControls.java
++++ b/src/com/google/javascript/jscomp/CheckAccessControls.java
+@@ -497,8 +491,47 @@ class CheckAccessControls implements ScopedCallback, HotSwapCompilerPass {
+         }
+       }
+     }
++    if (parent.getType() == Token.VAR) {
++      if (getprop.getType() == Token.NAME) {
++        if (getprop.getFirstChild().getType() == Token.THIS) {
++          return;
++        }
++      }
++      String name = getprop.getQualifiedName();
++      name = name.replace('.', '_');
++      if (getprop.getType() == Token.NAME) {
++        if (getprop.getFirstChild().getType() == Token.THIS) {
++          name = "this_" + name;
++        }
++      }
++      name = name + "_" + parent.getJSDocInfo().getOriginalCommentPosition();
++      if (property.containsKey(name)) {
++        compiler.report(t.makeError(getprop, VAR_MULTIPLE_DECLARATIONS,
++            name));
++      } else {
++        property.put(name, t.getInput().getName());
++      }
++    }
++    if (getprop.getType() == Token.NAME) {
++      if (getprop.getFirstChild().getType() == Token.THIS) {
++        return;
++      }
++    }
++    String name = getprop.getQualifiedName();
++    name = name.replace('.', '_');
++    if (getprop.getType() == Token.NAME) {
++      if (getprop.getFirstChild().getType() == Token.THIS) {
++        name = "this_" + name;
++      }
++    }
++    name = name + "_" + getprop.getLineno();
++    if (property.containsKey(name)) {
++      compiler.report(t.makeError(getprop, MULTIPLE_VAR_DECLARATIONS,
++          name));
++    } else {
++      property.put(name, t.getInput().getName());
++    }
+   }
+-
+   /**
+    * Whether the given access of a private constructor is legal.
+    *

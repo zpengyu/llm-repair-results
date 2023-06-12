@@ -1,0 +1,30 @@
+diff --git a/src/java/org/apache/commons/jxpath/ri/model/dom/DOMNodePointer.java b/src/java/org/apache/commons/jxpath/ri/model/dom/DOMNodePointer.java
+index 9524259..d5292f2 100644
+--- a/src/java/org/apache/commons/jxpath/ri/model/dom/DOMNodePointer.java
++++ b/src/java/org/apache/commons/jxpath/ri/model/dom/DOMNodePointer.java
+@@ -673,23 +673,17 @@ public class DOMNodePointer extends NodePointer {
+         if (node instanceof Document) {
+             node = ((Document) node).getDocumentElement();
+         }
+-
+-        Element element = (Element) node;
+-
+-        String uri = element.getNamespaceURI();
++        String uri = node.getNamespaceURI();
+         if (uri == null) {
+             String prefix = getPrefix(node);
+             String qname = prefix == null ? "xmlns" : "xmlns:" + prefix;
+-    
+-            Node aNode = node;
+-            while (aNode != null) {
++            for (Node aNode = node.getParentNode(); aNode != null; aNode = aNode.getParentNode()) {
+                 if (aNode.getNodeType() == Node.ELEMENT_NODE) {
+                     Attr attr = ((Element) aNode).getAttributeNode(qname);
+                     if (attr != null) {
+                         return attr.getValue();
+                     }
+                 }
+-                aNode = aNode.getParentNode();
+             }
+             return null;
+         }

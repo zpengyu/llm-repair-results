@@ -1,0 +1,16 @@
+    protected JavaType _narrow(Class<?> subclass)
+    {
+        // start with fast path
+        if (_class == subclass) {
+            return this;
+        }
+        // if not, maybe we can still handle it?
+        if (subclass.isAssignableFrom(_class)) {
+            // yes! But we have to re-resolve type, unfortunately:
+            JavaType subtype = _narrow(_bindings.bind(subclass));
+            _superClass = subtype.getRawClass();
+            return subtype;
+        }
+        throw new IllegalArgumentException("Class "+subclass.getName()+" not sub-type of "
+                +_class.getName());
+    }

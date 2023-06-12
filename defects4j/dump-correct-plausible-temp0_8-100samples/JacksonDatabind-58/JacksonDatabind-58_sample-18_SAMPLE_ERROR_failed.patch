@@ -1,0 +1,20 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/deser/BeanDeserializerFactory.java b/src/main/java/com/fasterxml/jackson/databind/deser/BeanDeserializerFactory.java
+index bc8e6736f..36c730a01 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/deser/BeanDeserializerFactory.java
++++ b/src/main/java/com/fasterxml/jackson/databind/deser/BeanDeserializerFactory.java
+@@ -748,9 +746,14 @@ public class BeanDeserializerFactory
+         if(objectIdInfo != null){
+             prop.setObjectIdInfo(objectIdInfo);
+         }
++        if (mutator instanceof AnnotatedMember) {
++            AnnotatedMember member = (AnnotatedMember) mutator;
++            if (member.getDeclaringClass().isEnum() && propType0.isEnumType()) {
++                prop.setViews(ctxt.getConfig().findViews(member));
++            }
++        }
+         return prop;
+     }
+-
+     /**
+      * Method that will construct a regular bean property setter using
+      * the given setter method.

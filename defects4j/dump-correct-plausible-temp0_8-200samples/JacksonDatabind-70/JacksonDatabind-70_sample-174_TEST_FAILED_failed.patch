@@ -1,0 +1,38 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/deser/impl/BeanPropertyMap.java b/src/main/java/com/fasterxml/jackson/databind/deser/impl/BeanPropertyMap.java
+index aeaa0dc42..0405c2647 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/deser/impl/BeanPropertyMap.java
++++ b/src/main/java/com/fasterxml/jackson/databind/deser/impl/BeanPropertyMap.java
+@@ -428,19 +428,18 @@ System.err.println("And new propr #"+slot+" '"+key+"'");
+         ArrayList<SettableBeanProperty> props = new ArrayList<SettableBeanProperty>(_size);
+         String key = getPropertyName(propToRm);
+         boolean found = false;
+-
++        int deleteIndex = -1;
+         for (int i = 1, end = _hashArea.length; i < end; i += 2) {
+             SettableBeanProperty prop = (SettableBeanProperty) _hashArea[i];
+             if (prop == null) {
+                 continue;
+             }
+             if (!found) {
+-                // 09-Jan-2017, tatu: Important: must check name slot and NOT property name,
+-                //   as only former is lower-case in case-insensitive case
+                 found = key.equals(prop.getName());
+                 if (found) {
++                    deleteIndex = _findFromOrdered(prop);
+                     // need to leave a hole here
+-                    _propsInOrder[_findFromOrdered(prop)] = null;
++                    _propsInOrder[deleteIndex] = null;
+                     continue;
+                 }
+             }
+@@ -449,9 +448,9 @@ System.err.println("And new propr #"+slot+" '"+key+"'");
+         if (!found) {
+             throw new NoSuchElementException("No entry '"+propToRm.getName()+"' found, can't remove");
+         }
++        _propsInOrder[deleteIndex] = null;
+         init(props);
+     }
+-
+     /**
+      * Convenience method that tries to find property with given name, and
+      * if it is found, call {@link SettableBeanProperty#deserializeAndSet}

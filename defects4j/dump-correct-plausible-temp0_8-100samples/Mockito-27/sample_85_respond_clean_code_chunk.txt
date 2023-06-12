@@ -1,0 +1,12 @@
+public void resetMock(T mock) {
+        MockHandlerInterface<T> oldMockHandler = getMockHandler(mock);
+        MockHandler<T> newMockHandler = new MockHandler<T>(oldMockHandler);
+        MethodInterceptorFilter newFilter = new MethodInterceptorFilter(newMockHandler, (MockSettingsImpl) org.mockito.Mockito.withSettings().defaultAnswer(org.mockito.Mockito.RETURNS_DEFAULTS));
+        Field f = ReflectionUtils.findField(Factory.class, "callbacks");
+        f.setAccessible(true);
+        try {
+            ((Map) f.get(mock)).put(0, newFilter);
+        } catch (IllegalAccessException e) {
+            throw new MockitoException(e);
+        }
+    }

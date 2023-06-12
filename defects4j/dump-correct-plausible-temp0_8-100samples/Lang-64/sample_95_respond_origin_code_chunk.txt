@@ -1,0 +1,125 @@
+public abstract class ValuedEnum extends Enum {
+    
+    /**
+     * Required for serialization support.
+     * 
+     * @see java.io.Serializable
+     */
+    private static final long serialVersionUID = -7129650521543789085L;
+    
+    /**
+     * The value contained in enum.
+     */
+    private final int iValue;
+
+    /**
+     * Constructor for enum item.
+     *
+     * @param name  the name of enum item
+     * @param value  the value of enum item
+     */
+    protected ValuedEnum(String name, int value) {
+        super(name);
+        iValue = value;
+    }
+
+    /**
+     * <p>Gets an <code>Enum</code> object by class and value.</p>
+     *
+     * <p>This method loops through the list of <code>Enum</code>,
+     * thus if there are many <code>Enum</code>s this will be
+     * slow.</p>
+     * 
+     * @param enumClass  the class of the <code>Enum</code> to get
+     * @param value  the value of the <code>Enum</code> to get
+     * @return the enum object, or null if the enum does not exist
+     * @throws IllegalArgumentException if the enum class is <code>null</code>
+     */
+    protected static Enum getEnum(Class enumClass, int value) {
+        if (enumClass == null) {
+            throw new IllegalArgumentException("The Enum Class must not be null");
+        }
+        List list = Enum.getEnumList(enumClass);
+        for (Iterator it = list.iterator(); it.hasNext();) {
+            ValuedEnum enumeration = (ValuedEnum) it.next();
+            if (enumeration.getValue() == value) {
+                return enumeration;
+            }
+        }
+        return null;
+    }
+
+    /**
+     * <p>Get value of enum item.</p>
+     *
+     * @return the enum item's value.
+     */
+    public final int getValue() {
+        return iValue;
+    }
+
+    /**
+     * <p>Tests for order.</p>
+     *
+     * <p>The default ordering is numeric by value, but this
+     * can be overridden by subclasses.</p>
+     *
+     * <p>NOTE: From v2.2 the enums must be of the same type.
+     * If the parameter is in a different class loader than this instance,
+     * reflection is used to compare the values.</p>
+     *
+     * @see java.lang.Comparable#compareTo(Object)
+     * @param other  the other object to compare to
+     * @return -ve if this is less than the other object, +ve if greater than,
+     *  <code>0</code> of equal
+     * @throws ClassCastException if other is not an <code>Enum</code>
+     * @throws NullPointerException if other is <code>null</code>
+     */
+    public int compareTo(Object other) {
+        ValuedEnum otherEnum = (ValuedEnum) other;
+        if (this.getClass() == otherEnum.getClass()) {
+            return iValue - otherEnum.iValue;
+        }
+        if (iValue < otherEnum.iValue) {
+            return -1;
+        }
+        if (iValue > otherEnum.iValue) {
+            return 1;
+        }
+        return 0;
+    }
+
+    /**
+     * <p>Use reflection to return an objects value.</p>
+     *
+     * @param other  the object to determine the value for
+     * @return the value
+     */
+    private int getValue(Object other) {
+        Class cls = other.getClass();
+        try {
+            Field field = cls.getField("iValue");
+            return field.getInt(other);
+        } catch (NoSuchFieldException e) {
+            return 0;
+        } catch (IllegalAccessException e) {
+            return 0;
+        }
+    }
+
+    /**
+     * <p>Human readable description of this <code>Enum</code> item.</p>
+     *
+     * @return String in the form <code>type[name=value]</code>, for example:
+     *  <code>JavaVersion[Java 1.0=100]</code>. Note that the package name is
+     *  stripped from the type name.
+     */
+    public String toString() {
+        if (iToString == null) {
+            String shortName = ClassUtils.getShortClassName(getEnumClass());
+            iToString = shortName + "[" + getName() + "=" + getValue() + "]";
+        }
+        return iToString;
+    }
+}
+

@@ -1,0 +1,24 @@
+diff --git a/src/main/java/com/fasterxml/jackson/core/json/async/NonBlockingJsonParser.java b/src/main/java/com/fasterxml/jackson/core/json/async/NonBlockingJsonParser.java
+index feec6483..29d8e820 100644
+--- a/src/main/java/com/fasterxml/jackson/core/json/async/NonBlockingJsonParser.java
++++ b/src/main/java/com/fasterxml/jackson/core/json/async/NonBlockingJsonParser.java
+@@ -100,17 +100,14 @@ public class NonBlockingJsonParser
+         }
+         // Time to update pointers first
+         _currInputProcessed += _origBufferLen;
+-
+         // Also need to adjust row start, to work as if it extended into the past wrt new buffer
+-        _currInputRowStart = start - (_inputEnd - _currInputRowStart);
+-
++        _currInputRowStart = _currInputRowStart + start - _inputEnd;
++        _inputEnd = end;
+         // And then update buffer settings
+         _inputBuffer = buf;
+         _inputPtr = start;
+-        _inputEnd = end;
+         _origBufferLen = end - start;
+     }
+-
+     @Override
+     public void endOfInput() {
+         _endOfInput = true;

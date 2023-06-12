@@ -1,0 +1,22 @@
+diff --git a/src/com/google/javascript/jscomp/CollapseVariableDeclarations.java b/src/com/google/javascript/jscomp/CollapseVariableDeclarations.java
+index 26ca29ca..c2fecd09 100644
+--- a/src/com/google/javascript/jscomp/CollapseVariableDeclarations.java
++++ b/src/com/google/javascript/jscomp/CollapseVariableDeclarations.java
+@@ -132,9 +120,16 @@ class CollapseVariableDeclarations implements CompilerPass {
+     // then we should not create new VAR nodes for it later in the tree.
+     // This is a workaround for a bug in Firefox.
+     private final Set<Var> blacklistedVars = Sets.newHashSet();
+-
+     @Override
+     public void visit(NodeTraversal t, Node n, Node parent) {
++      // Check if this is an assignment to a name
++      // if it is, then it is not a var or other declaration, so
++      // skip it
++      if (n.isName()) {
++        if (NodeUtil.isAssignmentOp(n.getParent())) {
++          return;
++        }
++      }
+       if (n.isVar()) {
+         blacklistStubVars(t, n);
+       }

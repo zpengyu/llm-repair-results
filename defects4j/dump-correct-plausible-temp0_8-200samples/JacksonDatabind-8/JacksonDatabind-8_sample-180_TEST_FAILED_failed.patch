@@ -1,0 +1,20 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/deser/impl/CreatorCollector.java b/src/main/java/com/fasterxml/jackson/databind/deser/impl/CreatorCollector.java
+index fd590d628..06567b895 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/deser/impl/CreatorCollector.java
++++ b/src/main/java/com/fasterxml/jackson/databind/deser/impl/CreatorCollector.java
+@@ -293,7 +291,14 @@ public class CreatorCollector
+             // one more thing: ok to override in sub-class
+             if (oldOne.getClass() == newOne.getClass()) {
+                 // [databind#667]: avoid one particular class of bogus problems
+-
++                    if (oldOne instanceof AnnotatedMember) { // and new one too?
++                        Class<?> oldType = ((AnnotatedMember) oldOne).getDeclaringClass();
++                        Class<?> newType = ((AnnotatedMember) newOne).getDeclaringClass();
++                        if (oldType.isAssignableFrom(newType) || newType.isAssignableFrom(oldType)) {
++                            // different accessors for same type; that's ok
++                            return;
++                        }
++                    }
+                     throw new IllegalArgumentException("Conflicting "+TYPE_DESCS[typeIndex]
+                             +" creators: already had explicitly marked "+oldOne+", encountered "+newOne);
+                 // otherwise, which one to choose?

@@ -1,0 +1,35 @@
+diff --git a/src/org/mockito/internal/configuration/SpyAnnotationEngine.java b/src/org/mockito/internal/configuration/SpyAnnotationEngine.java
+index e292e1300..192319b86 100644
+--- a/src/org/mockito/internal/configuration/SpyAnnotationEngine.java
++++ b/src/org/mockito/internal/configuration/SpyAnnotationEngine.java
+@@ -55,8 +54,29 @@ public class SpyAnnotationEngine implements AnnotationEngine {
+                 }
+             }
+         }
++        // issue 43: prefer mock over spy
++        fields = context.getDeclaredFields();
++        for (Field field : fields) {
++            if (field.isAnnotationPresent(Mock.class) || field.isAnnotationPresent(org.mockito.MockitoAnnotations.Mock.class)) {
++                assertNoAnnotations(Mock.class, field, Spy.class, org.mockito.MockitoAnnotations.Spy.class, Captor.class);
++                boolean wasAccessible = field.isAccessible();
++                field.setAccessible(true);
++                try {
++                    Object instance = field.get(testClass);
++                    if (instance != null) {
++                        new MockUtil().validateMock(instance);
++                        Mockito.reset(instance);
++                    } else {
++                        field.set(testClass, mockField(field, testClass));
++                    }
++                } catch (IllegalAccessException e) {
++                    throw new MockitoException("Problems initiating spied field " + field.getName(), e);
++                } finally {
++                    field.setAccessible(wasAccessible);
++                }
++            }
++        }
+     }    
+-    
+     //TODO duplicated elsewhere
+     void assertNoAnnotations(Class annotation, Field field, Class ... undesiredAnnotations) {
+         for (Class u : undesiredAnnotations) {

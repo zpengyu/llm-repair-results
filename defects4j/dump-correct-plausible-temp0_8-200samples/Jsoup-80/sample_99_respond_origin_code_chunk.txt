@@ -1,0 +1,22 @@
+void insert(Token.Comment commentToken) {
+    String data = commentToken.getData();
+    String elName = data.substring(1, data.length() -1);
+    String tagName = "";
+    String charAt0 = data.substring(0, 1);
+    boolean isXmlDeclaration = "!".equals(charAt0) || "?".equals(charAt0);
+    if(isXmlDeclaration){
+        tagName = settings.normalizeTag(elName);
+    }
+    Comment comment = new Comment(commentToken.getData());
+    Node insert = comment;
+    if (commentToken.bogus) { // xml declarations are emitted as bogus comments (which is right for html, but not xml)
+        // so we do a bit of a hack and parse the data as an element to pull the attributes out
+        if (isXmlDeclaration) {
+            Document doc = Jsoup.parse("<" + elName + ">", baseUri, Parser.xmlParser());
+            Element el = doc.child(0);
+            insert = new XmlDeclaration(tagName, "!".equals(charAt0));
+            insert.attributes().addAll(el.attributes());
+        }
+    }
+    insertNode(insert);
+}

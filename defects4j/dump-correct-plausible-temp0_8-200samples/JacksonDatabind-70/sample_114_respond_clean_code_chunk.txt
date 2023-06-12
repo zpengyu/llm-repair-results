@@ -1,0 +1,45 @@
+    public void remove(SettableBeanProperty propToRm)
+    {
+        // first, check we have entry matching property
+        int ix = _findIndexInHash(propToRm.getName());
+        if (ix < 0) {
+            throw new NoSuchElementException("No entry '"+propToRm.getName()+"' found, can't remove");
+        }
+        // remove from ordered list
+        int ixInOrder = _findFromOrdered(propToRm);
+        int end = _propsInOrder.length;
+        if (ixInOrder == end-1) { // easy case
+            _propsInOrder[ixInOrder] = null;
+        } else {
+            // need to shift some entries
+            System.arraycopy(_propsInOrder, ixInOrder+1, _propsInOrder, ixInOrder, end-ixInOrder);
+            _propsInOrder[end-1] = null;
+        }
+        // and then recalculate hash
+        _hashSize--;
+        // and now need to remove from hash area, by replacing it with `null`
+        _hashArea[ix] = null;
+        // and we may need to shift following entries as well
+        int i = (ix>>1);
+        int end2 = _hashArea.length;
+        while (true) {
+            i += 2;
+            if (i >= end2) {
+                break;
+            }
+            Object key = _hashArea[i];
+            if (key == null) {
+                break;
+            }
+            int index = (key.hashCode() & Integer.MAX_VALUE) % _hashMask;
+            if (index != ix) {
+                break;
+            }
+            // do need to rehash
+            ix = index;
+            _hashArea[ix] = key;
+            _hashArea[ix+1] = _hashArea[i+1];
+            _hashArea[i] = null;
+            _hashArea[i+1] = null;
+        }
+    }

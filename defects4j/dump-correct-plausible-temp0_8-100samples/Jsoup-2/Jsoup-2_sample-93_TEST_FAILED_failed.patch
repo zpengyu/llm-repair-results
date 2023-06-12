@@ -1,0 +1,43 @@
+diff --git a/src/main/java/org/jsoup/parser/Parser.java b/src/main/java/org/jsoup/parser/Parser.java
+index 8cc01d2..8816af0 100644
+--- a/src/main/java/org/jsoup/parser/Parser.java
++++ b/src/main/java/org/jsoup/parser/Parser.java
+@@ -140,20 +136,32 @@ public class Parser {
+             tq.matchChomp(">");
+         }
+         addChildToParent(child, isEmptyElement);
+-
+         // pc data only tags (textarea, script): chomp to end tag, add content as text node
+         if (tag.isData()) {
+-            String data = tq.chompTo("</" + tagName);
++            StringBuilder data = new StringBuilder();
++            String tagName2 = tagName.toLowerCase();
++            String content = "";
++            String dataEnd = "</" + tagName2;
++            int pos = -1;
++            while(!tq.isEmpty()) {
++                content = tq.chompTo(dataEnd);
++                pos = content.indexOf(">");
++                if(pos >= 0) {
++                    data.append(content.substring(0, pos+1));
++                    break;
++                }
++                else {
++                    data.append(content);
++                }
++            }
+             tq.chompTo(">");
+-
+             Node dataNode;
+             if (tag.equals(titleTag) || tag.equals(textareaTag)) // want to show as text, but not contain inside tags (so not a data tag?)
+-                dataNode = TextNode.createFromEncoded(data, baseUri);
++                dataNode = TextNode.createFromEncoded(data.toString(), baseUri);
+             else
+-                dataNode = new DataNode(data, baseUri); // data not encoded but raw (for " in script)
++                dataNode = new DataNode(data.toString(), baseUri); // data not encoded but raw (for " in script)
+             child.appendChild(dataNode);   
+         }
+-
+         // <base href>: update the base uri
+         if (child.tagName().equals("base")) {
+             String href = child.absUrl("href");

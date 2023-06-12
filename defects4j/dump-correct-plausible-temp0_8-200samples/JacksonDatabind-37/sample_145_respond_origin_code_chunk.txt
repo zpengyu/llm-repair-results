@@ -1,0 +1,41 @@
+    protected JavaType _narrow(Class<?> subclass)
+    {
+        if (_class == subclass) {
+            return this;
+        }
+        if (!_class.isAssignableFrom(subclass)) {
+            throw new IllegalArgumentException("Class "+subclass.getName()+" not sub-type of "
+                    +_class.getName());
+        }
+        JavaType supertype = _superClass;
+        if (supertype != null && supertype.getRawClass().isAssignableFrom(subclass)) {
+            // need to re-resolve super-type
+            supertype = supertype.narrowBy(subclass);
+        }
+        JavaType[] superInterfaces = _superInterfaces;
+        int len = superInterfaces.length;
+        JavaType[] interfaces = null;
+        for (int i = 0; i < len; ++i) {
+            JavaType iface = superInterfaces[i];
+            Class<?> cls = iface.getRawClass();
+            if (cls.isAssignableFrom(subclass)) {
+                if (interfaces == null) {
+                    interfaces = new JavaType[len];
+                    for (int j = 0; j < i; ++j) {
+                        interfaces[j] = superInterfaces[j];
+                    }
+                }
+                interfaces[i] = iface.narrowBy(subclass);
+            }
+            else if (interfaces != null) {
+                interfaces[i] = iface;
+            }
+        }
+        return construct(subclass, _bindings, supertype,
+                (interfaces == null) ? superInterfaces : interfaces,
+                _valueHandler, _typeHandler, _asStatic);
+    }
+
+ 
+# Study on the generalization of the defects
+

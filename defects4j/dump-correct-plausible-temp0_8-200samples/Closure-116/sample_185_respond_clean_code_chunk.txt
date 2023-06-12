@@ -1,0 +1,27 @@
+  private CanInlineResult canInlineReferenceDirectly(
+      Node callNode, Node fnNode) {
+    if (!isDirectCallNodeReplacementPossible(fnNode)) {
+      return CanInlineResult.NO;
+    }
+    Node block = fnNode.getLastChild();
+    Node fnParam = NodeUtil.getFunctionParameters(fnNode).getFirstChild();
+    Node callParam = getCallParameters(callNode);
+    for (Node aFnParam = fnParam; aFnParam != null;
+         aFnParam = aFnParam.getNext()) {
+      for (Node aCallParam = callParam; aCallParam != null;
+           aCallParam = aCallParam.getNext()) {
+        if (NodeUtil.mayEffectMutableState(aCallParam, compiler)
+            && NodeUtil.getNameReferenceCount(
+                block, aFnParam.getString()) > 1) {
+          return CanInlineResult.NO;
+        }
+      }
+    }
+    while (callParam != null) {
+      if (NodeUtil.mayHaveSideEffects(callParam, compiler)) {
+        return CanInlineResult.NO;
+      }
+      callParam = callParam.getNext();
+    }
+    return CanInlineResult.YES;
+  }

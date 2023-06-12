@@ -1,0 +1,22 @@
+diff --git a/src/com/google/javascript/rhino/jstype/PrototypeObjectType.java b/src/com/google/javascript/rhino/jstype/PrototypeObjectType.java
+index 87a287c9..ad565f22 100644
+--- a/src/com/google/javascript/rhino/jstype/PrototypeObjectType.java
++++ b/src/com/google/javascript/rhino/jstype/PrototypeObjectType.java
+@@ -363,12 +362,14 @@ class PrototypeObjectType extends ObjectType {
+            current != null && !current.isNativeObjectType() &&
+                propertyNames.size() <= MAX_PRETTY_PRINTED_PROPERTIES;
+            current = current.getImplicitPrototype()) {
+-        propertyNames.addAll(current.getOwnPropertyNames());
++        for (String s : current.getOwnPropertyNames()) {
++          if (!s.startsWith("<") || !s.endsWith(">")) {
++            propertyNames.add(s);
++          }
++        }
+       }
+-
+       StringBuilder sb = new StringBuilder();
+       sb.append("{");
+-
+       int i = 0;
+       for (String property : propertyNames) {
+         if (i > 0) {

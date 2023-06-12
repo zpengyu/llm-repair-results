@@ -1,0 +1,30 @@
+diff --git a/src/com/google/javascript/jscomp/parsing/IRFactory.java b/src/com/google/javascript/jscomp/parsing/IRFactory.java
+index 6a42e729..924d0caf 100644
+--- a/src/com/google/javascript/jscomp/parsing/IRFactory.java
++++ b/src/com/google/javascript/jscomp/parsing/IRFactory.java
+@@ -565,15 +565,17 @@ class IRFactory {
+ 
+     @Override
+     Node processForInLoop(ForInLoop loopNode) {
+-
+-        // Return the bare minimum to put the AST in a valid state.
+-      return newNode(
+-          Token.FOR,
+-          transform(loopNode.getIterator()),
+-          transform(loopNode.getIteratedObject()),
+-          transformBlock(loopNode.getBody()));
++      Node left = loopNode.getIterator();
++      Node right = loopNode.getIteratedObject();
++      Node body = transformBlock(loopNode.getBody());
++      if (left.isVar()) {
++        return new Node(Token.FOR, left, right, body);
++      } else {
++        return new Node(Token.FOR,
++            new Node(Token.VAR, left),
++            right, body);
++      }
+     }
+-
+     @Override
+     Node processForLoop(ForLoop loopNode) {
+       Node node = newNode(

@@ -1,0 +1,67 @@
+    private void init() {
+        thisYear= Calendar.getInstance(timeZone, locale).get(Calendar.YEAR);
+
+        nameValues= new ConcurrentHashMap<Integer, KeyValue[]>();
+
+        StringBuilder regex= new StringBuilder();
+        List<Strategy> collector = new ArrayList<Strategy>();
+
+        Matcher patternMatcher= formatPattern.matcher(pattern);
+        if(!patternMatcher.lookingAt()) {
+            throw new IllegalArgumentException("Invalid pattern");
+        }
+
+        currentFormatField= patternMatcher.group();
+        Strategy currentStrategy= getStrategy(currentFormatField, null);
+        for(;;) {
+            patternMatcher.region(patternMatcher.end(), patternMatcher.regionEnd());
+            if(!patternMatcher.lookingAt()) {
+                nextStrategy = null;
+                break;
+            }
+            String nextFormatField= patternMatcher.group();
+            nextStrategy = getStrategy(nextFormatField, currentStrategy);
+            if(currentStrategy.addRegex(this, regex)) {
+                collector.add(currentStrategy);
+            }
+            currentFormatField= nextFormatField;
+            currentStrategy= nextStrategy;
+        }
+        if(currentStrategy.addRegex(this, regex)) {
+            collector.add(currentStrategy);
+        }
+        currentFormatField= null;
+        strategies= collector.toArray(new Strategy[collector.size()]);
+        parsePattern= Pattern.compile(regex.toString());
+    }
+
+    protected Strategy getStrategy(String formatField, Strategy nextStrategy) {
+        switch (formatField.charAt(0)) {
+        case '\'':
+            return new CopyQuotedStrategy(formatField);
+        case 'D':
+            return DAY_OF_YEAR_STRATEGY;
+        case 'E':
+            return getLocaleSpecificStrategy(Calendar.DAY_OF_WEEK, formatField);
+        case 'M':
+            return formatField.length() >= 3 ? getLocaleSpecificStrategy(Calendar.MONTH, formatField) : NUMBER_MONTH_STRATEGY;
+        case 'y':
+            return formatField.length() > 2 ? LITERAL_YEAR_STRATEGY : ABBREVIATED_YEAR_STRATEGY;
+        case 'H':
+        case 'h':
+        case 'm':
+        case 's':
+        case 'S':
+        case 'a':
+            return NUMBER_STRATEGY;
+        case 'Z':
+        case 'z':
+            if (nextStrategy == null) {
+                throw new IllegalArgumentException("Format '" + formatField + "' not valid");
+            }
+            return nextStrategy == NUMBER_MONTH_STRATEGY ? new TimeZoneStrategy(formatField) : new BasicTimeZoneStrategy(formatField);
+        default:
+            throw new IllegalArgumentException("Format '" + formatField + "' not valid");
+        }
+    }
+

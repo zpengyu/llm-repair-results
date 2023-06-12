@@ -1,0 +1,58 @@
+diff --git a/src/java/org/apache/commons/codec/binary/Base64InputStream.java b/src/java/org/apache/commons/codec/binary/Base64InputStream.java
+index 90a35578..ebcf628a 100644
+--- a/src/java/org/apache/commons/codec/binary/Base64InputStream.java
++++ b/src/java/org/apache/commons/codec/binary/Base64InputStream.java
+@@ -145,6 +145,9 @@ public class Base64InputStream extends FilterInputStream {
+         } else if (len == 0) {
+             return 0;
+         } else {
++            int readLen;
++            int off = offset;
++            int toRead = len;
+             /*
+              Rationale for while-loop on (readLen == 0):
+              -----
+@@ -161,24 +163,28 @@ public class Base64InputStream extends FilterInputStream {
+              -----
+              This is a fix for CODEC-101
+             */
+-                if (!base64.hasData()) {
+-                    byte[] buf = new byte[doEncode ? 4096 : 8192];
+-                    int c = in.read(buf);
+-                    // A little optimization to avoid System.arraycopy()
+-                    // when possible.
+-                    if (c > 0 && b.length == len) {
+-                        base64.setInitialBuffer(b, offset, len);
+-                    }
+-                    if (doEncode) {
+-                        base64.encode(buf, 0, c);
+-                    } else {
+-                        base64.decode(buf, 0, c);
+-                    }
++            while ((readLen = base64.readResults(b, off, toRead)) == 0) {
++                byte[] buf = new byte[doEncode ? 4096 : 8192];
++                int c = in.read(buf);
++                // A little optimization to avoid System.arraycopy()
++                // when possible.
++                if (c > 0 && b.length == len) {
++                    base64.setInitialBuffer(b, offset, len);
++                }
++                if (c < 0) {
++                    return c;
+                 }
+-            return base64.readResults(b, offset, len);
++                if (doEncode) {
++                    base64.encode(buf, 0, c);
++                } else {
++                    base64.decode(buf, 0, c);
++                }
++                off += c;
++                toRead -= c;
++            }
++            return readLen;
+         }
+     }
+-
+     /**
+      * {@inheritDoc}
+      * 

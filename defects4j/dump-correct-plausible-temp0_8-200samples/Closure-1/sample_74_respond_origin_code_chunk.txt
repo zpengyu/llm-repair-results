@@ -1,0 +1,15 @@
+    Node lastArg;
+    while ((lastArg = argList.getLastChild()) != null) {
+      Var var = fnScope.getVar(lastArg.getString());
+      if (!referenced.contains(var)) {
+        if (NodeUtil.isGetOrSetKey(lastArg.getParent())) {
+          // The parameters object literal setters can not be removed.
+          break;
+        }
+        argList.removeChild(lastArg);
+        compiler.reportCodeChange();
+      } else {
+        break;
+      }
+    }
+

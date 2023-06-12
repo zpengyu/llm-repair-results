@@ -1,0 +1,39 @@
+diff --git a/src/main/java/org/apache/commons/compress/archivers/tar/TarUtils.java b/src/main/java/org/apache/commons/compress/archivers/tar/TarUtils.java
+index 121012d0..6b775d60 100644
+--- a/src/main/java/org/apache/commons/compress/archivers/tar/TarUtils.java
++++ b/src/main/java/org/apache/commons/compress/archivers/tar/TarUtils.java
+@@ -107,10 +102,32 @@ public class TarUtils {
+             result = (result << 3) + (currentByte - '0'); // convert from ASCII
+             // CheckStyle:MagicNumber ON
+         }
+-
+         return result;
+     }
+-
++    private static String exceptionMessage(final byte[] buffer, final int offset, final int length, final int illegal, final byte badByte) {
++        StringBuffer messageBuffer = new StringBuffer();
++        if (illegal < 0) {
++            messageBuffer.append("Illegal octal digit at buffer[0], ");
++            messageBuffer.append("value is 0x");
++            messageBuffer.append(Integer.toHexString(badByte));
++        } else if (illegal >= offset + length) {
++            messageBuffer.append("Missing trailing NUL or space character at end of buffer, ");
++            messageBuffer.append("got 0x");
++            messageBuffer.append(Integer.toHexString(badByte));
++        } else {
++            messageBuffer.append("Illegal octal digit at buffer[");
++            messageBuffer.append(illegal-offset);
++            messageBuffer.append("], ");
++            messageBuffer.append("value is 0x");
++            messageBuffer.append(Integer.toHexString(badByte));
++        }
++        messageBuffer.append(" [offset=");
++        messageBuffer.append(offset);
++        messageBuffer.append(", length=");
++        messageBuffer.append(length);
++        messageBuffer.append("]");
++        return messageBuffer.toString();
++    }
+     /** 
+      * Compute the value contained in a byte buffer.  If the most
+      * significant bit of the first byte in the buffer is set, this

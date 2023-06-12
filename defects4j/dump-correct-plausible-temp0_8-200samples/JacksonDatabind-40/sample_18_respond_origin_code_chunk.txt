@@ -1,0 +1,62 @@
+    protected abstract static class PrimitiveOrWrapperDeserializer<T>
+        extends StdScalarDeserializer<T>
+    {
+        private static final long serialVersionUID = 1L;
+
+        protected final T _nullValue;
+        protected final boolean _primitive;
+
+        protected PrimitiveOrWrapperDeserializer(Class<T> vc, T nvl) {
+            super(vc);
+            _nullValue = nvl;
+            _primitive = vc.isPrimitive();
+        }
+
+        @Override
+        public final T getNullValue(DeserializationContext ctxt) throws JsonMappingException
+        {
+            if (_primitive && ctxt.isEnabled(DeserializationFeature.FAIL_ON_NULL_FOR_PRIMITIVES)) {
+                throw ctxt.mappingException(
+                        "Can not map JSON null into type %s (set DeserializationConfig.DeserializationFeature.FAIL_ON_NULL_FOR_PRIMITIVES to 'false' to allow)",
+                        handledType().toString());
+            }
+            return _nullValue;
+        }
+
+        @Override
+        @Deprecated // remove in 2.7
+        public final T getNullValue() {
+            return _nullValue;
+        }
+
+        /**
+         * Method used to determine if some String value being deserialized from JSON
+         * counts as "empty", and can be directly turned into null value to use (as
+         * per <code>DeserializationFeature.ACCEPT_EMPTY_STRING_AS_NULL_OBJECT</code>).
+         * This can be called iff <code>_primitive</code> is false; otherwise standard
+         * handling applies.
+         *<p>
+         * Default implementation checks for empty String; can be overridden to
+         * change this (for example, check for <code>NullNode</code> or Pattern
+         * of empty values).
+         */
+        protected boolean _isEmptyOrTextualNull(String value) {
+            return value.isEmpty();
+        }
+
+        @Override
+        public T deserialize(JsonParser p, DeserializationContext ctxt) throws IOException
+        {
+            if (p.hasToken(JsonToken.VALUE_STRING)) {
+                String text = p.getText().trim();
+                if (_primitive || !_isEmptyOrTextualNull(text)) {
+                    return _deserializeFromEmptyString(p, ctxt);
+                }
+                return _nullValue;
+            }
+            return _deserializeNonNull(p, ctxt);
+        }
+
+        // [databind#1095]: Should not allow coercion from into null from Empty String
+        // either, if `null` not allowed
+    }

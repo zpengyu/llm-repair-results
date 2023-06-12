@@ -1,0 +1,37 @@
+    protected JavaType _narrow(Class<?> subclass)
+    {
+        if (_class == subclass) {
+            return this;
+        }
+        // Should we check that there is a sub-class relationship?
+        if (!_class.isAssignableFrom(subclass)) {
+            throw new IllegalArgumentException("Class "+subclass.getName()+" not sub-type of "
+                    +_class.getName());
+        }
+        // Otherwise, stitch together the hierarchy. First, super-class
+        JavaType superCls = _superClass;
+        if (superCls != null) {
+            // NOTE: superCls only known to be assignable from _class, not from subclass
+            JavaType superCls2 = superCls._narrow(subclass);
+            if (superCls2 != superCls) {
+                // probably can't happen, but for now let's verify
+                if (superCls2.getClass() != superCls.getClass()) {
+                    throw new IllegalArgumentException("Internal error: broken super-type handling");
+                }
+                superCls = superCls2;
+            }
+        }
+        // if not found, try a super-interface
+        JavaType superIface = _findSuperInterfaceChain(subclass);
+        if (superIface != null) {
+            // probably can't happen, but for now let's verify
+            if (superCls != null && superCls.getRawClass() == subclass) {
+                if (superIface.getRawClass() != _class) {
+                    throw new IllegalArgumentException("Internal error: broken super-type handling");
+                }
+            }
+            return superIface;
+        }
+        // should not get here but...
+        return superCls == null ? this : superCls;
+    }

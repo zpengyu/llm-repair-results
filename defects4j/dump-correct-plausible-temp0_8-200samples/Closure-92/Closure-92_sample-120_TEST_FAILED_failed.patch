@@ -1,0 +1,25 @@
+diff --git a/src/com/google/javascript/jscomp/ProcessClosurePrimitives.java b/src/com/google/javascript/jscomp/ProcessClosurePrimitives.java
+index d1d12a3c..eb5252b3 100644
+--- a/src/com/google/javascript/jscomp/ProcessClosurePrimitives.java
++++ b/src/com/google/javascript/jscomp/ProcessClosurePrimitives.java
+@@ -754,9 +753,9 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback
+       // Handle the case where there is a duplicate definition for an explicitly
+       // provided symbol.
+       if (candidateDefinition != null && explicitNode != null) {
++        Node parent = explicitNode.getParent();
+         explicitNode.detachFromParent();
+         compiler.reportCodeChange();
+-
+         // Does this need a VAR keyword?
+         replacementNode = candidateDefinition;
+         if (NodeUtil.isExpressionNode(candidateDefinition)) {
+@@ -771,8 +770,7 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback
+             nameNode.addChildToFront(valueNode);
+             Node varNode = new Node(Token.VAR, nameNode);
+             varNode.copyInformationFrom(candidateDefinition);
+-            candidateDefinition.getParent().replaceChild(
+-                candidateDefinition, varNode);
++            parent.replaceChild(candidateDefinition, varNode);
+             nameNode.setJSDocInfo(assignNode.getJSDocInfo());
+             compiler.reportCodeChange();
+             replacementNode = varNode;

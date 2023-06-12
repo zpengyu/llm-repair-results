@@ -1,0 +1,58 @@
+    private void applyPaxHeadersToCurrentEntry(Map<String, String> headers) {
+        /*
+         * The following headers are defined for Pax.
+         * atime, ctime, charset: cannot use these without changing TarArchiveEntry fields
+         * mtime
+         * comment
+         * gid, gname
+         * linkpath
+         * size
+         * uid,uname
+         * SCHILY.devminor, SCHILY.devmajor: don't have setters/getters for those
+         */
+        for (Entry<String, String> ent : headers.entrySet()){
+            String key = ent.getKey();
+            String val = ent.getValue();
+            if ("path".equals(key)){
+                currEntry.setName(val);
+            } else if ("linkpath".equals(key)){
+                currEntry.setLinkName(val);
+            } else if ("gid".equals(key)){
+                currEntry.setGroupId(Integer.parseInt(val));
+            } else if ("gname".equals(key)){
+                currEntry.setGroupName(val);
+            } else if ("uid".equals(key)){
+                currEntry.setUserId(Integer.parseInt(val));
+            } else if ("uname".equals(key)){
+                currEntry.setUserName(val);
+            } else if ("size".equals(key)){
+                currEntry.setSize(Long.parseLong(val));
+            } else if ("mtime".equals(key)){
+                currEntry.setModTime(extractLongValue(val));
+            } else if ("SCHILY.devminor".equals(key)){
+                currEntry.setDevMinor(Integer.parseInt(val));
+            } else if ("SCHILY.devmajor".equals(key)){
+                currEntry.setDevMajor(Integer.parseInt(val));
+            }
+        }
+    }
+    private static long extractLongValue(String val) {
+        long result;
+        if (val.length() > 18 || val.length() == 17
+                && val.charAt(0) > '1') {
+            // PAX standard limits it to 18 decimal digits
+            try {
+                BigInteger bi = new BigInteger(val);
+                result = bi.longValue();
+            } catch (NumberFormatException ex) {
+                result = 0;
+            }
+        } else {
+            try {
+                result = Long.parseLong(val);
+            } catch (NumberFormatException ex) {
+                result = 0;
+            }
+        }
+        return result;
+    }

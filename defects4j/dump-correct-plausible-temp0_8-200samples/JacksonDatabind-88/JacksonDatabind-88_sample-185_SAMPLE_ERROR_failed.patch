@@ -1,0 +1,23 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/jsontype/impl/ClassNameIdResolver.java b/src/main/java/com/fasterxml/jackson/databind/jsontype/impl/ClassNameIdResolver.java
+index 112c00b5c..743ac0fd9 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/jsontype/impl/ClassNameIdResolver.java
++++ b/src/main/java/com/fasterxml/jackson/databind/jsontype/impl/ClassNameIdResolver.java
+@@ -55,8 +55,16 @@ public class ClassNameIdResolver
+             //    compatibility -- needed later anyway, and not doing so may open
+             //    security issues.
+             JavaType t = tf.constructFromCanonical(id);
+-                // Probably cleaner to have a method in `TypeFactory` but can't add in patch
+-            return t;
++            if (t.isTypeOrSubTypeOf(_baseType)) {
++                return t;
++            }
++            if (ctxt instanceof DeserializationContext) {
++                DeserializationContext dctxt = (DeserializationContext) ctxt;
++                // First: we may have problem handlers that can deal with it?
++                return dctxt.handleWeirdTypeId(_baseType, id, this, "type id '" + id + " is not subtype of " + _baseType);
++            }
++            // ... meaning that we really should never get here.
++            return null;
+         }
+         Class<?> cls;
+         try {

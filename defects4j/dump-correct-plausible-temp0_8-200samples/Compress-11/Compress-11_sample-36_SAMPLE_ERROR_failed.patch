@@ -1,0 +1,36 @@
+diff --git a/src/main/java/org/apache/commons/compress/archivers/ArchiveStreamFactory.java b/src/main/java/org/apache/commons/compress/archivers/ArchiveStreamFactory.java
+index e2847a61..715d64dd 100644
+--- a/src/main/java/org/apache/commons/compress/archivers/ArchiveStreamFactory.java
++++ b/src/main/java/org/apache/commons/compress/archivers/ArchiveStreamFactory.java
+@@ -217,17 +215,13 @@ public class ArchiveStreamFactory {
+                 return new ArArchiveInputStream(in);
+             } else if (CpioArchiveInputStream.matches(signature, signatureLength)) {
+                 return new CpioArchiveInputStream(in);
+-            }
+-
+-            // Dump needs a bigger buffer to check the signature;
+-            final byte[] dumpsig = new byte[32];
+-            in.mark(dumpsig.length);
+-            signatureLength = in.read(dumpsig);
+-            in.reset();
+-            if (DumpArchiveInputStream.matches(dumpsig, signatureLength)) {
++            } else if (DumpArchiveInputStream.matches(signature, signatureLength)) {
+                 return new DumpArchiveInputStream(in);
++            } else if (TarArchiveInputStream.matches(signature, signatureLength)) {
++                return new TarArchiveInputStream(in);
++            } else if (Iso9660ArchiveInputStream.matches(signature, signatureLength)) {
++                return new Iso9660ArchiveInputStream(in);
+             }
+-
+             // Tar needs an even bigger buffer to check the signature; read the first block
+             final byte[] tarheader = new byte[512];
+             in.mark(tarheader.length);
+@@ -249,7 +243,5 @@ public class ArchiveStreamFactory {
+         } catch (IOException e) {
+             throw new ArchiveException("Could not use reset and mark operations.", e);
+         }
+-
+         throw new ArchiveException("No Archiver found for the stream signature");
+-    }
+-}
++    }}

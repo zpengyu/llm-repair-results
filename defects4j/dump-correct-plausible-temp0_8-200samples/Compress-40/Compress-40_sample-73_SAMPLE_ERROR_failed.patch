@@ -1,0 +1,31 @@
+diff --git a/src/main/java/org/apache/commons/compress/utils/BitInputStream.java b/src/main/java/org/apache/commons/compress/utils/BitInputStream.java
+index 4086c8b5..436ecd4b 100644
+--- a/src/main/java/org/apache/commons/compress/utils/BitInputStream.java
++++ b/src/main/java/org/apache/commons/compress/utils/BitInputStream.java
+@@ -78,14 +78,17 @@ public class BitInputStream implements Closeable {
+      *         the requested number of bits
+      * @throws IOException on error
+      */
+-    public long readBits(final int count) throws IOException {
++   public long readBits(final int count) throws IOException {
+         if (count < 0 || count > MAXIMUM_CACHE_SIZE) {
+             throw new IllegalArgumentException("count must not be negative or greater than " + MAXIMUM_CACHE_SIZE);
+         }
+         while (bitsCachedSize < count) {
+             final long nextByte = in.read();
+             if (nextByte < 0) {
+-                return nextByte;
++                if (count == MAXIMUM_CACHE_SIZE) {
++                    return nextByte;
++                }
++                throw new EOFException();
+             }
+             if (byteOrder == ByteOrder.LITTLE_ENDIAN) {
+                 bitsCached |= (nextByte << bitsCachedSize);
+@@ -106,5 +108,4 @@ public class BitInputStream implements Closeable {
+             }
+             bitsCachedSize -= count;
+         return bitsOut;
+-    }
+-}
++    }}

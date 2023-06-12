@@ -1,0 +1,34 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/jsontype/impl/ClassNameIdResolver.java b/src/main/java/com/fasterxml/jackson/databind/jsontype/impl/ClassNameIdResolver.java
+index 112c00b5c..1673c3393 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/jsontype/impl/ClassNameIdResolver.java
++++ b/src/main/java/com/fasterxml/jackson/databind/jsontype/impl/ClassNameIdResolver.java
+@@ -49,14 +49,25 @@ public class ClassNameIdResolver
+          *    to do translation when necessary
+          */
+         TypeFactory tf = ctxt.getTypeFactory();
+-        if (id.indexOf('<') > 0) {
++        int index = id.indexOf('<');
++        if (index > 0) {
+             // note: may want to try combining with specialization (esp for EnumMap)?
++            JavaType t = tf.constructFromCanonical(id);
+             // 17-Aug-2017, tatu: As per [databind#1735] need to ensure assignment
+             //    compatibility -- needed later anyway, and not doing so may open
+             //    security issues.
+-            JavaType t = tf.constructFromCanonical(id);
+-                // Probably cleaner to have a method in `TypeFactory` but can't add in patch
+-            return t;
++            if (_baseType == null || _baseType.getClass() == t.getRawClass()) {
++                return t;
++            }
++            if (_baseType.hasGenericTypes()) {
++                JavaType bt = _baseType.findSuperType(t.getRawClass());
++                if (bt != null) {
++                    return bt.narrowBy(t.getBindings().asType());
++                }
++            }
++            throw new IllegalArgumentException("Invalid type id '"+id+"' (for id type 'Id.class'): class "
++                    +t.getRawClass().getName()+" not subtype of "
++                    +_baseType.getRawClass().getName());
+         }
+         Class<?> cls;
+         try {

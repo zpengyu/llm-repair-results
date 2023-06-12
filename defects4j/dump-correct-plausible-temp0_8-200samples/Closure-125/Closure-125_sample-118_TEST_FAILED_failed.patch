@@ -1,0 +1,18 @@
+diff --git a/src/com/google/javascript/jscomp/TypeCheck.java b/src/com/google/javascript/jscomp/TypeCheck.java
+index 75a54ad5..ef7f0c52 100644
+--- a/src/com/google/javascript/jscomp/TypeCheck.java
++++ b/src/com/google/javascript/jscomp/TypeCheck.java
+@@ -1664,6 +1664,13 @@ public class TypeCheck implements NodeTraversal.Callback, CompilerPass {
+       } else {
+         ensureTyped(t, n);
+       }
++    } else if (type.isFunctionType()) {
++      // When the type checker sees a "new Foo", it assumes Foo is a constructor.
++      // But in a dynamic language like JS, this isn't necessarily true. If the
++      // programmer actually intended to invoke Foo, we should try to call it
++      // as a function.
++      visitParameterList(t, n, type.toMaybeFunctionType());
++      ensureTyped(t, n, type.toMaybeFunctionType().getReturnType());
+     } else {
+       report(t, n, NOT_A_CONSTRUCTOR);
+       ensureTyped(t, n);

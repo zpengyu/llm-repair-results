@@ -1,0 +1,27 @@
+diff --git a/src/main/java/org/apache/commons/csv/Lexer.java b/src/main/java/org/apache/commons/csv/Lexer.java
+index c161334..11f3700 100644
+--- a/src/main/java/org/apache/commons/csv/Lexer.java
++++ b/src/main/java/org/apache/commons/csv/Lexer.java
+@@ -108,7 +108,21 @@ abstract class Lexer {
+             throw new IOException("EOF whilst processing escape sequence");
+         default:
+             // Now check for meta-characters
+-                return c;
++            if (c >= '0' && c <= '7') {
++                int result = c - '0';
++                int count = 0;
++                while (count < 2) {
++                    int digit = in.read();
++                    if (digit >= '0' && digit <= '7') {
++                        result = result * 8 + digit - '0';
++                        ++count;
++                    } else {
++                        in.unread(digit);
++                        break;
++                    }
++                }
++                return result;
++            }
+             // indicate unexpected char - available from in.getLastChar()
+         }
+     }

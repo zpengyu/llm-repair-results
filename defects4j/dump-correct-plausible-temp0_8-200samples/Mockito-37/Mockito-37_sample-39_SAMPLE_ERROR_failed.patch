@@ -1,0 +1,24 @@
+diff --git a/src/org/mockito/internal/stubbing/answers/AnswersValidator.java b/src/org/mockito/internal/stubbing/answers/AnswersValidator.java
+index 5d8057846..07f0a9d0d 100644
+--- a/src/org/mockito/internal/stubbing/answers/AnswersValidator.java
++++ b/src/org/mockito/internal/stubbing/answers/AnswersValidator.java
+@@ -57,7 +45,18 @@ public class AnswersValidator {
+         if (throwable instanceof RuntimeException || throwable instanceof Error) {
+             return;
+         }
+-        
++        if (!invocation.isValidException(throwable)) {
++            reporter.checkedExceptionInvalid(throwable);
++        }
++    }
++    private void validateException(ThrowsException answer, Invocation invocation) {
++        Throwable throwable = answer.getThrowable();
++        if (throwable == null) {
++            reporter.cannotStubWithNullThrowable();
++        }
++        if (throwable instanceof RuntimeException || throwable instanceof Error) {
++            return;
++        }
+         if (!invocation.isValidException(throwable)) {
+             reporter.checkedExceptionInvalid(throwable);
+         }

@@ -1,0 +1,22 @@
+diff --git a/src/main/java/org/jsoup/helper/DataUtil.java b/src/main/java/org/jsoup/helper/DataUtil.java
+index 6de0c40..412b6fe 100644
+--- a/src/main/java/org/jsoup/helper/DataUtil.java
++++ b/src/main/java/org/jsoup/helper/DataUtil.java
+@@ -125,7 +122,16 @@ public final class DataUtil {
+         }
+         if (docData.length() > 0 && docData.charAt(0) == UNICODE_BOM) {
+             byteData.rewind();
+-            docData = Charset.forName(defaultCharset).decode(byteData).toString();
++            // use charset declared by content type header, OR fallback to default (utf-8)
++            Charset decodeCharset = Charset.forName(defaultCharset);
++            if (charsetName != null) {
++                try {
++                    decodeCharset = Charset.forName(charsetName);
++                } catch (IllegalCharsetNameException e) {
++                    decodeCharset = Charset.forName(defaultCharset);
++                }
++            }
++            docData = decodeCharset.decode(byteData).toString();
+             docData = docData.substring(1);
+             charsetName = defaultCharset;
+             doc = null;

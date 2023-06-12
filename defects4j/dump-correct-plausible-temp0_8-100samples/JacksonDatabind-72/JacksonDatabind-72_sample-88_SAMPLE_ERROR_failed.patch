@@ -1,0 +1,59 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/deser/impl/InnerClassProperty.java b/src/main/java/com/fasterxml/jackson/databind/deser/impl/InnerClassProperty.java
+index 128a8346f..958392127 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/deser/impl/InnerClassProperty.java
++++ b/src/main/java/com/fasterxml/jackson/databind/deser/impl/InnerClassProperty.java
+@@ -110,24 +93,9 @@ public final class InnerClassProperty
+     public void deserializeAndSet(JsonParser jp, DeserializationContext ctxt, Object bean)
+         throws IOException
+     {
+-        JsonToken t = jp.getCurrentToken();
+-        Object value;
+-        if (t == JsonToken.VALUE_NULL) {
+-            value = _valueDeserializer.getNullValue(ctxt);
+-        } else if (_valueTypeDeserializer != null) {
+-            value = _valueDeserializer.deserializeWithType(jp, ctxt, _valueTypeDeserializer);
+-        } else  { // the usual case
+-            try {
+-                value = _creator.newInstance(bean);
+-            } catch (Exception e) {
+-                ClassUtil.unwrapAndThrowAsIAE(e, "Failed to instantiate class "+_creator.getDeclaringClass().getName()+", problem: "+e.getMessage());
+-                value = null;
+-            }
+-            _valueDeserializer.deserialize(jp, ctxt, value);
+-        }
++        Object value = deserialize(jp, ctxt);
+         set(bean, value);
+     }
+-
+     @Override
+     public Object deserializeSetAndReturn(JsonParser jp,
+     		DeserializationContext ctxt, Object instance)
+@@ -145,7 +111,27 @@ public final class InnerClassProperty
+     public Object setAndReturn(Object instance, Object value) throws IOException {
+         return _delegate.setAndReturn(instance, value);
+     }
+-
++    @Override
++    public Object deserialize(JsonParser jp, DeserializationContext ctxt)
++        throws IOException
++    {
++        JsonToken t = jp.getCurrentToken();
++        Object value;
++        if (t == JsonToken.VALUE_NULL) {
++            value = _valueDeserializer.getNullValue(ctxt);
++        } else if (_valueTypeDeserializer != null) {
++            value = _valueDeserializer.deserializeWithType(jp, ctxt, _valueTypeDeserializer);
++        } else  { // the usual case
++            try {
++                value = _creator.newInstance(bean);
++            } catch (Exception e) {
++                ClassUtil.unwrapAndThrowAsIAE(e, "Failed to instantiate class "+_creator.getDeclaringClass().getName()+", problem: "+e.getMessage());
++                value = null;
++            }
++            _valueDeserializer.deserialize(jp, ctxt, value);
++        }
++        return value;
++    }
+     /*
+     /**********************************************************
+     /* JDK serialization handling

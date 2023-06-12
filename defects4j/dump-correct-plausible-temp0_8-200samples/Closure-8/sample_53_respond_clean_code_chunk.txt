@@ -1,0 +1,101 @@
+/**
+   * Gathers all of the variable declarations / assignments that should be
+   * collapsed into one.
+   *
+   * We do not do the collapsing as we go since node traversal would be affected
+   * by the changes we are making to the parse tree.
+   */
+  private class GatherCollapses extends AbstractPostOrderCallback {
+    // If a VAR is declared like
+    // var x;
+    // then we should not create new VAR nodes for it later in the tree.
+    // This is a workaround for a bug in Firefox.
+    private final Set<Var> blacklistedVars = Sets.newHashSet();
+    @Override
+    public void visit(NodeTraversal t, Node n, Node parent) {
+      if (n.isVar()) {
+        blacklistStubVars(t, n);
+      }
+      // Only care about var nodes
+      if (!n.isVar() && !canBeRedeclared(n, t.getScope())) return;
+      // If we've already looked at this node, skip it
+      if (nodesToCollapse.contains(n)) return;
+      // Adjacent VAR children of an IF node are the if and else parts and can't
+      // be collapsed
+      if (parent.isIf()) return;
+      Node varNode = n;
+      boolean hasVar = n.isVar();
+      // Find variable declarations that follow this one (if any)
+      n = n.getNext();
+      boolean hasNodesToCollapse = false;
+      while (n != null &&
+          (n.isVar() || canBeRedeclared(n, t.getScope()))) {
+        if (n.isVar()) {
+          blacklistStubVars(t, n);
+          hasVar = true;
+        }
+        nodesToCollapse.add(n);
+        hasNodesToCollapse = true;
+        n = n.getNext();
+      }
+      if (hasNodesToCollapse && hasVar) {
+        nodesToCollapse.add(varNode);
+        collapses.add(new Collapse(varNode, n, parent));
+      }
+    }
+    private void blacklistStubVars(NodeTraversal t, Node varNode) {
+      for (Node child = varNode.getFirstChild();
+           child != null; child = child.getNext()) {
+        if (child.getFirstChild() == null) {
+          blacklistedVars.add(t.getScope().getVar(child.getString()));
+        }
+      }
+    }
+    private boolean canBeRedeclared(Node n, Scope s) {
+      if (!NodeUtil.isExprAssign(n)) {
+        return false;
+      }
+      Node assign = n.getFirstChild();
+      Node lhs = assign.getFirstChild();
+      if (!lhs.isName()) {
+        return false;
+      }
+      Var var = s.getVar(lhs.getString());
+      return var != null
+          && var.getScope() == s
+          && !blacklistedVars.contains(var);
+    }
+  }
+  private void applyCollapses() {
+    for (Collapse collapse : collapses) {
+      Node var = new Node(Token.VAR);
+      var.copyInformationFrom(collapse.startNode);
+      collapse.parent.addChildBefore(var, collapse.startNode);
+      boolean redeclaration = false;
+      for (Node n = collapse.startNode; n != collapse.endNode;) {
+        Node next = n.getNext();
+        Preconditions.checkState(var.getNext() == n);
+        collapse.parent.removeChildAfter(var);
+        if (n.isVar()) {
+          while(n.hasChildren()) {
+            var.addChildToBack(n.removeFirstChild());
+          }
+        } else {
+          Node assign = n.getFirstChild();
+          Node lhs = assign.getFirstChild();
+          Preconditions.checkState(lhs.isName());
+          Node rhs = assign.getLastChild();
+          lhs.addChildToBack(rhs.detachFromParent());
+          var.addChildToBack(lhs.detachFromParent());
+          redeclaration = true;
+        }
+        n = next;
+      }
+      if (redeclaration) {
+        JSDocInfo info = new JSDocInfo();
+        info.addSuppression("duplicate");
+        var.setJSDocInfo(info);
+      }
+    }
+  }
+}

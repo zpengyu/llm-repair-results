@@ -1,0 +1,52 @@
+diff --git a/src/main/java/org/jsoup/nodes/Entities.java b/src/main/java/org/jsoup/nodes/Entities.java
+index 32cc3af..f5cb1f4 100644
+--- a/src/main/java/org/jsoup/nodes/Entities.java
++++ b/src/main/java/org/jsoup/nodes/Entities.java
+@@ -86,13 +85,11 @@ public class Entities {
+         final CoreCharset coreCharset = CoreCharset.byName(encoder.charset().name());
+         final Map<Character, String> map = escapeMode.getMap();
+         final int length = string.length();
+-
+-        int codePoint;
+-        for (int offset = 0; offset < length; offset += Character.charCount(codePoint)) {
+-            codePoint = string.codePointAt(offset);
+-
++        char c;
++        for (int offset = 0; offset < length; offset += Character.charCount(c)) {
++            c = string.charAt(offset);
+             if (normaliseWhite) {
+-                if (StringUtil.isWhitespace(codePoint)) {
++                if (StringUtil.isWhitespace(c)) {
+                     if ((stripLeadingWhite && !reachedNonWhite) || lastWasWhite)
+                         continue;
+                     accum.append(' ');
+@@ -104,8 +101,7 @@ public class Entities {
+                 }
+             }
+             // surrogate pairs, split implementation for efficiency on single char common case (saves creating strings, char[]):
+-            if (codePoint < Character.MIN_SUPPLEMENTARY_CODE_POINT) {
+-                final char c = (char) codePoint;
++            if (c < Character.MIN_SUPPLEMENTARY_CODE_POINT) {
+                 // html specific and required escapes:
+                 switch (c) {
+                     case '&':
+@@ -141,14 +137,14 @@ public class Entities {
+                         else if (map.containsKey(c))
+                             accum.append('&').append(map.get(c)).append(';');
+                         else
+-                            accum.append("&#x").append(Integer.toHexString(codePoint)).append(';');
++                            accum.append("&#x").append(Integer.toHexString(c)).append(';');
+                 }
+             } else {
+-                final String c = new String(Character.toChars(codePoint));
+-                if (encoder.canEncode(c)) // uses fallback encoder for simplicity
+-                    accum.append(c);
++                final String s = new String(Character.toChars(c));
++                if (encoder.canEncode(s)) // uses fallback encoder for simplicity
++                    accum.append(s);
+                 else
+-                    accum.append("&#x").append(Integer.toHexString(codePoint)).append(';');
++                    accum.append("&#x").append(Integer.toHexString(c)).append(';');
+             }
+         }
+     }

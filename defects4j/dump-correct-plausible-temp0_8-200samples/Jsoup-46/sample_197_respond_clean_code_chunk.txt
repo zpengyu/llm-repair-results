@@ -1,0 +1,87 @@
+static void escape(StringBuilder accum, String string, Document.OutputSettings out,
+        boolean inAttribute, boolean normaliseWhite, boolean stripLeadingWhite) {
+    final StringBuilder sb = new StringBuilder(string.length());
+    boolean lastWasWhite = false;
+    boolean reachedNonWhite = false;
+    final EscapeMode escapeMode = out.escapeMode();
+    final CharsetEncoder encoder = out.encoder();
+    final CoreCharset coreCharset = CoreCharset.byName(encoder.charset().name());
+    final Map<Character, String> map = escapeMode.getMap();
+    final int length = string.length();
+    int codePoint;
+    for (int offset = 0; offset < length; offset += Character.charCount(codePoint)) {
+        codePoint = string.codePointAt(offset);
+        if (normaliseWhite) {
+            if (StringUtil.isWhitespace(codePoint)) {
+                if ((stripLeadingWhite && !reachedNonWhite) || lastWasWhite)
+                    continue;
+                sb.append(' ');
+                lastWasWhite = true;
+                continue;
+            } else {
+                lastWasWhite = false;
+                reachedNonWhite = true;
+            }
+        }
+        // surrogate pairs, split implementation for efficiency on single char common case (saves creating strings, char[]):
+        if (codePoint < Character.MIN_SUPPLEMENTARY_CODE_POINT) {
+            final char c = (char) codePoint;
+            // html specific and required escapes:
+            switch (c) {
+                case '&':
+                    sb.append("&amp;");
+                    break;
+                case 0xA0:
+                    if (escapeMode != EscapeMode.xhtml)
+                        sb.append("&nbsp;");
+                    else
+                        sb.append(c);
+                    break;
+                case '<':
+                    if (!inAttribute)
+                        sb.append("&lt;");
+                    else
+                        sb.append(c);
+                    break;
+                case '>':
+                    if (!inAttribute)
+                        sb.append("&gt;");
+                    else
+                        sb.append(c);
+                    break;
+                case '"':
+                    if (inAttribute)
+                        sb.append("&quot;");
+                    else
+                        sb.append(c);
+                    break;
+                default:
+                    if (canEncode(coreCharset, c, encoder))
+                        sb.append(c);
+                    else if (map.containsKey(c))
+                        sb.append('&').append(map.get(c)).append(';');
+                    else
+                        sb.append("&#x").append(Integer.toHexString(codePoint)).append(';');
+            }
+        } else {
+            final String c = new String(Character.toChars(codePoint));
+            if (encoder.canEncode(c)) // uses fallback encoder for simplicity
+                sb.append(c);
+            else
+                sb.append("&#x").append(Integer.toHexString(codePoint)).append(';');
+        }
+    }
+    // handle leading whitespace
+    final char[] array = sb.toString().toCharArray();
+    final int arrayLength = array.length;
+    int i = 0;
+    while (i < arrayLength - 1) {
+        if (stripLeadingWhite && array[i] == ' ' && array[i + 1] == ' ') {
+            i++;
+        } else {
+            accum.append(array[i]);
+        }
+        i++;
+    }
+    accum.append(array[arrayLength - 1]);
+}

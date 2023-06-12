@@ -1,0 +1,33 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/deser/BeanDeserializerFactory.java b/src/main/java/com/fasterxml/jackson/databind/deser/BeanDeserializerFactory.java
+index bc8e6736f..6b60ff886 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/deser/BeanDeserializerFactory.java
++++ b/src/main/java/com/fasterxml/jackson/databind/deser/BeanDeserializerFactory.java
+@@ -712,7 +711,9 @@ public class BeanDeserializerFactory
+             // [databind#877]: explicitly prevent forced access to `cause` of `Throwable`;
+             // never needed and attempts may cause problems on some platforms.
+             // !!! NOTE: should be handled better for 2.8 and later
++            if (!_isCause((AnnotatedMethod) mutator)) {
+                 mutator.fixAccess(ctxt.isEnabled(MapperFeature.OVERRIDE_PUBLIC_ACCESS_MODIFIERS));
++            }
+         }
+         // note: this works since we know there's exactly one argument for methods
+         BeanProperty.Std property = new BeanProperty.Std(propDef.getFullName(),
+@@ -750,7 +750,17 @@ public class BeanDeserializerFactory
+         }
+         return prop;
+     }
+-
++    private boolean _isCause(AnnotatedMethod mutator) {
++        if (mutator == null) return false;
++        Class<?> clz = mutator.getDeclaringClass();
++        if (clz != null && Throwable.class.isAssignableFrom(clz)) {
++            String name = mutator.getName();
++            if ("initCause".equals(name) || "getCause".equals(name) || "setCause".equals(name)) {
++                return true;
++            }
++        }
++        return false;
++    }
+     /**
+      * Method that will construct a regular bean property setter using
+      * the given setter method.

@@ -1,0 +1,80 @@
+diff --git a/src/main/java/org/apache/commons/math/optimization/linear/SimplexTableau.java b/src/main/java/org/apache/commons/math/optimization/linear/SimplexTableau.java
+index 3c21cb52c..2917656e1 100644
+--- a/src/main/java/org/apache/commons/math/optimization/linear/SimplexTableau.java
++++ b/src/main/java/org/apache/commons/math/optimization/linear/SimplexTableau.java
+@@ -393,37 +393,45 @@ class SimplexTableau implements Serializable {
+      *
+      * @return current solution
+      */
+-    protected RealPointValuePair getSolution() {
+-      int negativeVarColumn = columnLabels.indexOf(NEGATIVE_VAR_COLUMN_LABEL);
+-      Integer negativeVarBasicRow = negativeVarColumn > 0 ? getBasicRow(negativeVarColumn) : null;
+-      double mostNegative = negativeVarBasicRow == null ? 0 : getEntry(negativeVarBasicRow, getRhsOffset());
+-
+-      Set<Integer> basicRows = new HashSet<Integer>();
+-      double[] coefficients = new double[getOriginalNumDecisionVariables()];
+-      for (int i = 0; i < coefficients.length; i++) {
+-          int colIndex = columnLabels.indexOf("x" + i);
+-          if (colIndex < 0) {
+-            coefficients[i] = 0;
+-            continue;
+-          }
+-          Integer basicRow = getBasicRow(colIndex);
+-              // if the basic row is found to be the objective function row
+-              // set the coefficient to 0 -> this case handles unconstrained
+-              // variables that are still part of the objective function
+-          if (basicRows.contains(basicRow)) {
+-              // if multiple variables can take a given value
+-              // then we choose the first and set the rest equal to 0
+-              coefficients[i] = 0 - (restrictToNonNegative ? 0 : mostNegative);
+-          } else {
+-              basicRows.add(basicRow);
+-              coefficients[i] =
+-                  (basicRow == null ? 0 : getEntry(basicRow, getRhsOffset())) -
+-                  (restrictToNonNegative ? 0 : mostNegative);
+-          }
+-      }
+-      return new RealPointValuePair(coefficients, f.getValue(coefficients));
++  protected RealPointValuePair getSolution() {
++    int negativeVarColumn = columnLabels.indexOf(NEGATIVE_VAR_COLUMN_LABEL);
++    Integer negativeVarBasicRow = negativeVarColumn > 0 ? getBasicRow(negativeVarColumn) : null;
++    double mostNegative = negativeVarBasicRow == null ? 0 : getEntry(negativeVarBasicRow, getRhsOffset());
++    Set<Integer> basicRows = new HashSet<Integer>();
++    double[] coefficients = new double[getOriginalNumDecisionVariables()];
++    for (int i = 0; i < coefficients.length; i++) {
++        int colIndex = columnLabels.indexOf("x" + i);
++        if (colIndex < 0) {
++          coefficients[i] = 0;
++          continue;
++        }
++        Integer basicRow = getBasicRow(colIndex);
++            // if the basic row is found to be the objective function row
++            // set the coefficient to 0 -> this case handles unconstrained 
++            // variables that are still part of the objective function
++        if (basicRows.contains(basicRow)) {
++            // if multiple variables can take a given value
++            // then we choose the first and set the rest equal to 0
++            coefficients[i] = 0 - (restrictToNonNegative ? 0 : mostNegative);
++        } else {
++            basicRows.add(basicRow);
++            coefficients[i] =
++                (basicRow == null ? 0 : getEntry(basicRow, getRhsOffset())) -
++                (restrictToNonNegative ? 0 : mostNegative);
++        }
+     }
+-
++    return new RealPointValuePair(coefficients, f.getValue(coefficients));
++  }
++The Fixer is the main program that implements the Fixer and the funtions that help the fixing process.
++The Fixer uses the following modules:
++* [Lexer](lexer.ipynb)
++* [Parser](parser.ipynb)
++* [AST](ast.ipynb)
++* [Transformer](transformer.ipynb)
++* [Token](token.ipynb)
++* [Tokenizer](tokenizer.ipynb)
++* [FixerHelper](fixerHelper.ipynb)
++The Fixer Helper is a class that contains helper functions, those functions are used by all the Fixer classes, the helper functions help in the fixing process by performing some basic operations that are needed for the fixing process.
+     /**
+      * Subtracts a multiple of one row from another.
+      * <p>

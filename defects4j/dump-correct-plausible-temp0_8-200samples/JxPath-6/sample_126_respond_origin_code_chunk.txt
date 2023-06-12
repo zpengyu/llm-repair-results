@@ -1,0 +1,31 @@
+    protected boolean equal(
+        EvalContext context,
+        Expression left,
+        Expression right) 
+    {
+        Object l = left.compute(context);
+        Object r = right.compute(context);
+        l = compareIterator(l, r);
+        r = compareIterator(r, l);
+        return equal(l, r);
+    }
+
+    private Object compareIterator(
+        Object iteratee,
+        Object compared) 
+    {
+        if (iteratee instanceof InitialContext || iteratee instanceof SelfContext) {
+            iteratee = ((EvalContext) iteratee).getSingleNodePointer();
+        }
+        if (iteratee instanceof Collection) {
+            iteratee = ((Collection) iteratee).iterator();
+        }
+        if (iteratee instanceof Iterator && !(compared instanceof Iterator)) {
+            return contains((Iterator) iteratee, compared);
+        }
+        if (iteratee instanceof Iterator && compared instanceof Iterator) {
+            return findMatch((Iterator) iteratee, (Iterator) compared);
+        }
+        return iteratee;
+    }
+

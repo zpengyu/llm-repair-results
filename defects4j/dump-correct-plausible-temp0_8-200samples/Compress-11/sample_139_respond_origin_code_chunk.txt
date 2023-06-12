@@ -1,0 +1,72 @@
+    public ArchiveInputStream createArchiveInputStream(final InputStream in)
+            throws ArchiveException {
+        if (in == null) {
+            throw new IllegalArgumentException("Stream must not be null.");
+        }
+        if (!in.markSupported()) {
+            in = new BufferedInputStream(in);
+        }
+        ArchiveInputStream result;
+        in.mark(12);
+        byte[] signature = new byte[12];
+        int signatureLength = 0;
+        try {
+            signatureLength = in.read(signature);
+            in.reset();
+        } catch (IOException e) {
+            throw new ArchiveException("Could not use reset and mark operations.", e);
+        }
+        if (ZipArchiveInputStream.matches(signature, signatureLength)) {
+            result = new ZipArchiveInputStream(in);
+        } else if (JarArchiveInputStream.matches(signature, signatureLength)) {
+            result = new JarArchiveInputStream(in);
+        } else if (ArArchiveInputStream.matches(signature, signatureLength)) {
+            result = new ArArchiveInputStream(in);
+        } else if (CpioArchiveInputStream.matches(signature, signatureLength)) {
+            result = new CpioArchiveInputStream(in);
+        } else if (LhaArchiveInputStream.matches(signature, signatureLength)) {
+            result = new LhaArchiveInputStream(in);
+        } else {
+            // Dump needs a bigger buffer to check the signature;
+            signature = new byte[32];
+            in.mark(32);
+            signatureLength = 0;
+            try {
+                signatureLength = in.read(signature);
+                in.reset();
+            } catch (IOException e) {
+                throw new ArchiveException("Could not use reset and mark operations.", e);
+            }
+            if (DumpArchiveInputStream.matches(signature, signatureLength)) {
+                result = new DumpArchiveInputStream(in);
+            } else {
+                // Tar needs an even bigger buffer to check the signature; read the first block
+                signature = new byte[512];
+                in.mark(512);
+                signatureLength = 0;
+                try {
+                    signatureLength = in.read(signature);
+                    in.reset();
+                } catch (IOException e) {
+                    throw new ArchiveException("Could not use reset and mark operations.", e);
+                }
+                if (TarArchiveInputStream.matches(signature, signatureLength)) {
+                    result = new TarArchiveInputStream(in);
+                } else {
+                    // COMPRESS-117 - improve auto-recognition
+                    try {
+                        TarArchiveInputStream tais = new TarArchiveInputStream(
+                                new ByteArrayInputStream(signature));
+                        tais.getNextEntry();
+                        result = new TarArchiveInputStream(in);
+                    } catch (Exception e) {
+                        // can generate IllegalArgumentException as well as IOException
+                        // autodetection, simply not a TAR
+                        throw new ArchiveException("No Archiver found for the stream signature");
+                    }
+                }
+            }
+        }
+        return result;
+    }
+

@@ -1,0 +1,30 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/jsontype/impl/ClassNameIdResolver.java b/src/main/java/com/fasterxml/jackson/databind/jsontype/impl/ClassNameIdResolver.java
+index 112c00b5c..d6c51f789 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/jsontype/impl/ClassNameIdResolver.java
++++ b/src/main/java/com/fasterxml/jackson/databind/jsontype/impl/ClassNameIdResolver.java
+@@ -55,8 +55,10 @@ public class ClassNameIdResolver
+             //    compatibility -- needed later anyway, and not doing so may open
+             //    security issues.
+             JavaType t = tf.constructFromCanonical(id);
+-                // Probably cleaner to have a method in `TypeFactory` but can't add in patch
+-            return t;
++            if (tf.constructType(_baseType).isAssignableFrom(t)) {
++                return t;
++            }
++            throw new IllegalArgumentException("Type id '"+id+"' (for id type 'Id.class') does not match base type '"+_baseType+"'");
+         }
+         Class<?> cls;
+         try {
+@@ -74,9 +76,11 @@ public class ClassNameIdResolver
+         } catch (Exception e) {
+             throw new IllegalArgumentException("Invalid type id '"+id+"' (for id type 'Id.class'): "+e.getMessage(), e);
+         }
++        if (!tf.constructType(_baseType).isAssignableFrom(tf.constructType(cls))) {
++            throw new IllegalArgumentException("Type id '"+id+"' (for id type 'Id.class') can not be assigned to base type '"+_baseType+"'");
++        }
+         return tf.constructSpecializedType(_baseType, cls);
+     }    
+-    
+     /*
+     /**********************************************************
+     /* Internal methods

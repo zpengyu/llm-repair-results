@@ -1,0 +1,15 @@
+    public JsonSerializer<?> createContextual(SerializerProvider serializers,
+            BeanProperty property) throws JsonMappingException
+    {
+        if (property != null) {
+            JsonFormat.Value format = serializers.getAnnotationIntrospector().findFormat((Annotated)property.getMember());
+            if (format != null) {
+                Boolean useTimestamp = format.getShape().isNumeric();
+                if (useTimestamp == null) {
+                    useTimestamp = Boolean.FALSE;
+                }
+                return withFormat(useTimestamp, format.getPattern());
+            }
+        }
+        return this;
+    }

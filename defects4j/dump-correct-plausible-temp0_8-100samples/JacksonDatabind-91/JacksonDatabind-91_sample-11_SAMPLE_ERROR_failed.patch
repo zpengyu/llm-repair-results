@@ -1,0 +1,33 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/deser/DeserializerCache.java b/src/main/java/com/fasterxml/jackson/databind/deser/DeserializerCache.java
+index b56ef54a9..dca7a07d7 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/deser/DeserializerCache.java
++++ b/src/main/java/com/fasterxml/jackson/databind/deser/DeserializerCache.java
+@@ -533,18 +533,18 @@ public final class DeserializerCache
+      *
+      * @since 2.8.11
+      */
+-    private boolean _hasCustomHandlers(JavaType t) {
+-        if (t.isContainerType()) {
+-            // First: value types may have both value and type handlers
+-            JavaType ct = t.getContentType();
+-            if (ct != null) {
+-                return (ct.getValueHandler() != null) || (ct.getTypeHandler() != null);
+-            // Second: map(-like) types may have value handler for key (but not type; keys are untyped)
+-            }
++private boolean _hasCustomHandlers(JavaType t)
++{
++    // First: value types may have both value and type handlers
++    if (t.isContainerType()) {
++        JavaType ct = t.getContentType();
++        if (ct != null) {
++            return (ct.getValueHandler() != null) || (ct.getTypeHandler() != null);
+         }
+-        return false;
+     }
+-
++    // Second: map(-like) types may have value handler for key (but not type; keys are untyped)
++    return (t.getKeyType() != null) && (t.getKeyHandler() != null);
++}
+     private Class<?> _verifyAsClass(Object src, String methodName, Class<?> noneClass)
+     {
+         if (src == null) {

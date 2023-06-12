@@ -1,0 +1,16 @@
+public TokenBuffer deserialize(JsonParser jp, DeserializationContext ctxt) throws IOException
+    {
+        if (jp.getCurrentToken() == JsonToken.START_OBJECT) {
+            copyCurrentStructure(jp);
+        } else {
+            // As per #592, need to support a special case of starting from
+            // FIELD_NAME, which is taken to mean that we are missing START_OBJECT, but need
+            // to assume one did exist.
+            JsonToken t = jp.getCurrentToken();
+            if (t == JsonToken.FIELD_NAME) {
+                return this;
+            }
+            throw ctxt.mappingException("Current token not START_OBJECT (needed to unwrap root name '%s'), but %s", _valueToUpdate, t);
+        }
+        return this;
+    }

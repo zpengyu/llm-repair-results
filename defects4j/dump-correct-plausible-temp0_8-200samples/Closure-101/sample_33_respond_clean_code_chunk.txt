@@ -1,0 +1,29 @@
+  protected CompilerOptions createOptions() {
+    CompilerOptions options = new CompilerOptions();
+    options.setCodingConvention(new ClosureCodingConvention());
+    CompilationLevel level = flags.compilation_level;
+    level.setOptionsForCompilationLevel(options);
+    if (flags.debug) {
+      level.setDebugOptionsForCompilationLevel(options);
+    }
+    WarningLevel wLevel = flags.warning_level;
+    wLevel.setOptionsForWarningLevel(options);
+    for (FormattingOption formattingOption : flags.formatting) {
+      formattingOption.applyToOptions(options);
+    }
+    if (flags.process_closure_primitives) {
+      options.closurePass = true;
+    }
+    initOptionsFromFlags(options);
+    return options;
+  }
+  private void initOptionsFromFlags(CompilerOptions options) {
+    if (flags.use_types_for_optimization) {
+      options.setUseTypesForLocalOptimization(true);
+    }
+    if (flags.use_local_closure_annotations) {
+      options.setCheckTypes(true);
+      options.setClosurePass(true);
+      options.setCheckDefineAssignments(CheckLevel.WARNING);
+    }
+  }

@@ -1,0 +1,41 @@
+diff --git a/src/main/java/org/apache/commons/math/ode/nonstiff/EmbeddedRungeKuttaIntegrator.java b/src/main/java/org/apache/commons/math/ode/nonstiff/EmbeddedRungeKuttaIntegrator.java
+index 9a6ac9b16..7d43b6ba1 100644
+--- a/src/main/java/org/apache/commons/math/ode/nonstiff/EmbeddedRungeKuttaIntegrator.java
++++ b/src/main/java/org/apache/commons/math/ode/nonstiff/EmbeddedRungeKuttaIntegrator.java
+@@ -300,25 +279,22 @@ public abstract class EmbeddedRungeKuttaIntegrator
+               // save the last evaluation for the next step
+               System.arraycopy(yDotTmp, 0, yDotK[0], 0, y0.length);
+           }
+-
+           // stepsize control for next step
+-          final double factor =
+-              FastMath.min(maxGrowth, FastMath.max(minReduction, safety * FastMath.pow(error, exp)));
+-          final double  scaledH    = stepSize * factor;
+-          final double  nextT      = stepStart + scaledH;
+-          final boolean nextIsLast = forward ? (nextT >= t) : (nextT <= t);
+-          hNew = filterStep(scaledH, forward, nextIsLast);
+-
+-          final double  filteredNextT      = stepStart + hNew;
+-          final boolean filteredNextIsLast = forward ? (filteredNextT >= t) : (filteredNextT <= t);
+-          if (filteredNextIsLast) {
++          final double  factor       = FastMath.min(maxGrowth, FastMath.max(minReduction, safety * FastMath.pow(error, exp)));
++          final double  scaledH      = stepSize * factor;
++          final boolean nextIsLast   = forward ? (t - (stepStart + scaledH) <= 0) : (t - (stepStart + scaledH) >= 0);
++          final double  filteredNextT = forward ?
++                                            stepStart + scaledH + 0.5 * MathUtils.sign(t - (stepStart + scaledH)) *
++                                            FastMath.max(FastMath.abs(t - stepStart), FastMath.abs(scaledH)) :
++                                            stepStart + scaledH + 0.5 * MathUtils.sign(t - (stepStart + scaledH)) *
++                                            FastMath.min(FastMath.abs(t - stepStart), FastMath.abs(scaledH));
++          if (nextIsLast) {
+               hNew = t - stepStart;
++          } else {
++              hNew = filterStep(scaledH, forward, filteredNextT >= t);
+           }
+-
+       }
+-
+     } while (!isLastStep);
+-
+     // dispatch results
+     equations.setTime(stepStart);
+     equations.setCompleteState(y);

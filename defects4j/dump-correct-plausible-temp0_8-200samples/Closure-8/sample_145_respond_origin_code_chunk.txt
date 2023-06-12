@@ -1,0 +1,84 @@
+private static boolean isRedeclareble(Node n, Scope s) {
+  if (!n.isVar()) return false;
+  Node assign = n.getFirstChild();
+  Node lhs = assign.getFirstChild();
+  return lhs.isName() && s.getVar(lhs.getString()) != null;
+}
+
+private static boolean canBeRedeclared(Node n, Scope s) {
+  if (!NodeUtil.isExprAssign(n)) {
+    return false;
+  }
+  Node assign = n.getFirstChild();
+  Node lhs = assign.getFirstChild();
+
+  if (!lhs.isName()) {
+    return false;
+  }
+
+  Var var = s.getVar(lhs.getString());
+  return var != null
+      && var.getScope() == s;
+}
+
+  private class GatherCollapses extends AbstractPostOrderCallback {
+
+    // If a VAR is declared like
+    // var x;
+    // then we should not create new VAR nodes for it later in the tree.
+    // This is a workaround for a bug in Firefox.
+    private final Set<Var> blacklistedVars = Sets.newHashSet();
+
+    @Override
+    public void visit(NodeTraversal t, Node n, Node parent) {
+      if (isRedeclareble(n, t.getScope())) {
+        blacklistStubVars(t, n);
+      }
+
+      // Only care about var nodes
+      if (!n.isVar() && !canBeRedeclared(n, t.getScope())) return;
+
+      // If we've already looked at this node, skip it
+      if (nodesToCollapse.contains(n)) return;
+
+      // Adjacent VAR children of an IF node are the if and else parts and can't
+      // be collapsed
+      if (parent.isIf()) return;
+
+      Node varNode = n;
+
+      // Find variable declarations that follow this one (if any)
+      n = n.getNext();
+      Node nextVar = n;
+
+      boolean hasVar = n.isVar();
+
+      while (n != null &&
+          (n.isVar() || canBeRedeclared(n, t.getScope()))) {
+
+        if (n.isVar()) {
+          blacklistStubVars(t, n);
+          hasVar = true;
+        }
+
+        nodesToCollapse.add(n);
+
+        n = n.getNext();
+      }
+
+      if (nextVar != n && hasVar) {
+        nodesToCollapse.add(varNode);
+        collapses.add(new Collapse(varNode, n, parent));
+      }
+    }
+
+    private void blacklistStubVars(NodeTraversal t, Node varNode) {
+      for (Node child = varNode.getFirstChild();
+           child != null; child = child.getNext()) {
+        if (child.getFirstChild() == null) {
+          blacklistedVars.add(t.getScope().getVar(child.getString()));
+        }
+      }
+    }
+
+  }

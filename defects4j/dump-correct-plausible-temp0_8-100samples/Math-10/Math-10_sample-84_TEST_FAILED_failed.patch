@@ -1,0 +1,33 @@
+diff --git a/src/main/java/org/apache/commons/math3/analysis/differentiation/DSCompiler.java b/src/main/java/org/apache/commons/math3/analysis/differentiation/DSCompiler.java
+index fc9944c36..a34189d4f 100644
+--- a/src/main/java/org/apache/commons/math3/analysis/differentiation/DSCompiler.java
++++ b/src/main/java/org/apache/commons/math3/analysis/differentiation/DSCompiler.java
+@@ -1412,13 +1407,24 @@ public class DSCompiler {
+             for (int i = 1; i < tmp2.length; ++i) {
+                 result[resultOffset + i] = -2 * tmp2[i]; // +/-pi - 2 * atan(y / (r - x))
+             }
+-
+         }
+-
+         // fix value to take special cases (+0/+0, +0/-0, -0/+0, -0/-0, +/-infinity) correctly
+-
++        for (int i = 0; i < x.length; ++i) {
++            // check for values like +0.0/-0.0
++            if (((x[xOffset + i] == 0.0) && (y[yOffset + i] == 0.0)) ||
++                    Double.isNaN(result[resultOffset + i])) {
++                result[resultOffset + i] = Double.NaN;
++            }
++            // check for values like +/-Infinity
++            if (Double.isInfinite(result[resultOffset + i])) {
++                if (Double.isInfinite(y[yOffset + i])) {
++                    result[resultOffset + i] = ((x[xOffset + i] < 0) ? -FastMath.PI : FastMath.PI) - 2 * result[resultOffset + i];
++                } else if (Double.isInfinite(x[xOffset + i])) {
++                    result[resultOffset + i] = (y[yOffset + i] < 0) ? -FastMath.PI : FastMath.PI;
++                }
++            }
++        }
+     }
+-
+     /** Compute hyperbolic cosine of a derivative structure.
+      * @param operand array holding the operand
+      * @param operandOffset offset of the operand in its array

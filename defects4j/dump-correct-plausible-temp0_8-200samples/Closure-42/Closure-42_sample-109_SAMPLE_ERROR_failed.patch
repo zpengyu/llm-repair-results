@@ -1,0 +1,27 @@
+diff --git a/src/com/google/javascript/jscomp/parsing/IRFactory.java b/src/com/google/javascript/jscomp/parsing/IRFactory.java
+index 6a42e729..f436b210 100644
+--- a/src/com/google/javascript/jscomp/parsing/IRFactory.java
++++ b/src/com/google/javascript/jscomp/parsing/IRFactory.java
+@@ -565,15 +565,18 @@ class IRFactory {
+ 
+     @Override
+     Node processForInLoop(ForInLoop loopNode) {
+-
+-        // Return the bare minimum to put the AST in a valid state.
++      // If the loopNode.getBody() is a BLOCK, we can just keep the BLOCK,
++      // otherwise, wrap the single node in a BLOCK.
++      Node body = transformBlock(loopNode.getBody());
++      if (!loopNode.getBody().isBlock()) {
++        body = newNode(Token.BLOCK, body);
++      }
+       return newNode(
+           Token.FOR,
+           transform(loopNode.getIterator()),
+           transform(loopNode.getIteratedObject()),
+-          transformBlock(loopNode.getBody()));
++          body);
+     }
+-
+     @Override
+     Node processForLoop(ForLoop loopNode) {
+       Node node = newNode(

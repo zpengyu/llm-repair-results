@@ -1,0 +1,24 @@
+	public static final Pattern PATTERN = Pattern
+		.compile("^(\\d+)\\s+(\\S+?)=(.*)$");
+	Map<String, String> parsePaxHeaders(final InputStream i)
+		throws IOException {
+		final Map<String, String> headers = new HashMap<String, String>(globalPaxHeaders);
+		final BufferedReader reader = new BufferedReader(new InputStreamReader(i));
+		while (true) {
+			final String line = reader.readLine();
+			if (line == null) {
+				break;
+			}
+			final Matcher matcher = PATTERN.matcher(line);
+			if (matcher.matches()) {
+				final String keyword = matcher.group(2);
+				final String value = matcher.group(3);
+				if (value.isEmpty()) {
+					headers.remove(keyword);
+				} else {
+					headers.put(keyword, value);
+				}
+			}
+		}
+		return headers;
+	}

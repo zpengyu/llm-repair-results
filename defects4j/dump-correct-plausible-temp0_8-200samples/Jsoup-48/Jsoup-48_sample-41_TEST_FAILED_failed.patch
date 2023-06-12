@@ -1,0 +1,36 @@
+diff --git a/src/main/java/org/jsoup/helper/HttpConnection.java b/src/main/java/org/jsoup/helper/HttpConnection.java
+index 0b7fa7e..e5362ae 100644
+--- a/src/main/java/org/jsoup/helper/HttpConnection.java
++++ b/src/main/java/org/jsoup/helper/HttpConnection.java
+@@ -755,13 +755,18 @@ public class HttpConnection implements Connection {
+                 String name = entry.getKey();
+                 if (name == null)
+                     continue; // http/1.1 line
+-
+                 List<String> values = entry.getValue();
++                StringBuilder value = new StringBuilder();
++                for (String string : values) {
++                    if (value.length() > 0)
++                        value.append(",");
++                    value.append(string);
++                }
+                 if (name.equalsIgnoreCase("Set-Cookie")) {
+-                    for (String value : values) {
+-                        if (value == null)
++                    for (String val : values) {
++                        if (val == null)
+                             continue;
+-                        TokenQueue cd = new TokenQueue(value);
++                        TokenQueue cd = new TokenQueue(val);
+                         String cookieName = cd.chompTo("=").trim();
+                         String cookieVal = cd.consumeTo(";").trim();
+                         // ignores path, date, domain, validateTLSCertificates et al. req'd?
+@@ -771,7 +776,7 @@ public class HttpConnection implements Connection {
+                     }
+                 } else { // combine same header names with comma: http://www.w3.org/Protocols/rfc2616/rfc2616-sec4.html#sec4.2
+                     if (!values.isEmpty())
+-                        header(name, values.get(0));
++                        header(name, value.toString());
+                 }
+             }
+         }

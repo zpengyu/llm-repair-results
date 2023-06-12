@@ -1,0 +1,49 @@
+diff --git a/src/com/google/javascript/jscomp/InlineVariables.java b/src/com/google/javascript/jscomp/InlineVariables.java
+index 4f045430..8134d60a 100644
+--- a/src/com/google/javascript/jscomp/InlineVariables.java
++++ b/src/com/google/javascript/jscomp/InlineVariables.java
+@@ -525,22 +525,6 @@ class InlineVariables implements CompilerPass {
+           || !isValidReference(reference)) {
+         return false;
+       }
+-
+-      // If the value is read more than once, skip it.
+-      // VAR declarations and EXPR_RESULT don't need the value, but other
+-      // ASSIGN expressions parents do.
+-      if (declaration != initialization &&
+-          !initialization.getGrandparent().isExprResult()) {
+-        return false;
+-      }
+-
+-      // Be very conservative and do no cross control structures or
+-      // scope boundaries
+-      if (declaration.getBasicBlock() != initialization.getBasicBlock()
+-          || declaration.getBasicBlock() != reference.getBasicBlock()) {
+-        return false;
+-      }
+-
+       // Do not inline into a call node. This would change
+       // the context in which it was being called. For example,
+       //   var a = b.c;
+@@ -557,7 +541,20 @@ class InlineVariables implements CompilerPass {
+           && reference.getParent().getFirstChild() == reference.getNode()) {
+         return false;
+       }
+-
++      // If the value is read more than once, skip it.
++      // VAR declarations and EXPR_RESULT don't need the value, but other
++      // ASSIGN expressions parents do.
++      if (declaration != initialization &&
++          !initialization.getGrandparent().isExprResult() &&
++          reference != declaration) {
++        return false;
++      }
++      // Be very conservative and do no cross control structures or
++      // scope boundaries
++      if (declaration.getBasicBlock() != initialization.getBasicBlock()
++          || declaration.getBasicBlock() != reference.getBasicBlock()) {
++        return false;
++      }
+       if (value.isFunction()) {
+         Node callNode = reference.getParent();
+         if (reference.getParent().isCall()) {

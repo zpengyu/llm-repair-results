@@ -1,0 +1,27 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/deser/BeanDeserializer.java b/src/main/java/com/fasterxml/jackson/databind/deser/BeanDeserializer.java
+index 3c89dc109..0205b4556 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/deser/BeanDeserializer.java
++++ b/src/main/java/com/fasterxml/jackson/databind/deser/BeanDeserializer.java
+@@ -754,8 +751,8 @@ public class BeanDeserializer
+             SettableBeanProperty creatorProp = creator.findCreatorProperty(propName);
+             if (creatorProp != null) {
+                 // Last creator property to set?
+-                if (buffer.assignParameter(creatorProp,
+-                        _deserializeWithErrorWrapping(p, ctxt, creatorProp))) {
++                Object value = _deserializeWithErrorWrapping(p, ctxt, creatorProp);
++                if (buffer.assignParameter(creatorProp, value)) {
+                     t = p.nextToken(); // to move to following FIELD_NAME/END_OBJECT
+                     Object bean;
+                     try {
+@@ -784,6 +781,11 @@ public class BeanDeserializer
+                     }
+                     return _unwrappedPropertyHandler.processUnwrapped(p, ctxt, bean, tokens);
+                 }
++                // [databind#743]: we may need to skip the bogus value
++                if (t == JsonToken.VALUE_NULL) {
++                    p.nextToken();
++                    t = p.getCurrentToken();
++                }
+                 continue;
+             }
+             // Object Id property?

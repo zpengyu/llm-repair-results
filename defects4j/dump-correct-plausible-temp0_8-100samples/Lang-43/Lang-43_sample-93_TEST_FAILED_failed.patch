@@ -1,0 +1,22 @@
+diff --git a/src/java/org/apache/commons/lang/text/ExtendedMessageFormat.java b/src/java/org/apache/commons/lang/text/ExtendedMessageFormat.java
+index c63fbf6d..64af1590 100644
+--- a/src/java/org/apache/commons/lang/text/ExtendedMessageFormat.java
++++ b/src/java/org/apache/commons/lang/text/ExtendedMessageFormat.java
+@@ -432,9 +432,14 @@ public class ExtendedMessageFormat extends MessageFormat {
+             }
+             switch (c[pos.getIndex()]) {
+             case QUOTE:
+-                next(pos);
+-                return appendTo == null ? null : appendTo.append(c, lastHold,
+-                        pos.getIndex() - lastHold);
++                if (escapingOn && c[start] == QUOTE) {
++                    next(pos);
++                    return appendTo == null ? null : appendTo.append(c,
++                            lastHold, pos.getIndex() - lastHold);
++                } else {
++                    throw new IllegalArgumentException(
++                            "Unmatched quote at " + pos.getIndex());
++                }
+             default:
+                 next(pos);
+             }

@@ -1,0 +1,42 @@
+diff --git a/src/main/java/org/apache/commons/compress/archivers/ar/ArArchiveInputStream.java b/src/main/java/org/apache/commons/compress/archivers/ar/ArArchiveInputStream.java
+index 9112fa85..18722b86 100644
+--- a/src/main/java/org/apache/commons/compress/archivers/ar/ArArchiveInputStream.java
++++ b/src/main/java/org/apache/commons/compress/archivers/ar/ArArchiveInputStream.java
+@@ -73,16 +69,15 @@ public class ArArchiveInputStream extends ArchiveInputStream {
+                 }
+             }
+         }
+-
+-                // hit eof
+-
+-        if (input.available() == 0) {
+-            return null;
+-        }
+-
++        // If a previous entry has not been completely read,
++        // skip the remaining bytes
+         if (offset % 2 != 0) {
+             read();
+         }
++        // hit eof
++        if (input.available() == 0) {
++            return null;
++        }
+         final byte[] name = new byte[16];
+         final byte[] lastmodified = new byte[12];
+         final byte[] userid = new byte[6];
+@@ -110,13 +103,10 @@ public class ArArchiveInputStream extends ArchiveInputStream {
+                 }
+             }
+         }
+-
+         return new ArArchiveEntry(new String(name).trim(),
+-                                          Long.parseLong(new String(length)
++                                  Long.parseLong(new String(length)
+                                                          .trim()));
+     }
+-
+-
+     public ArchiveEntry getNextEntry() throws IOException {
+         return getNextArEntry();
+     }

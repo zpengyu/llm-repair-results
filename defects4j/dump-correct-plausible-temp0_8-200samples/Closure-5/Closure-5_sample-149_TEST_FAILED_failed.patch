@@ -1,0 +1,28 @@
+diff --git a/src/com/google/javascript/jscomp/InlineObjectLiterals.java b/src/com/google/javascript/jscomp/InlineObjectLiterals.java
+index 2f5a8e10..4a8dbf00 100644
+--- a/src/com/google/javascript/jscomp/InlineObjectLiterals.java
++++ b/src/com/google/javascript/jscomp/InlineObjectLiterals.java
+@@ -184,6 +181,10 @@ class InlineObjectLiterals implements CompilerPass {
+           // isn't a perfect algorithm, but it should catch most cases.
+           String propName = parent.getLastChild().getString();
+           if (!validProperties.contains(propName)) {
++            // Only rewrite VAR declarations or simple assignment statements
++            if (!isVarOrAssignExprLhs(name)) {
++               return false;
++            }
+             if (NodeUtil.isVarOrSimpleAssignLhs(parent, gramps)) {
+               validProperties.add(propName);
+             } else {
+@@ -192,12 +193,6 @@ class InlineObjectLiterals implements CompilerPass {
+           }
+           continue;
+         }
+-
+-        // Only rewrite VAR declarations or simple assignment statements
+-        if (!isVarOrAssignExprLhs(name)) {
+-           return false;
+-        }
+-
+         Node val = ref.getAssignedValue();
+         if (val == null) {
+           // A var with no assignment.

@@ -1,0 +1,24 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/jsontype/impl/TypeDeserializerBase.java b/src/main/java/com/fasterxml/jackson/databind/jsontype/impl/TypeDeserializerBase.java
+index e8942ba4b..3104037ce 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/jsontype/impl/TypeDeserializerBase.java
++++ b/src/main/java/com/fasterxml/jackson/databind/jsontype/impl/TypeDeserializerBase.java
+@@ -158,11 +158,17 @@ public abstract class TypeDeserializerBase
+                 // use the default impl if no type id available:
+                 deser = _findDefaultImplDeserializer(ctxt);
+                 if (deser == null) {
+-                    // 10-May-2016, tatu: We may get some help...
++                    /* As per [databind#305] need to consider possibility of
++                     * custom handler being installed. If not, can just
++                     * throw the exception.
++                     */
++                    /* 10-May-2016, tatu: We may get some help...
++                     */
+                     JavaType actual = _handleUnknownTypeId(ctxt, typeId);
+                     if (actual == null) { // what should this be taken to mean?
+                         // 17-Jan-2019, tatu: As per [databind#2221], better NOT return `null` but...
+-                        return null;
++                        throw InvalidFormatException.from(_parser,
++                                "Could not resolve type id '"+typeId+"' into a subtype of "+_baseType, typeId, _baseType.getRawClass());
+                     }
+                     // ... would this actually work?
+                     deser = ctxt.findContextualValueDeserializer(actual, _property);

@@ -1,0 +1,24 @@
+diff --git a/src/main/java/org/jsoup/parser/Parser.java b/src/main/java/org/jsoup/parser/Parser.java
+index 5f71aaf..1a5b67d 100644
+--- a/src/main/java/org/jsoup/parser/Parser.java
++++ b/src/main/java/org/jsoup/parser/Parser.java
+@@ -200,11 +199,16 @@ public class Parser {
+             }
+             tq.consumeWhitespace();
+         }
+-        if (key.length() != 0)
+-            return Attribute.createFromEncoded(key, value);
++        if (key.length() != 0) {
++            if (value.startsWith(SQ))
++                return Attribute.createFromEncoded(key, value.substring(1, value.length() - 1));
++            else if (value.startsWith(DQ))
++                return Attribute.createFromEncoded(key, value.substring(1, value.length() - 1));
++            else
++                return Attribute.createFromEncoded(key, value);
++        }
+         else {
+             tq.consume();
+-
+             return null;
+         }
+     }

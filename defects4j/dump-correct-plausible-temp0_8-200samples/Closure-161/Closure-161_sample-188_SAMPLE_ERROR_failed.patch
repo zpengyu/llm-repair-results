@@ -1,0 +1,21 @@
+diff --git a/src/com/google/javascript/jscomp/PeepholeFoldConstants.java b/src/com/google/javascript/jscomp/PeepholeFoldConstants.java
+index 42875ffc..4aa6818e 100644
+--- a/src/com/google/javascript/jscomp/PeepholeFoldConstants.java
++++ b/src/com/google/javascript/jscomp/PeepholeFoldConstants.java
+@@ -1277,10 +1277,12 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
+ 
+   private Node tryFoldArrayAccess(Node n, Node left, Node right) {
+     Node parent = n.getParent();
+-    // If GETPROP/GETELEM is used as assignment target the array literal is
+-    // acting as a temporary we can't fold it here:
+-    //    "[][0] += 1"
+-
++    if (parent.isGetProp() || parent.isGetElem()) {
++      // TODO(johnlenz): Allow this.  Consider:
++      //    "var y = x[0]; y[0] = 2;"
++      // the temporary here is unnecessary.
++      return n;
++    }
+     if (right.getType() != Token.NUMBER) {
+       // Sometimes people like to use complex expressions to index into
+       // arrays, or strings to index into array methods.

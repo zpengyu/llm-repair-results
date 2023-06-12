@@ -1,0 +1,28 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/ser/std/DateTimeSerializerBase.java b/src/main/java/com/fasterxml/jackson/databind/ser/std/DateTimeSerializerBase.java
+index ae5fd6538..7503a6b59 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/ser/std/DateTimeSerializerBase.java
++++ b/src/main/java/com/fasterxml/jackson/databind/ser/std/DateTimeSerializerBase.java
+@@ -80,12 +79,19 @@ public abstract class DateTimeSerializerBase<T>
+             df.setTimeZone(tz);
+             return withFormat(Boolean.FALSE, df);
+         }
+-
+         // Otherwise, need one of these changes:
+-
+-
+         // Jackson's own `StdDateFormat` is quite easy to deal with...
+-
++        if (format.hasLocale() || format.hasTimeZone()) {
++            TimeZone tz = format.getTimeZone();
++            if (tz == null) {
++                tz = serializers.getTimeZone();
++            }
++            Locale loc = format.getLocale();
++            if (loc == null) {
++                loc = serializers.getLocale();
++            }
++            return withFormat(Boolean.FALSE, StdDateFormat.getISO8601Format(loc, tz));
++        }
+         // 08-Jun-2017, tatu: Unfortunately there's no generally usable
+         //    mechanism for changing `DateFormat` instances (or even clone()ing)
+         //    So: require it be `SimpleDateFormat`; can't config other types

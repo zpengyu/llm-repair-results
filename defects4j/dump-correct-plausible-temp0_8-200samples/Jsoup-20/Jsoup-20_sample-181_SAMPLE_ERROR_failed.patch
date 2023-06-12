@@ -1,0 +1,20 @@
+diff --git a/src/main/java/org/jsoup/helper/DataUtil.java b/src/main/java/org/jsoup/helper/DataUtil.java
+index 4bdf4fe..149a11b 100644
+--- a/src/main/java/org/jsoup/helper/DataUtil.java
++++ b/src/main/java/org/jsoup/helper/DataUtil.java
+@@ -89,7 +89,14 @@ public class DataUtil {
+             }
+         } else { // specified by content type header (or by user on file load)
+             Validate.notEmpty(charsetName, "Must set charset arg to character set of file to parse. Set to null to attempt to detect from HTML");
+-            docData = Charset.forName(charsetName).decode(byteData).toString();
++            if (charsetName.equals(defaultCharset)) {
++                docData = Charset.forName(charsetName).decode(byteData).toString();
++            } else {
++                byteData.rewind();
++                byte[] bytes = new byte[byteData.remaining()];
++                byteData.get(bytes);
++                docData = new String(bytes, charsetName);
++            }
+         }
+         if (doc == null) {
+             // there are times where there is a spurious byte-order-mark at the start of the text. Shouldn't be present

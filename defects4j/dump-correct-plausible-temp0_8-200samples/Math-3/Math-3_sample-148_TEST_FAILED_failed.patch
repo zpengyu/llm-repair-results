@@ -1,0 +1,43 @@
+diff --git a/src/main/java/org/apache/commons/math3/util/MathArrays.java b/src/main/java/org/apache/commons/math3/util/MathArrays.java
+index 9ef28e3d8..12f128de5 100644
+--- a/src/main/java/org/apache/commons/math3/util/MathArrays.java
++++ b/src/main/java/org/apache/commons/math3/util/MathArrays.java
+@@ -817,12 +817,11 @@ public class MathArrays {
+         if (len != b.length) {
+             throw new DimensionMismatchException(len, b.length);
+         }
+-
+-            // Revert to scalar multiplication.
+-
++        if (len == 1) {
++            return a[0] * b[0];
++        }
+         final double[] prodHigh = new double[len];
+         double prodLowSum = 0;
+-
+         for (int i = 0; i < len; i++) {
+             final double ai = a[i];
+             final double ca = SPLIT_FACTOR * ai;
+@@ -840,17 +838,13 @@ public class MathArrays {
+                                                   aHigh * bLow);
+             prodLowSum += prodLow;
+         }
+-
+-
+-        final double prodHighCur = prodHigh[0];
+-        double prodHighNext = prodHigh[1];
+-        double sHighPrev = prodHighCur + prodHighNext;
+-        double sPrime = sHighPrev - prodHighNext;
+-        double sLowSum = (prodHighNext - (sHighPrev - sPrime)) + (prodHighCur - sPrime);
+-
++        double prodHighCur = prodHigh[0];
++        double sHighPrev = prodHighCur;
++        double sPrime = prodHighCur;
++        double sLowSum = 0;
+         final int lenMinusOne = len - 1;
+         for (int i = 1; i < lenMinusOne; i++) {
+-            prodHighNext = prodHigh[i + 1];
++            final double prodHighNext = prodHigh[i + 1];
+             final double sHighCur = sHighPrev + prodHighNext;
+             sPrime = sHighCur - prodHighNext;
+             sLowSum += (prodHighNext - (sHighCur - sPrime)) + (sHighPrev - sPrime);

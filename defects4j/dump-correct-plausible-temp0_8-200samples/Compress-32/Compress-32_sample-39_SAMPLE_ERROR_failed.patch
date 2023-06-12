@@ -1,0 +1,17 @@
+diff --git a/src/main/java/org/apache/commons/compress/archivers/tar/TarArchiveInputStream.java b/src/main/java/org/apache/commons/compress/archivers/tar/TarArchiveInputStream.java
+index 87ff4aab..44e152ba 100644
+--- a/src/main/java/org/apache/commons/compress/archivers/tar/TarArchiveInputStream.java
++++ b/src/main/java/org/apache/commons/compress/archivers/tar/TarArchiveInputStream.java
+@@ -494,7 +494,11 @@ public class TarArchiveInputStream extends ArchiveInputStream {
+             String key = ent.getKey();
+             String val = ent.getValue();
+             if ("path".equals(key)){
+-                currEntry.setName(val);
++                String name = val;
++                if (getPlatform() == PLATFORM_FAT && name.indexOf("/") == -1) {
++                    name = name.replace('\\', '/');
++                }
++                currEntry.setName(name);
+             } else if ("linkpath".equals(key)){
+                 currEntry.setLinkName(val);
+             } else if ("gid".equals(key)){

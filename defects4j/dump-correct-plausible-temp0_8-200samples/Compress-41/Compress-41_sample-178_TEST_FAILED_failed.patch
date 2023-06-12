@@ -1,0 +1,24 @@
+diff --git a/src/main/java/org/apache/commons/compress/archivers/zip/ZipArchiveInputStream.java b/src/main/java/org/apache/commons/compress/archivers/zip/ZipArchiveInputStream.java
+index 5d4c0a82..87a98f9e 100644
+--- a/src/main/java/org/apache/commons/compress/archivers/zip/ZipArchiveInputStream.java
++++ b/src/main/java/org/apache/commons/compress/archivers/zip/ZipArchiveInputStream.java
+@@ -317,8 +298,18 @@ public ZipArchiveEntry getNextZipEntry() throws IOException {
+             } else if (current.entry.getMethod() == ZipMethod.BZIP2.getCode()) {
+                 current.in = new BZip2CompressorInputStream(new BoundedInputStream(in, current.entry.getCompressedSize()));
+             }
++        } else {
++            if (current.entry.getMethod() == ZipMethod.UNSHRINKING.getCode()) {
++                current.in = new UnshrinkingInputStream(new BoundedInputStream(in, current.entry.getCompressedSize()));
++            } else if (current.entry.getMethod() == ZipMethod.IMPLODING.getCode()) {
++                current.in = new ExplodingInputStream(
++                        current.entry.getGeneralPurposeBit().getSlidingDictionarySize(),
++                        current.entry.getGeneralPurposeBit().getNumberOfShannonFanoTrees(),
++                        new BoundedInputStream(in, current.entry.getCompressedSize()));
++            } else if (current.entry.getMethod() == ZipMethod.BZIP2.getCode()) {
++                current.in = new BZip2CompressorInputStream(new BoundedInputStream(in, current.entry.getCompressedSize()));
++            }
+         }
+-        
+         entriesRead++;
+         return current.entry;
+     }

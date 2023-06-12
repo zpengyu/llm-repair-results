@@ -1,0 +1,38 @@
+diff --git a/src/main/java/com/fasterxml/jackson/core/json/JsonGeneratorImpl.java b/src/main/java/com/fasterxml/jackson/core/json/JsonGeneratorImpl.java
+index 81b90fed..dbf4eed7 100644
+--- a/src/main/java/com/fasterxml/jackson/core/json/JsonGeneratorImpl.java
++++ b/src/main/java/com/fasterxml/jackson/core/json/JsonGeneratorImpl.java
+@@ -194,4 +168,32 @@ public abstract class JsonGeneratorImpl extends GeneratorBase
+         writeFieldName(fieldName);
+         writeString(value);
+     }
++    /*
++    /**********************************************************
++    /* Public API, low-level output handling
++    /**********************************************************
++     */
++    @Override
++    public void writeFieldName(String name) throws IOException
++    {
++        // Standard JSON allows unquoted field names, but that's a non-standard
++        // extension here; and since it is NOT the default, must explicitly enable
++        boolean addQuotes = isEnabled(Feature.QUOTE_FIELD_NAMES);
++        if (addQuotes) {
++            if (_cfgUnqNames) {
++                addQuotes = _isAllASCII(name);
++            }
++        }
++        writeFieldName(name, addQuotes);
++    }
++    private final static boolean _isAllASCII(String name)
++    {
++        final int len = name.length();
++        for (int i = 0; i < len; ++i) {
++            if (name.charAt(i) > 127) {
++                return false;
++            }
++        }
++        return true;
++    }
+ }
+\ No newline at end of file

@@ -1,0 +1,35 @@
+diff --git a/src/com/google/javascript/jscomp/TypedScopeCreator.java b/src/com/google/javascript/jscomp/TypedScopeCreator.java
+index 5e7bfa3f..ac930933 100644
+--- a/src/com/google/javascript/jscomp/TypedScopeCreator.java
++++ b/src/com/google/javascript/jscomp/TypedScopeCreator.java
+@@ -2004,7 +2002,9 @@ final class TypedScopeCreator implements ScopeCreator {
+         // no reason to do this extra computation for them.
+         return;
+       }
+-
++      // TODO(johnlenz): Support object literals, e.g.
++      //   var a = {};
++      //   a.b = 0;
+       if (n.isName() && NodeUtil.isLValue(n) &&
+           // Be careful of bleeding functions, which create variables
+           // in the inner scope, not the scope where the name appears.
+@@ -2023,7 +2022,8 @@ final class TypedScopeCreator implements ScopeCreator {
+           }
+         }
+       } else if (n.isGetProp() && n.isUnscopedQualifiedName() &&
+-          NodeUtil.isLValue(n)) {
++          NodeUtil.isLValue(n) &&
++          !(parent.isExprResult() && parent.getParent().isObjectLit())) {
+         String name = NodeUtil.getRootOfQualifiedName(n).getString();
+         Scope scope = t.getScope();
+         Var var = scope.getVar(name);
+@@ -2035,8 +2035,7 @@ final class TypedScopeCreator implements ScopeCreator {
+           }
+         }
+       }
+-    }
+-  }
++    }  }
+ 
+   private AstFunctionContents getFunctionAnalysisResults(@Nullable Node n) {
+     if (n == null) {

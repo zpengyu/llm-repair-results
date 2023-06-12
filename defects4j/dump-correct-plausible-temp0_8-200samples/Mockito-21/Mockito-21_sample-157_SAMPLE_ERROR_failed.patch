@@ -1,0 +1,30 @@
+diff --git a/src/org/mockito/internal/creation/instance/ConstructorInstantiator.java b/src/org/mockito/internal/creation/instance/ConstructorInstantiator.java
+index 972e1a282..207b64914 100644
+--- a/src/org/mockito/internal/creation/instance/ConstructorInstantiator.java
++++ b/src/org/mockito/internal/creation/instance/ConstructorInstantiator.java
+@@ -38,8 +31,22 @@ public class ConstructorInstantiator implements Instantiator {
+         try {
+             return cls.newInstance();
+         } catch (Exception e) {
+-            throw new InstantationException("Unable to create mock instance of '"
+-                    + cls.getSimpleName() + "'.\nPlease ensure it has parameter-less constructor.", e);
++            try {
++				Constructor<T> c = cls.getDeclaredConstructor();
++				return c.newInstance();
++			} catch (NoSuchMethodException e1) {
++				throw new InstantationException("Unable to create mock instance of '"
++	                    + cls.getSimpleName() + "'.\nPlease ensure it has parameter-less constructor.", e);
++			} catch (InstantiationException e1) {
++				throw new InstantationException("Unable to create mock instance of '"
++	                    + cls.getSimpleName() + "'.\nPlease ensure it has parameter-less constructor.", e);
++			} catch (IllegalAccessException e1) {
++				throw new InstantationException("Unable to create mock instance of '"
++	                    + cls.getSimpleName() + "'.\nPlease ensure it has parameter-less constructor.", e);
++			} catch (InvocationTargetException e1) {
++				throw new InstantationException("Unable to create mock instance of '"
++	                    + cls.getSimpleName() + "'.\nPlease ensure it has parameter-less constructor.", e);
++			}
+         }
+     }
+ }
+\ No newline at end of file

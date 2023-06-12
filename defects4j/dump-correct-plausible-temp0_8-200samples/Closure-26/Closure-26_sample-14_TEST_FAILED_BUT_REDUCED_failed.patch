@@ -1,0 +1,30 @@
+diff --git a/src/com/google/javascript/jscomp/ProcessCommonJSModules.java b/src/com/google/javascript/jscomp/ProcessCommonJSModules.java
+index f516e584..018ba35b 100644
+--- a/src/com/google/javascript/jscomp/ProcessCommonJSModules.java
++++ b/src/com/google/javascript/jscomp/ProcessCommonJSModules.java
+@@ -187,9 +181,22 @@ public class ProcessCommonJSModules implements CompilerPass {
+       script.addChildToFront(IR.exprResult(
+           IR.call(IR.getprop(IR.name("goog"), IR.string("provide")),
+               IR.string(moduleName))).copyInformationFromForTree(script));
+-
+-      emitOptionalModuleExportsOverride(script, moduleName);
+-
++      // Rewrite module.exports = to moduleName.module$exports =
++      Node last = script.getLastChild();
++      if (last.isExprResult() &&
++          last.getFirstChild().isAssign() &&
++          last.getFirstChild().getFirstChild().isGetProp() &&
++          last.getFirstChild().getFirstChild().getChildCount() == 2 &&
++          last.getFirstChild().getFirstChild().getChildAtIndex(0).isName() &&
++          last.getFirstChild().getFirstChild().getChildAtIndex(0)
++              .getString().equals("module") &&
++          last.getFirstChild().getFirstChild().getChildAtIndex(1).isString() &&
++          last.getFirstChild().getFirstChild().getChildAtIndex(1).getString().equals("exports")) {
++        Node moduleProp = last.getFirstChild().getFirstChild();
++        moduleProp.getFirstChild().setString(moduleName);
++        moduleProp.getLastChild().setString("module$exports");
++        emitOptionalModuleExportsOverride(script, moduleName);
++      }
+       // Rename vars to not conflict in global scope.
+       NodeTraversal.traverse(compiler, script, new SuffixVarsCallback(
+           moduleName));

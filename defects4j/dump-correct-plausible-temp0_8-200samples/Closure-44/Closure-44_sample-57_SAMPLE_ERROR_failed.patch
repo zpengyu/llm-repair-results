@@ -1,0 +1,27 @@
+diff --git a/src/com/google/javascript/jscomp/CodeConsumer.java b/src/com/google/javascript/jscomp/CodeConsumer.java
+index 74978330..7e816e6e 100644
+--- a/src/com/google/javascript/jscomp/CodeConsumer.java
++++ b/src/com/google/javascript/jscomp/CodeConsumer.java
+@@ -195,12 +193,19 @@ abstract class CodeConsumer {
+       // For example,
+       // REGEXP DIV REGEXP
+       // is valid and should print like
+-      // / // / /
++      // / / / /
++    }
++    if (c == '"') {
++      // Are we stringifying?
++      String last = getLastOp();
++      if ("+".equals(last) || "=".equals(last)) {
++        // Do not want to print extra spaces in this case.
++      } else if (isWordChar(getLastChar())) {
++        append(" ");
++      }
+     }
+-
+     append(newcode);
+   }
+-
+   void appendOp(String op, boolean binOp) {
+     append(op);
+   }

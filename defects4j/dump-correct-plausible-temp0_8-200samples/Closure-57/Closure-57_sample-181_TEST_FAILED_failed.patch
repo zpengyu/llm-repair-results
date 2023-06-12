@@ -1,0 +1,28 @@
+diff --git a/src/com/google/javascript/jscomp/ClosureCodingConvention.java b/src/com/google/javascript/jscomp/ClosureCodingConvention.java
+index 2a4fed72..ba35fc61 100644
+--- a/src/com/google/javascript/jscomp/ClosureCodingConvention.java
++++ b/src/com/google/javascript/jscomp/ClosureCodingConvention.java
+@@ -186,17 +186,15 @@ public class ClosureCodingConvention extends DefaultCodingConvention {
+   }
+ 
+   private static String extractClassNameIfGoog(Node node, Node parent,
+-      String functionName){
++      String functionName) {
+     String className = null;
+     if (NodeUtil.isExprCall(parent)) {
+       Node callee = node.getFirstChild();
+-      if (callee != null && callee.getType() == Token.GETPROP) {
+-        String qualifiedName = callee.getQualifiedName();
+-        if (functionName.equals(qualifiedName)) {
+-          Node target = callee.getNext();
+-          if (target != null) {
+-            className = target.getString();
+-          }
++      if (callee != null && callee.getType() == Token.GETPROP
++          && NodeUtil.isGet(callee) && callee.getLastChild().getString().equals(functionName)) {
++        Node target = callee.getFirstChild();
++        if (target != null) {
++          className = target.getQualifiedName();
+         }
+       }
+     }

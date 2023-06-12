@@ -1,0 +1,16 @@
+diff --git a/src/com/google/javascript/jscomp/GlobalNamespace.java b/src/com/google/javascript/jscomp/GlobalNamespace.java
+index a00893b3..ce77e4f7 100644
+--- a/src/com/google/javascript/jscomp/GlobalNamespace.java
++++ b/src/com/google/javascript/jscomp/GlobalNamespace.java
+@@ -305,7 +305,10 @@ class GlobalNamespace
+ 
+     public void collect(JSModule module, Scope scope, Node n) {
+       Node parent = n.getParent();
+-
++      if (n.isGetProp() && parent != null && parent.isAssign() && parent.getFirstChild() == n
++          && parent.getLastChild().isFunction()) {
++        return;
++      }
+       String name;
+       boolean isSet = false;
+       Name.Type type = Name.Type.OTHER;

@@ -1,0 +1,31 @@
+diff --git a/src/com/google/javascript/jscomp/InlineVariables.java b/src/com/google/javascript/jscomp/InlineVariables.java
+index 4f045430..579c4b46 100644
+--- a/src/com/google/javascript/jscomp/InlineVariables.java
++++ b/src/com/google/javascript/jscomp/InlineVariables.java
+@@ -557,7 +554,8 @@ class InlineVariables implements CompilerPass {
+           && reference.getParent().getFirstChild() == reference.getNode()) {
+         return false;
+       }
+-
++      // issue 668: Don't inline singleton getter methods
++      // calls as this confused class removing logic.
+       if (value.isFunction()) {
+         Node callNode = reference.getParent();
+         if (reference.getParent().isCall()) {
+@@ -569,12 +567,12 @@ class InlineVariables implements CompilerPass {
+           if (relationship != null) {
+             return false;
+           }
+-
+-          // issue 668: Don't inline singleton getter methods
+-          // calls as this confused class removing logic.
++          // Don't inline static methods.
++          if (convention.isStaticFunction(callNode)) {
++            return false;
++          }
+         }
+       }
+-
+       return canMoveAggressively(value) ||
+           canMoveModerately(initialization, reference);
+     }

@@ -1,0 +1,24 @@
+diff --git a/src/main/java/org/joda/time/format/DateTimeFormatter.java b/src/main/java/org/joda/time/format/DateTimeFormatter.java
+index 8f9d3948..1369eb36 100644
+--- a/src/main/java/org/joda/time/format/DateTimeFormatter.java
++++ b/src/main/java/org/joda/time/format/DateTimeFormatter.java
+@@ -713,13 +711,16 @@ public class DateTimeFormatter {
+             instantLocal, chrono, iLocale, iPivotYear, defaultYear);
+         int newPos = parser.parseInto(bucket, text, position);
+         instant.setMillis(bucket.computeMillis(false, text));
+-        if (iOffsetParsed && bucket.getOffsetInteger() != null) {
++        // The following lines are added to fix the bug
++        //
++        if (bucket.getZone() != null) {
++            chrono = chrono.withZone(bucket.getZone());
++        } else if (iOffsetParsed && bucket.getOffsetInteger() != null) {
+             int parsedOffset = bucket.getOffsetInteger();
+             DateTimeZone parsedZone = DateTimeZone.forOffsetMillis(parsedOffset);
+             chrono = chrono.withZone(parsedZone);
+-        } else if (bucket.getZone() != null) {
+-            chrono = chrono.withZone(bucket.getZone());
+         }
++        // End of added lines
+         instant.setChronology(chrono);
+         if (iZone != null) {
+             instant.setZone(iZone);

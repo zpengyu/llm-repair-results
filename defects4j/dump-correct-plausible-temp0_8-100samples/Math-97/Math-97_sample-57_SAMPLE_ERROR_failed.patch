@@ -1,0 +1,34 @@
+diff --git a/src/java/org/apache/commons/math/analysis/BrentSolver.java b/src/java/org/apache/commons/math/analysis/BrentSolver.java
+index 8dab47503..1fb2e37e2 100644
+--- a/src/java/org/apache/commons/math/analysis/BrentSolver.java
++++ b/src/java/org/apache/commons/math/analysis/BrentSolver.java
+@@ -137,20 +133,25 @@ public class BrentSolver extends UnivariateRealSolverImpl {
+         double sign = yMin * yMax;
+         if (sign >= 0) {
+             // check if either value is close to a zero
+-                // neither value is close to zero and min and max do not bracket root.
++            if (Precision.equals(yMin, 0.0, maxUlps) || Precision.equals(yMax, 0.0, maxUlps)) {
++                // one of the values is zero
++                if (Precision.equals(yMin, 0.0, maxUlps)) {
++                    ret = min;
++                } else {
++                    ret = max;
++                }
++            } else {
+                 throw new IllegalArgumentException
+                 ("Function values at endpoints do not have different signs." +
+                         "  Endpoints: [" + min + "," + max + "]" + 
+                         "  Values: [" + yMin + "," + yMax + "]");
++            }
+         } else {
+             // solve using only the first endpoint as initial guess
+             ret = solve(min, yMin, max, yMax, min, yMin);
+-            // either min or max is a root
+         }
+-
+         return ret;
+     }        
+-        
+     /**
+      * Find a zero starting search according to the three provided points.
+      * @param x0 old approximation for the root

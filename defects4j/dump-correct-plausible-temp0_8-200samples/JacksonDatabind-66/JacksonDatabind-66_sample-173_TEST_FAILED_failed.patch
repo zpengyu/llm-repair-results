@@ -1,0 +1,26 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/deser/std/StdKeyDeserializer.java b/src/main/java/com/fasterxml/jackson/databind/deser/std/StdKeyDeserializer.java
+index d4417f6ad..8c5cad40d 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/deser/std/StdKeyDeserializer.java
++++ b/src/main/java/com/fasterxml/jackson/databind/deser/std/StdKeyDeserializer.java
+@@ -308,7 +308,7 @@ public class StdKeyDeserializer extends KeyDeserializer
+         public final Object deserializeKey(String key, DeserializationContext ctxt)
+             throws IOException
+         {
+-            if (key == null) { // is this even legal call?
++            if (key == null) { // is this legal?
+                 return null;
+             }
+             try {
+@@ -317,6 +317,12 @@ public class StdKeyDeserializer extends KeyDeserializer
+                 if (result != null) {
+                     return result;
+                 }
++                // 17-Dec-2015, tatu: Allow for null-valued keys? Should have been allowed
++                //   from the start, but let's avoid problems with this being a change from
++                //   2.6
++                if (ctxt.isEnabled(DeserializationFeature.READ_UNKNOWN_ENUM_VALUES_AS_NULL)) {
++                    return null;
++                }
+                 return ctxt.handleWeirdKey(_keyClass, key, "not a valid representation");
+             } catch (Exception re) {
+                 return ctxt.handleWeirdKey(_keyClass, key, "not a valid representation: %s", re.getMessage());

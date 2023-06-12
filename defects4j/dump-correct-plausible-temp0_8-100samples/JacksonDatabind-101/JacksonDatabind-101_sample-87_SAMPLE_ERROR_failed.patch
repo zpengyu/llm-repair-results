@@ -1,0 +1,27 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/deser/BeanDeserializer.java b/src/main/java/com/fasterxml/jackson/databind/deser/BeanDeserializer.java
+index 3c89dc109..0b4db2364 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/deser/BeanDeserializer.java
++++ b/src/main/java/com/fasterxml/jackson/databind/deser/BeanDeserializer.java
+@@ -822,15 +819,13 @@ public class BeanDeserializer
+                 }
+                 continue;
+             }
+-        }
+-
+-        // We hit END_OBJECT, so:
+-        Object bean;
+-        try {
+-            bean = creator.build(ctxt, buffer);
+-        } catch (Exception e) {
+-            wrapInstantiationProblem(e, ctxt);
+-            return null; // never gets here
++            if (bean.getClass() != _beanType.getRawClass()) {
++                // !!! 08-Jul-2011, tatu: Could probably support; but for now
++                //   it's too complicated, so bail out
++                ctxt.reportInputMismatch(creatorProp,
++                        "Cannot create polymorphic instances with unwrapped values");
++                return null;
++            }
+         }
+         return _unwrappedPropertyHandler.processUnwrapped(p, ctxt, bean, tokens);
+     }

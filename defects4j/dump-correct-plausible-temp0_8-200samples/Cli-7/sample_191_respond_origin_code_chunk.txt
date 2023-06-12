@@ -1,0 +1,57 @@
+private void createOption(
+        final char type,
+        final boolean required,
+        final char opt) {
+    final Argument argument;
+    if (type != ' ') {
+        abuilder.reset();
+        abuilder.withValidator(validator(type));
+        if (required) {
+            abuilder.withMinimum(1);
+        }
+        if (type != '*') {
+            abuilder.withMaximum(1);
+        }
+        argument = abuilder.create();
+    }
+    else {
+        argument = null;
+    }
+
+    obuilder.reset();
+    obuilder.withArgument(argument);
+    obuilder.withShortName(String.valueOf(opt));
+    obuilder.withRequired(required);
+
+    options.add(obuilder.create());
+}
+
+private static Validator validator(final char c) {
+    switch (c) {
+        case '@' :
+            final ClassValidator classv = new ClassValidator();
+            classv.setInstance(true);
+            return classv;
+        case '+' :
+            final ClassValidator instancev = new ClassValidator();
+            return instancev;
+            //case ':':// no validator needed for a string
+        case '%' :
+            return NumberValidator.getNumberInstance();
+        case '#' :
+            return DateValidator.getDateInstance();
+        case '<' :
+            final FileValidator existingv = new FileValidator();
+            existingv.setExisting(true);
+            existingv.setFile(true);
+            return existingv;
+        case '>' :
+        case '*' :
+            return new FileValidator();
+            //case '/' :
+            //    return new UrlValidator();
+        default :
+            return null;
+    }
+}
+

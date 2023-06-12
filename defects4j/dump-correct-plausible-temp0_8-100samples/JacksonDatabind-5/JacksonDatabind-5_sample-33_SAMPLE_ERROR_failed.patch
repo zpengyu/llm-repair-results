@@ -1,0 +1,21 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/introspect/AnnotatedClass.java b/src/main/java/com/fasterxml/jackson/databind/introspect/AnnotatedClass.java
+index 929076729..fd5573bbc 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/introspect/AnnotatedClass.java
++++ b/src/main/java/com/fasterxml/jackson/databind/introspect/AnnotatedClass.java
+@@ -655,7 +655,15 @@ public final class AnnotatedClass
+                      */
+                 } else {
+                     // Well, or, as per [Issue#515], multi-level merge within mixins...
+-                        mixIns.add(_constructMethod(m));
++                        AnnotatedMethod newMethod = _constructMethod(m);
++                        AnnotatedMethod prev = mixIns.add(newMethod);
++                        if (prev != null) {
++                            // hmh. let's see if it's actually same signature
++                            if (newMethod.getAnnotated().getDeclaringClass()
++                                    .isAssignableFrom(prev.getAnnotated().getDeclaringClass())) {
++                                newMethod.addAll(prev);
++                            }
++                        }
+                 }
+             }
+         }

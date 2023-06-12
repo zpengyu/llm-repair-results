@@ -1,0 +1,71 @@
+diff --git a/src/java/org/apache/commons/cli/PosixParser.java b/src/java/org/apache/commons/cli/PosixParser.java
+index 2b1bbb1..7ada41e 100644
+--- a/src/java/org/apache/commons/cli/PosixParser.java
++++ b/src/java/org/apache/commons/cli/PosixParser.java
+@@ -111,42 +108,44 @@ public class PosixParser extends Parser {
+             // handle long option --foo or --foo=bar
+             if (token.startsWith("--"))
+             {
+-                if (token.indexOf('=') != -1)
++                // extract the value part if any
++                final int pos = token.indexOf('=');
++                final String value = pos == -1 ? null : token.substring(pos + 1);
++                // handle --foo=bar case
++                if (pos != -1)
+                 {
+-                    tokens.add(token.substring(0, token.indexOf('=')));
+-                    tokens.add(token.substring(token.indexOf('=') + 1, token.length()));
++                    tokens.add(token.substring(0, pos));
++                    tokens.add(value);
+                 }
++                // handle --foo case
+                 else
+                 {
+                     tokens.add(token);
+                 }
+             }
+-
++            // -abcde are treated as -a -b -c -d -e
++            else if (token.startsWith("-") && token.length() > 1)
++            {
++                final String value = options.hasOption(token) ? null : token.substring(2);
++                tokens.add("-" + token.charAt(1));
++                // burst token if value is not null
++                if (value != null)
++                {
++                    burstToken(value, stopAtNonOption);
++                }
++            }
+             // single hyphen
+             else if ("-".equals(token))
+             {
+                 tokens.add(token);
+             }
+-            else if (token.startsWith("-"))
++            // treat --foo the same as --foo=true
++            else if (token.startsWith("--"))
+             {
+-                if (token.length() == 2)
+-                {
+-                    processOptionToken(token, stopAtNonOption);
+-                }
+-                else if (options.hasOption(token))
+-                {
+-                    tokens.add(token);
+-                }
+-                // requires bursting
+-                else
+-                {
+-                    burstToken(token, stopAtNonOption);
+-                }
+-            }
+-            else if (stopAtNonOption)
+-            {
+-                process(token);
++                tokens.add(token);
++                tokens.add("true");
+             }
++            // handle token as an argument
+             else
+             {
+                 tokens.add(token);

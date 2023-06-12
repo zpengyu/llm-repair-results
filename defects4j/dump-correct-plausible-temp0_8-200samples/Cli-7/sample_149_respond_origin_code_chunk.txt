@@ -1,0 +1,56 @@
+    private void createOption(
+        final char type,
+        final boolean required,
+        final char opt) {
+        final Argument argument;
+        if (type != ' ') {
+            abuilder.reset();
+            Validator validator = null;
+            if(type == '@' || type == '+'){
+                ClassValidator classValidator = new ClassValidator();
+                if(type == '@'){
+                    classValidator.setInstance(true);
+                }
+                validator = classValidator;
+            }
+            if (type == ':') {
+                //validator = null;
+            }
+            if (type == '%') {
+                validator = NumberValidator.getNumberInstance();
+            }
+            if (type == '#') {
+                validator = DateValidator.getDateInstance();
+            }
+            if (type == '<' || type == '>' || type == '*') {
+                FileValidator fileValidator = new FileValidator();
+                if (type == '<') {
+                    fileValidator.setExisting(true);
+                    fileValidator.setFile(true);
+                }
+                validator = fileValidator;
+            }
+            if (type == '/') {
+                validator = new UrlValidator();
+            }
+            abuilder.withValidator(validator);
+            if (required) {
+                abuilder.withMinimum(1);
+            }
+            if (type != '*') {
+                abuilder.withMaximum(1);
+            }
+            argument = abuilder.create();
+        }
+        else {
+            argument = null;
+        }
+
+        obuilder.reset();
+        obuilder.withArgument(argument);
+        obuilder.withShortName(String.valueOf(opt));
+        obuilder.withRequired(required);
+
+        options.add(obuilder.create());
+    }
+

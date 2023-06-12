@@ -1,0 +1,30 @@
+diff --git a/src/com/google/javascript/jscomp/NameAnalyzer.java b/src/com/google/javascript/jscomp/NameAnalyzer.java
+index 9542fbff..9945e1b2 100644
+--- a/src/com/google/javascript/jscomp/NameAnalyzer.java
++++ b/src/com/google/javascript/jscomp/NameAnalyzer.java
+@@ -576,13 +576,18 @@ final class NameAnalyzer implements CompilerPass {
+             recordDepScope(nameNode, ns);
+           }
+         } else {
+-          // The rhs of the assignment is the caller, so it's used by the
+-          // context. Don't associate it w/ the lhs.
+-          // FYI: this fixes only the specific case where the assignment is the
+-          // caller expression, but it could be nested deeper in the caller and
+-          // we would still get a bug.
+-          // See testAssignWithCall2 for an example of this.
+-          recordDepScope(recordNode, ns);
++          if (recordNode.getType() == Token.CALL ||
++              recordNode.getType() == Token.NEW) {
++            // The rhs of the assignment is the caller, so it's used by the
++            // context. Don't associate it w/ the lhs.
++            // FYI: this fixes only the specific case where the assignment is the
++            // caller expression, but it could be nested deeper in the caller and
++            // we would still get a bug.
++            // See testAssignWithCall2 for an example of this.
++            recordDepScope(recordNode, ns);
++          } else {
++            recordDepScope(nameNode, ns);
++          }
+         }
+       }
+     }

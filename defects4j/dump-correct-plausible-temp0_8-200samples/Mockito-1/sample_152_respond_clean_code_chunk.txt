@@ -1,0 +1,26 @@
+    public void captureArgumentsFrom(Invocation invocation) {
+        if (invocation.getMethod().isVarArgs()) {
+            int indexOfVararg = invocation.getRawArguments().length - 1;
+            Object vararg = invocation.getRawArguments()[indexOfVararg];
+            for (int i = 0; i < Array.getLength(vararg); i++) {
+                captureSingleArgument(matchers, invocation.getRawArguments(), indexOfVararg, i);
+            }
+        } else {
+            for (int position = 0; position < matchers.size(); position++) {
+                captureSingleArgument(matchers, invocation.getRawArguments(), position, position);
+            }
+        }
+    }
+    private void captureSingleArgument(List<Matcher> matchers, Object[] rawArguments, int position, int index) {
+        Matcher m = matchers.get(position);
+        if (m instanceof CapturesArguments) {
+            if (isVariableArgument(rawArguments, position)) {
+                ((CapturesArguments) m).captureFrom(Array.get(rawArguments[position], index));
+            } else {
+                ((CapturesArguments) m).captureFrom(rawArguments[position]);
+            }
+        }
+    }
+    private boolean isVariableArgument(Object[] rawArguments, int position) {
+        return rawArguments.length > position && rawArguments[position] != null && rawArguments[position].getClass().isArray();
+    }

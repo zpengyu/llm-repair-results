@@ -1,0 +1,27 @@
+diff --git a/src/main/java/org/jsoup/helper/DataUtil.java b/src/main/java/org/jsoup/helper/DataUtil.java
+index e4fa18c..d2212c1 100644
+--- a/src/main/java/org/jsoup/helper/DataUtil.java
++++ b/src/main/java/org/jsoup/helper/DataUtil.java
+@@ -168,7 +162,22 @@ public final class DataUtil {
+             }
+             Charset charset = Charset.forName(charsetName);
+             doc.outputSettings().charset(charset);
++            String canonical = canonicalCharset(charset);
++            if (!charsetName.equals(canonical)) {
+                 // some charsets can read but not encode; switch to an encodable charset and update the meta el
++                if (doc.select("meta[http-equiv=content-type]").size() > 0) {
++                    Element meta = doc.select("meta[http-equiv=content-type]").first();
++                    String c = ContentType.get(meta.attr("content")).charset();
++                    if (c != null)
++                        c = canonicalCharset(c);
++                    if (c != null && !canonical.equals(c))
++                        meta.attr("content", updateCharsetInContentType(meta.attr("content"), canonical));
++                }
++                if (doc.select("meta[charset]").size() > 0)
++                    doc.select("meta[charset]").first().attr("charset", canonical);
++                else
++                    doc.head().prependElement("meta").attr("charset", canonical);
++            }
+         }
+         input.close();
+         return doc;

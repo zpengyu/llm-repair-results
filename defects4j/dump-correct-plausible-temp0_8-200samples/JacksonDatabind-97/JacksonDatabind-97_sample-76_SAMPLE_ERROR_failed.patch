@@ -1,0 +1,30 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/node/POJONode.java b/src/main/java/com/fasterxml/jackson/databind/node/POJONode.java
+index d1452fc54..ab069fbe3 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/node/POJONode.java
++++ b/src/main/java/com/fasterxml/jackson/databind/node/POJONode.java
+@@ -107,14 +107,22 @@ public class POJONode
+         if (_value == null) {
+             ctxt.defaultSerializeNull(gen);
+         } else if (_value instanceof JsonSerializable) {
+-            ((JsonSerializable) _value).serialize(gen, ctxt);
++            if (_forceTypeInformation) {
++                gen.setSchema(_schema);
++                gen.writeStartObject();
++                gen.writeStringField(_typePropertyName, _valueType.toCanonical());
++                gen.writeFieldName(_valuePropertyName);
++                ((JsonSerializable) _value).serialize(gen, ctxt);
++                gen.writeEndObject();
++            } else {
++                ((JsonSerializable) _value).serialize(gen, ctxt);
++            }
+         } else {
+             // 25-May-2018, tatu: [databind#1991] do not call via generator but through context;
+             //    this to preserve contextual information
+-            gen.writeObject(_value);
++            ctxt.findTypedValueSerializer(_valueType, true, _property).serialize(_value, gen, ctxt);
+         }
+     }
+-
+     /*
+     /**********************************************************
+     /* Extended API

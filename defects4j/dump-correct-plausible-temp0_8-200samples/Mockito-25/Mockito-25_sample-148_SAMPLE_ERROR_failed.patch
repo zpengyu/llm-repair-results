@@ -1,0 +1,36 @@
+diff --git a/src/org/mockito/internal/stubbing/defaultanswers/ReturnsDeepStubs.java b/src/org/mockito/internal/stubbing/defaultanswers/ReturnsDeepStubs.java
+index 6fa773f53..c9451d601 100644
+--- a/src/org/mockito/internal/stubbing/defaultanswers/ReturnsDeepStubs.java
++++ b/src/org/mockito/internal/stubbing/defaultanswers/ReturnsDeepStubs.java
+@@ -74,10 +65,27 @@ public class ReturnsDeepStubs implements Answer<Object>, Serializable {
+      * @param returnTypeGenericMetadata The metadata to use to create the new mock.
+      * @return The mock
+      */
+-
+-
+-
+-
++    private Object createMock(GenericMetadataSupport returnTypeGenericMetadata) {
++        Class<?> typeToMock = returnTypeGenericMetadata.rawType();
++        if (typeToMock == null) {
++            throw new MockitoException("Unable to mock " + returnTypeGenericMetadata);
++        }
++        if (returnTypeGenericMetadata.isArray()) {
++            return Array.newInstance(typeToMock.getComponentType(), 0);
++        }
++        if (returnTypeGenericMetadata.isWildcard()) {
++            return null;
++        }
++        if (returnTypeGenericMetadata.isRawType()) {
++            return mock(typeToMock, this);
++        }
++        return mock(typeToMock, withSettings()
++                .useConstructor()
++                .defaultAnswer(this)
++                .defaultNullAnswer()
++                .typeToMock(typeToMock)
++                .build());
++    }
+     private Object recordDeepStubMock(InvocationOnMock invocation, InvocationContainerImpl container) {
+         Class<?> clz = invocation.getMethod().getReturnType();
+         final Object mock = org.mockito.Mockito.mock(clz, this);

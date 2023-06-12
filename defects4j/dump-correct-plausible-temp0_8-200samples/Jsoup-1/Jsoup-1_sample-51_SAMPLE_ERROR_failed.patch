@@ -1,0 +1,41 @@
+diff --git a/src/main/java/org/jsoup/nodes/Document.java b/src/main/java/org/jsoup/nodes/Document.java
+index 7022584..21fde5d 100644
+--- a/src/main/java/org/jsoup/nodes/Document.java
++++ b/src/main/java/org/jsoup/nodes/Document.java
+@@ -111,22 +111,23 @@ public class Document extends Element {
+ 
+     // does not recurse.
+     private void normalise(Element element) {
+-        List<Node> toMove = new ArrayList<Node>();
+-        for (Node node: element.childNodes) {
+-            if (node instanceof TextNode) {
+-                TextNode tn = (TextNode) node;
+-                if (!tn.isBlank())
+-                    toMove.add(tn);
++        Node trav = element.childNode(0);
++        while (trav != null) {
++            if (trav instanceof TextNode && ((TextNode) trav).isBlank()) {
++                if (trav.nextSibling() == null) {
++                    // if last sibling, use as newline
++                    trav.insertNode(new Element(Tag.valueOf("br"), ""));
++                } else {
++                    // otherwise, remove
++                    Node next = trav.nextSibling();
++                    trav.remove();
++                    trav = next;
++                    continue;
++                }
+             }
+-        }
+-
+-        for (Node node: toMove) {
+-            element.removeChild(node);
+-            body().appendChild(new TextNode(" ", ""));
+-            body().appendChild(node);
++            trav = trav.nextSibling();
+         }
+     }
+-
+     @Override
+     public String outerHtml() {
+         return super.html(); // no outer wrapper tag

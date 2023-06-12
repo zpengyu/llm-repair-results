@@ -1,0 +1,129 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/ser/std/EnumSerializer.java b/src/main/java/com/fasterxml/jackson/databind/ser/std/EnumSerializer.java
+index d72ea4ad1..6f5cb8aaa 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/ser/std/EnumSerializer.java
++++ b/src/main/java/com/fasterxml/jackson/databind/ser/std/EnumSerializer.java
+@@ -25,12 +25,9 @@ import com.fasterxml.jackson.databind.util.EnumValues;
+  * scalar (String).
+  */
+ @JacksonStdImpl
+-public class EnumSerializer
+-    extends StdScalarSerializer<Enum<?>>
+-    implements ContextualSerializer
+-{
++public class EnumSerializer extends StdScalarSerializer<Enum<?>>
++    implements ContextualSerializer {
+     private static final long serialVersionUID = 1L;
+-
+     /**
+      * This map contains pre-resolved values (since there are ways
+      * to customize actual String constants to use) to use as
+@@ -60,9 +54,7 @@ public class EnumSerializer
+     public EnumSerializer(EnumValues v) {
+         this(v, null);
+     }
+-
+-    public EnumSerializer(EnumValues v, Boolean serializeAsIndex)
+-    {
++    public EnumSerializer(EnumValues v, Boolean serializeAsIndex) {
+         super(v.getEnumClass(), false);
+         _values = v;
+         _serializeAsIndex = serializeAsIndex;
+@@ -76,8 +67,7 @@ public class EnumSerializer
+      */
+     @SuppressWarnings("unchecked")
+     public static EnumSerializer construct(Class<?> enumClass, SerializationConfig config,
+-            BeanDescription beanDesc, JsonFormat.Value format)
+-    {
++                                           BeanDescription beanDesc, JsonFormat.Value format) {
+         /* 08-Apr-2015, tatu: As per [databind#749], we can not statically determine
+          *   between name() and toString(), need to construct `EnumValues` with names,
+          *   handle toString() case dynamically (for example)
+@@ -94,8 +83,7 @@ public class EnumSerializer
+      */
+     @Override
+     public JsonSerializer<?> createContextual(SerializerProvider serializers,
+-            BeanProperty property) throws JsonMappingException
+-    {
++                                              BeanProperty property) throws JsonMappingException {
+         if (property != null) {
+             JsonFormat.Value format = findFormatOverrides(serializers,
+                     property, handledType());
+@@ -115,19 +102,17 @@ public class EnumSerializer
+     /* Extended API for Jackson databind core
+     /**********************************************************
+      */
+-    
+-    public EnumValues getEnumValues() { return _values; }
+-
++    public EnumValues getEnumValues() {
++        return _values;
++    }
+     /*
+     /**********************************************************
+     /* Actual serialization
+     /**********************************************************
+      */
+-    
+     @Override
+     public final void serialize(Enum<?> en, JsonGenerator gen, SerializerProvider serializers)
+-        throws IOException
+-    {
++            throws IOException {
+         // [JACKSON-684]: serialize as index?
+         if (_serializeAsIndex(serializers)) {
+             gen.writeNumber(en.ordinal());
+@@ -146,10 +130,8 @@ public class EnumSerializer
+     /* Schema support
+     /**********************************************************
+      */
+-
+     @Override
+-    public JsonNode getSchema(SerializerProvider provider, Type typeHint)
+-    {
++    public JsonNode getSchema(SerializerProvider provider, Type typeHint) {
+         if (_serializeAsIndex(provider)) {
+             return createSchemaNode("integer", true);
+         }
+@@ -165,11 +147,9 @@ public class EnumSerializer
+         }
+         return objectNode;
+     }
+-    
+     @Override
+     public void acceptJsonFormatVisitor(JsonFormatVisitorWrapper visitor, JavaType typeHint)
+-        throws JsonMappingException
+-    {
++            throws JsonMappingException {
+         SerializerProvider serializers = visitor.getProvider();
+         if (_serializeAsIndex(serializers)) {
+             visitIntFormat(visitor, typeHint, JsonParser.NumberType.INT);
+@@ -200,9 +178,7 @@ public class EnumSerializer
+     /* Helper methods
+     /**********************************************************
+      */
+-    
+-    protected final boolean _serializeAsIndex(SerializerProvider serializers)
+-    {
++    protected final boolean _serializeAsIndex(SerializerProvider serializers) {
+         if (_serializeAsIndex != null) {
+             return _serializeAsIndex.booleanValue();
+         }
+@@ -214,8 +189,7 @@ public class EnumSerializer
+      * index (number) or not.
+      */
+     protected static Boolean _isShapeWrittenUsingIndex(Class<?> enumClass,
+-            JsonFormat.Value format, boolean fromClass)
+-    {
++                                                       JsonFormat.Value format, boolean fromClass) {
+         JsonFormat.Shape shape = (format == null) ? null : format.getShape();
+         if (shape == null) {
+             return null;
+@@ -235,6 +209,6 @@ public class EnumSerializer
+         // 07-Mar-2017, tatu: Also means `OBJECT` not available as property annotation...
+         throw new IllegalArgumentException(String.format(
+                 "Unsupported serialization shape (%s) for Enum %s, not supported as %s annotation",
+-                    shape, enumClass.getName(), (fromClass? "class" : "property")));
++                shape, enumClass.getName(), (fromClass ? "class" : "property")));
+     }
+ }
+\ No newline at end of file

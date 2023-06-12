@@ -1,0 +1,40 @@
+diff --git a/src/main/java/org/joda/time/DateTimeZone.java b/src/main/java/org/joda/time/DateTimeZone.java
+index 5c7a348c..224fa359 100644
+--- a/src/main/java/org/joda/time/DateTimeZone.java
++++ b/src/main/java/org/joda/time/DateTimeZone.java
+@@ -1169,16 +1168,28 @@ public abstract class DateTimeZone implements Serializable {
+         if (instantBefore == instantAfter) {
+             return instant;  // not an overlap (less than is a gap, equal is normal case)
+         }
+-
+         // work out range of instants that have duplicate local times
+         long local = convertUTCToLocal(instant);
+-        return convertLocalToUTC(local, false, earlierOrLater ? instantAfter : instantBefore);
+-
++        return convertLocalToUTC(local, instantBefore < instantAfter, earlierOrLater ? instantAfter : instantBefore);
+         // calculate result
+-          // currently in later offset
+-          // currently in earlier offset
+-    }
+-//    System.out.println(new DateTime(transitionStart, DateTimeZone.UTC) + " " + new DateTime(transitionStart, this));
++        long offsetBefore = convertUTCToLocal(instantBefore);
++        long offsetAfter = convertUTCToLocal(instantAfter);
++        long earlierOffset = offsetBefore - instantBefore;
++        long laterOffset = offsetAfter - instantAfter;
++        long difference = earlierOffset - laterOffset;
++        if (difference > 0) {
++            // earlier gap is greater
++            return instant + earlierOffset;  // currently in later offset
++        } else if (difference < 0) {
++            return instant + laterOffset;  // currently in earlier offset
++        } else if (earlierOffset > 0) {
++            return instant + earlierOffset;  // both negative (past gap is greater)
++        } else if (earlierOffset < 0) {
++            return instant + laterOffset;  // both positive (future gap is greater)
++        } else {
++            return instant + earlierOffset;  // both zero (no gap)
++        }
++    }//    System.out.println(new DateTime(transitionStart, DateTimeZone.UTC) + " " + new DateTime(transitionStart, this));
+ 
+     //-----------------------------------------------------------------------
+     /**

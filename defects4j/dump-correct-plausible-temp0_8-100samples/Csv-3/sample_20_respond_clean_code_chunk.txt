@@ -1,0 +1,56 @@
+    int readEscape() throws IOException {
+        // the escape char has just been read (normally a backslash)
+        final int c = in.read();
+        switch (c) {
+        case 'r':
+            return CR;
+        case 'n':
+            return LF;
+        case 't':
+            return TAB;
+        case 'b':
+            return BACKSPACE;
+        case 'f':
+            return FF;
+        case CR:
+        case LF:
+        case FF: // TODO is this correct?
+        case TAB: // TODO is this correct? Do tabs need to be escaped?
+        case BACKSPACE: // TODO is this correct?
+            return c;
+        case END_OF_STREAM:
+            throw new IOException("EOF whilst processing escape sequence");
+        default:
+            // Now check for meta-characters
+            if (c >= '0' && c <= '7') {
+                // Ok, this is an escaped octal value
+                final int ch2 = in.read();
+                final int ch3 = in.read();
+                return (c - '0') * 64 + (ch2 - '0') * 8 + (ch3 - '0');
+            } else if (c == 'x' || c == 'X') {
+                // Ok, this is an escaped hex value
+                int ch2 = in.read();
+                int ch3 = in.read();
+                if (isHexDigit(ch2) && isHexDigit(ch3)) {
+                    return hexToInt(ch2, ch3);
+                }
+                // look for white space
+                while (isWhitespace(ch2) || isWhitespace(ch3)) {
+                    if (isWhitespace(ch2)) {
+                        ch2 = in.read();
+                    }
+                    if (isWhitespace(ch3)) {
+                        ch3 = in.read();
+                    }
+                }
+                if (isHexDigit(ch2) && isHexDigit(ch3)) {
+                    return hexToInt(ch2, ch3);
+                } else {
+                    return c;
+                }
+            } else {
+                // indicate unexpected char - available from in.getLastChar()
+                return c;
+            }
+        }
+    }

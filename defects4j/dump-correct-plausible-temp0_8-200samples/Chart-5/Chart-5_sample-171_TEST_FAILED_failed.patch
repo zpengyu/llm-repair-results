@@ -1,0 +1,26 @@
+diff --git a/source/org/jfree/data/xy/XYSeries.java b/source/org/jfree/data/xy/XYSeries.java
+index 0b37e6e..735df36 100644
+--- a/source/org/jfree/data/xy/XYSeries.java
++++ b/source/org/jfree/data/xy/XYSeries.java
+@@ -554,6 +553,10 @@ public class XYSeries extends Series implements Cloneable, Serializable {
+                 throw new SeriesException("Couldn't clone XYDataItem!");
+             }
+             existing.setY(y);
++            // check if this addition will exceed the maximum item count...
++            if (getItemCount() > this.maximumItemCount) {
++                this.data.remove(0);
++            }
+         }
+         else {
+             // if the series is sorted, the negative index is a result from
+@@ -566,10 +569,6 @@ public class XYSeries extends Series implements Cloneable, Serializable {
+             else {
+                 this.data.add(new XYDataItem(x, y));
+             }
+-            // check if this addition will exceed the maximum item count...
+-            if (getItemCount() > this.maximumItemCount) {
+-                this.data.remove(0);
+-            }
+         }
+         fireSeriesChanged();
+         return overwritten;

@@ -1,0 +1,17 @@
+private JSDocInfo getFunctionJsDocInfo(Node n) {
+    JSDocInfo jsDoc = n.getJSDocInfo();
+    Node parent = n.getParent();
+    if (jsDoc == null) {
+      int parentType = parent.getType();
+      if (parentType == Token.NAME || parentType == Token.ASSIGN) {
+        jsDoc = parent.getJSDocInfo();
+        if (jsDoc == null && parentType == Token.NAME) {
+          Node gramps = parent.getParent();
+          if (gramps.getType() == Token.VAR) {
+            jsDoc = gramps.getJSDocInfo();
+          }
+        }
+      }
+    }
+    return jsDoc;
+  }

@@ -1,0 +1,21 @@
+diff --git a/src/main/java/org/jsoup/helper/DataUtil.java b/src/main/java/org/jsoup/helper/DataUtil.java
+index 4bdf4fe..d01c642 100644
+--- a/src/main/java/org/jsoup/helper/DataUtil.java
++++ b/src/main/java/org/jsoup/helper/DataUtil.java
+@@ -84,12 +84,16 @@ public class DataUtil {
+                     charsetName = foundCharset;
+                     byteData.rewind();
+                     docData = Charset.forName(foundCharset).decode(byteData).toString();
++                    if (docData.startsWith("\ufeff"))
++                        docData = docData.substring(1);
+                     doc = null;
+                 }
+             }
+         } else { // specified by content type header (or by user on file load)
+             Validate.notEmpty(charsetName, "Must set charset arg to character set of file to parse. Set to null to attempt to detect from HTML");
+             docData = Charset.forName(charsetName).decode(byteData).toString();
++            if (docData.startsWith("\ufeff"))
++                docData = docData.substring(1);
+         }
+         if (doc == null) {
+             // there are times where there is a spurious byte-order-mark at the start of the text. Shouldn't be present

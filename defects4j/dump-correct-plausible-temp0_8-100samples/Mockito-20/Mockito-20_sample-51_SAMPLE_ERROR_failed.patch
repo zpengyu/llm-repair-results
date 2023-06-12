@@ -1,0 +1,34 @@
+diff --git a/src/org/mockito/internal/creation/bytebuddy/ByteBuddyMockMaker.java b/src/org/mockito/internal/creation/bytebuddy/ByteBuddyMockMaker.java
+index ddaada2f1..ee1e1512d 100644
+--- a/src/org/mockito/internal/creation/bytebuddy/ByteBuddyMockMaker.java
++++ b/src/org/mockito/internal/creation/bytebuddy/ByteBuddyMockMaker.java
+@@ -34,8 +34,7 @@ public class ByteBuddyMockMaker implements MockMaker {
+             mockInstance = classInstantiator.instantiate(mockedProxyType);
+             MockMethodInterceptor.MockAccess mockAccess = (MockMethodInterceptor.MockAccess) mockInstance;
+             mockAccess.setMockitoInterceptor(new MockMethodInterceptor(asInternalMockHandler(handler), settings));
+-
+-            return ensureMockIsAssignableToMockedType(settings, mockInstance);
++            return mockInstance;
+         } catch (ClassCastException cce) {
+             throw new MockitoException(join(
+                     "ClassCastException occurred while creating the mockito mock :",
+@@ -51,7 +50,18 @@ public class ByteBuddyMockMaker implements MockMaker {
+             throw new MockitoException("Unable to create mock instance of type '" + mockedProxyType.getSuperclass().getSimpleName() + "'", e);
+         }
+     }
+-
++    private <T> T ensureMockIsAssignableToMockedType(MockCreationSettings<T> settings, T mock) {
++        MockitoState.instance().validateType(settings);
++        if (settings.getTypeToMock().isInstance(mock)) {
++            return mock;
++        }
++        throw new ClassCastException(join(
++                "Created mock instance of type '" + mock.getClass().getSimpleName() + "'",
++                "is not assignable to the mocked type '" + settings.getTypeToMock() + "'",
++                "",
++                "You might experience classloading issues, please ask the mockito mailing-list."
++        ));
++    }
+     private <T> T ensureMockIsAssignableToMockedType(MockCreationSettings<T> settings, T mock) {
+         // Force explicit cast to mocked type here, instead of
+         // relying on the JVM to implicitly cast on the client call site.

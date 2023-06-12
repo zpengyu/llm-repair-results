@@ -1,0 +1,40 @@
+diff --git a/src/java/org/apache/commons/jxpath/ri/model/dom/DOMNodePointer.java b/src/java/org/apache/commons/jxpath/ri/model/dom/DOMNodePointer.java
+index a5bb202..4687810 100644
+--- a/src/java/org/apache/commons/jxpath/ri/model/dom/DOMNodePointer.java
++++ b/src/java/org/apache/commons/jxpath/ri/model/dom/DOMNodePointer.java
+@@ -96,16 +95,26 @@ public class DOMNodePointer extends NodePointer {
+             NodeNameTest nodeNameTest = (NodeNameTest) test;
+             QName testName = nodeNameTest.getNodeName();
+             String namespaceURI = nodeNameTest.getNamespaceURI();
+-            boolean wildcard = nodeNameTest.isWildcard();
+-            String testPrefix = testName.getPrefix();
+-            if (wildcard && testPrefix == null) {
+-                return true;
++            String nodeNS = DOMNodePointer.getNamespaceURI(node);
++            //check whether both test and node namespaces are null.
++            if (nodeNS == null && namespaceURI == null) {
++                if ((nodeNameTest.isWildcard() || nodeNameTest.getPrefix() != null)
++                        || testName.getName().equals(
++                        DOMNodePointer.getLocalName(node))) {
++                    return true;
++                }
+             }
+-            if (wildcard
+-                || testName.getName()
+-                        .equals(DOMNodePointer.getLocalName(node))) {
+-                String nodeNS = DOMNodePointer.getNamespaceURI(node);
+-                return equalStrings(namespaceURI, nodeNS);
++            //if only the node namespace is null, and the test namespace is not null
++            //then see if the node local name is wildcard or test prefix is not null
++            //if it is, then it is considered a match.
++            else if (nodeNS == null && namespaceURI != null &&
++                    (nodeNameTest.isWildcard() || nodeNameTest.getPrefix() != null)) {
++                return true;
++            } else if (nodeNS != null && namespaceURI != null &&
++                        equalStrings(namespaceURI, nodeNS) &&
++                        (nodeNameTest.isWildcard() ||
++                            testName.getName().equals(DOMNodePointer.getLocalName(node)))) {
++                return true;
+             }
+             return false;
+         }

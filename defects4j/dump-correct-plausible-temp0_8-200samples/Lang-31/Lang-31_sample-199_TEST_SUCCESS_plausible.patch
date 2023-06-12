@@ -1,0 +1,59 @@
+diff --git a/src/main/java/org/apache/commons/lang3/StringUtils.java b/src/main/java/org/apache/commons/lang3/StringUtils.java
+index 20b1f857..e05ee3ca 100644
+--- a/src/main/java/org/apache/commons/lang3/StringUtils.java
++++ b/src/main/java/org/apache/commons/lang3/StringUtils.java
+@@ -1437,25 +1437,35 @@ public class StringUtils {
+      * <code>false</code> if no match or null input
+      * @since 2.4
+      */
+-	public static boolean containsAny(CharSequence cs, char[] searchChars) {
+-		if (isEmpty(cs) || ArrayUtils.isEmpty(searchChars)) {
+-			return false;
+-		}
+-		int csLength = cs.length();
+-		int searchLength = searchChars.length;
+-		for (int i = 0; i < csLength; i++) {
+-			char ch = cs.charAt(i);
+-			for (int j = 0; j < searchLength; j++) {
+-				if (searchChars[j] == ch) {
+-						// ch is a supplementary character
+-						// ch is in the Basic Multilingual Plane
+-						return true;
+-				}
+-			}
+-		}
+-		return false;
+-	}
+-
++public static boolean containsAny(CharSequence cs, char[] searchChars) {
++    if (isEmpty(cs) || ArrayUtils.isEmpty(searchChars)) {
++        return false;
++    }
++    int csLength = cs.length();
++    int searchLength = searchChars.length;
++    int csLast = csLength - 1;
++    int searchLast = searchLength - 1;
++    for (int i = 0; i < csLength; i++) {
++        char ch = cs.charAt(i);
++        for (int j = 0; j < searchLength; j++) {
++            if (searchChars[j] == ch) {
++                if (Character.isHighSurrogate(ch)) {
++                    if (j == searchLast) {
++                        return false;
++                    }
++                    if (i < csLast
++                        && searchChars[j + 1] == cs.charAt(i + 1)) {
++                        return true;
++                    }
++                } else {
++                    // ch is in the Basic Multilingual Plane
++                    return true;
++                }
++            }
++        }
++    }
++    return false;
++}
+     /**
+      * <p>
+      * Checks if the CharSequence contains any character in the given set of characters.

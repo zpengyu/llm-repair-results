@@ -1,0 +1,21 @@
+diff --git a/src/com/google/javascript/rhino/jstype/PrototypeObjectType.java b/src/com/google/javascript/rhino/jstype/PrototypeObjectType.java
+index 77c5441e..372a9d8c 100644
+--- a/src/com/google/javascript/rhino/jstype/PrototypeObjectType.java
++++ b/src/com/google/javascript/rhino/jstype/PrototypeObjectType.java
+@@ -572,10 +571,14 @@ class PrototypeObjectType extends ObjectType {
+           if (!hasProperty(prop)) {
+             typeToInfer = getNativeType(JSTypeNative.VOID_TYPE)
+                 .getLeastSupertype(propType);
++          } else if (propType.isUnknownType()) {
++            typeToInfer = propType;
++          } else if (propType.isUnionType()) {
++            typeToInfer = propType.toMaybeUnionType().getRestrictedUnion(
++                getPropertyType(prop));
+           }
+           defineInferredProperty(prop, typeToInfer, null);
+         }
+       }
+     }
+-  }
+-}
++  }}

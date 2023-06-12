@@ -1,0 +1,99 @@
+diff --git a/src/com/google/javascript/jscomp/NameAnalyzer.java b/src/com/google/javascript/jscomp/NameAnalyzer.java
+index 25e2b5d4..7c0eef0b 100644
+--- a/src/com/google/javascript/jscomp/NameAnalyzer.java
++++ b/src/com/google/javascript/jscomp/NameAnalyzer.java
+@@ -924,7 +913,93 @@ final class NameAnalyzer implements CompilerPass {
+         }
+       }
+     }
+-
++  /**
++   * Determine if a reference to this name might be an alias to the global
++   * object.
++   *
++   * <p>This happens when the reference is to the result of a function call:
++   * <pre>
++   * var alias = foo();
++   * alert(alias.bar);
++   * </pre>
++   * This could be an alias to the global object.
++   *
++   * <p>This also happens when the reference is to the result of an
++   * indirect eval call:
++   * <pre>
++   * var alias = (0, eval)('this');
++   * alert(alias.bar);
++   * </pre>
++   *
++   * <p>This method does not update the reference graph.  It only determines
++   * if we should expect such a reference to occur.
++   *
++   * @param name The referenced name.
++   * @param n The node that is the root of a reference.
++   * @return Whether the reference might be an alias to the global object.
++   */
++  private boolean maybeHiddenAlias(String name, Node n) {
++    if (indirectEvalAliasesGlobalThis) {
++      if (isIndirectEval(n)) {
++        return true;
++      }
++    }
++    if (functionCallAliasesGlobalThis) {
++      // A function call may be an alias of the global object.
++      Node parent = n.getParent();
++      if (parent != null &&
++          !parent.isGetProp() &&
++          NodeUtil.isGet(parent.getParent())) {
++        Node grandparent = parent.getParent();
++        if (grandparent.getLastChild() == parent) {
++          if (isFunctionCall(parent.getFirstChild())) {
++            // There is a reference to a function call.
++            // This might be an alias.
++            return true;
++          }
++        }
++      }
++    }
++    return false;
++  }
++  /**
++   * Determine if a node represents a function call.
++   * @param n A node.
++   * @return Whether the node represents a function call.
++   */
++  private boolean isFunctionCall(Node n) {
++    if (n == null) {
++      return false;
++    }
++    if (n.isCall()) {
++      return true;
++    }
++    if (n.isNew()) {
++      return true;
++    }
++    if (n.isName() &&
++        indirectEvalAliasesGlobalThis &&
++        isIndirectEval(n)) {
++      return true;
++    }
++    return false;
++  }
++  /**
++   * Determine if a node represents an indirect call to eval().
++   * @param n A node.
++   * @return Whether the node represents an indirect call to eval().
++   */
++  private boolean isIndirectEval(Node n) {
++    if (!n.isName() ||
++        !NodeUtil.getRootOfQualifiedName(n).getString().equals("eval")) {
++      return false;
++    }
++    Node firstAncestor = n.getFirstAncestor(Token.CALL);
++    if (firstAncestor == null) {
++      return false;
++    }
++    return firstAncestor.getFirstChild() != n;
++  }
+     /**
+      * A value whose result is the return value of a function call
+      * can be an alias to global object. The dependency on the call target will

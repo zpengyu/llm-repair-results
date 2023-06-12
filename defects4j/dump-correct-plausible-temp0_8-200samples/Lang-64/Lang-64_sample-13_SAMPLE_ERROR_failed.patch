@@ -1,0 +1,52 @@
+diff --git a/src/java/org/apache/commons/lang/enums/ValuedEnum.java b/src/java/org/apache/commons/lang/enums/ValuedEnum.java
+index 0823e77d..65ca8d88 100644
+--- a/src/java/org/apache/commons/lang/enums/ValuedEnum.java
++++ b/src/java/org/apache/commons/lang/enums/ValuedEnum.java
+@@ -180,19 +174,41 @@ public abstract class ValuedEnum extends Enum {
+      * @throws NullPointerException if other is <code>null</code>
+      */
+     public int compareTo(Object other) {
+-        return iValue - ((ValuedEnum) other).iValue;
++        if (other == this) {
++            return 0;
++        }
++        Class otherClass = other.getClass();
++        Class thisClass = this.getClass();
++        if (thisClass.equals(otherClass)) {
++            return iValue - ((ValuedEnum) other).iValue;
++        }
++        Class testClass = otherClass;
++        while (!testClass.equals(thisClass)) {
++            if (testClass.isAssignableFrom(thisClass)) {
++                return -1;
++            }
++            testClass = testClass.getSuperclass();
++        }
++        return 1;
+     }
+-
+     /**
+      * <p>Use reflection to return an objects value.</p>
+      *
+      * @param other  the object to determine the value for
+      * @return the value
+      */
+-            // ignore - should never happen
+-            // ignore - should never happen
+-            // ignore - should never happen
+-
++    private int getValue(Object other) {
++        try {
++            Field field = other.getClass().getDeclaredField("iValue");
++            try {
++                return field.getInt(other);
++            } catch (IllegalAccessException ex) {
++                return 0;
++            }
++        } catch (NoSuchFieldException ex) {
++            return 0;
++        }
++    }
+     /**
+      * <p>Human readable description of this <code>Enum</code> item.</p>
+      *

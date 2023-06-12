@@ -1,0 +1,21 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/type/SimpleType.java b/src/main/java/com/fasterxml/jackson/databind/type/SimpleType.java
+index 09fc2487a..b1c646111 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/type/SimpleType.java
++++ b/src/main/java/com/fasterxml/jackson/databind/type/SimpleType.java
+@@ -137,9 +137,14 @@ public class SimpleType // note: until 2.6 was final
+                     _valueHandler, _typeHandler, _asStatic);
+         // Otherwise, stitch together the hierarchy. First, super-class
+         // if not found, try a super-interface
+-        // should not get here but...
++        if (subclass.isInterface()) { // let's assume it's a super-interface
++            return new SimpleType(subclass, _bindings, this, _superInterfaces,
++                    _valueHandler, _typeHandler, _asStatic);
++        }
++        // otherwise, it's NOT ok; should have been sub-class
++        throw new IllegalArgumentException("Internal error: class "+subclass.getName()
++                +" not a subtype of "+_class.getName());
+     }
+-
+     @Override
+     public JavaType withContentType(JavaType contentType) {
+         throw new IllegalArgumentException("Simple types have no content types; can not call withContentType()");

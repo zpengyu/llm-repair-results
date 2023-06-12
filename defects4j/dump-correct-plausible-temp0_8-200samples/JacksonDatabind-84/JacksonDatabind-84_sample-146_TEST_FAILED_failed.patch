@@ -1,0 +1,37 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/type/ResolvedRecursiveType.java b/src/main/java/com/fasterxml/jackson/databind/type/ResolvedRecursiveType.java
+index 7b8c69af7..76f5157e6 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/type/ResolvedRecursiveType.java
++++ b/src/main/java/com/fasterxml/jackson/databind/type/ResolvedRecursiveType.java
+@@ -7,18 +7,13 @@ import com.fasterxml.jackson.databind.JavaType;
+  *
+  * @since 2.7
+  */
+-public class ResolvedRecursiveType extends TypeBase
+-{
++public class ResolvedRecursiveType extends TypeBase {
+     private static final long serialVersionUID = 1L;
+-
+     protected JavaType _referencedType;
+-
+     public ResolvedRecursiveType(Class<?> erasedType, TypeBindings bindings) {
+         super(erasedType, bindings, null, null, 0, null, null, false);
+     }
+-
+-    public void setReference(JavaType ref)
+-    {
++    public void setReference(JavaType ref) {
+         // sanity check; should not be called multiple times
+         if (_referencedType != null) {
+             throw new IllegalStateException("Trying to re-set self reference; old value = "+_referencedType+", new = "+ref);
+@@ -108,7 +88,9 @@ public class ResolvedRecursiveType extends TypeBase
+         if (_referencedType == null) {
+             return false;
+         }
++        // When comparing, must use _referencedType, NOT getSelfReferencedType(),
++        // since latter will resolve to loop
+         return (o.getClass() == getClass()
+-                && _referencedType.equals(((ResolvedRecursiveType) o).getSelfReferencedType()));
++                && _referencedType.equals(((ResolvedRecursiveType) o)._referencedType));
+     }
+ }
+\ No newline at end of file

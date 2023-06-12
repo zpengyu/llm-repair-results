@@ -1,0 +1,17 @@
+diff --git a/src/com/google/javascript/jscomp/ProcessClosurePrimitives.java b/src/com/google/javascript/jscomp/ProcessClosurePrimitives.java
+index d1d12a3c..15832c1d 100644
+--- a/src/com/google/javascript/jscomp/ProcessClosurePrimitives.java
++++ b/src/com/google/javascript/jscomp/ProcessClosurePrimitives.java
+@@ -782,7 +780,11 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback
+         // Handle the case where there's not a duplicate definition.
+         replacementNode = createDeclarationNode();
+         if (firstModule == minimumModule) {
+-          firstNode.getParent().addChildBefore(replacementNode, firstNode);
++          if (firstNode.getType() == Token.IMPORT) {
++            firstNode.getParent().addChildAfter(replacementNode, firstNode);
++          } else {
++            firstNode.getParent().addChildBefore(replacementNode, firstNode);
++          }
+         } else {
+           // In this case, the name was implicitly provided by two independent
+           // modules. We need to move this code up to a common module.

@@ -1,0 +1,62 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/jsontype/impl/AsPropertyTypeDeserializer.java b/src/main/java/com/fasterxml/jackson/databind/jsontype/impl/AsPropertyTypeDeserializer.java
+index 8bad30e7c..3797c2764 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/jsontype/impl/AsPropertyTypeDeserializer.java
++++ b/src/main/java/com/fasterxml/jackson/databind/jsontype/impl/AsPropertyTypeDeserializer.java
+@@ -134,31 +134,45 @@ public class AsPropertyTypeDeserializer extends AsArrayTypeDeserializer
+     protected Object _deserializeTypedUsingDefaultImpl(JsonParser p, DeserializationContext ctxt,
+             TokenBuffer tb) throws IOException
+     {
+-        // As per [JACKSON-614], may have default implementation to use
+         JsonDeserializer<Object> deser = _findDefaultImplDeserializer(ctxt);
+         if (deser != null) {
+             if (tb != null) {
+                 tb.writeEndObject();
+                 p = tb.asParser(p);
+-                // must move to point to the first token:
+                 p.nextToken();
+             }
+             return deser.deserialize(p, ctxt);
+         }
+-        // or, perhaps we just bumped into a "natural" value (boolean/int/double/String)?
+-        Object result = TypeDeserializer.deserializeIfNatural(p, ctxt, _baseType);
+-        if (result != null) {
+-            return result;
++        // Ok: must point to START_OBJECT (or equivalent)
++        JsonToken t = p.getCurrentToken();
++        if (t == JsonToken.START_ARRAY) {
++            return super.deserializeTypedFromAny(p, ctxt);
+         }
+-        // or, something for which "as-property" won't work, changed into "wrapper-array" type:
+-        if (p.getCurrentToken() == JsonToken.START_ARRAY) {
++        if (t == JsonToken.START_OBJECT) {
++            t = p.nextToken();
++        }
++        // 27-Jun-2016, tatu: As per [databind#1318], need to handle missing property,
++        //   as well as missing Type Id.
++        //   May need to add some more handling for missing property case if
++        //   issues arise.
++        if (t != JsonToken.FIELD_NAME) {
+             return super.deserializeTypedFromAny(p, ctxt);
+         }
+-        ctxt.reportWrongTokenException(p, JsonToken.FIELD_NAME,
+-                "missing property '"+_typePropertyName+"' that is to contain type id  (for class "+baseTypeName()+")");
+-        return null;
++        // [databind#1697]
++        String propName = p.getCurrentName();
++        if (!propName.equals(_typePropertyName)) {
++            return super.deserializeTypedFromAny(p, ctxt);
++        }
++        p.nextToken(); // value token
++        String typeId = p.getText();
++        p.nextToken();
++        if (tb != null) {
++            tb.writeFieldName(propName);
++            tb.writeString(typeId);
++        }
++        JavaType type = ctxt.getTypeFactory().constructFromCanonical(typeId);
++        return _deserializeTypedForId(p, ctxt, type);
+     }
+-
+     /* Also need to re-route "unknown" version. Need to think
+      * this through bit more in future, but for now this does address issue and has
+      * no negative side effects (at least within existing unit test suite).

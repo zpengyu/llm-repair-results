@@ -1,0 +1,19 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/deser/BeanDeserializer.java b/src/main/java/com/fasterxml/jackson/databind/deser/BeanDeserializer.java
+index 3c89dc109..c6fcaf331 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/deser/BeanDeserializer.java
++++ b/src/main/java/com/fasterxml/jackson/databind/deser/BeanDeserializer.java
+@@ -823,7 +820,13 @@ public class BeanDeserializer
+                 continue;
+             }
+         }
+-
++        // 30-Aug-2018, tatu: ... but for now let's ensure we have sane
++        //    state -- may as well force it to be explicit
++        if (t != JsonToken.END_OBJECT) {
++            ctxt.reportInputMismatch(handledType(),
++                    JsonToken.END_OBJECT, "Current token not END_OBJECT (to match wrapper object with root name '%s'), but %s",
++                    _valueToUpdate.getClass().getName(), t);
++        }
+         // We hit END_OBJECT, so:
+         Object bean;
+         try {

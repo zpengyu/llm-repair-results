@@ -1,0 +1,70 @@
+diff --git a/src/main/java/org/apache/commons/compress/archivers/ArchiveStreamFactory.java b/src/main/java/org/apache/commons/compress/archivers/ArchiveStreamFactory.java
+index 57b411d0..298252b8 100644
+--- a/src/main/java/org/apache/commons/compress/archivers/ArchiveStreamFactory.java
++++ b/src/main/java/org/apache/commons/compress/archivers/ArchiveStreamFactory.java
+@@ -194,21 +194,27 @@ public class ArchiveStreamFactory {
+      * @throws ArchiveException if the archiver name is not known
+      * @throws IllegalArgumentException if the stream is null or does not support mark
+      */
+-    public ArchiveInputStream createArchiveInputStream(final InputStream in)
+-            throws ArchiveException {
+-        if (in == null) {
+-            throw new IllegalArgumentException("Stream must not be null.");
+-        }
+-
+-        if (!in.markSupported()) {
+-            throw new IllegalArgumentException("Mark is not supported.");
+-        }
+-
+-        final byte[] signature = new byte[12];
+-        in.mark(signature.length);
++public ArchiveInputStream createArchiveInputStream(final InputStream in)
++        throws ArchiveException {
++    if (in == null) {
++        throw new IllegalArgumentException("Stream must not be null.");
++    }
++    if (!in.markSupported()) {
++        throw new IllegalArgumentException("Mark is not supported.");
++    }
++    ArchiveInputStream is = createArchiveInputStream(getInputStream(in));
++    if (is == null) {
++        throw new ArchiveException("No Archiver found for the stream signature");
++    }
++    return is;
++}
++def getInputStream(InputStream in) throws IOException {
++    final byte[] signature = new byte[12];
++    in.mark(signature.length);
++    int signatureLength = in.read(signature);
++    in.reset();
++    if (signatureLength >= 12) {
+         try {
+-            int signatureLength = in.read(signature);
+-            in.reset();
+             if (ZipArchiveInputStream.matches(signature, signatureLength)) {
+                 return new ZipArchiveInputStream(in);
+             } else if (JarArchiveInputStream.matches(signature, signatureLength)) {
+@@ -239,10 +243,11 @@ public class ArchiveStreamFactory {
+             // COMPRESS-117 - improve auto-recognition
+             if (signatureLength >= 512) {
+                 try {
+-                    TarArchiveInputStream tais = new TarArchiveInputStream(new ByteArrayInputStream(tarheader));
++                    TarArchiveInputStream tais = new TarArchiveInputStream(
++                            new ByteArrayInputStream(tarheader));
+                     // COMPRESS-191 - verify the header checksum
+                     tais.getNextEntry();
+-                        return new TarArchiveInputStream(in);
++                    return new TarArchiveInputStream(in);
+                 } catch (Exception e) { // NOPMD
+                     // can generate IllegalArgumentException as well
+                     // as IOException
+@@ -253,7 +258,6 @@ public class ArchiveStreamFactory {
+         } catch (IOException e) {
+             throw new ArchiveException("Could not use reset and mark operations.", e);
+         }
+-
+-        throw new ArchiveException("No Archiver found for the stream signature");
+     }
+-}
++    return null;
++}}

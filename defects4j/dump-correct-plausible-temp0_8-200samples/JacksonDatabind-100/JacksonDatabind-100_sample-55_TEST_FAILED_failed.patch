@@ -1,0 +1,22 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/node/TreeTraversingParser.java b/src/main/java/com/fasterxml/jackson/databind/node/TreeTraversingParser.java
+index afb9f1869..ba3addb7a 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/node/TreeTraversingParser.java
++++ b/src/main/java/com/fasterxml/jackson/databind/node/TreeTraversingParser.java
+@@ -364,12 +364,17 @@ public class TreeTraversingParser extends ParserMinimalBase
+             if (data != null) {
+                 return data;
+             }
++            // However, if it is POJO, we may want to convert value to byte array:
+             if (n.isPojo()) {
+                 Object ob = ((POJONode) n).getPojo();
+                 if (ob instanceof byte[]) {
+                     return (byte[]) ob;
+                 }
+             }
++            // however, if not, one possible way to convert is using Base64 encoding
++            if (n.isTextual()) {
++                return b64variant.decode(n.asText());
++            }
+         }
+         // otherwise return null to mark we have no binary content
+         return null;

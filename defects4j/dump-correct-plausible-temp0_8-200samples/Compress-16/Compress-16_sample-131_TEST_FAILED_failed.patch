@@ -1,0 +1,57 @@
+diff --git a/src/main/java/org/apache/commons/compress/archivers/ArchiveStreamFactory.java b/src/main/java/org/apache/commons/compress/archivers/ArchiveStreamFactory.java
+index 57b411d0..d7c14e27 100644
+--- a/src/main/java/org/apache/commons/compress/archivers/ArchiveStreamFactory.java
++++ b/src/main/java/org/apache/commons/compress/archivers/ArchiveStreamFactory.java
+@@ -203,9 +202,12 @@ public class ArchiveStreamFactory {
+         if (!in.markSupported()) {
+             throw new IllegalArgumentException("Mark is not supported.");
+         }
+-
+-        final byte[] signature = new byte[12];
++        byte[] signature = new byte[12];
++        final byte[] dumpsig = new byte[32];
++        final byte[] tarheader = new byte[512];
+         in.mark(signature.length);
++        in.mark(dumpsig.length);
++        in.mark(tarheader.length);
+         try {
+             int signatureLength = in.read(signature);
+             in.reset();
+@@ -218,19 +220,13 @@ public class ArchiveStreamFactory {
+             } else if (CpioArchiveInputStream.matches(signature, signatureLength)) {
+                 return new CpioArchiveInputStream(in);
+             }
+-
+             // Dump needs a bigger buffer to check the signature;
+-            final byte[] dumpsig = new byte[32];
+-            in.mark(dumpsig.length);
+             signatureLength = in.read(dumpsig);
+             in.reset();
+             if (DumpArchiveInputStream.matches(dumpsig, signatureLength)) {
+                 return new DumpArchiveInputStream(in);
+             }
+-
+             // Tar needs an even bigger buffer to check the signature; read the first block
+-            final byte[] tarheader = new byte[512];
+-            in.mark(tarheader.length);
+             signatureLength = in.read(tarheader);
+             in.reset();
+             if (TarArchiveInputStream.matches(tarheader, signatureLength)) {
+@@ -242,7 +238,7 @@ public class ArchiveStreamFactory {
+                     TarArchiveInputStream tais = new TarArchiveInputStream(new ByteArrayInputStream(tarheader));
+                     // COMPRESS-191 - verify the header checksum
+                     tais.getNextEntry();
+-                        return new TarArchiveInputStream(in);
++                    return new TarArchiveInputStream(in);
+                 } catch (Exception e) { // NOPMD
+                     // can generate IllegalArgumentException as well
+                     // as IOException
+@@ -253,7 +249,5 @@ public class ArchiveStreamFactory {
+         } catch (IOException e) {
+             throw new ArchiveException("Could not use reset and mark operations.", e);
+         }
+-
+         throw new ArchiveException("No Archiver found for the stream signature");
+-    }
+-}
++    }}

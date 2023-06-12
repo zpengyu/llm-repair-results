@@ -1,0 +1,21 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/node/TreeTraversingParser.java b/src/main/java/com/fasterxml/jackson/databind/node/TreeTraversingParser.java
+index afb9f1869..2c940bce7 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/node/TreeTraversingParser.java
++++ b/src/main/java/com/fasterxml/jackson/databind/node/TreeTraversingParser.java
+@@ -370,6 +370,16 @@ public class TreeTraversingParser extends ParserMinimalBase
+                     return (byte[]) ob;
+                 }
+             }
++            if (n.isTextual()) {
++                // [databind#2096]: we only expect this to work when there's a variant
++                if (b64variant != null) {
++                    try {
++                        return b64variant.decode(n.textValue());
++                    } catch (IllegalArgumentException iae) {
++                        throw ctxt.weirdStringException(_valueClass, "not a valid Base64 code");
++                    }
++                }
++            }
+         }
+         // otherwise return null to mark we have no binary content
+         return null;

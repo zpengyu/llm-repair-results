@@ -1,0 +1,59 @@
+public class JdkDeserializers
+{
+    private final static HashSet<String> _classNames = new HashSet<String>();
+    static {
+        // note: can skip primitive types; other ways to check them:
+        Class<?>[] types = new Class<?>[] {
+                UUID.class,
+                AtomicBoolean.class,
+                StackTraceElement.class,
+                ByteBuffer.class
+        };
+        for (Class<?> cls : types) { _classNames.add(cls.getName()); }
+        for (Class<?> cls : FromStringDeserializer.types()) { _classNames.add(cls.getName()); }
+    }
+    public static JsonDeserializer<?> find(Class<?> rawType, String clsName)
+    {
+        if (_classNames.contains(clsName)) {
+            JsonDeserializer<?> d = FromStringDeserializer.findDeserializer(rawType);
+            if (d != null) {
+                return d;
+            }
+            if (rawType == UUID.class) {
+                return new UUIDDeserializer();
+            }
+            if (rawType == StackTraceElement.class) {
+                return new StackTraceElementDeserializer();
+            }
+            if (rawType == AtomicBoolean.class) {
+                // (note: AtomicInteger/Long work due to single-arg constructor. For now?
+                return new AtomicBooleanDeserializer();
+            }
+            if (rawType == ByteBuffer.class) {
+                return new ByteBufferDeserializer();
+            }
+        }
+        if (rawType == OptionalDouble.class) {
+            return new Jdk8OptionalDeserializer.Double(_valueClass(rawType));
+        }
+        if (rawType == OptionalInt.class) {
+            return new Jdk8OptionalDeserializer.Int(_valueClass(rawType));
+        }
+        if (rawType == OptionalLong.class) {
+            return new Jdk8OptionalDeserializer.Long(_valueClass(rawType));
+        }
+        return null;
+    }
+    public static Class<Number> _valueClass(Class<?> optionalType) {
+        if (optionalType == OptionalDouble.class) {
+            return Number.class;
+        }
+        if (optionalType == OptionalInt.class) {
+            return Integer.class;
+        }
+        if (optionalType == OptionalLong.class) {
+            return Long.class;
+        }
+        throw new IllegalArgumentException("Unrecognized optional type: "+optionalType.getName());
+    }
+}

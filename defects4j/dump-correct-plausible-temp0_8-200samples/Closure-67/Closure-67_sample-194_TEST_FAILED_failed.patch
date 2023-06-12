@@ -1,0 +1,39 @@
+diff --git a/src/com/google/javascript/jscomp/AnalyzePrototypeProperties.java b/src/com/google/javascript/jscomp/AnalyzePrototypeProperties.java
+index 17ab404c..13998f0c 100644
+--- a/src/com/google/javascript/jscomp/AnalyzePrototypeProperties.java
++++ b/src/com/google/javascript/jscomp/AnalyzePrototypeProperties.java
+@@ -312,20 +312,20 @@ class AnalyzePrototypeProperties implements CompilerPass {
+     }
+ 
+     private boolean isPrototypePropertyAssign(Node assign) {
+-      Node n = assign.getFirstChild();
+-      if (n != null && NodeUtil.isVarOrSimpleAssignLhs(n, assign)
+-          && n.getType() == Token.GETPROP
+-          ) {
+-        // We want to exclude the assignment itself from the usage list
+-        boolean isChainedProperty =
+-            n.getFirstChild().getType() == Token.GETPROP;
+-
+-        if (isChainedProperty) {
+-          Node child = n.getFirstChild().getFirstChild().getNext();
+-
+-          if (child.getType() == Token.STRING &&
+-              child.getString().equals("prototype")) {
+-            return true;
++      Node lhs = assign.getFirstChild();
++      Node rhs = assign.getLastChild();
++      if (lhs != null && NodeUtil.isVarOrSimpleAssignLhs(lhs, assign)) {
++        Node getprop = NodeUtil.getAssignedValue(lhs);
++        if (getprop != null && getprop.getType() == Token.GETPROP) {
++          // We want to exclude the assignment itself from the usage list
++          boolean isChainedProperty =
++              getprop.getFirstChild().getType() == Token.GETPROP;
++          if (isChainedProperty) {
++            Node child = getprop.getFirstChild().getFirstChild().getNext();
++            if (child.getType() == Token.STRING &&
++                child.getString().equals("prototype")) {
++              return true;
++            }
+           }
+         }
+       }

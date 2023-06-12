@@ -1,0 +1,39 @@
+diff --git a/src/main/java/org/jsoup/nodes/FormElement.java b/src/main/java/org/jsoup/nodes/FormElement.java
+index 256eb1b..1bd8631 100644
+--- a/src/main/java/org/jsoup/nodes/FormElement.java
++++ b/src/main/java/org/jsoup/nodes/FormElement.java
+@@ -80,18 +79,25 @@ public class FormElement extends Element {
+             String name = el.attr("name");
+             if (name.length() == 0) continue;
+             String type = el.attr("type");
+-
+             if ("select".equals(el.tagName())) {
+                 Elements options = el.select("option[selected]");
+-                boolean set = false;
+-                for (Element option: options) {
+-                    data.add(HttpConnection.KeyVal.create(name, option.val()));
+-                    set = true;
+-                }
+-                if (!set) {
+-                    Element option = el.select("option").first();
+-                    if (option != null)
++                if (options.isEmpty() && el.hasAttr("multiple")) {
++                    for (Element option : el.select("option")) {
++                        if (option.hasAttr("selected")) {
++                            data.add(HttpConnection.KeyVal.create(name, option.val()));
++                        }
++                    }
++                } else {
++                    boolean set = false;
++                    for (Element option : options) {
+                         data.add(HttpConnection.KeyVal.create(name, option.val()));
++                        set = true;
++                    }
++                    if (!set) {
++                        Element option = el.select("option").first();
++                        if (option != null)
++                            data.add(HttpConnection.KeyVal.create(name, option.val()));
++                    }
+                 }
+             } else if ("checkbox".equalsIgnoreCase(type) || "radio".equalsIgnoreCase(type)) {
+                 // only add checkbox or radio if they have the checked attribute

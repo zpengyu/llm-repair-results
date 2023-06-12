@@ -1,0 +1,21 @@
+diff --git a/src/main/java/org/jsoup/nodes/Entities.java b/src/main/java/org/jsoup/nodes/Entities.java
+index 5a2b368..c46ce3c 100644
+--- a/src/main/java/org/jsoup/nodes/Entities.java
++++ b/src/main/java/org/jsoup/nodes/Entities.java
+@@ -86,11 +85,11 @@ public class Entities {
+         final CoreCharset coreCharset = CoreCharset.byName(encoder.charset().name());
+         final Map<Character, String> map = escapeMode.getMap();
+         final int length = string.length();
+-
+-        int codePoint;
+-        for (int offset = 0; offset < length; offset += Character.charCount(codePoint)) {
+-            codePoint = string.codePointAt(offset);
+-
++        final int[] codePoints = CodePointBuffer.ensureBufferCapacity(length);
++        final int codePointCount = string.codePointCount(0, length);
++        string.getChars(0, length, codePoints, 0); // TODO: string.getCodePoints is not yet supported by GWT
++        for (int i = 0; i < codePointCount; i++) {
++            int codePoint = codePoints[i];
+             if (normaliseWhite) {
+                 if (StringUtil.isWhitespace(codePoint)) {
+                     if ((stripLeadingWhite && !reachedNonWhite) || lastWasWhite)

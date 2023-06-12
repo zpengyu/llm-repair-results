@@ -1,0 +1,17 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/jsontype/impl/ClassNameIdResolver.java b/src/main/java/com/fasterxml/jackson/databind/jsontype/impl/ClassNameIdResolver.java
+index 112c00b5c..d5a78f070 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/jsontype/impl/ClassNameIdResolver.java
++++ b/src/main/java/com/fasterxml/jackson/databind/jsontype/impl/ClassNameIdResolver.java
+@@ -56,7 +56,11 @@ public class ClassNameIdResolver
+             //    security issues.
+             JavaType t = tf.constructFromCanonical(id);
+                 // Probably cleaner to have a method in `TypeFactory` but can't add in patch
+-            return t;
++            JavaType bt = tf.constructType(this.handledType());
++            if (t.isTypeOrSubTypeOf(bt)) {
++                return t;
++            }
++            throw new IllegalArgumentException("Class "+t.getRawClass().getName()+" not subtype of "+bt.getRawClass().getName());
+         }
+         Class<?> cls;
+         try {

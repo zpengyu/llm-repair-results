@@ -1,0 +1,127 @@
+diff --git a/src/main/java/org/apache/commons/cli/TypeHandler.java b/src/main/java/org/apache/commons/cli/TypeHandler.java
+index 775e0f2..cdfc661 100644
+--- a/src/main/java/org/apache/commons/cli/TypeHandler.java
++++ b/src/main/java/org/apache/commons/cli/TypeHandler.java
+@@ -99,6 +98,26 @@ public class TypeHandler
+         {
+             return createURL(str);
+         }
++        else if (PatternOptionBuilder.LOCALE_VALUE == clazz)
++        {
++            return createLocale(str);
++        }
++        else if (PatternOptionBuilder.PATTERN_VALUE == clazz)
++        {
++            return createPattern(str);
++        }
++        else if (PatternOptionBuilder.TIME_PERIOD_VALUE == clazz)
++        {
++            return createTimePeriod(str);
++        }
++        else if (PatternOptionBuilder.INTEGER_VALUE == clazz)
++        {
++            return createInteger(str);
++        }
++        else if (PatternOptionBuilder.LIST_VALUE == clazz)
++        {
++            return createList(str);
++        }
+         else
+         {
+             return null;
+@@ -248,4 +257,94 @@ public class TypeHandler
+         //        return FileW.findFiles(str);
+         throw new UnsupportedOperationException("Not yet implemented");
+     }
++    /**
++     * Returns the Locale represented by <code>str</code>.
++     *
++     * @param str the locale string
++     * @return The locale represented by <code>str</code>.
++     * @throws ParseException if <code>str</code> is not a valid
++     *         locale string.
++     */
++    public static Locale createLocale(final String str) throws ParseException
++    {
++        final String[] parts = str.split("_");
++        if (parts.length == 1)
++        {
++            return new Locale(parts[0]);
++        }
++        else if (parts.length == 2)
++        {
++            return new Locale(parts[0], parts[1]);
++        }
++        else
++        {
++            return new Locale(parts[0], parts[1], parts[2]);
++        }
++    }
++    /**
++     * Returns the Pattern represented by <code>str</code>.
++     *
++     * @param str the pattern string
++     * @return The pattern represented by <code>str</code>.
++     * @throws ParseException if <code>str</code> is not a valid
++     *         pattern string.
++     */
++    public static Pattern createPattern(final String str) throws ParseException
++    {
++        try
++        {
++            return Pattern.compile(str);
++        }
++        catch (final PatternSyntaxException e)
++        {
++            throw new ParseException(e.getMessage());
++        }
++    }
++    /**
++     * Returns the TimePeriod represented by <code>str</code>.
++     * <p>
++     * This method is not yet implemented and always throws an
++     * {@link UnsupportedOperationException}.
++     *
++     * @param str the time period string
++     * @return The time period represented by <code>str</code>.
++     * @throws UnsupportedOperationException always
++     */
++    public static TimePeriod createTimePeriod(final String str)
++    {
++        // to implement/port:
++        //        return new TimePeriod(str);
++        throw new UnsupportedOperationException("Not yet implemented");
++    }
++    /**
++     * Returns the Integer represented by <code>str</code>.
++     *
++     * @param str the int string
++     * @return The int represented by <code>str</code>.
++     * @throws ParseException if <code>str</code> is not a valid
++     *         int string.
++     */
++    public static Integer createInteger(final String str) throws ParseException
++    {
++        try
++        {
++            return Integer.valueOf(str);
++        }
++        catch (final NumberFormatException e)
++        {
++            throw new ParseException(e.getMessage());
++        }
++    }
++    /**
++     * Returns the List represented by <code>str</code>.
++     *
++     * @param str the list string
++     * @return The list represented by <code>str</code>.
++     * @throws ParseException if <code>str</code> is not a valid
++     *         int string.
++     */
++    public static List<String> createList(final String str)
++    {
++        return Arrays.asList(str.split(","));
++    }
+ }
+\ No newline at end of file

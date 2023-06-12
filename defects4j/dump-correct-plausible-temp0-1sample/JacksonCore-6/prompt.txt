@@ -1,0 +1,80 @@
+###Provide a fix for the buggy function
+###Buggy Function
+class FibonacciExample {
+    public static void main(String args[]) {
+        int n1 = 0, n2 = 1, n3, i, count = 10;
+
+        System.out.print(n1 + " " + n2);
+
+        for (i = 2; i < count; ++i) {
+            n3 = n1 - n2;
+            System.out.print(" " + n3);
+            n1 = n2;
+            n2 = n3;
+        }
+    }
+}
+
+###Fixed Function
+class FibonacciExample {
+    public static void main(String args[]) {
+        int n1 = 0, n2 = 1, n3, i, count = 10;
+
+        System.out.print(n1 + " " + n2);
+
+        for (i = 2; i < count; ++i) {
+            n3 = n1 + n2;
+            System.out.print(" " + n3);
+            n1 = n2;
+            n2 = n3;
+        }
+    }
+}
+
+###Provide a fix for the buggy function
+###Buggy Function
+public void writeEmbeddedObject(Object object) throws IOException {
+    // 01-Sep-2016, tatu: As per [core#318], handle small number of cases
+    throw new JsonGenerationException("No native support for writing embedded objects",
+            this);
+}
+###Fixed Function
+public void writeEmbeddedObject(Object object) throws IOException {
+    // 01-Sep-2016, tatu: As per [core#318], handle small number of cases
+    if (object == null) {
+        writeNull();
+        return;
+    }
+    if (object instanceof byte[]) {
+        writeBinary((byte[]) object);
+        return;
+    }
+    throw new JsonGenerationException("No native support for writing embedded objects of type "
+            +object.getClass().getName(),
+}
+###Provide a fix for the buggy function
+###Buggy Function
+    private final static int _parseIndex(String str) {
+        final int len = str.length();
+        // [core#133]: beware of super long indexes; assume we never
+        // have arrays over 2 billion entries so ints are fine.
+        if (len == 0 || len > 10) {
+            return -1;
+        }
+        // [core#176]: no leading zeroes allowed
+        for (int i = 0; i < len; ++i) {
+            char c = str.charAt(i);
+            if (c > '9' || c < '0') {
+                return -1;
+            }
+        }
+        if (len == 10) {
+            long l = NumberInput.parseLong(str);
+            if (l > Integer.MAX_VALUE) {
+                return -1;
+            }
+        }
+        return NumberInput.parseInt(str);
+    }
+
+###Fixed Function

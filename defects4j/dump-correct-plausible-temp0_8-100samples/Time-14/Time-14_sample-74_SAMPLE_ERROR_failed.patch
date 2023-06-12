@@ -1,0 +1,47 @@
+diff --git a/src/main/java/org/joda/time/chrono/BasicMonthOfYearDateTimeField.java b/src/main/java/org/joda/time/chrono/BasicMonthOfYearDateTimeField.java
+index 98e6912c..4f91d21a 100644
+--- a/src/main/java/org/joda/time/chrono/BasicMonthOfYearDateTimeField.java
++++ b/src/main/java/org/joda/time/chrono/BasicMonthOfYearDateTimeField.java
+@@ -200,25 +200,24 @@ class BasicMonthOfYearDateTimeField extends ImpreciseDateTimeField {
+     }
+ 
+     //-----------------------------------------------------------------------
+-    public int[] add(ReadablePartial partial, int fieldIndex, int[] values, int valueToAdd) {
+-        // overridden as superclass algorithm can't handle
+-        // 2004-02-29 + 48 months -> 2008-02-29 type dates
+-        if (valueToAdd == 0) {
+-            return values;
+-        }
+-            // month is largest field and being added to, such as month-day
+-        if (DateTimeUtils.isContiguous(partial)) {
+-            long instant = 0L;
+-            for (int i = 0, isize = partial.size(); i < isize; i++) {
+-                instant = partial.getFieldType(i).getField(iChronology).set(instant, values[i]);
+-            }
+-            instant = add(instant, valueToAdd);
+-            return iChronology.get(partial, instant);
+-        } else {
+-            return super.add(partial, fieldIndex, values, valueToAdd);
+-        }
++public int[] add(ReadablePartial partial, int fieldIndex, int[] values, int valueToAdd) {
++    // overridden as superclass algorithm can't handle
++    // 2004-02-29 + 48 months -> 2008-02-29 type dates
++    int current = values[fieldIndex];
++    if (current == Integer.MAX_VALUE) {
++        return values; // don't bother wrapping
+     }
+-
++    if (current <= (Integer.MAX_VALUE - valueToAdd)) {
++        // safe to add
++        values = getField(partial.getFieldType(fieldIndex)).add(partial, fieldIndex, values, valueToAdd);
++    } else {
++        // check if wrap will work
++        values = getField(partial.getFieldType(fieldIndex)).add(partial, fieldIndex, values, Integer.MAX_VALUE - current);
++        // add remaining in a safe way
++        values = getField(partial.getFieldType(fieldIndex)).add(partial, fieldIndex, values, valueToAdd - (Integer.MAX_VALUE - current));
++    }
++    return values;
++}
+     //-----------------------------------------------------------------------
+     /**
+      * Add to the Month component of the specified time instant

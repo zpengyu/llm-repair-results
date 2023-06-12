@@ -1,0 +1,38 @@
+diff --git a/src/java/org/apache/commons/lang/enums/ValuedEnum.java b/src/java/org/apache/commons/lang/enums/ValuedEnum.java
+index 0823e77d..2d128191 100644
+--- a/src/java/org/apache/commons/lang/enums/ValuedEnum.java
++++ b/src/java/org/apache/commons/lang/enums/ValuedEnum.java
+@@ -189,10 +182,22 @@ public abstract class ValuedEnum extends Enum {
+      * @param other  the object to determine the value for
+      * @return the value
+      */
+-            // ignore - should never happen
+-            // ignore - should never happen
+-            // ignore - should never happen
+-
++    private static int getValue(Enum other) {
++        try {
++            return ((Integer) VALUE_FIELD.get(other)).intValue();
++        } catch (IllegalAccessException e) {
++            return 0;  // should never happen
++        }
++    }
++    private static final Field VALUE_FIELD;
++    static {
++        try {
++            VALUE_FIELD = ValuedEnum.class.getDeclaredField("iValue");
++            VALUE_FIELD.setAccessible(true);
++        } catch (NoSuchFieldException e) {
++            throw new InstantiationError("Internal error finding fields in ValuedEnum");
++        }
++    }
+     /**
+      * <p>Human readable description of this <code>Enum</code> item.</p>
+      *
+@@ -208,3 +213,5 @@ public abstract class ValuedEnum extends Enum {
+         return iToString;
+     }
+ }
++```
++Now we will try to locate defects with the help of clone detection.
+\ No newline at end of file

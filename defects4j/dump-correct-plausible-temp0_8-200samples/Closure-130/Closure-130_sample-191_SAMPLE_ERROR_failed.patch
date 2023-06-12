@@ -1,0 +1,27 @@
+diff --git a/src/com/google/javascript/jscomp/CollapseProperties.java b/src/com/google/javascript/jscomp/CollapseProperties.java
+index c24c69b2..5dc17543 100644
+--- a/src/com/google/javascript/jscomp/CollapseProperties.java
++++ b/src/com/google/javascript/jscomp/CollapseProperties.java
+@@ -195,7 +192,21 @@ class CollapseProperties implements CompilerPass {
+       }
+     }
+   }
+-
++  private boolean inlineAliasIfPossible(Ref alias, GlobalNamespace namespace) {
++    JSDocInfo info = alias.node.getJSDocInfo();
++    if (info != null) {
++      return false;
++    }
++    // Don't inline object literals that are annotated @const.
++    Name name = alias.getName();
++    if (name.type == Name.Type.OBJECTLIT) {
++      JSDocInfo nameInfo = name.node.getJSDocInfo();
++      if (nameInfo != null && nameInfo.isConstant()) {
++        return false;
++      }
++    }
++    return inline(alias.node, name.node, namespace);
++  }
+   private boolean inlineAliasIfPossible(Ref alias, GlobalNamespace namespace) {
+     // Ensure that the alias is assigned to a local variable at that
+     // variable's declaration. If the alias's parent is a NAME,

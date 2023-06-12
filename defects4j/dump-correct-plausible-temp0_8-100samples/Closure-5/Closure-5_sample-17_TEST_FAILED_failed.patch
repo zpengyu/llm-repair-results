@@ -1,0 +1,20 @@
+diff --git a/src/com/google/javascript/jscomp/InlineObjectLiterals.java b/src/com/google/javascript/jscomp/InlineObjectLiterals.java
+index 2f5a8e10..53211477 100644
+--- a/src/com/google/javascript/jscomp/InlineObjectLiterals.java
++++ b/src/com/google/javascript/jscomp/InlineObjectLiterals.java
+@@ -242,8 +233,13 @@ class InlineObjectLiterals implements CompilerPass {
+             }
+           }
+         }
+-
+-
++        // Make sure that the variables we're inlining are only referenced
++        // in this statement.
++        for (Reference t : refs) {
++          if (t.getScope() != ref.getScope()) {
++            return false;
++          }
++        }
+         // We have found an acceptable object literal assignment. As
+         // long as there are no other assignments that mess things up,
+         // we can inline.

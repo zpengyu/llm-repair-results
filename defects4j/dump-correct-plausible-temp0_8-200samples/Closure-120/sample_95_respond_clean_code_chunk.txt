@@ -1,0 +1,20 @@
+    boolean isAssignedOnceInLifetime() {
+      Reference ref = getOneAndOnlyAssignment();
+      if (ref == null) {
+        return false;
+      }
+      // Make sure this assignment is not in a loop.
+      for (BasicBlock block = ref.getBasicBlock();
+           block != null; block = block.getParent()) {
+        if (block.isFunction) {
+          break;
+        } else if (block.isLoop) {
+          // found a loop, this might still be ok if the variable is a
+          // local variable. A local variable is never declared outside
+          // of the function so the loop can't run long enough to wipe
+          // out the assignment.
+          return variable.scope.isLocal();
+        }
+      }
+      return true;
+    }

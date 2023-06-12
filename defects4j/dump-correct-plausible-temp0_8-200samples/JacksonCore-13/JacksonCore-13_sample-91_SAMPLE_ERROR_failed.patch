@@ -1,0 +1,58 @@
+diff --git a/src/main/java/com/fasterxml/jackson/core/json/JsonGeneratorImpl.java b/src/main/java/com/fasterxml/jackson/core/json/JsonGeneratorImpl.java
+index 81b90fed..9cdaf18e 100644
+--- a/src/main/java/com/fasterxml/jackson/core/json/JsonGeneratorImpl.java
++++ b/src/main/java/com/fasterxml/jackson/core/json/JsonGeneratorImpl.java
+@@ -194,4 +168,52 @@ public abstract class JsonGeneratorImpl extends GeneratorBase
+         writeFieldName(fieldName);
+         writeString(value);
+     }
++    @Override
++    public void writeFieldName(SerializableString name) throws IOException
++    {
++        if (_cfgPrettyPrinter != null) {
++            _writePPFieldName(name);
++            return;
++        }
++        // Minimal check for avoiding double-quoting
++        if (_outputTail + 1 >= _outputEnd) {
++            _flushBuffer();
++        }
++        if (_cfgUnqNames) { // quote only if necessary
++            final int status = ((_outputTail >= _outputHead) // empty or just got flushed?
++                    && (_outputBuffer[_outputTail] != '"'))
++                ? writeUnq(name) : writeRaw(name);
++            if (status < 0) {
++                _writeQuotedFieldName(name);
++            }
++        } else {
++            if (writeRaw(name) < 0) {
++                _writeQuotedFieldName(name);
++            }
++        }
++    }
++    @Override
++    public final void writeFieldName(String name) throws IOException
++    {
++        if (_cfgPrettyPrinter != null) {
++            _writePPFieldName(name);
++            return;
++        }
++        // Minimal check for avoiding double-quoting
++        if (_outputTail + 1 >= _outputEnd) {
++            _flushBuffer();
++        }
++        if (_cfgUnqNames) { // quote only if necessary
++            final int status = ((_outputTail >= _outputHead) // empty or just got flushed?
++                    && (_outputBuffer[_outputTail] != '"'))
++                ? writeUnq(name) : writeRaw(name);
++            if (status < 0) {
++                _writeQuotedFieldName(name);
++            }
++        } else {
++            if (writeRaw(name) < 0) {
++                _writeQuotedFieldName(name);
++            }
++        }
++    }
+ }
+\ No newline at end of file

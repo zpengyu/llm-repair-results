@@ -1,0 +1,72 @@
+diff --git a/src/main/java/org/apache/commons/cli/TypeHandler.java b/src/main/java/org/apache/commons/cli/TypeHandler.java
+index 775e0f2..6569b5d 100644
+--- a/src/main/java/org/apache/commons/cli/TypeHandler.java
++++ b/src/main/java/org/apache/commons/cli/TypeHandler.java
+@@ -99,19 +98,30 @@ public class TypeHandler
+         {
+             return createURL(str);
+         }
++        else if (PatternOptionBuilder.LOCALE_VALUE == clazz)
++        {
++            return createLocale(str);
++        }
++        else if (PatternOptionBuilder.PATTERN_VALUE == clazz)
++        {
++            return createPattern(str);
++        }
++        else if (PatternOptionBuilder.TIME_PERIOD_VALUE == clazz)
++        {
++            return createTimePeriod(str);
++        }
+         else
+         {
+             return null;
+         }
+     }
+-
+     /**
+-      * Create an Object from the classname and empty constructor.
+-      *
+-      * @param classname the argument value
+-      * @return the initialised object
+-      * @throws ParseException if the class could not be found or the object could not be created
+-      */
++     * Create an Object from the classname and empty constructor.
++     *
++     * @param classname the argument value
++     * @return the initialised object
++     * @throws ParseException if the class could not be found or the object could not be created
++     */
+     public static Object createObject(final String classname) throws ParseException
+     {
+         Class<?> cl;
+@@ -248,4 +249,28 @@ public class TypeHandler
+         //        return FileW.findFiles(str);
+         throw new UnsupportedOperationException("Not yet implemented");
+     }
++    public static Locale createLocale(final String str)
++    {
++        final String[] s = str.split("_");
++        if (s.length == 1)
++        {
++            return new Locale(s[0]);
++        }
++        else if (s.length == 2)
++        {
++            return new Locale(s[0], s[1]);
++        }
++        else
++        {
++            return new Locale(s[0], s[1], s[2]);
++        }
++    }
++    public static Pattern createPattern(final String str)
++    {
++        return Pattern.compile(str);
++    }
++    public static TimePeriod createTimePeriod(final String str)
++    {
++        return TimePeriod.valueOf(str);
++    }
+ }
+\ No newline at end of file

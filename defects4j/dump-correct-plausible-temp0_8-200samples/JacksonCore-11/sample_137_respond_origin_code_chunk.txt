@@ -1,0 +1,21 @@
+private void _verifySharing()
+{
+    if (_hashShared) {
+        int[] oldHashArea = _hashArea;
+        _hashArea = Arrays.copyOf(_hashArea, _hashArea.length);
+        _names = Arrays.copyOf(_names, _names.length);
+        _hashShared = false;
+        // 09-Sep-2015, tatu: As per [jackson-core#216], also need to ensure
+        //    we rehash as needed, as need-rehash flag is not copied from parent
+        if (_needRehash) {
+            rehash();
+        } else if (_hashArea.length > DEFAULT_NAME_HASH_SIZE) {
+            /* Can not be shared anymore, but let's only use the
+             * default-sized bucket array if that's what parent had
+             */
+            if (oldHashArea.length == DEFAULT_NAME_HASH_SIZE) {
+                _hashArea = oldHashArea;
+            }
+        }
+    }
+}

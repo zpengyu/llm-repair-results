@@ -1,0 +1,33 @@
+diff --git a/src/main/java/org/jsoup/parser/HtmlTreeBuilder.java b/src/main/java/org/jsoup/parser/HtmlTreeBuilder.java
+index 5a46c4c..d0740bf 100644
+--- a/src/main/java/org/jsoup/parser/HtmlTreeBuilder.java
++++ b/src/main/java/org/jsoup/parser/HtmlTreeBuilder.java
+@@ -380,18 +380,13 @@ public class HtmlTreeBuilder extends TreeBuilder {
+     }
+ 
+     void resetInsertionMode() {
+-        boolean last = false;
+         for (int pos = stack.size() -1; pos >= 0; pos--) {
+             Element node = stack.get(pos);
+-            if (pos == 0) {
+-                last = true;
+-                node = contextElement;
+-            }
+             String name = node.nodeName();
+             if ("select".equals(name)) {
+                 transition(HtmlTreeBuilderState.InSelect);
+                 break; // frag
+-            } else if (("td".equals(name) || "td".equals(name) && !last)) {
++            } else if (("td".equals(name) || "td".equals(name) && pos == 0)) {
+                 transition(HtmlTreeBuilderState.InCell);
+                 break;
+             } else if ("tr".equals(name)) {
+@@ -421,7 +416,7 @@ public class HtmlTreeBuilder extends TreeBuilder {
+             } else if ("html".equals(name)) {
+                 transition(HtmlTreeBuilderState.BeforeHead);
+                 break; // frag
+-            } else if (last) {
++            } else if (pos == 0) {
+                 transition(HtmlTreeBuilderState.InBody);
+                 break; // frag
+             }

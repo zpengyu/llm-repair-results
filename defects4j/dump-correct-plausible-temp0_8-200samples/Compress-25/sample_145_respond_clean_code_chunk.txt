@@ -1,0 +1,23 @@
+    public ZipArchiveInputStream(InputStream inputStream,
+                                 String encoding,
+                                 boolean useUnicodeExtraFields,
+                                 boolean allowStoredEntriesWithDataDescriptor) throws IOException {
+        zipEncoding = ZipEncodingHelper.getZipEncoding(encoding);
+        this.useUnicodeExtraFields = useUnicodeExtraFields;
+        in = new PushbackInputStream(inputStream, buf.capacity());
+        this.allowStoredEntriesWithDataDescriptor =
+            allowStoredEntriesWithDataDescriptor;
+        // haven't read anything so far
+        int readByte = in.read();
+        if (readByte == -1) {
+            // zipped inputstream is empty
+            throw new ZipException("archive is empty");
+        }
+        if (((readByte << 24) | (readByte << 16) | (readByte << 8) | readByte) == 0x504b0304) {
+            // actually a PKZIP header.
+            in.unread(readByte);
+        } else {
+            // something in the header is invalid
+            throw new ZipException("archive is not a ZIP archive");
+        }
+    }

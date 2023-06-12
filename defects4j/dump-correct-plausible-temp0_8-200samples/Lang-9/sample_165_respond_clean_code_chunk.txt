@@ -1,0 +1,40 @@
+    private void init() {
+        thisYear= Calendar.getInstance(timeZone, locale).get(Calendar.YEAR);
+        nameValues= new ConcurrentHashMap<Integer, KeyValue[]>();
+        StringBuilder regex= new StringBuilder();
+        List<Strategy> collector = new ArrayList<Strategy>();
+        Matcher patternMatcher= formatPattern.matcher(pattern);
+        if(!patternMatcher.lookingAt()) {
+            throw new IllegalArgumentException("Invalid pattern");
+        }
+        int currentFormatFieldStart= patternMatcher.regionStart();
+        int currentFormatFieldEnd= patternMatcher.end();
+        currentFormatField= patternMatcher.group();
+        Strategy currentStrategy= getStrategy(currentFormatField);
+        for(;;) {
+            patternMatcher.region(currentFormatFieldEnd, patternMatcher.regionEnd());
+            if(!patternMatcher.lookingAt()) {
+                nextStrategy = null;
+                break;
+            }
+            String nextFormatField= patternMatcher.group();
+            int nextFormatFieldStart= patternMatcher.regionStart();
+            int nextFormatFieldEnd= patternMatcher.end();
+            nextStrategy = getStrategy(nextFormatField);
+            if(currentStrategy.addRegex(this, regex)) {
+                collector.add(currentStrategy);
+            }
+            currentFormatFieldStart= nextFormatFieldStart;
+            currentFormatFieldEnd= nextFormatFieldEnd;
+            currentFormatField= nextFormatField;
+            currentStrategy= nextStrategy;
+        }
+        if(currentStrategy.addRegex(this, regex)) {
+            collector.add(currentStrategy);
+        }
+        currentFormatFieldStart= -1;
+        currentFormatFieldEnd= -1;
+        currentFormatField= null;
+        strategies= collector.toArray(new Strategy[collector.size()]);
+        parsePattern= Pattern.compile(regex.toString());
+    }

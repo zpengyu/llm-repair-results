@@ -1,0 +1,77 @@
+diff --git a/src/main/java/org/apache/commons/csv/Lexer.java b/src/main/java/org/apache/commons/csv/Lexer.java
+index c161334..4be3ed3 100644
+--- a/src/main/java/org/apache/commons/csv/Lexer.java
++++ b/src/main/java/org/apache/commons/csv/Lexer.java
+@@ -84,35 +84,45 @@ abstract class Lexer {
+      * @throws IOException if there is a problem reading the stream or the end of stream is detected: 
+      * the escape character is not allowed at end of strem
+      */
+-    int readEscape() throws IOException {
+-        // the escape char has just been read (normally a backslash)
+-        final int c = in.read();
+-        switch (c) {
+-        case 'r':
+-            return CR;
+-        case 'n':
+-            return LF;
+-        case 't':
+-            return TAB;
+-        case 'b':
+-            return BACKSPACE;
+-        case 'f':
+-            return FF;
+-        case CR:
+-        case LF:
+-        case FF: // TODO is this correct?
+-        case TAB: // TODO is this correct? Do tabs need to be escaped?
+-        case BACKSPACE: // TODO is this correct?
+-            return c;
+-        case END_OF_STREAM:
+-            throw new IOException("EOF whilst processing escape sequence");
+-        default:
+-            // Now check for meta-characters
+-                return c;
+-            // indicate unexpected char - available from in.getLastChar()
++int readEscape() throws IOException {
++    // the escape char has just been read (normally a backslash)
++    final int c = in.read();
++    switch (c) {
++    case 'r':
++        return CR;
++    case 'n':
++        return LF;
++    case 't':
++        return TAB;
++    case 'b':
++        return BACKSPACE;
++    case 'f':
++        return FF;
++    case CR:
++    case LF:
++    case FF: // TODO is this correct?
++    case TAB: // TODO is this correct? Do tabs need to be escaped?
++    case BACKSPACE: // TODO is this correct?
++        return c;
++    case END_OF_STREAM:
++        throw new IOException("EOF whilst processing escape sequence");
++    default:
++        // Now check for meta-characters
++        if (c == 'u') {
++            // we have a unicode escape
++            final int[] unicodeChars = new int[4];
++            int count = 0;
++            for (int i = 0; i < 4; i++) {
++                unicodeChars[count++] = in.read();
++            }
++            // TODO this is a bit simplistic, and probably doesn't handle
++            // all unicode cases, but it seems to work for our current unit
++            // tests
++            return Integer.parseInt(new String(unicodeChars), 16);
+         }
++        return c;
+     }
+-
++}
+     void trimTrailingSpaces(final StringBuilder buffer) {
+         int length = buffer.length();
+         while (length > 0 && Character.isWhitespace(buffer.charAt(length - 1))) {

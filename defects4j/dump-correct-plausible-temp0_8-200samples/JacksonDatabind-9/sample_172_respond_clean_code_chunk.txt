@@ -1,0 +1,22 @@
+    public void serialize(Object value, JsonGenerator jgen, SerializerProvider provider) throws IOException {
+        String str;
+        if (value == null) {
+            provider.defaultSerializeNull(jgen);
+            return;
+        }
+        if (value instanceof Date) {
+            provider.defaultSerializeDateKey((Date) value, jgen);
+            return;
+        }
+        if (!(value instanceof Calendar)) {
+            str = value.toString();
+        } else {
+            Calendar cal = (Calendar)value;
+            if (_useTimestamp) {
+                provider.defaultSerializeDateKey(cal.getTime(), jgen);
+            } else {
+                str = cal.getTime().toString();
+            }
+        }
+        jgen.writeFieldName(str);
+    }

@@ -1,0 +1,32 @@
+diff --git a/gson/src/main/java/com/google/gson/stream/JsonReader.java b/gson/src/main/java/com/google/gson/stream/JsonReader.java
+index 4541941d..847bf738 100644
+--- a/gson/src/main/java/com/google/gson/stream/JsonReader.java
++++ b/gson/src/main/java/com/google/gson/stream/JsonReader.java
+@@ -709,13 +701,13 @@ public class JsonReader implements Closeable {
+           return PEEKED_NONE;
+         }
+         if (last == NUMBER_CHAR_SIGN || last == NUMBER_CHAR_NONE) {
+-          value = -(c - '0');
++          value = c - '0';
+           last = NUMBER_CHAR_DIGIT;
+         } else if (last == NUMBER_CHAR_DIGIT) {
+           if (value == 0) {
+             return PEEKED_NONE; // Leading '0' prefix is not allowed (since it could be octal).
+           }
+-          long newValue = value * 10 - (c - '0');
++          long newValue = value * 10 + (c - '0');
+           fitsInLong &= value > MIN_INCOMPLETE_INTEGER
+               || (value == MIN_INCOMPLETE_INTEGER && newValue < value);
+           value = newValue;
+@@ -726,10 +718,9 @@ public class JsonReader implements Closeable {
+         }
+       }
+     }
+-
+     // We've read a complete number. Decide if it's a PEEKED_LONG or a PEEKED_NUMBER.
+     if (last == NUMBER_CHAR_DIGIT && fitsInLong && (value != Long.MIN_VALUE || negative)) {
+-      peekedLong = negative ? value : -value;
++      peekedLong = negative ? -value : value;
+       pos += i;
+       return peeked = PEEKED_LONG;
+     } else if (last == NUMBER_CHAR_DIGIT || last == NUMBER_CHAR_FRACTION_DIGIT

@@ -1,0 +1,18 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/jsontype/impl/TypeDeserializerBase.java b/src/main/java/com/fasterxml/jackson/databind/jsontype/impl/TypeDeserializerBase.java
+index e8942ba4b..069a89330 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/jsontype/impl/TypeDeserializerBase.java
++++ b/src/main/java/com/fasterxml/jackson/databind/jsontype/impl/TypeDeserializerBase.java
+@@ -160,8 +160,11 @@ public abstract class TypeDeserializerBase
+                 if (deser == null) {
+                     // 10-May-2016, tatu: We may get some help...
+                     JavaType actual = _handleUnknownTypeId(ctxt, typeId);
+-                    if (actual == null) { // what should this be taken to mean?
+-                        // 17-Jan-2019, tatu: As per [databind#2221], better NOT return `null` but...
++                    // 17-Jan-2019, tatu: As per [databind#2221], better NOT return `null` but...
++                    if (actual == null) {
++                        ctxt.reportMappingException("Could not resolve type id '%s' as a subtype of %s",
++                                typeId, _baseType);
++                        // from caller's perspective this is equivalent to returning null; not pretty but...
+                         return null;
+                     }
+                     // ... would this actually work?

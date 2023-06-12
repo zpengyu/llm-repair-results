@@ -1,0 +1,20 @@
+    protected JavaType _fromVariable(TypeVariable<?> type, TypeBindings context)
+    {
+        // First: if type is bound, we may already have resolved it
+        if (context == null) {
+            context = TypeBindings.emptyBindings();
+        }
+        final String name = type.getName();
+        if (context.isBound(name)) {
+            return context.findType(name);
+        }
+        // Either not yet bound; or bound but not resolved
+        context._addPlaceholder(name);
+        // 19-Mar-2015: Without context, all we can check are bounds.
+        Type[] bounds = type.getBounds();
+        if (bounds.length == 0) { // default: Object
+            return TypeFactory.unknownType();
+        }
+        return _constructType(bounds[0], context);
+    }
+

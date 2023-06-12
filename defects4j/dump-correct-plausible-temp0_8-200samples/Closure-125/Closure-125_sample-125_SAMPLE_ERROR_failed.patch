@@ -1,0 +1,19 @@
+diff --git a/src/com/google/javascript/jscomp/TypeCheck.java b/src/com/google/javascript/jscomp/TypeCheck.java
+index 75a54ad5..fda7836c 100644
+--- a/src/com/google/javascript/jscomp/TypeCheck.java
++++ b/src/com/google/javascript/jscomp/TypeCheck.java
+@@ -1664,6 +1664,14 @@ public class TypeCheck implements NodeTraversal.Callback, CompilerPass {
+       } else {
+         ensureTyped(t, n);
+       }
++    } else if (type.isUnionType()) {
++      UnionType unionType = type.toMaybeUnionType();
++      if (unionType.isSubtypeOf(getNativeType(JSTypeNative.FUNCTION_PROTOTYPE))) {
++        ensureTyped(t, n);
++      } else {
++        report(t, n, NOT_A_CONSTRUCTOR);
++        ensureTyped(t, n);
++      }
+     } else {
+       report(t, n, NOT_A_CONSTRUCTOR);
+       ensureTyped(t, n);

@@ -1,0 +1,53 @@
+    protected void iterateSimplex(final Comparator<RealPointValuePair> comparator)
+        throws FunctionEvaluationException, OptimizationException, IllegalArgumentException {
+
+        while (true) {
+
+            incrementIterationsCounter();
+
+            // save the original vertex
+            final RealPointValuePair[] original = simplex;
+            final RealPointValuePair best = original[0];
+
+            // perform a reflection step
+            final RealPointValuePair reflected = evaluateNewSimplex(original, 1.0, comparator);
+            if (comparator.compare(reflected, best) < 0) {
+
+                // compute the expanded simplex
+                final RealPointValuePair[] reflectedSimplex = simplex;
+                final RealPointValuePair expanded = evaluateNewSimplex(original, khi, comparator);
+                if (comparator.compare(reflected, expanded) <= 0) {
+                    // accept the reflected simplex
+                    simplex = reflectedSimplex;
+                } else {
+                    simplex = expandedSimplex;
+                }
+
+                return;
+
+            } else if (comparator.compare(reflected, original[n]) < 0) {
+                // perform an outside contraction step
+                final RealPointValuePair[] reflectedSimplex = simplex;
+                final RealPointValuePair outContracted = evaluateNewSimplex(original, gamma, comparator);
+                if (comparator.compare(outContracted, reflected) < 0) {
+                    // accept the contracted simplex
+                    simplex = reflectedSimplex;
+                }
+
+                return;
+
+            }
+
+            // perform an inside contraction step
+            final RealPointValuePair inContracted = evaluateNewSimplex(original, rho, comparator);
+            if (comparator.compare(inContracted, best) < 0) {
+                // accept the contracted simplex
+
+            // check convergence
+                return;
+            }
+
+        }
+
+    }
+

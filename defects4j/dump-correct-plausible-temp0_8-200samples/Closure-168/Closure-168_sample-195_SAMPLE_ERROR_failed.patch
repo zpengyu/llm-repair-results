@@ -1,0 +1,40 @@
+diff --git a/src/com/google/javascript/jscomp/TypedScopeCreator.java b/src/com/google/javascript/jscomp/TypedScopeCreator.java
+index 5e7bfa3f..c7bebf97 100644
+--- a/src/com/google/javascript/jscomp/TypedScopeCreator.java
++++ b/src/com/google/javascript/jscomp/TypedScopeCreator.java
+@@ -1984,7 +1984,8 @@ final class TypedScopeCreator implements ScopeCreator {
+       }
+     }
+ 
+-    @Override public void visit(NodeTraversal t, Node n, Node parent) {
++    @Override
++    public void visit(NodeTraversal t, Node n, Node parent) {
+       if (t.inGlobalScope()) {
+         return;
+       }
+@@ -2023,7 +2020,7 @@ final class TypedScopeCreator implements ScopeCreator {
+           }
+         }
+       } else if (n.isGetProp() && n.isUnscopedQualifiedName() &&
+-          NodeUtil.isLValue(n)) {
++                 NodeUtil.isLValue(n)) {
+         String name = NodeUtil.getRootOfQualifiedName(n).getString();
+         Scope scope = t.getScope();
+         Var var = scope.getVar(name);
+@@ -2034,9 +2031,15 @@ final class TypedScopeCreator implements ScopeCreator {
+                 .recordEscapedQualifiedName(n.getQualifiedName());
+           }
+         }
++      } else if (n.isCall() && parent.isExprResult() &&
++                 !mayHaveSideEffects(n) &&
++                 n.getFirstChild().isGetProp() &&
++                 n.getFirstChild().isUnscopedQualifiedName()) {
++        data.get(t.getScopeRoot()).recordEscapedQualifiedName(
++            n.getFirstChild().getQualifiedName());
+       }
+     }
+-  }
++  }  }
+ 
+   private AstFunctionContents getFunctionAnalysisResults(@Nullable Node n) {
+     if (n == null) {

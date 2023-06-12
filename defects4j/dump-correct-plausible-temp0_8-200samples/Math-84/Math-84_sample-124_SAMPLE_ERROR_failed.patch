@@ -1,0 +1,46 @@
+diff --git a/src/main/java/org/apache/commons/math/optimization/direct/MultiDirectional.java b/src/main/java/org/apache/commons/math/optimization/direct/MultiDirectional.java
+index 2fa8c34bf..07180e493 100644
+--- a/src/main/java/org/apache/commons/math/optimization/direct/MultiDirectional.java
++++ b/src/main/java/org/apache/commons/math/optimization/direct/MultiDirectional.java
+@@ -79,25 +74,30 @@ public class MultiDirectional extends DirectSearchOptimizer {
+                 if (comparator.compare(reflected, expanded) <= 0) {
+                     // accept the reflected simplex
+                     simplex = reflectedSimplex;
++                } else {
++                    // accept the expanded simplex
++                    simplex = expandedSimplex;
+                 }
+-
+                 return;
+-
+             }
+-
+-            // compute the contracted simplex
+-            final RealPointValuePair contracted = evaluateNewSimplex(original, gamma, comparator);
+-            if (comparator.compare(contracted, best) < 0) {
+-                // accept the contracted simplex
+-
++            // perform an inside contraction step
++            final RealPointValuePair insideContracted = evaluateNewSimplex(original, gamma, comparator);
++            if (comparator.compare(insideContracted, best) <= 0) {
++                // accept the reflected simplex
+             // check convergence
+                 return;
+             }
+-
++            // perform an outside contraction step
++            final RealPointValuePair outsideContracted = evaluateNewSimplex(original, ro, comparator);
++            if (comparator.compare(outsideContracted, best) <= 0) {
++                // accept the outside contracted simplex
++            // check convergence
++                return;
++            }
++            // perform a reduction step
++            reduceSimplex(epsilon, comparator);
+         }
+-
+     }
+-
+     /** Compute and evaluate a new simplex.
+      * @param original original simplex (to be preserved)
+      * @param coeff linear coefficient

@@ -1,0 +1,27 @@
+diff --git a/src/com/google/javascript/jscomp/TypedScopeCreator.java b/src/com/google/javascript/jscomp/TypedScopeCreator.java
+index 051f5c8e..f7aa79ae 100644
+--- a/src/com/google/javascript/jscomp/TypedScopeCreator.java
++++ b/src/com/google/javascript/jscomp/TypedScopeCreator.java
+@@ -1462,9 +1460,21 @@ final class TypedScopeCreator implements ScopeCreator {
+         case Token.VAR:
+           defineVar(n, parent);
+           break;
++        case Token.LET:
++        case Token.CONST:
++          defineLetConst(n, parent);
++          break;
+       }
+     }
+-
++  private void defineLetConst(Node n, Node parent) {
++    Preconditions.checkArgument(parent.getType() == Token.VAR);
++    for (Node nameNode : n.children()) {
++      String name = nameNode.getString();
++      Preconditions.checkArgument(name != null && name.length() > 0);
++      Var v = createVar(name, nameNode, false);
++      setType(v, nameNode);
++    }
++  }
+     /** Handle bleeding functions and function parameters. */
+     private void handleFunctionInputs(Node fnNode) {
+       // Handle bleeding functions.

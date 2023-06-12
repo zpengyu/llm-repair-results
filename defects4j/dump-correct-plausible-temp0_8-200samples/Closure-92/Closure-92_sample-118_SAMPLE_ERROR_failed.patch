@@ -1,0 +1,21 @@
+diff --git a/src/com/google/javascript/jscomp/ProcessClosurePrimitives.java b/src/com/google/javascript/jscomp/ProcessClosurePrimitives.java
+index d1d12a3c..7319962e 100644
+--- a/src/com/google/javascript/jscomp/ProcessClosurePrimitives.java
++++ b/src/com/google/javascript/jscomp/ProcessClosurePrimitives.java
+@@ -781,7 +779,15 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback
+       } else {
+         // Handle the case where there's not a duplicate definition.
+         replacementNode = createDeclarationNode();
+-        if (firstModule == minimumModule) {
++        if (firstNode.isFromExterns()) {
++          // There was a definition in the externs. We can just replace the
++          // name node with our declaration.
++          firstNode.getParent().replaceChild(firstNode, replacementNode);
++          if (explicitNode != null) {
++            explicitNode.detachFromParent();
++          }
++          compiler.reportCodeChange();
++        } else if (firstModule == minimumModule) {
+           firstNode.getParent().addChildBefore(replacementNode, firstNode);
+         } else {
+           // In this case, the name was implicitly provided by two independent

@@ -1,0 +1,29 @@
+diff --git a/src/com/google/javascript/jscomp/PeepholeOptimizationsPass.java b/src/com/google/javascript/jscomp/PeepholeOptimizationsPass.java
+index 7eda511e..00966452 100644
+--- a/src/com/google/javascript/jscomp/PeepholeOptimizationsPass.java
++++ b/src/com/google/javascript/jscomp/PeepholeOptimizationsPass.java
+@@ -124,19 +123,20 @@ class PeepholeOptimizationsPass
+       Node c = node.getFirstChild();
+       while(c != null) {
+         traverse(c);
++        // If the visit() method removed the next sibling,
++        // then the next sibling has already been traversed.
+         Node next = c.getNext();
++        if (next == null) {
++          break;
++        }
+         c = next;
+       }
+-
+       visit(node);
+       visits++;
+-
+       Preconditions.checkState(visits < 10000, "too many interations");
+     } while (shouldRetraverse(node));
+-
+     exitNode(node);
+   }
+-
+   private boolean shouldRetraverse(Node node) {
+     if (node.getParent() != null && node.isFunction() || node.isScript()) {
+       ScopeState state = traversalState.peek();

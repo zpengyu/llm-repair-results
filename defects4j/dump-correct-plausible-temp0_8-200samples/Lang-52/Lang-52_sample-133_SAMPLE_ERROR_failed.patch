@@ -1,0 +1,115 @@
+diff --git a/src/java/org/apache/commons/lang/StringEscapeUtils.java b/src/java/org/apache/commons/lang/StringEscapeUtils.java
+index 8d3b0aaa..3f8e3fb4 100644
+--- a/src/java/org/apache/commons/lang/StringEscapeUtils.java
++++ b/src/java/org/apache/commons/lang/StringEscapeUtils.java
+@@ -179,64 +179,56 @@ public class StringEscapeUtils {
+         sz = str.length();
+         for (int i = 0; i < sz; i++) {
+             char ch = str.charAt(i);
+-
+-            // handle unicode
+-            if (ch > 0xfff) {
+-                out.write("\\u" + hex(ch));
+-            } else if (ch > 0xff) {
+-                out.write("\\u0" + hex(ch));
+-            } else if (ch > 0x7f) {
+-                out.write("\\u00" + hex(ch));
+-            } else if (ch < 32) {
+-                switch (ch) {
+-                    case '\b':
+-                        out.write('\\');
+-                        out.write('b');
+-                        break;
+-                    case '\n':
+-                        out.write('\\');
+-                        out.write('n');
+-                        break;
+-                    case '\t':
+-                        out.write('\\');
+-                        out.write('t');
+-                        break;
+-                    case '\f':
+-                        out.write('\\');
+-                        out.write('f');
+-                        break;
+-                    case '\r':
+-                        out.write('\\');
+-                        out.write('r');
+-                        break;
+-                    default :
+-                        if (ch > 0xf) {
+-                            out.write("\\u00" + hex(ch));
+-                        } else {
+-                            out.write("\\u000" + hex(ch));
+-                        }
+-                        break;
++            if ((ch > 61) && (ch < 127)) {
++                if (ch == '\\') {
++                    out.write('\\');
++                    out.write('\\');
++                    continue;
+                 }
+-            } else {
+-                switch (ch) {
+-                    case '\'':
+-                        if (escapeSingleQuote) {
+-                          out.write('\\');
+-                        }
+-                        out.write('\'');
+-                        break;
+-                    case '"':
+-                        out.write('\\');
+-                        out.write('"');
+-                        break;
+-                    case '\\':
++                out.write(ch);
++                continue;
++            }
++            switch (ch) {
++                case ' ':
++                    if (i == 0 || escapeSingleQuote) {
+                         out.write('\\');
++                    }
++                    out.write(' ');
++                    break;
++                case '\t':
++                    out.write('\\');
++                    out.write('t');
++                    break;
++                case '\n':
++                    out.write('\\');
++                    out.write('n');
++                    break;
++                case '\r':
++                    out.write('\\');
++                    out.write('r');
++                    break;
++                case '\f':
++                    out.write('\\');
++                    out.write('f');
++                    break;
++                case '=': // Fall through
++                case ':': // Fall through
++                case '#': // Fall through
++                case '!':
++                    out.write('\\');
++                    out.write(ch);
++                    break;
++                default:
++                    if ((ch < 0x0020) || (ch > 0x007e)) {
+                         out.write('\\');
+-                        break;
+-                    default :
++                        out.write('u');
++                        out.write(toHex((ch >> 12) & 0xF));
++                        out.write(toHex((ch >> 8) & 0xF));
++                        out.write(toHex((ch >> 4) & 0xF));
++                        out.write(toHex(ch & 0xF));
++                    } else {
+                         out.write(ch);
+-                        break;
+-                }
++                    }
+             }
+         }
+     }

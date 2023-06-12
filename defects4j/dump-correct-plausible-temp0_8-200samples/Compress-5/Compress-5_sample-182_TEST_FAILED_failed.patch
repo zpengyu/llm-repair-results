@@ -1,0 +1,25 @@
+diff --git a/src/main/java/org/apache/commons/compress/archivers/zip/ZipArchiveInputStream.java b/src/main/java/org/apache/commons/compress/archivers/zip/ZipArchiveInputStream.java
+index fc7b80d5..a5730870 100644
+--- a/src/main/java/org/apache/commons/compress/archivers/zip/ZipArchiveInputStream.java
++++ b/src/main/java/org/apache/commons/compress/archivers/zip/ZipArchiveInputStream.java
+@@ -237,6 +236,7 @@ public class ZipArchiveInputStream extends ArchiveInputStream {
+                 throw new ZipException(e.getMessage());
+             }
+             if (read == 0 && inf.finished()) {
++                checkCrc();
+                 return -1;
+             }
+             crc.update(buffer, start, read);
+@@ -244,7 +244,11 @@ public class ZipArchiveInputStream extends ArchiveInputStream {
+         }
+         throw new ArrayIndexOutOfBoundsException();
+     }
+-
++    private void checkCrc() throws IOException {
++        if (current.getCrc() != crc.getValue()) {
++            throw new ZipException("CRC mismatch");
++        }
++    }
+     public void close() throws IOException {
+         if (!closed) {
+             closed = true;

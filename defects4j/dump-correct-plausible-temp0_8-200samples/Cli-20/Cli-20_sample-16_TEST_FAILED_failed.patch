@@ -1,0 +1,62 @@
+diff --git a/src/java/org/apache/commons/cli/PosixParser.java b/src/java/org/apache/commons/cli/PosixParser.java
+index 2b1bbb1..3bfdfde 100644
+--- a/src/java/org/apache/commons/cli/PosixParser.java
++++ b/src/java/org/apache/commons/cli/PosixParser.java
+@@ -98,10 +98,9 @@ public class PosixParser extends Parser {
+     {
+         init();
+         this.options = options;
+-
+         // an iterator for the command line tokens
+-        Iterator iter = Arrays.asList(arguments).iterator();
+-
++        List argumentList = Arrays.asList(arguments);
++        Iterator iter = argumentList.iterator();
+         // process each command line token
+         while (iter.hasNext())
+         {
+@@ -111,28 +109,39 @@ public class PosixParser extends Parser {
+             // handle long option --foo or --foo=bar
+             if (token.startsWith("--"))
+             {
+-                if (token.indexOf('=') != -1)
++                int pos = token.indexOf('=');
++                if (pos == -1)
+                 {
+-                    tokens.add(token.substring(0, token.indexOf('=')));
+-                    tokens.add(token.substring(token.indexOf('=') + 1, token.length()));
++                    tokens.add(token);
+                 }
+                 else
+                 {
+-                    tokens.add(token);
++                    tokens.add(token.substring(0, pos));
++                    // there is a value specified and it's the last token in
++                    // the string, add it
++                    if (pos == token.length() - 1)
++                    {
++                        tokens.add("");
++                    }
++                    else if (pos != token.length() - 1)
++                    {
++                        tokens.add(token.substring(pos + 1, token.length()));
++                    }
+                 }
+             }
+-
+             // single hyphen
+             else if ("-".equals(token))
+             {
+                 tokens.add(token);
+             }
++            // single character options
+             else if (token.startsWith("-"))
+             {
+                 if (token.length() == 2)
+                 {
+                     processOptionToken(token, stopAtNonOption);
+                 }
++                // long option
+                 else if (options.hasOption(token))
+                 {
+                     tokens.add(token);

@@ -1,0 +1,81 @@
+###Provide a fix for the buggy function
+###Buggy Function
+class FibonacciExample {
+    public static void main(String args[]) {
+        int n1 = 0, n2 = 1, n3, i, count = 10;
+
+        System.out.print(n1 + " " + n2);
+
+        for (i = 2; i < count; ++i) {
+            n3 = n1 - n2;
+            System.out.print(" " + n3);
+            n1 = n2;
+            n2 = n3;
+        }
+    }
+}
+
+###Fixed Function
+class FibonacciExample {
+    public static void main(String args[]) {
+        int n1 = 0, n2 = 1, n3, i, count = 10;
+
+        System.out.print(n1 + " " + n2);
+
+        for (i = 2; i < count; ++i) {
+            n3 = n1 + n2;
+            System.out.print(" " + n3);
+            n1 = n2;
+            n2 = n3;
+        }
+    }
+}
+
+###Provide a fix for the buggy function
+###Buggy Function
+public int getLength() {
+    return ValueUtils.getLength(getBaseValue());
+}
+###Fixed Function
+public int getLength() {
+    Object baseValue = getBaseValue();
+    return baseValue == null ? 1 : ValueUtils.getLength(baseValue);
+}
+###Provide a fix for the buggy function
+###Buggy Function
+public class UnionContext extends NodeSetContext {
+    private EvalContext contexts[];
+    private boolean prepared;
+
+    public UnionContext(EvalContext parentContext, EvalContext contexts[]) {
+        super(parentContext, new BasicNodeSet());
+        this.contexts = contexts;
+    }
+
+    public int getDocumentOrder() {
+        return contexts.length > 1 ? 1 : super.getDocumentOrder();
+    }
+
+    public boolean setPosition(int position) {
+        if (!prepared) {
+            prepared = true;
+            BasicNodeSet nodeSet = (BasicNodeSet) getNodeSet();
+            ArrayList pointers = new ArrayList();
+            for (int i = 0; i < contexts.length; i++) {
+                EvalContext ctx = (EvalContext) contexts[i];
+                while (ctx.nextSet()) {
+                    while (ctx.nextNode()) {
+                        NodePointer ptr = ctx.getCurrentNodePointer();
+                        if (!pointers.contains(ptr)) {
+                            nodeSet.add(ptr);
+                            pointers.add(ptr);
+                        }
+                    }
+                }
+            }
+        }
+        return super.setPosition(position);
+    }
+}
+
+###Fixed Function

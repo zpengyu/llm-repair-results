@@ -1,0 +1,68 @@
+diff --git a/src/main/java/org/apache/commons/compress/archivers/tar/TarUtils.java b/src/main/java/org/apache/commons/compress/archivers/tar/TarUtils.java
+index 34ecc5ac..05eed4aa 100644
+--- a/src/main/java/org/apache/commons/compress/archivers/tar/TarUtils.java
++++ b/src/main/java/org/apache/commons/compress/archivers/tar/TarUtils.java
+@@ -100,46 +100,45 @@ public class TarUtils {
+      * @throws IllegalArgumentException if the trailing space/NUL is missing or if a invalid byte is detected.
+      */
+     public static long parseOctal(final byte[] buffer, final int offset, final int length) {
+-        long    result = 0;
+-        int     end = offset + length;
+-        int     start = offset;
+-
+-        if (length < 2){
+-            throw new IllegalArgumentException("Length "+length+" must be at least 2");
++        long result = 0;
++        int end = offset + length;
++        int start = offset;
++        if (length < 2) {
++            throw new IllegalArgumentException("Length " + length + " must be at least 2");
+         }
+-
+         if (buffer[start] == 0) {
+             return 0L;
+         }
+-
+         // Skip leading spaces
+-        while (start < end){
+-            if (buffer[start] == ' '){
++        while (start < end) {
++            if (buffer[start] == ' ') {
+                 start++;
+             } else {
+                 break;
+             }
+         }
+-
+         // Must have trailing NUL or space
+         byte trailer;
+-        trailer = buffer[end-1];
+-        if (trailer == 0 || trailer == ' '){
++        trailer = buffer[end - 1];
++        if (trailer == 0 || trailer == ' ') {
+             end--;
+         } else {
+             throw new IllegalArgumentException(
+-                    exceptionMessage(buffer, offset, length, end-1, trailer));
++                    exceptionMessage(buffer, offset, length, end - 1, trailer));
+         }
+         // May have additional NULs or spaces
+         trailer = buffer[end - 1];
+-        if (trailer == 0 || trailer == ' '){
++        if (trailer == 0 || trailer == ' ') {
+             end--;
+         }
+-
+-        for ( ;start < end; start++) {
++        for (; start < end; start++) {
+             final byte currentByte = buffer[start];
+             // CheckStyle:MagicNumber OFF
+-            if (currentByte < '0' || currentByte > '7'){
++            if (currentByte < '0' || currentByte > '7') {
++                throw new IllegalArgumentException(
++                        exceptionMessage(buffer, offset, length, start, currentByte));
++            }
++            if (Long.MAX_VALUE >> 3 < result) {
+                 throw new IllegalArgumentException(
+                         exceptionMessage(buffer, offset, length, start, currentByte));
+             }

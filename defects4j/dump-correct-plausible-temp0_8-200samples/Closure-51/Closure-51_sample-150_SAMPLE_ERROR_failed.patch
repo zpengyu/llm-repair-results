@@ -1,0 +1,22 @@
+diff --git a/src/com/google/javascript/jscomp/CodeConsumer.java b/src/com/google/javascript/jscomp/CodeConsumer.java
+index dbdb0a9b..8c1feda0 100644
+--- a/src/com/google/javascript/jscomp/CodeConsumer.java
++++ b/src/com/google/javascript/jscomp/CodeConsumer.java
+@@ -281,9 +240,15 @@ abstract class CodeConsumer {
+    * @return Whether the a line break can be added after the specified BLOCK.
+    */
+   boolean breakAfterBlockFor(Node n, boolean statementContext) {
++    // Block that is a direct child of a while or for loop should be indented.
++    // This can only happen if the loop body is a block.
++    if (statementContext
++        && n.getParent().isLoop()
++        && NodeUtil.isBlock(n)) {
++      return false;
++    }
+     return statementContext;
+   }
+-
+   /** Called when we're at the end of a file. */
+   void endFile() {}
+ }
+\ No newline at end of file

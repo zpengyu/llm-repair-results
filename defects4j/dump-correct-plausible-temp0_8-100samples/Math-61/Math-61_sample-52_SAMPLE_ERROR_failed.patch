@@ -1,0 +1,31 @@
+diff --git a/src/main/java/org/apache/commons/math/distribution/PoissonDistributionImpl.java b/src/main/java/org/apache/commons/math/distribution/PoissonDistributionImpl.java
+index b470cfa54..ce381de9f 100644
+--- a/src/main/java/org/apache/commons/math/distribution/PoissonDistributionImpl.java
++++ b/src/main/java/org/apache/commons/math/distribution/PoissonDistributionImpl.java
+@@ -90,15 +90,19 @@ public class PoissonDistributionImpl extends AbstractIntegerDistribution
+      * @since 2.1
+      */
+     public PoissonDistributionImpl(double p, double epsilon, int maxIterations) {
+-        if (p <= 0) {
+-            throw MathRuntimeException.createIllegalArgumentException(LocalizedFormats.NOT_POSITIVE_POISSON_MEAN, p);
++        if (p <= 0.0d) {
++            throw new NotStrictlyPositiveException(LocalizedFormats.MEAN, Double.valueOf(p));
++        } else if (epsilon <= 0.0d) {
++            throw new NotStrictlyPositiveException(LocalizedFormats.EPSILON, Double.valueOf(epsilon));
++        } else if ((double) maxIterations <= 0.0d) {
++            throw new NotStrictlyPositiveException(LocalizedFormats.MAX_ITERATIONS, Integer.valueOf(maxIterations));
++        } else {
++            mean = p;
++            normal = new NormalDistributionImpl(p, FastMath.sqrt(p));
++            this.epsilon = epsilon;
++            this.maxIterations = maxIterations;
+         }
+-        mean = p;
+-        normal = new NormalDistributionImpl(p, FastMath.sqrt(p));
+-        this.epsilon = epsilon;
+-        this.maxIterations = maxIterations;
+     }
+-
+     /**
+      * Create a new Poisson distribution with the given mean and convergence criterion.
+      *

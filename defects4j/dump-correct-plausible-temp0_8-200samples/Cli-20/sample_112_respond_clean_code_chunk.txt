@@ -1,0 +1,76 @@
+    protected String[] flatten(Options options, String[] arguments, boolean stopAtNonOption)
+    {
+        init();
+        this.options = options;
+        // an iterator for the command line tokens
+        Iterator iter = Arrays.asList(arguments).iterator();
+        // process each command line token
+        while (iter.hasNext())
+        {
+            // get the next command line token
+            String token = (String) iter.next();
+            // handle long option --foo or --foo=bar
+            if (token.startsWith("--"))
+            {
+                if (token.indexOf('=') != -1)
+                {
+                    tokens.add(token.substring(0, token.indexOf('=')));
+                    tokens.add(token.substring(token.indexOf('=') + 1, token.length()));
+                }
+                else
+                {
+                    tokens.add(token);
+                }
+            }
+            // single hyphen
+            else if ("-".equals(token))
+            {
+                tokens.add(token);
+            }
+            else if (token.startsWith("-"))
+            {
+                if (token.length() == 2)
+                {
+                    processOptionToken(token, stopAtNonOption);
+                }
+                else if (options.hasOption(token))
+                {
+                    tokens.add(token);
+                }
+                // requires bursting
+                else
+                {
+                    burstToken(token, stopAtNonOption);
+                }
+            }
+            else if (stopAtNonOption)
+            {
+                process(token);
+            }
+            else
+            {
+                tokens.add(token);
+            }
+            gobble(iter);
+        }
+        return (String[]) tokens.toArray(new String[tokens.size()]);
+    }
+    /**
+     * Process the token. If stopAtNonOption is set and the token is nonOption,
+     * the processing is stopped. Otherwise, the token is added to the list of
+     * processed tokens
+     *
+     * @param token
+     *            The command line token to be processed
+     * @param stopAtNonOption
+     *            Specifies whether to stop processing at the first nonOption
+     *            token
+     */
+    protected void process(String token)
+    {
+        if (stopAtNonOption && !getOptions().hasOption(token))
+        {
+            this.stopProcessing = true;
+        }
+        tokens.add(token);
+    }

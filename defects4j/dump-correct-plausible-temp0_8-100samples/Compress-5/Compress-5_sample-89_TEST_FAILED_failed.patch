@@ -1,0 +1,23 @@
+diff --git a/src/main/java/org/apache/commons/compress/archivers/zip/ZipArchiveInputStream.java b/src/main/java/org/apache/commons/compress/archivers/zip/ZipArchiveInputStream.java
+index fc7b80d5..f0509802 100644
+--- a/src/main/java/org/apache/commons/compress/archivers/zip/ZipArchiveInputStream.java
++++ b/src/main/java/org/apache/commons/compress/archivers/zip/ZipArchiveInputStream.java
+@@ -237,6 +236,18 @@ public class ZipArchiveInputStream extends ArchiveInputStream {
+                 throw new ZipException(e.getMessage());
+             }
+             if (read == 0 && inf.finished()) {
++                if (current != null && current.getMethod() == ZipArchiveOutputStream.DEFLATED) {
++                    // if DEFLATED, need to check if all data read
++                    int available = inf.getRemaining();
++                    if (available > 0) {
++                        // throw exception if entry has not been fully consumed
++                        throw new EOFException(
++                            "DEFLATED entry finished prematurely "
++                            + "(wrote " + current.getCompressedSize()
++                            + " bytes, but inflated " + readBytesOfEntry
++                            + " bytes)");
++                    }
++                }
+                 return -1;
+             }
+             crc.update(buffer, start, read);

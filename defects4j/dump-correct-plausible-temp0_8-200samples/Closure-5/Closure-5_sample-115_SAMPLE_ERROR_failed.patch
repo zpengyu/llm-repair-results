@@ -1,0 +1,30 @@
+diff --git a/src/com/google/javascript/jscomp/InlineObjectLiterals.java b/src/com/google/javascript/jscomp/InlineObjectLiterals.java
+index 2f5a8e10..fca1bc0b 100644
+--- a/src/com/google/javascript/jscomp/InlineObjectLiterals.java
++++ b/src/com/google/javascript/jscomp/InlineObjectLiterals.java
+@@ -242,12 +233,19 @@ class InlineObjectLiterals implements CompilerPass {
+             }
+           }
+         }
+-
+-
+-        // We have found an acceptable object literal assignment. As
+-        // long as there are no other assignments that mess things up,
+-        // we can inline.
+-        ret = true;
++        // Make sure that there are no other references to this node,
++        // because we will be destroying it.
++        if (ref.getParent().getParent().isExprResult()) {
++          Node exprResultNode = ref.getParent().getParent();
++          if (NodeUtil.hasExactlyOneSemiLocalReference(
++                  exprResultNode.getFirstChild(),
++                  ref.getScope())) {
++            ret = true;
++          } else {
++            // There are other references to this node.
++            return false;
++          }
++        }
+       }
+       return ret;
+     }

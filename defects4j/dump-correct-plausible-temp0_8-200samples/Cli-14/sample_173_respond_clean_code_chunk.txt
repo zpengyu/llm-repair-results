@@ -1,0 +1,28 @@
+    public void validate(final WriteableCommandLine commandLine)
+        throws OptionException {
+        // number of options found
+        int present = 0;
+        // reference to first unexpected option
+        Option unexpected = null;
+        // get all options that were specified on the command line
+        final Set found = commandLine.getOptions();
+        for (final Iterator i = options.iterator(); i.hasNext();) {
+            final Option option = (Option) i.next();
+            if (found.contains(option.getKey())) {
+                // too many options
+                if (++present > maximum) {
+                    unexpected = option;
+                    break;
+                }
+            }
+        }
+        // too many options
+        if (unexpected != null) {
+            throw new OptionException(this, ResourceConstants.UNEXPECTED_TOKEN,
+                                      unexpected.getPreferredName());
+        }
+        // too few option
+        if (present < minimum) {
+            throw new OptionException(this, ResourceConstants.MISSING_OPTION);
+        }
+    }

@@ -1,0 +1,17 @@
+diff --git a/src/main/java/org/jsoup/helper/DataUtil.java b/src/main/java/org/jsoup/helper/DataUtil.java
+index 4bdf4fe..c1132c8 100644
+--- a/src/main/java/org/jsoup/helper/DataUtil.java
++++ b/src/main/java/org/jsoup/helper/DataUtil.java
+@@ -83,6 +83,12 @@ public class DataUtil {
+                 if (foundCharset != null && foundCharset.length() != 0 && !foundCharset.equals(defaultCharset)) { // need to re-decode
+                     charsetName = foundCharset;
+                     byteData.rewind();
++                    // Remove Byte Order Mark
++                    byte[] data = new byte[byteData.remaining()];
++                    byteData.get(data);
++                    if (data.length > 0 && data[0] == (byte) 0xEF && data[1] == (byte) 0xBB && data[2] == (byte) 0xBF) {
++                        byteData = ByteBuffer.wrap(Arrays.copyOfRange(data, 3, data.length));
++                    }
+                     docData = Charset.forName(foundCharset).decode(byteData).toString();
+                     doc = null;
+                 }

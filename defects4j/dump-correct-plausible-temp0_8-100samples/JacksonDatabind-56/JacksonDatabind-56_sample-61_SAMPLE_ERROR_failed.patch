@@ -1,0 +1,24 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/deser/std/FromStringDeserializer.java b/src/main/java/com/fasterxml/jackson/databind/deser/std/FromStringDeserializer.java
+index 01a819a9f..1ce06bac1 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/deser/std/FromStringDeserializer.java
++++ b/src/main/java/com/fasterxml/jackson/databind/deser/std/FromStringDeserializer.java
+@@ -285,9 +278,15 @@ public abstract class FromStringDeserializer<T> extends StdScalarDeserializer<T>
+             if (_kind == STD_LOCALE) {
+                 return Locale.ROOT;
+             }
++            // [databind#1775]: Should try other alternatives too...
++            if (_valueClass == Currency.class) {
++                // need to get serializer, to ensure it's handled correctly, including
++                // of preserving empty-String-as-null setting
++                JsonDeserializer<?> deser = ctxt.findRootValueDeserializer(_valueClass);
++                if (deser != null) {
++                    return deser.getNullValue(ctxt);
++                }
++            }
+             return super._deserializeFromEmptyString();
+         }
+-
+-
+-    }
+-}
++    }}

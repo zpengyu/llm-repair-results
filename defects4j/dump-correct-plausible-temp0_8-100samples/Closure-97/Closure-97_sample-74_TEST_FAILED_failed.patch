@@ -1,0 +1,32 @@
+diff --git a/src/com/google/javascript/jscomp/PeepholeFoldConstants.java b/src/com/google/javascript/jscomp/PeepholeFoldConstants.java
+index 0f2a6d44..d40c842e 100644
+--- a/src/com/google/javascript/jscomp/PeepholeFoldConstants.java
++++ b/src/com/google/javascript/jscomp/PeepholeFoldConstants.java
+@@ -701,17 +695,19 @@ public class PeepholeFoldConstants extends AbstractPeepholeOptimization {
+           throw new AssertionError("Unknown shift operator: " +
+               Node.tokenToName(n.getType()));
+       }
+-
+-      Node newNumber = Node.newNumber(result);
+-      n.getParent().replaceChild(n, newNumber);
+-      reportCodeChange();
+-
+-      return newNumber;
++      // Make sure the result is a whole number.
++      if (result == Math.floor(result) &&
++          // Check if the result is in 32-bit integer range.
++          result >= Integer.MIN_VALUE && result <= Integer.MAX_VALUE) {
++        int intResult = (int) result;
++        Node newNumber = Node.newNumber(intResult);
++        n.getParent().replaceChild(n, newNumber);
++        reportCodeChange();
++        return newNumber;
++      }
+     }
+-
+     return n;
+   }
+-
+   /**
+    * Try to fold comparison nodes, e.g ==
+    */

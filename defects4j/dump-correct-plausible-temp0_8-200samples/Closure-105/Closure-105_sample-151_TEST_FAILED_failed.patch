@@ -1,0 +1,41 @@
+diff --git a/src/com/google/javascript/jscomp/FoldConstants.java b/src/com/google/javascript/jscomp/FoldConstants.java
+index 003743b3..04141e3d 100644
+--- a/src/com/google/javascript/jscomp/FoldConstants.java
++++ b/src/com/google/javascript/jscomp/FoldConstants.java
+@@ -1476,6 +1473,7 @@ class FoldConstants extends AbstractPostOrderCallback
+     List<Node> arrayFoldedChildren = Lists.newLinkedList();
+     StringBuilder sb = new StringBuilder();
+     int foldedSize = 0;
++    boolean anyNonString = false;
+     Node elem = arrayNode.getFirstChild();
+     // Merges adjacent String nodes.
+     while (elem != null) {
+@@ -1492,6 +1490,7 @@ class FoldConstants extends AbstractPostOrderCallback
+           sb = new StringBuilder();
+         }
+         foldedSize += InlineCostEstimator.getCost(elem);
++        anyNonString = true;
+         arrayFoldedChildren.add(elem);
+       }
+       elem = elem.getNext();
+@@ -1539,9 +1534,17 @@ class FoldConstants extends AbstractPostOrderCallback
+         if (foldedSize > originalSize) {
+           return;
+         }
+-        arrayNode.detachChildren();
+-        for (Node node : arrayFoldedChildren) {
+-          arrayNode.addChildToBack(node);
++        if (!anyNonString) {
++          // If there is no non-string value, we can just return a single
++          // string literal.
++          arrayNode.detachChildren();
++          Node newString = Node.newString(sb.toString());
++          parent.replaceChild(n, newString);
++        } else {
++          arrayNode.detachChildren();
++          for (Node node : arrayFoldedChildren) {
++            arrayNode.addChildToBack(node);
++          }
+         }
+         break;
+     }

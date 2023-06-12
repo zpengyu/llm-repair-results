@@ -1,0 +1,35 @@
+    public JsonSerializer<?> createContextual(SerializerProvider serializers,
+            BeanProperty property) throws JsonMappingException
+    {
+        if (property == null) {
+            return this;
+        }
+        JsonFormat.Value format = findFormatOverrides(serializers, property, handledType());
+        if (format == null) {
+            return this;
+        }
+        // Simple case first: serialize as numeric timestamp?
+        JsonFormat.Shape shape = format.getShape();
+        if (shape.isNumeric()) {
+            return withFormat(Boolean.TRUE, null);
+        }
+        Boolean useTimestamp = format.getFeature(JsonFormat.Feature.WRITE_DATES_AS_TIMESTAMPS);
+        if (useTimestamp != null) {
+            return withFormat(useTimestamp, null);
+        }
+        // Otherwise, need one of these changes:
+        TimeZone tz = format.getTimeZone();
+        final String pattern = format.hasPattern()
+                ? format.getPattern()
+                : StdDateFormat.DATE_FORMAT_STR_ISO8601;
+        final Locale loc = format.hasLocale()
+                ? format.getLocale()
+                : serializers.getLocale();
+        SimpleDateFormat df = new SimpleDateFormat(pattern, loc);
+        if (tz == null) {
+            tz = serializers.getTimeZone();
+        }
+        df.setTimeZone(tz);
+        return withFormat(Boolean.FALSE, df);
+    }
+

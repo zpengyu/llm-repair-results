@@ -1,0 +1,33 @@
+private void updateScopeForTypeChange(
+    FlowScope scope, Node left, JSType leftType, JSType resultType) {
+  Preconditions.checkNotNull(resultType);
+  switch (left.getType()) {
+    case Token.NAME:
+      String varName = left.getString();
+      Var var = syntacticScope.getVar(varName);
+      boolean isVarDeclaration = left.hasChildren();
+      // TODO(nicksantos): This is not completely accurate, because
+      // there are some cases where we can't use the type in the
+      // global scope (like when the LHS is a qualified name.)
+      //
+      // A better way of doing this might be to have type inference
+      // compute the declared type, and use that as the declared type.
+      boolean isVarTypeBetter = !isVarDeclaration || var == null || var.isTypeInferred();
+      if (isVarTypeBetter) {
+        redeclareSimpleVar(scope, left, resultType);
+      }
+      left.setJSType(isVarDeclaration || leftType == null ?
+          resultType : null);
+      break;
+    case Token.GETPROP:
+      String qualifiedName = left.getQualifiedName();
+      if (qualifiedName != null) {
+        scope.inferQualifiedSlot(left, qualifiedName,
+            leftType == null ? unknownType : leftType,
+            resultType);
+      }
+      left.setJSType(resultType);
+      ensurePropertyDefined(left, resultType);
+      break;
+  }
+}

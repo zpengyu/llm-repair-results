@@ -1,0 +1,31 @@
+diff --git a/src/com/google/javascript/jscomp/TypeCheck.java b/src/com/google/javascript/jscomp/TypeCheck.java
+index 6030d48d..589c56f6 100644
+--- a/src/com/google/javascript/jscomp/TypeCheck.java
++++ b/src/com/google/javascript/jscomp/TypeCheck.java
+@@ -1574,12 +1570,22 @@ public class TypeCheck implements NodeTraversal.Callback, CompilerPass {
+            !isExtern)) {
+         report(t, n, CONSTRUCTOR_NOT_CALLABLE, childType.toString());
+       }
+-
+       // Functions with explcit 'this' types must be called in a GETPROP
+       // or GETELEM.
+-
+-      visitParameterList(t, n, functionType);
+-      ensureTyped(t, n, functionType.getReturnType());
++      // TODO(user): improve this check to ensure that the
++      // target of the GETPROP/GETELEM (if one exists) is compatible
++      // with the function's declared type.
++      if (functionType.getTypeOfThis().isUnknownType() ||
++          (n.getParent().getType() == Token.GETPROP &&
++           n.getParent().getFirstChild() == n) ||
++          (n.getParent().getType() == Token.GETELEM &&
++           n.getParent().getFirstChild() == n)) {
++        visitParameterList(t, n, functionType);
++        ensureTyped(t, n, functionType.getReturnType());
++      } else {
++        // The call target is not specified properly.
++        ensureTyped(t, n);
++      }
+     } else {
+       ensureTyped(t, n);
+     }

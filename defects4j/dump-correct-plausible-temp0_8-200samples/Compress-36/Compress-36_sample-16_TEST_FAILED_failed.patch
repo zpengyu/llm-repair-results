@@ -1,0 +1,36 @@
+diff --git a/src/main/java/org/apache/commons/compress/archivers/sevenz/SevenZFile.java b/src/main/java/org/apache/commons/compress/archivers/sevenz/SevenZFile.java
+index 6bf6dc68..f9cc3af0 100644
+--- a/src/main/java/org/apache/commons/compress/archivers/sevenz/SevenZFile.java
++++ b/src/main/java/org/apache/commons/compress/archivers/sevenz/SevenZFile.java
+@@ -902,19 +902,21 @@ public class SevenZFile implements Closeable {
+         if (deferredBlockStreams.isEmpty()) {
+             throw new IllegalStateException("No current 7z entry (call getNextEntry() first).");
+         }
+-        
+-        while (deferredBlockStreams.size() > 1) {
+-            // In solid compression mode we need to decompress all leading folder'
+-            // streams to get access to an entry. We defer this until really needed
+-            // so that entire blocks can be skipped without wasting time for decompression.
+-            final InputStream stream = deferredBlockStreams.remove(0);
+-            IOUtils.skip(stream, Long.MAX_VALUE);
+-            stream.close();
++        if (deferredBlockStreams.size() > 1) {
++            // If there is more than one deferred stream, it means we're in solid
++            // compression mode. This means that all folder streams preceding the
++            // current entry need to be decompressed to decompress the current
++            // entry. We do this on demand, but since we're done with the current
++            // entry, we can now decompress all folder streams to skip the whole
++            // block.
++            while (deferredBlockStreams.size() > 1) {
++                final InputStream stream = deferredBlockStreams.remove(0);
++                IOUtils.skip(stream, Long.MAX_VALUE);
++                stream.close();
++            }
+         }
+-
+         return deferredBlockStreams.get(0);
+     }
+-
+     /**
+      * Reads data into an array of bytes.
+      * 

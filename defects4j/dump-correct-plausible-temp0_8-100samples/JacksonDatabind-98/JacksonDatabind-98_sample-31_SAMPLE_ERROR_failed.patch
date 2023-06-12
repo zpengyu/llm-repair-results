@@ -1,0 +1,22 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/deser/impl/ExternalTypeHandler.java b/src/main/java/com/fasterxml/jackson/databind/deser/impl/ExternalTypeHandler.java
+index b0797059f..74dc7c2f2 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/deser/impl/ExternalTypeHandler.java
++++ b/src/main/java/com/fasterxml/jackson/databind/deser/impl/ExternalTypeHandler.java
+@@ -299,7 +297,16 @@ public class ExternalTypeHandler
+                 }
+             }
+         }
+-        Object bean = creator.build(ctxt, buffer);
++        Object bean;
++        // If no values were deserialized using creator, it's an error
++        if (!creator.canCreateFromObjectWith()) {
++            if (buffer.getParameters(new Object[buffer.getParameterCount()]) == null) {
++                // [databind#1706]: better explain problem
++                ctxt.reportInputMismatch(_beanType,
++                        "Cannot create creator property with no creator parameters (either already set, or no values passed to deserializer)");
++            }
++        }
++        bean = creator.build(ctxt, buffer);
+         // third: assign non-creator properties
+         for (int i = 0; i < len; ++i) {
+             SettableBeanProperty prop = _properties[i].getProperty();

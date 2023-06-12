@@ -1,0 +1,29 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/ser/PropertyBuilder.java b/src/main/java/com/fasterxml/jackson/databind/ser/PropertyBuilder.java
+index 9a9d91ebf..94e0db318 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/ser/PropertyBuilder.java
++++ b/src/main/java/com/fasterxml/jackson/databind/ser/PropertyBuilder.java
+@@ -102,10 +99,6 @@ public class PropertyBuilder
+         if (inclusion == JsonInclude.Include.USE_DEFAULTS) { // should not occur but...
+             inclusion = JsonInclude.Include.ALWAYS;
+         }
+-
+-        // 12-Jul-2016, tatu: [databind#1256] Need to make sure we consider type refinement
+-        JavaType actualType = (serializationType == null) ? declaredType : serializationType;
+-        
+         switch (inclusion) {
+         case NON_DEFAULT:
+             // 11-Nov-2015, tatu: This is tricky because semantics differ between cases,
+@@ -114,9 +107,12 @@ public class PropertyBuilder
+             //    static definition. Sigh.
+             // First: case of class specifying it; try to find POJO property defaults
+             if (_defaultInclusion.getValueInclusion() == JsonInclude.Include.NON_DEFAULT) {
++                // 12-Jul-2016, tatu: [databind#1256] Need to consider explicit type, if any
++                // (may be different from declared type, for example with type refinement)
++                JavaType actualType = (serializationType == null) ? declaredType : serializationType;
+                 valueToSuppress = getPropertyDefaultValue(propDef.getName(), am, actualType);
+             } else {
+-                valueToSuppress = getDefaultValue(actualType);
++                valueToSuppress = getDefaultValue(declaredType);
+             }
+             if (valueToSuppress == null) {
+                 suppressNulls = true;

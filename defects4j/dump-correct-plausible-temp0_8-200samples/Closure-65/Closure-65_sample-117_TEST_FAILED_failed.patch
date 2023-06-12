@@ -1,0 +1,21 @@
+diff --git a/src/com/google/javascript/jscomp/CodeGenerator.java b/src/com/google/javascript/jscomp/CodeGenerator.java
+index 5b684191..e3992de9 100644
+--- a/src/com/google/javascript/jscomp/CodeGenerator.java
++++ b/src/com/google/javascript/jscomp/CodeGenerator.java
+@@ -1065,7 +1063,15 @@ class CodeGenerator {
+               // Other characters can be misinterpreted by some js parsers,
+               // or perhaps mangled by proxies along the way,
+               // so we play it safe and unicode escape them.
+-              appendHexJavaScriptRepresentation(sb, c);
++              if (c < 0xFF) { // &0xFF is a bitwise AND
++                appendHexJavaScriptRepresentation(sb, c);
++              } else {
++                // JavaScript doesn't support \uFFFF Unicode escapes, so use a
++                // surrogate pair instead.
++                sb.append("\\u");
++                appendHexJavaScriptRepresentation(sb, (char) (((c >> 10) & 0x3FF) + 0xD7C0));
++                appendHexJavaScriptRepresentation(sb, (char) ((c & 0x3FF) + 0xDC00));
++              }
+             }
+           }
+       }

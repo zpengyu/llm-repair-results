@@ -1,0 +1,30 @@
+diff --git a/src/com/google/javascript/jscomp/CodeGenerator.java b/src/com/google/javascript/jscomp/CodeGenerator.java
+index a9d0a5b0..8500dc3d 100644
+--- a/src/com/google/javascript/jscomp/CodeGenerator.java
++++ b/src/com/google/javascript/jscomp/CodeGenerator.java
+@@ -954,10 +954,10 @@ class CodeGenerator {
+ 
+   /** Helper to escape javascript string as well as regular expression */
+   static String strEscape(String s, char quote,
+-                          String doublequoteEscape,
+-                          String singlequoteEscape,
+-                          String backslashEscape,
+-                          CharsetEncoder outputCharsetEncoder) {
++String doublequoteEscape,
++String singlequoteEscape,
++String backslashEscape,
++CharsetEncoder outputCharsetEncoder) {
+     StringBuilder sb = new StringBuilder(s.length() + 2);
+     sb.append(quote);
+     for (int i = 0; i < s.length(); i++) {
+@@ -1011,7 +1009,9 @@ class CodeGenerator {
+             // check is measurably faster than using the CharsetEncoder.
+             if (c > 0x1f && c <= 0x7f) {
+               sb.append(c);
+-            } else {
++            } else if ((c >= 0x0020 && c <= 0xD7FF) ||
++                (c >= 0xE000 && c <= 0xFFFD) ||
++                (c >= 0x10000 && c <= 0x10FFFF)) {
+               // Other characters can be misinterpreted by some js parsers,
+               // or perhaps mangled by proxies along the way,
+               // so we play it safe and unicode escape them.

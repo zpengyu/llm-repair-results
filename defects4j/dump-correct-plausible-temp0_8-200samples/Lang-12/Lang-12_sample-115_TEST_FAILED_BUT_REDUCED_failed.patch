@@ -1,0 +1,90 @@
+diff --git a/src/main/java/org/apache/commons/lang3/RandomStringUtils.java b/src/main/java/org/apache/commons/lang3/RandomStringUtils.java
+index 7f269a0c..1c824c45 100644
+--- a/src/main/java/org/apache/commons/lang3/RandomStringUtils.java
++++ b/src/main/java/org/apache/commons/lang3/RandomStringUtils.java
+@@ -220,26 +220,37 @@ public class RandomStringUtils {
+      * @throws IllegalArgumentException if {@code count} &lt; 0 or the provided chars array is empty.
+      * @since 2.0
+      */
+-    public static String random(int count, int start, int end, boolean letters, boolean numbers,
++public static String random(int count, int start, int end, boolean letters, boolean numbers,
+                                 char[] chars, Random random) {
+         if (count == 0) {
+             return "";
+         } else if (count < 0) {
+             throw new IllegalArgumentException("Requested random string length " + count + " is less than 0.");
+         }
+-
+         if (start == 0 && end == 0) {
+-                if (!letters && !numbers) {
+-                    end = Integer.MAX_VALUE;
++                if (letters && numbers) {
++                    end = 123;
++                    start = 32;
++                } else if (letters) {
++                    end = 123;
++                    start = 97;
++                } else if (numbers) {
++                    end = 58;
++                    start = 48;
+                 } else {
+-                    end = 'z' + 1;
+-                    start = ' ';
++                    end = Integer.MAX_VALUE;
++                    start = 0;
++                }
++            } else {
++                if (end < start) {
++                    throw new IllegalArgumentException("Parameter end (" + end + ") must be greater than start (" + start + ")");
+                 }
++            }
++        if (chars != null && chars.length == 0) {
++            throw new IllegalArgumentException("The chars array must not be empty");
+         }
+-
+-        char[] buffer = new char[count];
++        StringBuilder buffer = new StringBuilder();
+         int gap = end - start;
+-
+         while (count-- != 0) {
+             char ch;
+             if (chars == null) {
+@@ -255,32 +266,31 @@ public class RandomStringUtils {
+                         count++;
+                     } else {
+                         // low surrogate, insert high surrogate after putting it in
+-                        buffer[count] = ch;
++                        buffer.append(ch);
+                         count--;
+-                        buffer[count] = (char) (55296 + random.nextInt(128));
++                        buffer.append((char) (55296 + random.nextInt(128)));
+                     }
+                 } else if(ch >= 55296 && ch <= 56191) {
+                     if(count == 0) {
+                         count++;
+                     } else {
+                         // high surrogate, insert low surrogate before putting it in
+-                        buffer[count] = (char) (56320 + random.nextInt(128));
++                        buffer.append((char) (56320 + random.nextInt(128)));
+                         count--;
+-                        buffer[count] = ch;
++                        buffer.append(ch);
+                     }
+                 } else if(ch >= 56192 && ch <= 56319) {
+                     // private high surrogate, no effing clue, so skip it
+                     count++;
+                 } else {
+-                    buffer[count] = ch;
++                    buffer.append(ch);
+                 }
+             } else {
+                 count++;
+             }
+         }
+-        return new String(buffer);
++        return buffer.toString();
+     }
+-
+     /**
+      * <p>Creates a random string whose length is the number of characters
+      * specified.</p>

@@ -1,0 +1,26 @@
+diff --git a/src/com/google/javascript/jscomp/ProcessClosurePrimitives.java b/src/com/google/javascript/jscomp/ProcessClosurePrimitives.java
+index 385e8b07..c87bcc48 100644
+--- a/src/com/google/javascript/jscomp/ProcessClosurePrimitives.java
++++ b/src/com/google/javascript/jscomp/ProcessClosurePrimitives.java
+@@ -326,9 +322,19 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback
+       // the checks for broken requires turned off. In these cases, we
+       // allow broken requires to be preserved by the first run to
+       // let them be caught in the subsequent run.
++      parent.detachFromParent();
++      compiler.reportCodeChange();
++      // If a replacement symbol was provided, we need to rename the require
++      // to reference the provided symbol.
+       if (provided != null) {
+-        parent.detachFromParent();
+-        compiler.reportCodeChange();
++        Preconditions.checkState(left.isName());
++        String name = provided.name;
++        if (!name.equals(ns)) {
++          Node replacement = Node.newString(Token.NAME, name);
++          NodeUtil.copyNameAnnotations(left, replacement);
++          left.getParent().replaceChild(left, replacement);
++          compiler.reportCodeChange();
++        }
+       }
+     }
+   }

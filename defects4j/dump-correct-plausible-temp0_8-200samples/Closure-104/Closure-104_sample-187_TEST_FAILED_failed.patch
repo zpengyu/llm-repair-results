@@ -1,0 +1,41 @@
+diff --git a/src/com/google/javascript/rhino/jstype/UnionType.java b/src/com/google/javascript/rhino/jstype/UnionType.java
+index f543a6d8..60d9daf4 100644
+--- a/src/com/google/javascript/rhino/jstype/UnionType.java
++++ b/src/com/google/javascript/rhino/jstype/UnionType.java
+@@ -273,19 +273,31 @@ public class UnionType extends JSType {
+   JSType meet(JSType that) {
+     UnionTypeBuilder builder = new UnionTypeBuilder(registry);
+     for (JSType alternate : alternates) {
+-      if (alternate.isSubtype(that)) {
++      JSType builderType = builder.build();
++      if (builderType == null) {
++        if (alternate.isSubtype(that)) {
++          builder.addAlternate(alternate);
++        }
++      } else if (builderType.isSubtype(alternate)) {
+         builder.addAlternate(alternate);
+       }
+     }
+-
+     if (that instanceof UnionType) {
+       for (JSType otherAlternate : ((UnionType) that).alternates) {
+-        if (otherAlternate.isSubtype(this)) {
++        JSType builderType = builder.build();
++        if (builderType == null) {
++          if (otherAlternate.isSubtype(this)) {
++            builder.addAlternate(otherAlternate);
++          }
++        } else if (builderType.isSubtype(otherAlternate)) {
+           builder.addAlternate(otherAlternate);
+         }
+       }
+-    } else if (that.isSubtype(this)) {
+-      builder.addAlternate(that);
++    } else {
++      JSType builderType = builder.build();
++      if (builderType == null || builderType.isSubtype(that)) {
++        builder.addAlternate(that);
++      }
+     }
+     JSType result = builder.build();
+     if (result != null) {

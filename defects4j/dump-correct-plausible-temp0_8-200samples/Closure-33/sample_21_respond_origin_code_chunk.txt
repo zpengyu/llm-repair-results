@@ -1,0 +1,48 @@
+  public void matchConstraint(ObjectType constraintObj) {
+    // We only want to match contraints on anonymous types.
+
+    // Handle the case where the constraint object is a record type.
+    //
+    // param constraintObj {{prop: (number|undefined)}}
+    // function f(constraintObj) {}
+    // f({});
+    //
+    // We want to modify the object literal to match the constraint, by
+    // taking any each property on the record and trying to match
+    // properties on this object.
+    if (constraintObj.isRecordType()) {
+      for (String prop : constraintObj.getOwnPropertyNames()) {
+        JSType propType = constraintObj.getPropertyType(prop);
+        if (!isPropertyTypeDeclared(prop)) {
+          JSType typeToInfer = propType;
+          if (!hasProperty(prop)) {
+            typeToInfer =
+                getNativeType(JSTypeNative.VOID_TYPE).getLeastSupertype(propType);
+          }
+          defineInferredProperty(prop, typeToInfer, null);
+        }
+      }
+    } else {
+      // Handle the case where the constraint object is a named type.
+      //
+      // /** @constructor */
+      // function Foo() {}
+      // /** @type {number} */
+      // Foo.prototype.prop;
+      // var obj = new Foo;
+      // obj.prop = 'asdf';
+      // obj.prop - 5;
+      //
+      // We want to use type information on the constraint to improve
+      // the type of the object.
+      if (constraintObj.isNamedType()) {
+        for (String prop : constraintObj.getOwnPropertyNames()) {
+          JSType propType = constraintObj.getPropertyType(prop);
+          if (!isPropertyTypeDeclared(prop)) {
+            defineInferredProperty(prop, propType, null);
+          }
+        }
+      }
+    }
+  }
+

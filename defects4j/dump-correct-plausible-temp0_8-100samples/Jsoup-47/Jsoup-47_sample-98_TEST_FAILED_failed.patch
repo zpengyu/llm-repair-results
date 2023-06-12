@@ -1,0 +1,69 @@
+diff --git a/src/main/java/org/jsoup/nodes/Entities.java b/src/main/java/org/jsoup/nodes/Entities.java
+index 5a2b368..59d0c4d 100644
+--- a/src/main/java/org/jsoup/nodes/Entities.java
++++ b/src/main/java/org/jsoup/nodes/Entities.java
+@@ -107,43 +104,27 @@ public class Entities {
+             if (codePoint < Character.MIN_SUPPLEMENTARY_CODE_POINT) {
+                 final char c = (char) codePoint;
+                 // html specific and required escapes:
+-                switch (c) {
+-                    case '&':
+-                        accum.append("&amp;");
+-                        break;
+-                    case 0xA0:
+-                        if (escapeMode != EscapeMode.xhtml)
+-                            accum.append("&nbsp;");
+-                        else
+-                            accum.append("&#xa0;");
+-                        break;
+-                    case '<':
+-                        // escape when in character data or when in a xml attribue val; not needed in html attr val
+-                        if (!inAttribute)
+-                            accum.append("&lt;");
+-                        else
+-                            accum.append(c);
+-                        break;
+-                    case '>':
+-                        if (!inAttribute)
+-                            accum.append("&gt;");
+-                        else
+-                            accum.append(c);
+-                        break;
+-                    case '"':
+-                        if (inAttribute)
+-                            accum.append("&quot;");
+-                        else
+-                            accum.append(c);
+-                        break;
+-                    default:
+-                        if (canEncode(coreCharset, c, encoder))
+-                            accum.append(c);
+-                        else if (map.containsKey(c))
+-                            accum.append('&').append(map.get(c)).append(';');
+-                        else
+-                            accum.append("&#x").append(Integer.toHexString(codePoint)).append(';');
+-                }
++                if (c == '&')
++                    accum.append("&amp;");
++                else if (c == '<' && !inAttribute)
++                    accum.append("&lt;");
++                else if (c == '>' && !inAttribute)
++                    accum.append("&gt;");
++                else if (c == '"')
++                    accum.append("&quot;");
++                else if (c == '\'')
++                    accum.append("&#39;");
++                else if (c == 0xA0)
++                    if (escapeMode != EscapeMode.xhtml)
++                        accum.append("&nbsp;");
++                    else
++                        accum.append("&#xa0;");
++                else if (canEncode(coreCharset, c, encoder))
++                    accum.append(c);
++                else if (map.containsKey(c))
++                    accum.append('&').append(map.get(c)).append(';');
++                else
++                    accum.append("&#x").append(Integer.toHexString(codePoint)).append(';');
+             } else {
+                 final String c = new String(Character.toChars(codePoint));
+                 if (encoder.canEncode(c)) // uses fallback encoder for simplicity

@@ -1,0 +1,30 @@
+diff --git a/src/com/google/javascript/jscomp/RemoveUnusedVars.java b/src/com/google/javascript/jscomp/RemoveUnusedVars.java
+index 41175cf3..5fe3b98f 100644
+--- a/src/com/google/javascript/jscomp/RemoveUnusedVars.java
++++ b/src/com/google/javascript/jscomp/RemoveUnusedVars.java
+@@ -366,7 +366,7 @@ class RemoveUnusedVars
+    *
+    * @param fnScope The scope inside the function
+    */
+-  private void removeUnreferencedFunctionArgs(Scope fnScope) {
++private void removeUnreferencedFunctionArgs(Scope fnScope) {
+     // Notice that removing unreferenced function args breaks
+     // Function.prototype.length. In advanced mode, we don't really care
+     // about this: we consider "length" the equivalent of reflecting on
+@@ -403,9 +400,15 @@ class RemoveUnusedVars
+     } else {
+       callSiteOptimizer.optimize(fnScope, referenced);
+     }
++    if (argList.hasOneChild()) {
++      Node arg = argList.getFirstChild();
++      if (arg.getString().equals("$jscomp$arg$jscomp$0")) {
++        argList.removeChild(arg);
++        compiler.reportCodeChange();
++      }
++    }
+   }
+ 
+-
+   /**
+    * @return the LP node containing the function parameters.
+    */

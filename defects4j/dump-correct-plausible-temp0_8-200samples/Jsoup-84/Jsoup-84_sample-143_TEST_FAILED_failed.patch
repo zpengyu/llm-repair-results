@@ -1,0 +1,40 @@
+diff --git a/src/main/java/org/jsoup/helper/W3CDom.java b/src/main/java/org/jsoup/helper/W3CDom.java
+index f866f43..b47c1cf 100644
+--- a/src/main/java/org/jsoup/helper/W3CDom.java
++++ b/src/main/java/org/jsoup/helper/W3CDom.java
+@@ -87,7 +86,15 @@ public class W3CDom {
+                 String prefix = updateNamespaces(sourceEl);
+                 String namespace = namespacesStack.peek().get(prefix);
+                 String tagName = sourceEl.tagName();
+-
++		String wholeText = "";
++		if(source instanceof org.jsoup.nodes.TextNode){
++			org.jsoup.nodes.TextNode sourceText = (org.jsoup.nodes.TextNode) source;
++			wholeText = sourceText.getWholeText();
++		}
++		if(source instanceof org.jsoup.nodes.DataNode){
++			org.jsoup.nodes.DataNode sourceData = (org.jsoup.nodes.DataNode) source;
++			wholeText = sourceData.getWholeData();
++		}
+                 Element el =
+                     doc.createElementNS(namespace, tagName);
+                 copyAttributes(sourceEl, el);
+@@ -97,18 +104,10 @@ public class W3CDom {
+                     dest.appendChild(el);
+                 }
+                 dest = el; // descend
+-            } else if (source instanceof org.jsoup.nodes.TextNode) {
+-                org.jsoup.nodes.TextNode sourceText = (org.jsoup.nodes.TextNode) source;
+-                Text text = doc.createTextNode(sourceText.getWholeText());
+-                dest.appendChild(text);
+             } else if (source instanceof org.jsoup.nodes.Comment) {
+                 org.jsoup.nodes.Comment sourceComment = (org.jsoup.nodes.Comment) source;
+                 Comment comment = doc.createComment(sourceComment.getData());
+                 dest.appendChild(comment);
+-            } else if (source instanceof org.jsoup.nodes.DataNode) {
+-                org.jsoup.nodes.DataNode sourceData = (org.jsoup.nodes.DataNode) source;
+-                Text node = doc.createTextNode(sourceData.getWholeData());
+-                dest.appendChild(node);
+             } else {
+                 // unhandled
+             }

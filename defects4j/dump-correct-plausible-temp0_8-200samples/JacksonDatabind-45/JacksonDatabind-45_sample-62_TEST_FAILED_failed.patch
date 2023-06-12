@@ -1,0 +1,32 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/ser/std/DateTimeSerializerBase.java b/src/main/java/com/fasterxml/jackson/databind/ser/std/DateTimeSerializerBase.java
+index 7709acdcd..0c6ef6523 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/ser/std/DateTimeSerializerBase.java
++++ b/src/main/java/com/fasterxml/jackson/databind/ser/std/DateTimeSerializerBase.java
+@@ -53,14 +53,10 @@ public abstract class DateTimeSerializerBase<T>
+         if (property != null) {
+             JsonFormat.Value format = serializers.getAnnotationIntrospector().findFormat((Annotated)property.getMember());
+             if (format != null) {
+-
+-            	// Simple case first: serialize as numeric timestamp?
+-                JsonFormat.Shape shape = format.getShape();
+-                if (shape.isNumeric()) {
+-                    return withFormat(Boolean.TRUE, null);
+-                }
+-
+-                if (format.getShape() == JsonFormat.Shape.STRING) {
++                final Boolean useTimestamp = format.getShape().isNumeric()
++                    ? Boolean.TRUE
++                    : (format.getShape() == JsonFormat.Shape.STRING) ? Boolean.FALSE : null;
++                if (useTimestamp != null) {
+                     TimeZone tz = format.getTimeZone();
+                     final String pattern = format.hasPattern()
+                                     ? format.getPattern()
+@@ -73,7 +69,7 @@ public abstract class DateTimeSerializerBase<T>
+                         tz = serializers.getTimeZone();
+                     }
+                     df.setTimeZone(tz);
+-                    return withFormat(Boolean.FALSE, df);
++                    return withFormat(useTimestamp, df);
+                 }
+             }
+         }

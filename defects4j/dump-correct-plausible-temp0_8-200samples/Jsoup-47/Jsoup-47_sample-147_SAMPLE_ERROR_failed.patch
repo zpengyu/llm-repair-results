@@ -1,0 +1,102 @@
+diff --git a/src/main/java/org/jsoup/nodes/Entities.java b/src/main/java/org/jsoup/nodes/Entities.java
+index 5a2b368..ad444bc 100644
+--- a/src/main/java/org/jsoup/nodes/Entities.java
++++ b/src/main/java/org/jsoup/nodes/Entities.java
+@@ -78,19 +78,21 @@ public class Entities {
+     // this method is ugly, and does a lot. but other breakups cause rescanning and stringbuilder generations
+     static void escape(StringBuilder accum, String string, Document.OutputSettings out,
+                        boolean inAttribute, boolean normaliseWhite, boolean stripLeadingWhite) {
+-
++        final EscapeMode escapeMode = out.escapeMode();
++        if (escapeMode == EscapeMode.none) { // no need for escaping at all
++            accum.append(string);
++            return;
++        }
++        if (escapeMode != EscapeMode.extended) { // no need for specific extended escaping, use standard escaping
++            escape(accum, string, out, inAttribute);
++            return;
++        }
+         boolean lastWasWhite = false;
+         boolean reachedNonWhite = false;
+-        final EscapeMode escapeMode = out.escapeMode();
+-        final CharsetEncoder encoder = out.encoder();
+-        final CoreCharset coreCharset = CoreCharset.byName(encoder.charset().name());
+-        final Map<Character, String> map = escapeMode.getMap();
+-        final int length = string.length();
+-
+         int codePoint;
++        final int length = string.length();
+         for (int offset = 0; offset < length; offset += Character.charCount(codePoint)) {
+             codePoint = string.codePointAt(offset);
+-
+             if (normaliseWhite) {
+                 if (StringUtil.isWhitespace(codePoint)) {
+                     if ((stripLeadingWhite && !reachedNonWhite) || lastWasWhite)
+@@ -103,53 +105,23 @@ public class Entities {
+                     reachedNonWhite = true;
+                 }
+             }
+-            // surrogate pairs, split implementation for efficiency on single char common case (saves creating strings, char[]):
+-            if (codePoint < Character.MIN_SUPPLEMENTARY_CODE_POINT) {
++            if (escapeMode == EscapeMode.base) {
+                 final char c = (char) codePoint;
+-                // html specific and required escapes:
+-                switch (c) {
+-                    case '&':
+-                        accum.append("&amp;");
+-                        break;
+-                    case 0xA0:
+-                        if (escapeMode != EscapeMode.xhtml)
+-                            accum.append("&nbsp;");
+-                        else
+-                            accum.append("&#xa0;");
+-                        break;
+-                    case '<':
+-                        // escape when in character data or when in a xml attribue val; not needed in html attr val
+-                        if (!inAttribute)
+-                            accum.append("&lt;");
+-                        else
+-                            accum.append(c);
+-                        break;
+-                    case '>':
+-                        if (!inAttribute)
+-                            accum.append("&gt;");
+-                        else
+-                            accum.append(c);
+-                        break;
+-                    case '"':
+-                        if (inAttribute)
+-                            accum.append("&quot;");
+-                        else
+-                            accum.append(c);
+-                        break;
+-                    default:
+-                        if (canEncode(coreCharset, c, encoder))
+-                            accum.append(c);
+-                        else if (map.containsKey(c))
+-                            accum.append('&').append(map.get(c)).append(';');
+-                        else
+-                            accum.append("&#x").append(Integer.toHexString(codePoint)).append(';');
++                if (c == '&' || c == '"' || c == '<' || c == '>' || c == '\'') {
++                    accum.append(Entities.escape(c));
++                    continue;
+                 }
+-            } else {
+-                final String c = new String(Character.toChars(codePoint));
+-                if (encoder.canEncode(c)) // uses fallback encoder for simplicity
+-                    accum.append(c);
+-                else
++            }
++            if (escapeMode == EscapeMode.extended) {
++                if (codePoint >= 0x7F && (codePoint < 0xA0 || codePoint >= 0x200C && codePoint <= 0x200F || codePoint >= 0x202A && codePoint <= 0x202E || codePoint >= 0x206A && codePoint <= 0x206F || codePoint >= 0xFE00 && codePoint <= 0xFE0F || codePoint >= 0xFEFF && codePoint <= 0xFFFF)) {
+                     accum.append("&#x").append(Integer.toHexString(codePoint)).append(';');
++                    continue;
++                }
++            }
++            if (codePoint < Character.MIN_SUPPLEMENTARY_CODE_POINT) {
++                accum.append((char)codePoint);
++            } else {
++                accum.append(Character.toChars(codePoint));
+             }
+         }
+     }

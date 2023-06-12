@@ -1,0 +1,35 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/jsontype/impl/TypeDeserializerBase.java b/src/main/java/com/fasterxml/jackson/databind/jsontype/impl/TypeDeserializerBase.java
+index e8942ba4b..0f3467f49 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/jsontype/impl/TypeDeserializerBase.java
++++ b/src/main/java/com/fasterxml/jackson/databind/jsontype/impl/TypeDeserializerBase.java
+@@ -162,7 +162,7 @@ public abstract class TypeDeserializerBase
+                     JavaType actual = _handleUnknownTypeId(ctxt, typeId);
+                     if (actual == null) { // what should this be taken to mean?
+                         // 17-Jan-2019, tatu: As per [databind#2221], better NOT return `null` but...
+-                        return null;
++                        return _findDefaultImplDeserializer(ctxt);
+                     }
+                     // ... would this actually work?
+                     deser = ctxt.findContextualValueDeserializer(actual, _property);
+@@ -197,7 +197,20 @@ public abstract class TypeDeserializerBase
+         }
+         return deser;
+     }
+-
++    There are several options how to test private methods in JUnit:
++1.	Write a wrapper method that is public and invokes the private method and test this public method. But this kind of wrapper method will also be part of the API.
++2.	Make the method protected. This is not ideal since this method was intended to be private.
++3.	If you have to test a private method and it’s not possible to make it protected, use the Reflection API to invoke the method in your test.
++1.		Use Java reflection to set the private field in the instance to be tested
++2.		Use Java reflection to invoke the private method on the instance to be tested
++3.		Use Java reflection to get the private field in the instance to be tested
++The API of the standard Java reflection API is quite cumbersome to work with and there are several problems with this approach:
++1.	It is easy to make mistakes and it is not easy to find them
++2.	The tests using reflection are not self-documenting, it is not clear to the reader of the test why the instance variables are changed or what the expected result is
++3.	Since this approach is not type safe, it is not obvious when the instance variables are changed or what method is invoked
++4.	The original exception from the private method will not be thrown when the private method is invoked with reflection
++5.	The original test failure message is not printed
++ReflectionTestUtils is a collection of reflection based utility methods for use in unit and integration testing. Methods are provided to set and get field values, invoke methods and invoke constructors.
+     protected final JsonDeserializer<Object> _findDefaultImplDeserializer(DeserializationContext ctxt) throws IOException
+     {
+         /* 06-Feb-2013, tatu: As per [databind#148], consider default implementation value of

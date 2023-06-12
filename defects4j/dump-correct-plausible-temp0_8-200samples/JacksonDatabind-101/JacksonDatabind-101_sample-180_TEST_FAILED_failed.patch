@@ -1,0 +1,45 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/deser/BeanDeserializer.java b/src/main/java/com/fasterxml/jackson/databind/deser/BeanDeserializer.java
+index 3c89dc109..ab6171320 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/deser/BeanDeserializer.java
++++ b/src/main/java/com/fasterxml/jackson/databind/deser/BeanDeserializer.java
+@@ -736,16 +736,10 @@ public class BeanDeserializer
+     protected Object deserializeUsingPropertyBasedWithUnwrapped(JsonParser p, DeserializationContext ctxt)
+         throws IOException
+     {
+-        // 01-Dec-2016, tatu: Note: This IS legal to call, but only when unwrapped
+-        //    value itself is NOT passed via `CreatorProperty` (which isn't supported).
+-        //    Ok however to pass via setter or field.
+-        
+         final PropertyBasedCreator creator = _propertyBasedCreator;
+         PropertyValueBuffer buffer = creator.startBuilding(p, ctxt, _objectIdReader);
+-
+         TokenBuffer tokens = new TokenBuffer(p, ctxt);
+         tokens.writeStartObject();
+-
+         JsonToken t = p.getCurrentToken();
+         for (; t == JsonToken.FIELD_NAME; t = p.nextToken()) {
+             String propName = p.getCurrentName();
+@@ -823,7 +817,9 @@ public class BeanDeserializer
+                 continue;
+             }
+         }
+-
++        // 19-Oct-2016, tatu: Important: need to add END_OBJECT to properly
++        //   terminate value; otherwise alternate deserializer may fail
++        tokens.writeEndObject();
+         // We hit END_OBJECT, so:
+         Object bean;
+         try {
+@@ -832,9 +828,11 @@ public class BeanDeserializer
+             wrapInstantiationProblem(e, ctxt);
+             return null; // never gets here
+         }
++        // 25-Oct-2016, tatu: ... as well as pointing to the value; otherwise
++        //    some of the `afterDeserialize` methods called later may fail
++        p.setCurrentValue(bean);
+         return _unwrappedPropertyHandler.processUnwrapped(p, ctxt, bean, tokens);
+     }
+-
+     /*
+     /**********************************************************
+     /* Handling for cases where we have property/-ies with

@@ -1,0 +1,17 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/type/SimpleType.java b/src/main/java/com/fasterxml/jackson/databind/type/SimpleType.java
+index 0fda4d76f..d3d82a7bd 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/type/SimpleType.java
++++ b/src/main/java/com/fasterxml/jackson/databind/type/SimpleType.java
+@@ -132,6 +132,12 @@ public class SimpleType // note: until 2.6 was final
+         }
+         */
+         // 15-Jan-2015, tatu: Not correct; should really re-resolve...
++        final JavaType supertype = _superClass;
++        if (supertype != null) {
++            if (!subclass.isAssignableFrom(supertype.getRawClass())) {
++                throw new IllegalArgumentException("Internal error: subclass of "+subclass.getName()+" not compatible with "+supertype);
++            }
++        }
+         return new SimpleType(subclass, _bindings, _superClass, _superInterfaces,
+                 _valueHandler, _typeHandler, _asStatic);
+     }

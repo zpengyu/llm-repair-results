@@ -1,0 +1,22 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/deser/impl/CreatorCollector.java b/src/main/java/com/fasterxml/jackson/databind/deser/impl/CreatorCollector.java
+index fd590d628..beaecd851 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/deser/impl/CreatorCollector.java
++++ b/src/main/java/com/fasterxml/jackson/databind/deser/impl/CreatorCollector.java
+@@ -300,6 +297,17 @@ public class CreatorCollector
+                     // new type more generic, use old
+                 // new type more specific, use it
+             }
++            // new type more generic, use old
++            if (oldOne.getClass().isAssignableFrom(newOne.getClass())) {
++                return;
++            }
++            // new type more specific, use it
++            if (newOne.getClass().isAssignableFrom(oldOne.getClass())) {
++                _creators[typeIndex] = _fixAccess(newOne);
++                return;
++            }
++            throw new IllegalArgumentException("Conflicting "+TYPE_DESCS[typeIndex]
++                +" creators: already had "+oldOne+", encountered "+newOne);
+         }
+         if (explicit) {
+             _explicitCreators |= mask;

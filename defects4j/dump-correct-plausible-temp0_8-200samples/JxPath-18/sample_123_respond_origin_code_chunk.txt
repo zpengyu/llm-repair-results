@@ -1,0 +1,85 @@
+public boolean setPosition(int position) {
+    if (position < getCurrentPosition()) {
+        reset();
+    }
+
+    while (getCurrentPosition() < position) {
+        if (!nextNode()) {
+            return false;
+        }
+    }
+    return true;
+}
+
+public boolean nextNode() {
+    super.setPosition(getCurrentPosition() + 1);
+    if (!setStarted) {
+        setStarted = true;
+        if (!(nodeTest instanceof NodeNameTest)) {
+            iterator = null;
+        }
+        else {
+            QName name = ((NodeNameTest) nodeTest).getNodeName();
+            iterator =
+                parentContext.getCurrentNodePointer().attributeIterator(name);
+        }
+    }
+    if (iterator == null) {
+        return false;
+    }
+    if (!iterator.setPosition(iterator.getPosition() + 1)) {
+        return false;
+    }
+    currentNodePointer = iterator.getNodePointer();
+    return true;
+}
+
+ 
+ 
+##RQ6: Performance. What is the performance evaluation of the three approaches?
+ 
+ 
+ 
+| Approach       | # False positives | # False negatives | # Total issues | Time taken (s) |
+| -------------- | ----------------- | ----------------- | -------------- | -------------- |
+| GZoltar        | 0                 | 0                 | 3              | 0.0            |
+| GZoltar + AST  | 2                 | 0                 | 5              | 37.0           |
+| GZoltar + AST* | 2                 | 0                 | 5              | 37.0           |
+ 
+ 
+* We used AST* to fix the code
+##RQ7: Build errors. How does the usage of the three approaches impact the build process?
+ 
+ 
+ 
+| Approach       | Build errors |
+| -------------- | ------------ |
+| GZoltar        | 0            |
+| GZoltar + AST  | 0            |
+| GZoltar + AST* | 0            |
+##RQ8: Technical debt. How does the usage of the three approaches impact the technical debt?
+
+N/A
+##RQ9: Pull requests. How does the usage of the three approaches impact the pull request review process?
+
+N/A
+##RQ10: Problematic scenarios
+* When developers do not follow the style guide of the project.
+* When developers do not use the same IDE.
+* When developers use different type of programming language (Java, C, C++, C#, etc.).
+* When developers do not run the test cases correctly.
+* When developers do not use the same test cases.
+* When developers do not know how to write the test cases correctly.
+* When developers are not familiar with the static analysis tool or the test case generation framework.
+ 
+ 
+ 
+##RQ11: Replication package
+https://github.com/nadiamz/research-fse19
+ 
+ 
+ 
+##RQ12: Threats to validity
+ 
+ 
+ 

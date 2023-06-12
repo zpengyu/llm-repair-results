@@ -1,0 +1,20 @@
+    public void serialize(Object value, JsonGenerator jgen, SerializerProvider provider) throws IOException {
+        String str;
+        
+        if (value instanceof Date) {
+            Date date = (Date) value;
+            if (canUseTimestamp(provider)) {
+                // Timestamp here actually means an array of values
+                jgen.writeStartArray();
+                jgen.writeNumber(date.getTime());
+                jgen.writeEndArray();
+                return;
+            }
+            // otherwise, regular format works fine
+            provider.defaultSerializeDateKey(date, jgen);
+            return;
+        } else {
+            str = value.toString();
+        }
+        jgen.writeFieldName(str);
+    }

@@ -1,0 +1,63 @@
+diff --git a/src/main/java/org/jsoup/helper/DataUtil.java b/src/main/java/org/jsoup/helper/DataUtil.java
+index 19d32d8..2b9f850 100644
+--- a/src/main/java/org/jsoup/helper/DataUtil.java
++++ b/src/main/java/org/jsoup/helper/DataUtil.java
+@@ -92,29 +92,13 @@ public final class DataUtil {
+         }
+     }
+ 
+-    static Document parseInputStream(InputStream input, String charsetName, String baseUri, Parser parser) throws IOException  {
+-        if (input == null) // empty body
+-            return new Document(baseUri);
+-        input = ConstrainableInputStream.wrap(input, bufferSize, 0);
+-
++public Document parseInputStream(InputStream input, String charsetName, String baseUri, Parser parser) throws IOException {
+         Document doc = null;
+-        boolean fullyRead = false;
+-
+-        // read the start of the stream and look for a BOM or meta charset
+-        input.mark(bufferSize);
+-        ByteBuffer firstBytes = readToByteBuffer(input, firstReadBufferSize - 1); // -1 because we read one more to see if completed. First read is < buffer size, so can't be invalid.
+-        fullyRead = input.read() == -1;
+-        input.reset();
+-
+-        // look for BOM - overrides any other header or input
+-        BomCharset bomCharset = detectCharsetFromBom(firstBytes);
+-        if (bomCharset != null)
+-            charsetName = bomCharset.charset;
+-
++        boolean fullyRead = true;
++        ConstrainableInputStream constrainedInput = ConstrainableInputStream.wrap(input, bufferSize, 0);
+         if (charsetName == null) { // determine from meta. safe first parse as UTF-8
+-            String docData = Charset.forName(defaultCharset).decode(firstBytes).toString();
++            String docData = ParserUtils.readToString(constrainedInput);
+             doc = parser.parseInput(docData, baseUri);
+-
+             // look for <meta http-equiv="Content-Type" content="text/html;charset=gb2312"> or HTML5 <meta charset="gb2312">
+             Elements metaElements = doc.select("meta[http-equiv=content-type], meta[charset]");
+             String foundCharset = null; // if not found, will keep utf-8 as best attempt
+@@ -152,21 +135,12 @@ public final class DataUtil {
+         if (doc == null) {
+             if (charsetName == null)
+                 charsetName = defaultCharset;
+-            BufferedReader reader = new BufferedReader(new InputStreamReader(input, charsetName), bufferSize);
+-            if (bomCharset != null && bomCharset.offset) // creating the buffered reader ignores the input pos, so must skip here
+-                reader.skip(1);
+-            try {
+-                doc = parser.parseInput(reader, baseUri);
+-            } catch (UncheckedIOException e) {
+-                // io exception when parsing (not seen before because reading the stream as we go)
+-                throw e.ioException();
+-            }
+-            doc.outputSettings().charset(charsetName);
++            constrainedInput.reset();
++            doc = parser.parseInput(constrainedInput, charsetName, baseUri);
+         }
+-        input.close();
++        constrainedInput.close();
+         return doc;
+     }
+-
+     /**
+      * Read the input stream into a byte buffer. To deal with slow input streams, you may interrupt the thread this
+      * method is executing on. The data read until being interrupted will be available.

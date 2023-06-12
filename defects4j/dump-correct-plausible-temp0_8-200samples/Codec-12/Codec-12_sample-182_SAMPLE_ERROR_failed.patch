@@ -1,0 +1,50 @@
+diff --git a/src/main/java/org/apache/commons/codec/binary/BaseNCodecInputStream.java b/src/main/java/org/apache/commons/codec/binary/BaseNCodecInputStream.java
+index 78f4d67e..bf405d0b 100644
+--- a/src/main/java/org/apache/commons/codec/binary/BaseNCodecInputStream.java
++++ b/src/main/java/org/apache/commons/codec/binary/BaseNCodecInputStream.java
+@@ -113,10 +106,12 @@ public class BaseNCodecInputStream extends FilterInputStream {
+                 if (!baseNCodec.hasData()) {
+                     byte[] buf = new byte[doEncode ? 4096 : 8192];
+                     int c = in.read(buf);
+-                    if (doEncode) {
+-                        baseNCodec.encode(buf, 0, c);
+-                    } else {
+-                        baseNCodec.decode(buf, 0, c);
++                    if (c != -1) {
++                        if (doEncode) {
++                            baseNCodec.encode(buf, 0, c);
++                        } else {
++                            baseNCodec.decode(buf, 0, c);
++                        }
+                     }
+                 }
+                 readLen = baseNCodec.readResults(b, offset, len);
+@@ -124,6 +119,28 @@ public class BaseNCodecInputStream extends FilterInputStream {
+             return readLen;
+         }
+     }
++    @Override
++    public long skip(long n) throws IOException {
++        if (n < 0) {
++            throw new IllegalArgumentException("Negative skip length: " + n);
++        }
++        final int chunkSize = 512;
++        final long maxSkipBufferSize = chunkSize * 2;
++        if (n < maxSkipBufferSize) {
++            return super.skip(n);
++        }
++        long todo = n;
++        byte[] skipBuffer = new byte[chunkSize];
++        while (todo >= maxSkipBufferSize) {
++            long skipped = super.read(skipBuffer, 0, chunkSize);
++            if (skipped == -1) {
++                // we have reached EOF.
++                return n - todo;
++            }
++            todo -= skipped;
++        }
++        return n - super.skip(todo);
++    }
+     /**
+      * {@inheritDoc}
+      * 

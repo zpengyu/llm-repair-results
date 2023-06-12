@@ -1,0 +1,27 @@
+diff --git a/src/com/google/javascript/jscomp/CodeConsumer.java b/src/com/google/javascript/jscomp/CodeConsumer.java
+index dbdb0a9b..36807898 100644
+--- a/src/com/google/javascript/jscomp/CodeConsumer.java
++++ b/src/com/google/javascript/jscomp/CodeConsumer.java
+@@ -281,9 +240,19 @@ abstract class CodeConsumer {
+    * @return Whether the a line break can be added after the specified BLOCK.
+    */
+   boolean breakAfterBlockFor(Node n, boolean statementContext) {
+-    return statementContext;
++    if (!statementContext) {
++      return false;
++    }
++    if (NodeUtil.isFor(n) ||
++        NodeUtil.isIf(n) ||
++        NodeUtil.isWhile(n) ||
++        NodeUtil.isDo(n) ||
++        NodeUtil.isSwitch(n) ||
++        NodeUtil.isCase(n)) {
++      return false;
++    }
++    return true;
+   }
+-
+   /** Called when we're at the end of a file. */
+   void endFile() {}
+ }
+\ No newline at end of file

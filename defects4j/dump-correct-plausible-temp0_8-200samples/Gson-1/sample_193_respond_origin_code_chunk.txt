@@ -1,0 +1,26 @@
+private static Type[] extractRealTypes(
+      Type[] actualTypeArguments, Type parentType, Class<?> rawParentClass) {
+    Preconditions.checkNotNull(actualTypeArguments);
+
+    Type[] retTypes = new Type[actualTypeArguments.length];
+    for (int i = 0; i < actualTypeArguments.length; ++i) {
+      Type typeToEvaluate = actualTypeArguments[i];
+      Type actualType = getActualType(typeToEvaluate, parentType, rawParentClass);
+      if (typeToEvaluate instanceof TypeVariable<?>) {
+        // if this is a variable, the parameterized type will not have an entry for this variable
+        // so set it to the variable itself
+        if (actualType instanceof TypeVariable) {
+          retTypes[i] = typeToEvaluate;
+        } else {
+          retTypes[i] = actualType;
+        }
+      } else {
+        retTypes[i] = actualType;
+      }
+    }
+    return retTypes;
+  }
+ 
+ 
+ 
+ 

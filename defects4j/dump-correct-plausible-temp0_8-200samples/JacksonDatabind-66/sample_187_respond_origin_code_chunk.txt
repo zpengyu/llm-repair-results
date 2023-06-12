@@ -1,0 +1,17 @@
+        public final Object deserializeKey(String key, DeserializationContext ctxt)
+            throws IOException
+        {
+            if (key == null) { // is this even legal call?
+                return null;
+            }
+            try {
+                final JsonParser parser = ctxt.getParser();
+                return parser.hasTokenId(JsonTokenId.ID_STRING)
+                        ? _delegate.deserialize(parser, ctxt)
+                        : _delegate.deserialize(parser, ctxt, key);
+            } catch (Exception re) {
+                return ctxt.handleWeirdKey(_keyClass, key, "not a valid representation: %s", re.getMessage());
+            }
+        }
+
+

@@ -1,0 +1,91 @@
+    protected String[] flatten(Options options, String[] arguments, boolean stopAtNonOption)
+    {
+        init();
+        this.options = options;
+        // an iterator for the command line tokens
+        Iterator iter = Arrays.asList(arguments).iterator();
+        // process each command line token
+        while (iter.hasNext())
+        {
+            // get the next command line token
+            String token = (String) iter.next();
+            // handle long option --foo or --foo=bar
+            if (token.startsWith("--"))
+            {
+                if (token.indexOf('=') != -1)
+                {
+                    tokens.add(token.substring(0, token.indexOf('=')));
+                    tokens.add(token.substring(token.indexOf('=') + 1, token.length()));
+                }
+                else
+                {
+                    tokens.add(token);
+                }
+            }
+            // single hyphen
+            else if ("-".equals(token))
+            {
+                tokens.add(token);
+            }
+            else if (token.startsWith("-"))
+            {
+                if (token.length() == 2)
+                {
+                    processOptionToken(token, stopAtNonOption);
+                }
+                else if (options.hasOption(token))
+                {
+                    tokens.add(token);
+                }
+                // requires bursting
+                else
+                {
+                    burstToken(token, stopAtNonOption);
+                }
+            }
+            else if (stopAtNonOption)
+            {
+                process(token);
+            }
+            else
+            {
+                tokens.add(token);
+            }
+            gobble(iter);
+        }
+        return (String[]) tokens.toArray(new String[tokens.size()]);
+    }
+    /**
+     * Adds tokens for an option to the processed tokens list.
+     */
+    private void processOptionToken(String token, boolean stopAtNonOption)
+    {
+        Option opt = options.getOption(token);
+        if (opt == null)
+        {
+            tokens.add(token);
+        }
+        else
+        {
+            tokens.add(token);
+            // if an option is part of a group then add the group's name
+            if (opt.hasArg() && (!stopAtNonOption || opt.getValues() == null))
+            {
+                if (opt.isRequired())
+                {
+                    // if required then the value is required
+                    requiredOptions.add(opt);
+                }
+                // check if the option is part of a group
+                OptionGroup group = options.getOptionGroup(opt);
+                if (group != null)
+                {
+                    // if the group is required then the value is required
+                    if (group.isRequired())
+                    {
+                        requiredOptions.add(opt);
+                    }
+                }
+            }
+        }
+    }

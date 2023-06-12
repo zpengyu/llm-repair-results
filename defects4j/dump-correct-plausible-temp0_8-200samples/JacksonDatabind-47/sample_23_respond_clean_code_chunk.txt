@@ -1,0 +1,29 @@
+    public JavaType refineSerializationType(final MapperConfig<?> config,
+            final Annotated a, final JavaType baseType) throws JsonMappingException
+    {
+        JavaType type = baseType;
+        final TypeFactory tf = config.getTypeFactory();
+        // 10-Oct-2015, tatu: For 2.7, we'll need to delegate back to
+        //    now-deprecated secondary methods; this because while
+        //    direct sub-class not yet retrofitted may only override
+        //    those methods. With 2.8 or later we may consider removal
+        //    of these methods
+        if (type.getRawClass() != Object.class) { // [databind#1178]: avoid if possible
+            Class<?> serClass = findSerializationType(a);
+            if (serClass != null) {
+                type = _config.constructSpecializedType(type, serClass);
+            }
+        }
+        // Then further processing for container types
+        type = _findAndAddDynamic(a, tf, type);
+        type = _findAndAddVirtualSubtypes(a, tf, type);
+        // First, key type (for Maps, Map-like types):
+        if (type.isContainerType()) {
+            JavaType keyType = type.getKeyType();
+            Class<?> keyClass = findSerializationKeyType(a, keyType);
+            if (keyClass != null) {
+                type = ((MapLikeType) type).withKeyType(keyType);
+            }
+        }
+        return type;
+    }

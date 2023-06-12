@@ -1,0 +1,56 @@
+diff --git a/src/org/mockito/internal/configuration/SpyAnnotationEngine.java b/src/org/mockito/internal/configuration/SpyAnnotationEngine.java
+index e292e1300..23418caaf 100644
+--- a/src/org/mockito/internal/configuration/SpyAnnotationEngine.java
++++ b/src/org/mockito/internal/configuration/SpyAnnotationEngine.java
+@@ -35,12 +35,7 @@ public class SpyAnnotationEngine implements AnnotationEngine {
+                 try {
+                     Object instance = field.get(testClass);
+                     if (instance == null) {
+-                        throw new MockitoException("Cannot create a @Spy for '" + field.getName() + "' field because the *instance* is missing\n" +
+-                        		  "The instance must be created *before* initMocks();\n" +
+-                                  "Example of correct usage of @Spy:\n" +
+-                            	  "   @Spy List mock = new LinkedList();\n" +
+-                            	  "   //also, don't forget about MockitoAnnotations.initMocks();");
+-
++                        instance = createSpyInstance(field, testClass);
+                     }
+                     if (new MockUtil().isMock(instance)) { 
+                         // instance has been spied earlier
+@@ -56,7 +51,36 @@ public class SpyAnnotationEngine implements AnnotationEngine {
+             }
+         }
+     }
+-    
++    private Object createSpyInstance(Field field, Object testClass) throws IllegalAccessException {
++        try {
++            Class<?> type = field.getType();
++            if (type.isInterface()) {
++                return Mockito.mock(type);
++            } else {
++                Constructor<?> noArgsConstructor = null;
++                Constructor<?>[] constructors = type.getConstructors();
++                for (Constructor<?> constructor : constructors) {
++                    if (constructor.getParameterTypes().length == 0) {
++                        noArgsConstructor = constructor;
++                        break;
++                    }
++                }
++                if (noArgsConstructor != null) {
++                    return noArgsConstructor.newInstance(new Object[0]);
++                } else {
++                    throw new MockitoException("Cannot create a @Spy for '" + field.getName() + "' field because the type '" + type.getCanonicalName() + "' has no accessible zero-argument constructor\n" +
++                    		  "The instance must be created *before* initMocks();\n" +
++                    		  "Example of correct usage of @Spy:\n" +
++                    		  "   @Spy List mock = new LinkedList();\n" +
++                    		  "   //also, don't forget about MockitoAnnotations.initMocks();");
++                }
++            }
++        } catch (InstantiationException e) {
++            throw new MockitoException("Cannot instantiate " + field.getName(), e);
++        } catch (InvocationTargetException e) {
++            throw new MockitoException("Cannot instantiate " + field.getName(), e.getTargetException());
++        }
++    }    
+     //TODO duplicated elsewhere
+     void assertNoAnnotations(Class annotation, Field field, Class ... undesiredAnnotations) {
+         for (Class u : undesiredAnnotations) {

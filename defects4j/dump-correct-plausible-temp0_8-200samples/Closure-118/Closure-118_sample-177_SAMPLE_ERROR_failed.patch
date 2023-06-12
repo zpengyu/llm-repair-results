@@ -1,0 +1,23 @@
+diff --git a/src/com/google/javascript/jscomp/DisambiguateProperties.java b/src/com/google/javascript/jscomp/DisambiguateProperties.java
+index 96c66201..b0abbd5a 100644
+--- a/src/com/google/javascript/jscomp/DisambiguateProperties.java
++++ b/src/com/google/javascript/jscomp/DisambiguateProperties.java
+@@ -509,9 +507,17 @@ class DisambiguateProperties<T> implements CompilerPass {
+                 (type == null ? "null" : type.toString()), n.toString(), ""));
+           }
+         }
++        if (prop.getType() != null &&
++            type != null && !prop.getType().isEquivalentTo(type)) {
++          compiler.report(JSError.make(
++              t.getSourceName(), child, propertiesToErrorFor.get(name),
++              Warnings.INVALIDATION, name,
++              (type == null ? "null" : type.toString()),
++              n.toString(),
++              "Existing type is: " + prop.getType()));
++        }
+       }
+     }
+-
+     private void printErrorLocations(List<String> errors, JSType t) {
+       if (!t.isObject() || t.isAllType()) {
+         return;

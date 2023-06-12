@@ -1,0 +1,71 @@
+/**
+ * Adjusts the tree for common JS module processing.
+ * <ol>
+ * <li>var moduleName = {};
+ * <li>var moduleName = moduleName || {}; (if declared before)
+ * <li>module.exports = moduleName;
+ * <li>if (moduleName.module$exports) {
+ *        moduleName = moduleName.module$exports;
+ *     }
+ * <li>if (typeof moduleName == 'object' && moduleName &&
+ *       moduleName.__esModule) {
+ *       moduleName = moduleName.default;
+ *     }
+ * <li>goog.provide('moduleName');
+ * <li>goog.require('moduleName');
+ * </ol>
+ */
+@Override
+public void process(Node externs, Node root) {
+  var scriptNodeCount = 0;
+  for (var n : root.children()) {
+    if (n.isCall() && n.getChildCount() == 2 &&
+        "require".equals(n.getFirstChild().getQualifiedName()) &&
+        n.getChildAtIndex(1).isString()) {
+      var moduleName = toModuleName(n.getChildAtIndex(1).getString(),
+          normalizeSourceName(n.getSourceFileName()));
+      var moduleRef = IR.name(moduleName).srcref(n);
+      n.getParent().replaceChild(n, moduleRef);
+      n.addChildToFront(IR.exprResult(
+          IR.call(IR.getprop(IR.name("goog"), IR.string("require")),
+              IR.string(moduleName))).copyInformationFromForTree(n));
+      compiler.reportCodeChange();
+    }
+    if (n.isScript()) {
+      scriptNodeCount++;
+      var moduleName = guessCJSModuleName(normalizeSourceName(n
+          .getSourceFileName()));
+      n.addChildToFront(IR.var(IR.name(moduleName), IR.objectlit())
+          .copyInformationFromForTree(n));
+      n.addChildToFront(IR.exprResult(
+          IR.call(IR.getprop(IR.name("goog"), IR.string("provide")),
+              IR.string(moduleName))).copyInformationFromForTree(n));
+      emitOptionalModuleExportsOverride(n, moduleName);
+      NodeTraversal.traverse(compiler, n, new SuffixVarsCallback(
+          moduleName));
+      compiler.reportCodeChange();
+    }
+    if (n.isGetProp() &&
+        "module.exports".equals(n.getQualifiedName())) {
+      var moduleName = guessCJSModuleName(n.getSourceFileName());
+      var module = n.getChildAtIndex(0);
+      module.putProp(Node.ORIGINALNAME_PROP, "module");
+      module.setString(moduleName);
+      var exports = n.getChildAtIndex(1);
+      exports.putProp(Node.ORIGINALNAME_PROP, "exports");
+      exports.setString("module$exports");
+    }
+  }
+}
+
+private void emitOptionalModuleExportsOverride(Node script,
+    String moduleName) {
+
+  var moduleExportsProp = IR.getprop(IR.name(moduleName),
+      IR.string("module$exports"));
+  script.addChildToBack(IR.ifNode(
+      moduleExportsProp,
+      IR.block(IR.exprResult(IR.assign(IR.name(moduleName),
+          moduleExportsProp.cloneTree())))).copyInformationFromForTree(
+      script));
+}

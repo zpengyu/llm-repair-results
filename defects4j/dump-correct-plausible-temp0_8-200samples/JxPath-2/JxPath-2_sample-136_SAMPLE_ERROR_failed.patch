@@ -1,0 +1,26 @@
+diff --git a/src/java/org/apache/commons/jxpath/ri/compiler/Expression.java b/src/java/org/apache/commons/jxpath/ri/compiler/Expression.java
+index 927f617..bbe46a5 100644
+--- a/src/java/org/apache/commons/jxpath/ri/compiler/Expression.java
++++ b/src/java/org/apache/commons/jxpath/ri/compiler/Expression.java
+@@ -82,8 +75,8 @@ public abstract class Expression {
+         if (result == null) {
+             return Collections.EMPTY_LIST.iterator();
+         }
+-        if (result instanceof EvalContext) {
+-            return (EvalContext) result;
++        if (result instanceof Pointer) {
++            return new ValueIterator(result);
+         }
+         return new PointerIterator(ValueUtils.iterate(result),
+                 new QName(null, "value"),
+@@ -125,7 +111,9 @@ public abstract class Expression {
+         public ValueIterator(Iterator it) {
+             this.iterator = it;
+         }
+-
++        public ValueIterator(Object o) {
++            this.iterator = o instanceof Iterator ? (Iterator) o : Arrays.asList(new Object[] {o}).iterator();
++        }
+         public boolean hasNext() {
+             return iterator.hasNext();
+         }

@@ -1,0 +1,29 @@
+    private boolean isShortOption(String token)
+    {
+        // short options (-S, -SV, -S=V, -SV1=V2, -S1S2)
+        if (!token.startsWith("-") || token.length() == 1)
+        {
+            return false;
+        }
+
+        // remove leading "-" and "=value"
+        int pos = token.indexOf("=");
+        String optName = pos == -1 ? token.substring(1) : token.substring(1, pos);
+        boolean result = options.hasShortOption(optName);
+
+        if (result == false) {
+            if (optName.length() != 1) {
+                // check for several concatenated short options
+                for (int i = 0; i < optName.length(); i++) {
+                    result = options.hasShortOption(optName.substring(i, i + 1));
+                    if (result == false) {
+                        return false;
+                    }
+                }
+            } else {
+                return false;
+            }
+        }
+
+        return result;
+    }

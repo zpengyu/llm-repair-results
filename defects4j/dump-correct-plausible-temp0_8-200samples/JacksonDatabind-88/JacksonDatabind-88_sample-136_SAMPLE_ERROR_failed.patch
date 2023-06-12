@@ -1,0 +1,20 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/jsontype/impl/ClassNameIdResolver.java b/src/main/java/com/fasterxml/jackson/databind/jsontype/impl/ClassNameIdResolver.java
+index 112c00b5c..fc63e210b 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/jsontype/impl/ClassNameIdResolver.java
++++ b/src/main/java/com/fasterxml/jackson/databind/jsontype/impl/ClassNameIdResolver.java
+@@ -55,7 +55,14 @@ public class ClassNameIdResolver
+             //    compatibility -- needed later anyway, and not doing so may open
+             //    security issues.
+             JavaType t = tf.constructFromCanonical(id);
+-                // Probably cleaner to have a method in `TypeFactory` but can't add in patch
++            TypeResolutionContext ctxt2 = ctxt.getTypeFactory().withClassLoader(_baseType.getRawClass().getClassLoader());
++            if (!_baseType.hasRawClass(Object.class)) {
++                if (!_baseType.isTypeOrSubTypeOf(t.getRawClass())) {
++                    ctxt2.reportBadTypeDefinition(ctxt2.constructType(id),
++                            String.format("Class %s not subtype of %s", id, _baseType));
++                }
++            }
++            // Probably cleaner to have a method in `TypeFactory` but can't add in patch
+             return t;
+         }
+         Class<?> cls;

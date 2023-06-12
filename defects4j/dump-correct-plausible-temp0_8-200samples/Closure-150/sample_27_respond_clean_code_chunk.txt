@@ -1,0 +1,36 @@
+    @Override public void visit(NodeTraversal t, Node n, Node parent) {
+      if (n == scope.getRootNode()) return;
+      if (n.getType() == Token.LP && parent == scope.getRootNode()) {
+        handleFunctionInputs(parent);
+        return;
+      }
+      attachLiteralTypes(n);
+      switch (n.getType()) {
+        case Token.FUNCTION:
+          if (parent.getType() == Token.NAME) {
+            return;
+          }
+          defineDeclaredFunction(n, parent);
+          break;
+        case Token.CATCH:
+          defineCatch(n, parent);
+          break;
+        case Token.VAR:
+          defineVar(n, parent);
+          break;
+        case Token.CONST:
+          defineConst(n, parent);
+          break;
+      }
+    }
+    // defineConst
+    private void defineConst(Node n, Node parent) {
+      Node nameNode = n.getFirstChild();
+      String name = nameNode.getString();
+      checkNotDuplicate(n, nameNode, name);
+      JSType type = n.getJSType();
+      if (type == null) {
+        type = JSType.UNKNOWN;
+      }
+      scope.declare(name, nameNode, type, n, false);
+    }

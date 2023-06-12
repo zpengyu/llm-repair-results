@@ -1,0 +1,51 @@
+diff --git a/src/java/org/apache/commons/math/complex/Complex.java b/src/java/org/apache/commons/math/complex/Complex.java
+index 64b9ecb89..cace5de29 100644
+--- a/src/java/org/apache/commons/math/complex/Complex.java
++++ b/src/java/org/apache/commons/math/complex/Complex.java
+@@ -242,30 +242,23 @@ public class Complex implements Serializable  {
+      *         not equal to this Complex instance
+      * 
+      */
+-    public boolean equals(Object other) {
+-        boolean ret;
+-        
+-        if (this == other) { 
+-            ret = true;
+-        } else if (other == null) {
+-            ret = false;
+-        } else  {
+-            try {
+-                Complex rhs = (Complex)other;
+-                if (rhs.isNaN()) {
+-                    ret = this.isNaN();
+-                } else {
+-                    ret = (Double.doubleToRawLongBits(real) == Double.doubleToRawLongBits(rhs.getReal())) && (Double.doubleToRawLongBits(imaginary) == Double.doubleToRawLongBits(rhs.getImaginary()));
+-                }
+-            } catch (ClassCastException ex) {
+-                // ignore exception
+-                ret = false;
+-            }
+-        }
+-      
+-        return ret;
++public boolean equals(Object other) {
++    if (this == other) { 
++        return true;
+     }
+-    
++    if (other == null) {
++        return false;
++    }
++    if (this.getClass() != other.getClass()) {
++        return false;
++    }
++    Complex rhs = (Complex)other;
++    if (this.isNaN() || rhs.isNaN()) {
++        return false;
++    } else {
++        return (Double.doubleToRawLongBits(real) == Double.doubleToRawLongBits(rhs.getReal())) && (Double.doubleToRawLongBits(imaginary) == Double.doubleToRawLongBits(rhs.getImaginary()));
++    }
++}    
+     /**
+      * Get a hashCode for the complex number.
+      * <p>

@@ -1,0 +1,31 @@
+diff --git a/gson/src/main/java/com/google/gson/internal/UnsafeAllocator.java b/gson/src/main/java/com/google/gson/internal/UnsafeAllocator.java
+index a72d3d10..ce7fd633 100644
+--- a/gson/src/main/java/com/google/gson/internal/UnsafeAllocator.java
++++ b/gson/src/main/java/com/google/gson/internal/UnsafeAllocator.java
+@@ -27,9 +27,6 @@ import java.lang.reflect.Method;
+  * @author Joel Leitch
+  * @author Jesse Wilson
+  */
+-public abstract class UnsafeAllocator {
+-  public abstract <T> T newInstance(Class<T> c) throws Exception;
+-
+   public static UnsafeAllocator create() {
+     // try JVM
+     // public class Unsafe {
+@@ -107,4 +100,15 @@ public abstract class UnsafeAllocator {
+    * throw an {@link java.lang.UnsupportedOperationException}
+    * @param c instance of the class to be checked
+    */
++  @SuppressWarnings("unchecked")
++  public static boolean isInstantiable(Class<?> c) {
++    checkNotNull(c);
++    if (c.isInterface()) {
++      throw new UnsupportedOperationException("Interface can't be instantiated! Interface name: " + c.getName());
++    }
++    if (Modifier.isAbstract(c.getModifiers())) {
++      throw new UnsupportedOperationException("Abstract class can't be instantiated! Class name: " + c.getName());
++    }
++    return true;
++  }
+ }
+\ No newline at end of file

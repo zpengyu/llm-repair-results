@@ -1,0 +1,64 @@
+diff --git a/src/main/java/org/jsoup/parser/CharacterReader.java b/src/main/java/org/jsoup/parser/CharacterReader.java
+index c5d91e0..32ec50a 100644
+--- a/src/main/java/org/jsoup/parser/CharacterReader.java
++++ b/src/main/java/org/jsoup/parser/CharacterReader.java
+@@ -420,36 +420,32 @@ public final class CharacterReader {
+      * That saves both having to create objects as hash keys, and running through the entry list, at the expense of
+      * some more duplicates.
+      */
+-    private static String cacheString(final char[] charBuf, final String[] stringCache, final int start, final int count) {
+-        // limit (no cache):
+-        if (count > maxStringCacheLen)
+-            return new String(charBuf, start, count);
+-
+-        // calculate hash:
+-        int hash = 0;
+-        int offset = start;
+-        for (int i = 0; i < count; i++) {
+-            hash = 31 * hash + charBuf[offset++];
+-        }
+-
+-        // get from cache
+-        final int index = hash & stringCache.length - 1;
+-        String cached = stringCache[index];
+-
+-        if (cached == null) { // miss, add
+-            cached = new String(charBuf, start, count);
++private static String cacheString(final char[] charBuf, final String[] stringCache, final int start, final int count) {
++    // limit (no cache):
++    if (count > maxStringCacheLen)
++        return new String(charBuf, start, count);
++    // calculate hash:
++    int hash = 0;
++    int offset = start;
++    for (int i = 0; i < count; i++) {
++        hash = 31 * hash + charBuf[offset++];
++    }
++    // get from cache
++    final int index = hash & stringCache.length - 1;
++    String cached = stringCache[index];
++    if (cached == null) { // miss, add
++        cached = new String(charBuf, start, count);
++        stringCache[index] = cached;
++    } else { // hashcode hit, check equality
++        if (rangeEquals(charBuf, start, count, cached)) { // hit
++            return cached;
++        } else if (start == 0 && count == charBuf.length) { // if input is the full buffer, can't be a hashcode conflict (as full buffer hash is correct)
++            cached = new String(charBuf, start, count); // so update cache
+             stringCache[index] = cached;
+-        } else { // hashcode hit, check equality
+-            if (rangeEquals(charBuf, start, count, cached)) { // hit
+-                return cached;
+-            } else { // hashcode conflict
+-                cached = new String(charBuf, start, count);
+-                stringCache[index] = cached; // update the cache, as recently used strings are more likely to show up again
+-            }
+         }
+-        return cached;
+     }
+-
++    return cached;
++}
+     /**
+      * Check if the value of the provided range equals the string.
+      */

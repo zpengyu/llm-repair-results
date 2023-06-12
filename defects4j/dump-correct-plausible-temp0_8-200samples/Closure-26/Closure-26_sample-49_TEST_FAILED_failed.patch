@@ -1,0 +1,39 @@
+diff --git a/src/com/google/javascript/jscomp/ProcessCommonJSModules.java b/src/com/google/javascript/jscomp/ProcessCommonJSModules.java
+index f516e584..2bc65a79 100644
+--- a/src/com/google/javascript/jscomp/ProcessCommonJSModules.java
++++ b/src/com/google/javascript/jscomp/ProcessCommonJSModules.java
+@@ -121,11 +121,10 @@ public class ProcessCommonJSModules implements CompilerPass {
+   /**
+    * Visits require, every "script" and special module.exports assignments.
+    */
++private static final String MODULE_EXPORTS = "module$exports";
+   private class ProcessCommonJsModulesCallback extends
+       AbstractPostOrderCallback {
+-
+     private int scriptNodeCount = 0;
+-
+     @Override
+     public void visit(NodeTraversal t, Node n, Node parent) {
+       if (n.isCall() && n.getChildCount() == 2 &&
+@@ -204,9 +195,8 @@ public class ProcessCommonJSModules implements CompilerPass {
+      */
+     private void emitOptionalModuleExportsOverride(Node script,
+         String moduleName) {
+-
+       Node moduleExportsProp = IR.getprop(IR.name(moduleName),
+-          IR.string("module$exports"));
++          IR.string(MODULE_EXPORTS));
+       script.addChildToBack(IR.ifNode(
+           moduleExportsProp,
+           IR.block(IR.exprResult(IR.assign(IR.name(moduleName),
+@@ -224,9 +213,8 @@ public class ProcessCommonJSModules implements CompilerPass {
+       module.setString(moduleName);
+       Node exports = prop.getChildAtIndex(1);
+       exports.putProp(Node.ORIGINALNAME_PROP, "exports");
+-      exports.setString("module$exports");
++      exports.setString(MODULE_EXPORTS);
+     }
+-
+     /**
+      * Returns next script node in parents.
+      */

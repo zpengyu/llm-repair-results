@@ -1,0 +1,29 @@
+diff --git a/src/main/java/org/jsoup/helper/DataUtil.java b/src/main/java/org/jsoup/helper/DataUtil.java
+index e4fa18c..21277fe 100644
+--- a/src/main/java/org/jsoup/helper/DataUtil.java
++++ b/src/main/java/org/jsoup/helper/DataUtil.java
+@@ -92,7 +92,23 @@ public final class DataUtil {
+         }
+     }
+ 
+-    static Document parseInputStream(InputStream input, String charsetName, String baseUri, Parser parser) throws IOException  {
++    private static Charset detectCharsetFromBom(ByteBuffer firstBytes) {
++        for (BomCharset bom : BOMS) {
++            if (startsWith(firstBytes, bom.bytes))
++                return bom.charset;
++        }
++        return null;
++    }
++    private static boolean startsWith(ByteBuffer firstBytes, byte[] bom) {
++        if (firstBytes.remaining() < bom.length)
++            return false;
++        for (int i = 0; i < bom.length; i++) {
++            if (bom[i] != firstBytes.get(i))
++                return false;
++        }
++        return true;
++    }
++    static Document parseInputStream(InputStream input, String charsetName, String baseUri, Parser parser) throws IOException {
+         if (input == null) // empty body
+             return new Document(baseUri);
+         input = ConstrainableInputStream.wrap(input, bufferSize, 0);

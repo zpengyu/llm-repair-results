@@ -1,0 +1,26 @@
+    private static void modify(Calendar val, int field, boolean round) {
+        if (val.get(Calendar.YEAR) > 280000000) {
+            throw new ArithmeticException("Calendar value too large for accurate calculations");
+        }
+        if (field == DateUtils.SEMI_MONTH) {
+            if (val.get(Calendar.DATE) == 1) {
+                val.add(Calendar.DATE, 15);
+            } else {
+                val.add(Calendar.DATE, -15);
+                val.add(Calendar.MONTH, 1);
+            }
+            // ----------------- Fix for LANG-440 ---------------------- START ---------------
+        } else if (field == Calendar.AM_PM) {
+            if (val.get(Calendar.HOUR_OF_DAY) == 0) {
+                val.add(Calendar.HOUR_OF_DAY, 12);
+            } else {
+                val.add(Calendar.HOUR_OF_DAY, -12);
+            }
+            // ----------------- Fix for LANG-440 ---------------------- END ---------------
+        } else {
+            //We need at add one to this field since the
+            //  last number causes us to round up
+            val.add(fields[i][0], 1);
+        }
+        return;
+    }

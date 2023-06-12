@@ -1,0 +1,25 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/ser/PropertyBuilder.java b/src/main/java/com/fasterxml/jackson/databind/ser/PropertyBuilder.java
+index 9a9d91ebf..2cafa2f85 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/ser/PropertyBuilder.java
++++ b/src/main/java/com/fasterxml/jackson/databind/ser/PropertyBuilder.java
+@@ -102,10 +99,18 @@ public class PropertyBuilder
+         if (inclusion == JsonInclude.Include.USE_DEFAULTS) { // should not occur but...
+             inclusion = JsonInclude.Include.ALWAYS;
+         }
+-
+         // 12-Jul-2016, tatu: [databind#1256] Need to make sure we consider type refinement
+         JavaType actualType = (serializationType == null) ? declaredType : serializationType;
+-        
++        // [databind#1113]: Have to check if `@JsonInclude.Value.getContentInclusion()` should be used
++        //   (and this is not something that can be done by per-property `@JsonInclude`)
++        if (propDef.findInclusion() == null) {
++            if (actualType.isContainerType() && !inclV.getContentInclusion().isAlwaysIncluded()) {
++                inclusion = inclV.getContentInclusion();
++                if (inclusion == JsonInclude.Include.USE_DEFAULTS) { // should not occur but...
++                    inclusion = JsonInclude.Include.ALWAYS;
++                }
++            }
++        }
+         switch (inclusion) {
+         case NON_DEFAULT:
+             // 11-Nov-2015, tatu: This is tricky because semantics differ between cases,

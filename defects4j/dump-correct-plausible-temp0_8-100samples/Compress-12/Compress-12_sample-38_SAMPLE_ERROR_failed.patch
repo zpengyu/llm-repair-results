@@ -1,0 +1,53 @@
+diff --git a/src/main/java/org/apache/commons/compress/archivers/tar/TarArchiveInputStream.java b/src/main/java/org/apache/commons/compress/archivers/tar/TarArchiveInputStream.java
+index 52bb7455..5effc3fe 100644
+--- a/src/main/java/org/apache/commons/compress/archivers/tar/TarArchiveInputStream.java
++++ b/src/main/java/org/apache/commons/compress/archivers/tar/TarArchiveInputStream.java
+@@ -173,23 +173,22 @@ public class TarArchiveInputStream extends ArchiveInputStream {
+         if (hasHitEOF) {
+             return null;
+         }
+-
+         if (currEntry != null) {
+             long numToSkip = entrySize - entryOffset;
+-
+-            while (numToSkip > 0) {
+-                long skipped = skip(numToSkip);
+-                if (skipped <= 0) {
+-                    throw new RuntimeException("failed to skip current tar entry");
++            if (entrySize == 0) {
++                readBuf = null;
++            } else {
++                while (numToSkip > 0) {
++                    long skipped = skip(numToSkip);
++                    if (skipped <= 0) {
++                        throw new RuntimeException("failed to skip current tar entry");
++                    }
++                    numToSkip -= skipped;
+                 }
+-                numToSkip -= skipped;
++                readBuf = null;
+             }
+-
+-            readBuf = null;
+         }
+-
+         byte[] headerBuf = getRecord();
+-
+         if (hasHitEOF) {
+             currEntry = null;
+             return null;
+@@ -236,7 +230,13 @@ public class TarArchiveInputStream extends ArchiveInputStream {
+         entrySize = currEntry.getSize();
+         return currEntry;
+     }
+-
++1. Determine the objective of the program
++2. Determine the buggy function
++3. Determine the input domain of the program
++4. Determine the expected output of the program
++5. Determine the output of the program
++6. Compare the expected and actual output and determine the bug
++7. Provide a fix for the buggy function
+     /**
+      * Get the next record in this tar archive. This will skip
+      * over any remaining data in the current entry, if there

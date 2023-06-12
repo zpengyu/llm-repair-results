@@ -1,0 +1,48 @@
+diff --git a/src/org/mockito/internal/stubbing/defaultanswers/ReturnsDeepStubs.java b/src/org/mockito/internal/stubbing/defaultanswers/ReturnsDeepStubs.java
+index 6fa773f53..b08582c4a 100644
+--- a/src/org/mockito/internal/stubbing/defaultanswers/ReturnsDeepStubs.java
++++ b/src/org/mockito/internal/stubbing/defaultanswers/ReturnsDeepStubs.java
+@@ -74,10 +65,39 @@ public class ReturnsDeepStubs implements Answer<Object>, Serializable {
+      * @param returnTypeGenericMetadata The metadata to use to create the new mock.
+      * @return The mock
+      */
+-
+-
+-
+-
++    protected Object createMock(GenericMetadataSupport returnTypeGenericMetadata) {
++        if (returnTypeGenericMetadata.isArray()) {
++            return Array.newInstance(returnTypeGenericMetadata.getComponentType().rawType(), 0);
++        }
++        if (returnTypeGenericMetadata.isCollection()) {
++            return new ArrayList();
++        }
++        if (returnTypeGenericMetadata.isMap()) {
++            return new HashMap();
++        }
++        if (returnTypeGenericMetadata.isSet()) {
++            return new HashSet();
++        }
++        if (returnTypeGenericMetadata.isSubclassOf(List.class)) {
++            return new ArrayList();
++        }
++        if (returnTypeGenericMetadata.isSubclassOf(Collection.class)) {
++            return new ArrayList();
++        }
++        if (returnTypeGenericMetadata.isSubclassOf(Map.class)) {
++            return new HashMap();
++        }
++        if (returnTypeGenericMetadata.isSubclassOf(Set.class)) {
++            return new HashSet();
++        }
++        if (returnTypeGenericMetadata.isSubclassOf(SortedSet.class)) {
++            return new TreeSet();
++        }
++        if (returnTypeGenericMetadata.isSubclassOf(SortedMap.class)) {
++            return new TreeMap();
++        }
++        return org.mockito.Mockito.mock(returnTypeGenericMetadata.rawType(), this);
++    }
+     private Object recordDeepStubMock(InvocationOnMock invocation, InvocationContainerImpl container) {
+         Class<?> clz = invocation.getMethod().getReturnType();
+         final Object mock = org.mockito.Mockito.mock(clz, this);

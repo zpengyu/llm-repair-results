@@ -1,0 +1,64 @@
+    private static void escapeJavaStyleString(Writer out, String str, boolean escapeSingleQuote) throws IOException {
+        if (out == null) {
+            throw new IllegalArgumentException("The Writer must not be null");
+        }
+        if (str == null) {
+            return;
+        }
+        int sz;
+        sz = str.length();
+        for (int i = 0; i < sz; i++) {
+            char ch = str.charAt(i);
+            if ((ch > 61) && (ch < 127)) {
+                if (ch == '\\') {
+                    out.write('\\');
+                    out.write('\\');
+                    continue;
+                }
+                out.write(ch);
+                continue;
+            }
+            switch (ch) {
+                case ' ':
+                    if (i == 0 || escapeSingleQuote) {
+                        out.write('\\');
+                    }
+                    out.write(' ');
+                    break;
+                case '\t':
+                    out.write('\\');
+                    out.write('t');
+                    break;
+                case '\n':
+                    out.write('\\');
+                    out.write('n');
+                    break;
+                case '\r':
+                    out.write('\\');
+                    out.write('r');
+                    break;
+                case '\f':
+                    out.write('\\');
+                    out.write('f');
+                    break;
+                case '=': // Fall through
+                case ':': // Fall through
+                case '#': // Fall through
+                case '!':
+                    out.write('\\');
+                    out.write(ch);
+                    break;
+                default:
+                    if ((ch < 0x0020) || (ch > 0x007e)) {
+                        out.write('\\');
+                        out.write('u');
+                        out.write(toHex((ch >> 12) & 0xF));
+                        out.write(toHex((ch >> 8) & 0xF));
+                        out.write(toHex((ch >> 4) & 0xF));
+                        out.write(toHex(ch & 0xF));
+                    } else {
+                        out.write(ch);
+                    }
+            }
+        }
+    }

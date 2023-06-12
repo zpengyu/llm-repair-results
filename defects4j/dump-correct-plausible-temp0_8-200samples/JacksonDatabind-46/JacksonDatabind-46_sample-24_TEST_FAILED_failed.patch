@@ -1,0 +1,15 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/type/ReferenceType.java b/src/main/java/com/fasterxml/jackson/databind/type/ReferenceType.java
+index 1f21190da..41d95cce5 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/type/ReferenceType.java
++++ b/src/main/java/com/fasterxml/jackson/databind/type/ReferenceType.java
+@@ -150,6 +150,10 @@ public class ReferenceType extends SimpleType
+     @Override
+     public StringBuilder getGenericSignature(StringBuilder sb)
+     {
++        if (_referencedType == null) {
++            // 17-Feb-2016, tatu: Possible if called outside of deserialization handling
++            throw new IllegalStateException("Cannot be used outside of deserialization");
++        }
+         _classSignature(_class, sb, false);
+         sb.append('<');
+         sb = _referencedType.getGenericSignature(sb);

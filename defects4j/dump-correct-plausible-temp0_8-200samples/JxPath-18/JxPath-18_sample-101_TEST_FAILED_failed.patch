@@ -1,0 +1,41 @@
+diff --git a/src/java/org/apache/commons/jxpath/ri/axes/AttributeContext.java b/src/java/org/apache/commons/jxpath/ri/axes/AttributeContext.java
+index 25d0931..a10d305 100644
+--- a/src/java/org/apache/commons/jxpath/ri/axes/AttributeContext.java
++++ b/src/java/org/apache/commons/jxpath/ri/axes/AttributeContext.java
+@@ -35,7 +34,8 @@ public class AttributeContext extends EvalContext {
+     private boolean setStarted = false;
+     private NodeIterator iterator;
+     private NodePointer currentNodePointer;
+-
++    private int currentIndex = 0;
++    private int currentPos = 0;
+     /**
+      * @param parentContext represents the previous step on the path
+      * @param nodeTest is the name of the attribute we are looking for
+@@ -52,9 +50,10 @@ public class AttributeContext extends EvalContext {
+     public void reset() {
+         setStarted = false;
+         iterator = null;
++        currentPos = 0;
++        currentIndex = 0;
+         super.reset();
+     }
+-
+     public boolean setPosition(int position) {
+         if (position < getCurrentPosition()) {
+             reset();
+@@ -82,10 +79,12 @@ public class AttributeContext extends EvalContext {
+         if (iterator == null) {
+             return false;
+         }
+-        if (!iterator.setPosition(iterator.getPosition() + 1)) {
++        if (!iterator.setPosition(currentIndex)) {
+             return false;
+         }
+         currentNodePointer = iterator.getNodePointer();
++        currentIndex++;
++        currentPos++;
+         return true;
+     }
+ }
+\ No newline at end of file

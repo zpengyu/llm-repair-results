@@ -1,0 +1,29 @@
+diff --git a/src/main/java/org/apache/commons/cli/DefaultParser.java b/src/main/java/org/apache/commons/cli/DefaultParser.java
+index e160ce2..0c9c8f9 100644
+--- a/src/main/java/org/apache/commons/cli/DefaultParser.java
++++ b/src/main/java/org/apache/commons/cli/DefaultParser.java
+@@ -307,10 +306,22 @@ public class DefaultParser implements CommandLineParser
+         // remove leading "-" and "=value"
+         int pos = token.indexOf("=");
+         String optName = pos == -1 ? token.substring(1) : token.substring(1, pos);
+-        return options.hasShortOption(optName);
+         // check for several concatenated short options
++        if (optName.length() > 1 && options.hasShortOption(optName.substring(0, 1)))
++        {
++            // several short options are concatenated => split
++            for (int i = 0; i < optName.length(); i++)
++            {
++                String c = String.valueOf(optName.charAt(i));
++                if (!options.hasShortOption(c))
++                {
++                    return false;
++                }
++            }
++            return true;
++        }
++        return options.hasShortOption(optName);
+     }
+-
+     /**
+      * Tells if the token looks like a long option.
+      *

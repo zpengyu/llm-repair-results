@@ -1,0 +1,59 @@
+public class ReturnsDeepStubs implements Answer<Object>, Serializable {
+    
+    private static final long serialVersionUID = -7105341425736035847L;
+
+    private ReturnsEmptyValues delegate = new ReturnsEmptyValues();
+
+    public Object answer(InvocationOnMock invocation) throws Throwable {
+        GenericMetadataSupport returnTypeGenericMetadata =
+                actualParameterizedType(invocation.getMock()).resolveGenericReturnType(invocation.getMethod());
+
+        Class<?> rawType = returnTypeGenericMetadata.rawType();
+        if (!new MockCreationValidator().isTypeMockable(rawType)) {
+            return delegate.returnValueFor(rawType);
+        }
+
+        return getMock(invocation, rawType);
+    }
+
+    private Object getMock(InvocationOnMock invocation, Class<?> rawType) throws Throwable {
+    	InternalMockHandler<Object> handler = new MockUtil().getMockHandler(invocation.getMock());
+    	InvocationContainerImpl container = (InvocationContainerImpl) handler.getInvocationContainer();
+
+        // matches invocation for verification
+        for (StubbedInvocationMatcher stubbedInvocationMatcher : container.getStubbedInvocations()) {
+    		if(container.getInvocationForStubbing().matches(stubbedInvocationMatcher.getInvocation())) {
+    			return stubbedInvocationMatcher.answer(invocation);
+    		}
+		}
+
+        // deep stub
+        return recordDeepStubMock(invocation, container);
+    }
+
+    /**
+     * Creates a mock using the Generics Metadata.
+     *
+     * @param returnTypeGenericMetadata The metadata to use to create the new mock.
+     * @return The mock
+     */
+
+    private Object recordDeepStubMock(InvocationOnMock invocation, InvocationContainerImpl container) {
+        Class<?> clz = invocation.getMethod().getReturnType();
+        final Object mock = org.mockito.Mockito.mock(clz, this);
+
+        container.addAnswer(new Answer<Object>() {
+            public Object answer(InvocationOnMock invocation) throws Throwable {
+                return mock;
+            }
+        }, false);
+
+        return mock;
+    }
+
+    protected GenericMetadataSupport actualParameterizedType(Object mock) {
+        CreationSettings mockSettings = (CreationSettings) new MockUtil().getMockHandler(mock).getMockSettings();
+        return GenericMetadataSupport.inferFrom(mockSettings.getTypeToMock());
+    }
+}
+

@@ -1,0 +1,36 @@
+diff --git a/src/main/java/org/jsoup/helper/DataUtil.java b/src/main/java/org/jsoup/helper/DataUtil.java
+index 19d32d8..505fb9e 100644
+--- a/src/main/java/org/jsoup/helper/DataUtil.java
++++ b/src/main/java/org/jsoup/helper/DataUtil.java
+@@ -92,7 +92,7 @@ public final class DataUtil {
+         }
+     }
+ 
+-    static Document parseInputStream(InputStream input, String charsetName, String baseUri, Parser parser) throws IOException  {
++    static Document parseInputStream(InputStream input, String charsetName, String baseUri, Parser parser) throws IOException {
+         if (input == null) // empty body
+             return new Document(baseUri);
+         input = ConstrainableInputStream.wrap(input, bufferSize, 0);
+@@ -152,11 +146,19 @@ public final class DataUtil {
+         if (doc == null) {
+             if (charsetName == null)
+                 charsetName = defaultCharset;
+-            BufferedReader reader = new BufferedReader(new InputStreamReader(input, charsetName), bufferSize);
++            // https://github.com/jhy/jsoup/issues/1064
++            InputStreamReader reader;
++            if (charsetName.equals("ISO-8859-1")) {
++                // we have to set this special case here to enforce ISO-8859-1, as otherwise it'd be detected as UTF-8 (which it is by definition, a subset of)
++                reader = new InputStreamReader(input, Charsets.ISO_8859_1);
++            } else {
++                reader = new InputStreamReader(input, charsetName);
++            }
++            BufferedReader bufferedReader = new BufferedReader(reader, bufferSize);
+             if (bomCharset != null && bomCharset.offset) // creating the buffered reader ignores the input pos, so must skip here
+-                reader.skip(1);
++                bufferedReader.skip(1);
+             try {
+-                doc = parser.parseInput(reader, baseUri);
++                doc = parser.parseInput(bufferedReader, baseUri);
+             } catch (UncheckedIOException e) {
+                 // io exception when parsing (not seen before because reading the stream as we go)
+                 throw e.ioException();

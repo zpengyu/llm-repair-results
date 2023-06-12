@@ -1,0 +1,259 @@
+diff --git a/src/main/java/org/apache/commons/math3/random/BitsStreamGenerator.java b/src/main/java/org/apache/commons/math3/random/BitsStreamGenerator.java
+index 33d350cb1..f81abad90 100644
+--- a/src/main/java/org/apache/commons/math3/random/BitsStreamGenerator.java
++++ b/src/main/java/org/apache/commons/math3/random/BitsStreamGenerator.java
+@@ -25,46 +25,101 @@ import org.apache.commons.math3.util.FastMath;
+  * @version $Id$
+  * @since 2.0
+  */
+-public abstract class BitsStreamGenerator
+-    implements RandomGenerator {
+-    /** Serializable version identifier */
++    public abstract class BitsStreamGenerator implements RandomGenerator {
++    /** Serializable version identifier. */
++    private static final long serialVersionUID = -6104179812103820574L;
+     /** Next gaussian. */
+     private double nextGaussian;
+-
+     /**
+      * Creates a new random number generator.
+      */
+-    public BitsStreamGenerator() {
++    protected BitsStreamGenerator() {
+         nextGaussian = Double.NaN;
+     }
+-
+-    /** {@inheritDoc} */
+-    public abstract void setSeed(int seed);
+-
+-    /** {@inheritDoc} */
+-    public abstract void setSeed(int[] seed);
+-
+-    /** {@inheritDoc} */
+-    public abstract void setSeed(long seed);
+-
+-    /** Generate next pseudorandom number.
++    /**
++     * Generate next pseudorandom number.
+      * <p>This method is the core generation algorithm. It is used by all the
+      * public generation methods for the various primitive types {@link
+      * #nextBoolean()}, {@link #nextBytes(byte[])}, {@link #nextDouble()},
+      * {@link #nextFloat()}, {@link #nextGaussian()}, {@link #nextInt()},
+      * {@link #next(int)} and {@link #nextLong()}.</p>
++     *
+      * @param bits number of random bits to produce
+      * @return random bits generated
+      */
+     protected abstract int next(int bits);
+-
+-    /** {@inheritDoc} */
++    /**
++     * Sets the seed of the underlying random number generator using a
++     * {@code long} seed.
++     * <p>Sequences of values generated starting with the same seeds
++     * should be identical.</p>
++     *
++     * @param seed the seed value
++     */
++    @Override
++    public abstract void setSeed(long seed);
++    /**
++     * Sets the seed of the underlying random number generator using an
++     * {@code int} array seed.
++     * <p>Sequences of values generated starting with the same seeds
++     * should be identical.</p>
++     *
++     * @param seed the seed value
++     */
++    @Override
++    public void setSeed(int[] seed) {
++        long prime = 4294967291L; // largest prime smaller than 2^32
++        long combined = 0L;
++        for (int s : seed) {
++            combined = combined * prime + s;
++        }
++        setSeed(combined);
++    }
++    /**
++     * Sets the seed of the underlying random number generator using an
++     * {@code int} seed.
++     * <p>Sequences of values generated starting with the same seeds
++     * should be identical.</p>
++     *
++     * @param seed the seed value
++     */
++    @Override
++    public void setSeed(int seed) {
++        setSeed(seed);
++    }
++    /**
++     * {@inheritDoc}
++     *
++     * @since 3.1
++     */
++    @Override
++    public void setSeed(long[] seed) {
++        if (seed == null) {
++            throw new NullArgumentException();
++        }
++        long prime = 4294967291L; // largest prime smaller than 2^32
++        long combined = 0L;
++        for (long s : seed) {
++            combined = combined * prime + s;
++        }
++        setSeed(combined);
++    }
++    /**
++     * {@inheritDoc}
++     *
++     * @since 3.1
++     */
++    @Override
+     public boolean nextBoolean() {
+         return next(1) != 0;
+     }
+-
+-    /** {@inheritDoc} */
+-    public void nextBytes(byte[] bytes) {
++    /**
++     * {@inheritDoc}
++     *
++     * @since 3.1
++     */
++    @Override
++    public byte[] nextBytes(byte[] bytes) {
+         int i = 0;
+         final int iEnd = bytes.length - 3;
+         while (i < iEnd) {
+@@ -80,23 +135,35 @@ public abstract class BitsStreamGenerator
+             bytes[i++] = (byte) (random & 0xff);
+             random     = random >> 8;
+         }
++        return bytes;
+     }
+-
+-    /** {@inheritDoc} */
++    /**
++     * {@inheritDoc}
++     *
++     * @since 3.1
++     */
++    @Override
+     public double nextDouble() {
+         final long high = ((long) next(26)) << 26;
+         final int  low  = next(26);
+         return (high | low) * 0x1.0p-52d;
+     }
+-
+-    /** {@inheritDoc} */
++    /**
++     * {@inheritDoc}
++     *
++     * @since 3.1
++     */
++    @Override
+     public float nextFloat() {
+         return next(23) * 0x1.0p-23f;
+     }
+-
+-    /** {@inheritDoc} */
++    /**
++     * {@inheritDoc}
++     *
++     * @since 3.1
++     */
++    @Override
+     public double nextGaussian() {
+-
+         final double random;
+         if (Double.isNaN(nextGaussian)) {
+             // generate a new pair of gaussian numbers
+@@ -111,31 +178,23 @@ public abstract class BitsStreamGenerator
+             random = nextGaussian;
+             nextGaussian = Double.NaN;
+         }
+-
+         return random;
+-
+     }
+-
+-    /** {@inheritDoc} */
++    /**
++     * {@inheritDoc}
++     *
++     * @since 3.1
++     */
++    @Override
+     public int nextInt() {
+         return next(32);
+     }
+-
+     /**
+      * {@inheritDoc}
+-     * <p>This default implementation is copied from Apache Harmony
+-     * java.util.Random (r929253).</p>
+-     *
+-     * <p>Implementation notes: <ul>
+-     * <li>If n is a power of 2, this method returns
+-     * {@code (int) ((n * (long) next(31)) >> 31)}.</li>
+      *
+-     * <li>If n is not a power of 2, what is returned is {@code next(31) % n}
+-     * with {@code next(31)} values rejected (i.e. regenerated) until a
+-     * value that is larger than the remainder of {@code Integer.MAX_VALUE / n}
+-     * is generated. Rejection of this initial segment is necessary to ensure
+-     * a uniform distribution.</li></ul></p>
++     * @since 3.1
+      */
++    @Override
+     public int nextInt(int n) throws IllegalArgumentException {
+         if (n > 0) {
+             if ((n & -n) == n) {
+@@ -151,18 +210,45 @@ public abstract class BitsStreamGenerator
+         }
+         throw new NotStrictlyPositiveException(n);
+     }
+-
+-    /** {@inheritDoc} */
++    /**
++     * {@inheritDoc}
++     *
++     * @since 3.1
++     */
++    @Override
+     public long nextLong() {
+         final long high  = ((long) next(32)) << 32;
+         final long  low  = ((long) next(32)) & 0xffffffffL;
+         return high | low;
+     }
+-
++    /**
++     * {@inheritDoc}
++     *
++     * @since 3.1
++     */
++    @Override
++    public void nextBytes(byte[] bytes) {
++        int i = 0;
++        final int iEnd = bytes.length - 3;
++        while (i < iEnd) {
++            final int random = next(32);
++            bytes[i]     = (byte) (random & 0xff);
++            bytes[i + 1] = (byte) ((random >>  8) & 0xff);
++            bytes[i + 2] = (byte) ((random >> 16) & 0xff);
++            bytes[i + 3] = (byte) ((random >> 24) & 0xff);
++            i += 4;
++        }
++        int random = next(32);
++        while (i < bytes.length) {
++            bytes[i++] = (byte) (random & 0xff);
++            random     = random >> 8;
++        }
++    }
+     /**
+      * Clears the cache used by the default implementation of
+      * {@link #nextGaussian}.
+      */
++    @Override
+     public void clear() {
+         nextGaussian = Double.NaN;
+     }

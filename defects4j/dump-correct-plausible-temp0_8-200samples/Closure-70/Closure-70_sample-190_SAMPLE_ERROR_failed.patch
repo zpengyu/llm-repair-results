@@ -1,0 +1,22 @@
+diff --git a/src/com/google/javascript/jscomp/TypedScopeCreator.java b/src/com/google/javascript/jscomp/TypedScopeCreator.java
+index a067f341..48f74527 100644
+--- a/src/com/google/javascript/jscomp/TypedScopeCreator.java
++++ b/src/com/google/javascript/jscomp/TypedScopeCreator.java
+@@ -1750,8 +1750,15 @@ final class TypedScopeCreator implements ScopeCreator {
+           }
+         }
+       }
+-    } // end declareArguments
+-  } // end LocalScopeBuilder
++      for (Node astParameter : astParameters.children()) {
++        if (!astParameter.isName()) {
++          Node destructuringObj = astParameter.getFirstChild();
++          // Make sure to declare the names in a destructuring pattern.
++          defineSlot(destructuringObj, functionNode,
++              destructuringObj.getJSType(), true);
++        }
++      }
++    } // end declareArguments  } // end LocalScopeBuilder
+ 
+ 
+   /** Find the best JSDoc for the given node. */

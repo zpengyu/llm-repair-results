@@ -1,0 +1,55 @@
+diff --git a/src/com/google/javascript/jscomp/TypeInference.java b/src/com/google/javascript/jscomp/TypeInference.java
+index 53e8cb48..c605eec5 100644
+--- a/src/com/google/javascript/jscomp/TypeInference.java
++++ b/src/com/google/javascript/jscomp/TypeInference.java
+@@ -583,7 +576,49 @@ class TypeInference
+         break;
+     }
+   }
+-
++  private void ensurePropertyDefined(Node left, JSType type) {
++    Preconditions.checkState(left.isGetProp());
++    Node leftChild = left.getFirstChild();
++    Node rightChild = leftChild.getNext();
++    JSType leftChildType = leftChild.getJSType();
++    JSType rightChildType = rightChild.getJSType();
++    if (leftChildType == null || rightChildType == null) {
++      return;
++    }
++    if (leftChildType.isUnknownType()) {
++      return;
++    }
++    // TODO(user): Remove this check when the type system can properly
++    // handle unknown properties on templatized types.
++    if (leftChildType.isTemplatizedType()) {
++      return;
++    }
++    // Does the property already exist on the type?
++    //
++    // This can happen in 3 ways:
++    // 1) The type is the instance type of a ctor, and the prop is defined
++    //    on the ctor's prototype.
++    // 2) The type is a loose object, and the prop is defined on the
++    //    bottom object.
++    // 3) The type is loose but not the bottom object, but the prop is
++    //    defined on some other object that is a subtype of this type.
++    JSType ctorType = leftChildType.restrictByNotNullOrUndefined();
++    String propName = rightChild.getString();
++    if (ctorType.getConstructor().hasProperty(propName) ||
++        ctorType.isLoose() &&
++        registry.getNativeObjectType(JSTypeNative.OBJECT_TYPE).getImplicitPrototype().
++        hasProperty(propName)) {
++      return;
++    }
++    // It doesn't exist, so add it.
++    FunctionType getterType = registry.createFunctionType(type);
++    getterType.setKind(Type.Kind.GETTER_DEF);
++    FunctionType setterType = registry.createFunctionType(
++        registry.getNativeType(JSTypeNative.VOID_TYPE), type);
++    setterType.setKind(Type.Kind.SETTER_DEF);
++    leftChildType.defineDeclaredProperty(propName,
++        type, getterType, setterType);
++  }
+   /**
+    * Defines a property if the property has not been defined yet.
+    */

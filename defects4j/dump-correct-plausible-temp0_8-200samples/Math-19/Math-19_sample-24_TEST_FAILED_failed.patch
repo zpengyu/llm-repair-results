@@ -1,0 +1,31 @@
+diff --git a/src/main/java/org/apache/commons/math3/optimization/direct/CMAESOptimizer.java b/src/main/java/org/apache/commons/math3/optimization/direct/CMAESOptimizer.java
+index 140e9d4f9..25604b066 100644
+--- a/src/main/java/org/apache/commons/math3/optimization/direct/CMAESOptimizer.java
++++ b/src/main/java/org/apache/commons/math3/optimization/direct/CMAESOptimizer.java
+@@ -535,8 +533,25 @@ public class CMAESOptimizer
+                 boundaries = new double[2][];
+                 boundaries[0] = lB;
+                 boundaries[1] = uB;
+-
+                 // Abort early if the normalization will overflow (cf. "encode" method).
++                // Convert bounds to "natural" space
++                double[] z = new double[lB.length];
++                double[] w = new double[uB.length];
++                double[] zScal = new double[lB.length];
++                double[] wScal = new double[uB.length];
++                double[] range = new double[lB.length];
++                double[] invRange = new double[uB.length];
++                for (int i = 0; i < lB.length; i++) {
++                    z[i] = lB[i];
++                    zScal[i] = (lB[i] - init[i]) / inputSigma[i];
++                    w[i] = uB[i];
++                    wScal[i] = (uB[i] - init[i]) / inputSigma[i];
++                    range[i] = w[i] - z[i];
++                    invRange[i] = 1.0 / range[i];
++                }
++                if (range[0] > Double.MAX_VALUE) {
++                    throw new MathUnsupportedOperationException();
++                }
+             }
+         } else {
+             // Convert API to internal handling of boundaries.

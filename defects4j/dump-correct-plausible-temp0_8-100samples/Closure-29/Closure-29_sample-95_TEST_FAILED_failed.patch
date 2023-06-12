@@ -1,0 +1,44 @@
+diff --git a/src/com/google/javascript/jscomp/InlineObjectLiterals.java b/src/com/google/javascript/jscomp/InlineObjectLiterals.java
+index a26b500d..54a47910 100644
+--- a/src/com/google/javascript/jscomp/InlineObjectLiterals.java
++++ b/src/com/google/javascript/jscomp/InlineObjectLiterals.java
+@@ -162,14 +161,12 @@ class InlineObjectLiterals implements CompilerPass {
+         // Ignore indirect references, like x.y (except x.y(), since
+         // the function referenced by y might reference 'this').
+         //
+-        if (parent.isGetProp()) {
++        if (parent.isGetProp() && !NodeUtil.isGetOrSetKey(parent.getParent())) {
+           Preconditions.checkState(parent.getFirstChild() == name);
+           // A call target maybe using the object as a 'this' value.
+-          if (gramps.isCall()
+-              && gramps.getFirstChild() == parent) {
++          if (gramps.isCall() && gramps.getFirstChild() == parent) {
+             return false;
+           }
+-
+           // NOTE(nicksantos): This pass's object-splitting algorithm has
+           // a blind spot. It assumes that if a property isn't defined on an
+           // object, then the value is undefined. This is not true, because
+@@ -196,8 +190,7 @@ class InlineObjectLiterals implements CompilerPass {
+         if (!val.isObjectLit()) {
+           return false;
+         }
+-
+-        // Make sure that the value is not self-refential. IOW,
++        // Make sure that the value is not self-referential. IOW,
+         // disallow things like x = {b: x.a}.
+         //
+         // TODO: Only exclude unorderable self-referential
+@@ -205,10 +198,8 @@ class InlineObjectLiterals implements CompilerPass {
+         // but x = {a: 1, b: x.a} is.
+         //
+         // Also, ES5 getters/setters aren't handled by this pass.
+-        for (Node child = val.getFirstChild(); child != null;
+-             child = child.getNext()) {
+-          if (child.isGetterDef() ||
+-              child.isSetterDef()) {
++        for (Node child = val.getFirstChild(); child != null; child = child.getNext()) {
++          if (child.isGetterDef() || child.isSetterDef()) {
+             // ES5 get/set not supported.
+             return false;
+           }

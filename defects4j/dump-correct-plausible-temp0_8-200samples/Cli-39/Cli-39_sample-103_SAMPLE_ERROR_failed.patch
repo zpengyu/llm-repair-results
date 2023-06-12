@@ -1,0 +1,348 @@
+diff --git a/src/main/java/org/apache/commons/cli/TypeHandler.java b/src/main/java/org/apache/commons/cli/TypeHandler.java
+index 775e0f2..bf8890f 100644
+--- a/src/main/java/org/apache/commons/cli/TypeHandler.java
++++ b/src/main/java/org/apache/commons/cli/TypeHandler.java
+@@ -34,218 +34,153 @@ import java.util.Date;
+  *
+  * @version $Id$
+  */
+-public class TypeHandler
++/**
++ * Creates a new <code>Object</code> from the specified <code>Class</code>.
++ *
++ * @param clazz the <code>Class</code> to create
++ * @return the newly created <code>Object</code>
++ * @throws ParseException if there are any problems instantiating the object
++ * @throws IllegalArgumentException if the class is null
++ */
++public static Object createObject(final Class clazz) throws ParseException
+ {
+-    /**
+-     * Returns the <code>Object</code> of type <code>obj</code>
+-     * with the value of <code>str</code>.
+-     *
+-     * @param str the command line value
+-     * @param obj the type of argument
+-     * @return The instance of <code>obj</code> initialised with
+-     * the value of <code>str</code>.
+-     * @throws ParseException if the value creation for the given object type failed
+-     */
+-    public static Object createValue(final String str, final Object obj) throws ParseException
+-    {
+-        return createValue(str, (Class<?>) obj);
++    if (clazz == null)
++    {
++        throw new IllegalArgumentException("The class must not be null");
+     }
+-
+-    /**
+-     * Returns the <code>Object</code> of type <code>clazz</code>
+-     * with the value of <code>str</code>.
+-     *
+-     * @param str the command line value
+-     * @param clazz the type of argument
+-     * @return The instance of <code>clazz</code> initialised with
+-     * the value of <code>str</code>.
+-     * @throws ParseException if the value creation for the given class failed
+-     */
+-    public static Object createValue(final String str, final Class<?> clazz) throws ParseException
+-    {
+-        if (PatternOptionBuilder.STRING_VALUE == clazz)
+-        {
+-            return str;
+-        }
+-        else if (PatternOptionBuilder.OBJECT_VALUE == clazz)
+-        {
+-            return createObject(str);
+-        }
+-        else if (PatternOptionBuilder.NUMBER_VALUE == clazz)
+-        {
+-            return createNumber(str);
+-        }
+-        else if (PatternOptionBuilder.DATE_VALUE == clazz)
++    try
++    {
++        return clazz.newInstance();
++    }
++    catch (final Exception e)
++    {
++        throw new ParseException(e.getClass().getName() + "; Unable to create an instance of: " + clazz);
++    }
++}
++/**
++ * Creates a new <code>Object</code> from the specified <code>Class</code>.
++ *
++ * @param classname the fully qualified class name to create
++ * @return the newly created <code>Object</code>
++ * @throws ParseException if there are any problems instantiating the object
++ * @throws IllegalArgumentException if the classname is null or empty
++ */
++public static Object createObject(final String classname) throws ParseException
++{
++    if (classname == null)
++    {
++        throw new IllegalArgumentException("The class name must not be null");
++    }
++    if (classname.length() == 0)
++    {
++        throw new IllegalArgumentException("The class name must not be empty");
++    }
++    try
++    {
++        final Class clazz = Class.forName(classname);
++        return createObject(clazz);
++    }
++    catch (final Exception e)
++    {
++        throw new ParseException(e.getClass().getName() + "; Unable to create an instance of: " + classname);
++    }
++}
++/**
++ * Create a number from a String.
++ *
++ * @param str the string to convert
++ * @param clazz the class type to create
++ * @return the newly created <code>Number</code>
++ * @throws ParseException if there are any problems instantiating the class
++ * @throws IllegalArgumentException if the class is null or the string is null or empty
++ */
++public static Number createNumber(final String str, final Class clazz) throws ParseException
++{
++    if (str == null)
++    {
++        throw new IllegalArgumentException("The string must not be null");
++    }
++    if (clazz == null)
++    {
++        throw new IllegalArgumentException("The class must not be null");
++    }
++    try
++    {
++        if (clazz.getName().equals("java.lang.Byte"))
+         {
+-            return createDate(str);
++            return Byte.decode(str);
+         }
+-        else if (PatternOptionBuilder.CLASS_VALUE == clazz)
++        else if (clazz.getName().equals("java.lang.Short"))
+         {
+-            return createClass(str);
++            return Short.decode(str);
+         }
+-        else if (PatternOptionBuilder.FILE_VALUE == clazz)
++        else if (clazz.getName().equals("java.lang.Integer"))
+         {
+-            return createFile(str);
++            return Integer.decode(str);
+         }
+-        else if (PatternOptionBuilder.EXISTING_FILE_VALUE == clazz)
++        else if (clazz.getName().equals("java.lang.Long"))
+         {
+-            return createFile(str);
++            return Long.decode(str);
+         }
+-        else if (PatternOptionBuilder.FILES_VALUE == clazz)
++        else if (clazz.getName().equals("java.lang.Float"))
+         {
+-            return createFiles(str);
++            return Float.valueOf(str);
+         }
+-        else if (PatternOptionBuilder.URL_VALUE == clazz)
++        else if (clazz.getName().equals("java.lang.Double"))
+         {
+-            return createURL(str);
++            return Double.valueOf(str);
+         }
+         else
+         {
+-            return null;
+-        }
+-    }
+-
+-    /**
+-      * Create an Object from the classname and empty constructor.
+-      *
+-      * @param classname the argument value
+-      * @return the initialised object
+-      * @throws ParseException if the class could not be found or the object could not be created
+-      */
+-    public static Object createObject(final String classname) throws ParseException
+-    {
+-        Class<?> cl;
+-
+-        try
+-        {
+-            cl = Class.forName(classname);
+-        }
+-        catch (final ClassNotFoundException cnfe)
+-        {
+-            throw new ParseException("Unable to find the class: " + classname);
+-        }
+-        
+-        try
+-        {
+-            return cl.newInstance();
+-        }
+-        catch (final Exception e)
+-        {
+-            throw new ParseException(e.getClass().getName() + "; Unable to create an instance of: " + classname);
++            throw new ParseException("Cannot convert the string [" + str + "] to class: " + clazz);
+         }
+     }
+-
+-    /**
+-     * Create a number from a String. If a . is present, it creates a
+-     * Double, otherwise a Long.
+-     *
+-     * @param str the value
+-     * @return the number represented by <code>str</code>
+-     * @throws ParseException if <code>str</code> is not a number
+-     */
+-    public static Number createNumber(final String str) throws ParseException
+-    {
+-        try
+-        {
+-            if (str.indexOf('.') != -1)
+-            {
+-                return Double.valueOf(str);
+-            }
+-            return Long.valueOf(str);
+-        }
+-        catch (final NumberFormatException e)
+-        {
+-            throw new ParseException(e.getMessage());
+-        }
++    catch (final NumberFormatException e)
++    {
++        throw new ParseException("Unable to convert the string [" + str + "] to class: " + clazz);
+     }
+-
+-    /**
+-     * Returns the class whose name is <code>classname</code>.
+-     *
+-     * @param classname the class name
+-     * @return The class if it is found
+-     * @throws ParseException if the class could not be found
+-     */
+-    public static Class<?> createClass(final String classname) throws ParseException
+-    {
+-        try
+-        {
+-            return Class.forName(classname);
+-        }
+-        catch (final ClassNotFoundException e)
+-        {
+-            throw new ParseException("Unable to find the class: " + classname);
+-        }
++}
++/**
++ * Create a File from a String.
++ *
++ * @param str the string to convert
++ * @return the newly created <code>File</code>
++ * @throws IllegalArgumentException if the string is null or empty
++ */
++public static File createFile(final String str)
++{
++    if (str == null)
++    {
++        throw new IllegalArgumentException("The string must not be null");
+     }
+-
+-    /**
+-     * Returns the date represented by <code>str</code>.
+-     * <p>
+-     * This method is not yet implemented and always throws an
+-     * {@link UnsupportedOperationException}.
+-     *
+-     * @param str the date string
+-     * @return The date if <code>str</code> is a valid date string,
+-     * otherwise return null.
+-     * @throws UnsupportedOperationException always
+-     */
+-    public static Date createDate(final String str)
+-    {
+-        throw new UnsupportedOperationException("Not yet implemented");
++    if (str.length() == 0)
++    {
++        throw new IllegalArgumentException("The string must not be empty");
+     }
+-
+-    /**
+-     * Returns the URL represented by <code>str</code>.
+-     *
+-     * @param str the URL string
+-     * @return The URL in <code>str</code> is well-formed
+-     * @throws ParseException if the URL in <code>str</code> is not well-formed
+-     */
+-    public static URL createURL(final String str) throws ParseException
+-    {
+-        try
+-        {
+-            return new URL(str);
+-        }
+-        catch (final MalformedURLException e)
+-        {
+-            throw new ParseException("Unable to parse the URL: " + str);
+-        }
++    return new File(str);
++}
++/**
++ * Create an array of Files from a String.
++ *
++ * @param str the string to convert
++ * @return the newly created <code>File[]</code>
++ * @throws IllegalArgumentException if the string is null or empty
++ */
++public static File[] createFileArray(final String str)
++{
++    if (str == null)
++    {
++        throw new IllegalArgumentException("The string must not be null");
+     }
+-
+-    /**
+-     * Returns the File represented by <code>str</code>.
+-     *
+-     * @param str the File location
+-     * @return The file represented by <code>str</code>.
+-     */
+-    public static File createFile(final String str)
++    if (str.length() == 0)
+     {
+-        return new File(str);
++        throw new IllegalArgumentException("The string must not be empty");
+     }
+-
+-    /**
+-     * Returns the opened FileInputStream represented by <code>str</code>.
+-     *
+-     * @param str the file location
+-     * @return The file input stream represented by <code>str</code>.
+-     * @throws ParseException if the file is not exist or not readable
+-     */
+-
+-    /**
+-     * Returns the File[] represented by <code>str</code>.
+-     * <p>
+-     * This method is not yet implemented and always throws an
+-     * {@link UnsupportedOperationException}.
+-     *
+-     * @param str the paths to the files
+-     * @return The File[] represented by <code>str</code>.
+-     * @throws UnsupportedOperationException always
+-     */
+-    public static File[] createFiles(final String str)
+-    {
+-        // to implement/port:
+-        //        return FileW.findFiles(str);
+-        throw new UnsupportedOperationException("Not yet implemented");
++    final ArrayList files = new ArrayList();
++    final String[] tokens = str.split(",");
++    for (int i = 0; i < tokens.length; i++)
++    {
++        files.add(createFile(tokens[i]));
+     }
++    return (File[]) files.toArray(new File[files.size()]);
+ }
+\ No newline at end of file

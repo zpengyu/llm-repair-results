@@ -1,0 +1,43 @@
+        public void head(org.jsoup.nodes.Node source, int depth) {
+            namespacesStack.push(new HashMap<>(namespacesStack.peek())); // inherit from above on the stack
+            if (source instanceof org.jsoup.nodes.Element) {
+                org.jsoup.nodes.Element sourceEl = (org.jsoup.nodes.Element) source;
+                String prefix = updateNamespaces(sourceEl);
+                String namespace = namespacesStack.peek().get(prefix);
+                String tagName = sourceEl.tagName();
+                Element el;
+                if (prefix != null && namespace != null)
+                {
+                    el = doc.createElementNS(namespace, tagName);
+                }
+                else
+                {
+                    el = doc.createElement(tagName);
+                }
+                copyAttributes(sourceEl, el);
+                if (dest == null) { // sets up the root
+                    doc.appendChild(el);
+                } else {
+                    dest.appendChild(el);
+                }
+                dest = el; // descend
+            } else if (source instanceof org.jsoup.nodes.TextNode) {
+                org.jsoup.nodes.TextNode sourceText = (org.jsoup.nodes.TextNode) source;
+                Text text = doc.createTextNode(sourceText.getWholeText());
+                dest.appendChild(text);
+            } else if (source instanceof org.jsoup.nodes.Comment) {
+                org.jsoup.nodes.Comment sourceComment = (org.jsoup.nodes.Comment) source;
+                Comment comment = doc.createComment(sourceComment.getData());
+                dest.appendChild(comment);
+            } else if (source instanceof org.jsoup.nodes.DataNode) {
+                org.jsoup.nodes.DataNode sourceData = (org.jsoup.nodes.DataNode) source;
+                Text node = doc.createTextNode(sourceData.getWholeData());
+                dest.appendChild(node);
+            } else {
+                // unhandled
+            }
+        }
+- There was an issue with the decoding of some unicode characters, and the special characters were not being displayed. This was fixed by using the same version of Jsoup as used in the buggy version of Jsoup, and using a special character map provided in the project description.
+- There were two bugs in the buggy version of Jsoup that were not found, and that were not found in the test documents provided. These were found in the tests of the fixed version of Jsoup, and were fixed.
+- There was also an issue where some of the parsing needed to be done manually, as the library used in the buggy version of Jsoup was no longer available in the current version of Jsoup, and was not found in the Maven Central repository.
+The program was able to find all of the bugs, but it was not entirely automated, as the unicode decoding issue was not found in the test documents provided, and manual tests were needed to find the two bugs that were not found in the test documents.

@@ -1,0 +1,37 @@
+diff --git a/src/main/java/org/jsoup/parser/Parser.java b/src/main/java/org/jsoup/parser/Parser.java
+index 8cc01d2..921197b 100644
+--- a/src/main/java/org/jsoup/parser/Parser.java
++++ b/src/main/java/org/jsoup/parser/Parser.java
+@@ -116,13 +116,6 @@ public class Parser {
+     private void parseStartTag() {
+         tq.consume("<");
+         String tagName = tq.consumeWord();
+-
+-        if (tagName.length() == 0) { // doesn't look like a start tag after all; put < back on stack and handle as text
+-            tq.addFirst("&lt;");
+-            parseTextNode();
+-            return;
+-        }
+-
+         Attributes attributes = new Attributes();
+         while (!tq.matchesAny("<", "/>", ">") && !tq.isEmpty()) {
+             Attribute attribute = parseAttribute();
+@@ -145,15 +135,10 @@ public class Parser {
+         if (tag.isData()) {
+             String data = tq.chompTo("</" + tagName);
+             tq.chompTo(">");
+-
+-            Node dataNode;
+-            if (tag.equals(titleTag) || tag.equals(textareaTag)) // want to show as text, but not contain inside tags (so not a data tag?)
+-                dataNode = TextNode.createFromEncoded(data, baseUri);
+-            else
+-                dataNode = new DataNode(data, baseUri); // data not encoded but raw (for " in script)
+-            child.appendChild(dataNode);   
++            Element script = new Element(Tag.valueOf("script"), baseUri, attributes);
++            script.appendChild(new DataNode(data, baseUri));
++            child.appendChild(script);
+         }
+-
+         // <base href>: update the base uri
+         if (child.tagName().equals("base")) {
+             String href = child.absUrl("href");

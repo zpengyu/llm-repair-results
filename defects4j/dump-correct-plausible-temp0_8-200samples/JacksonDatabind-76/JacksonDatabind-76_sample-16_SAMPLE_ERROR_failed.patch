@@ -1,0 +1,23 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/deser/BuilderBasedDeserializer.java b/src/main/java/com/fasterxml/jackson/databind/deser/BuilderBasedDeserializer.java
+index 316efa3a9..30d4b65f3 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/deser/BuilderBasedDeserializer.java
++++ b/src/main/java/com/fasterxml/jackson/databind/deser/BuilderBasedDeserializer.java
+@@ -586,7 +584,7 @@ public class BuilderBasedDeserializer
+                     try {
+                         bean = creator.build(ctxt, buffer);
+                     } catch (Exception e) {
+-                        wrapAndThrow(e, _beanType.getRawClass(), propName, ctxt);
++                        wrapInstantiationProblem(e, ctxt);
+                         continue;
+                     }
+                     while (t == JsonToken.FIELD_NAME) {
+@@ -631,7 +628,8 @@ public class BuilderBasedDeserializer
+         try {
+             bean = creator.build(ctxt, buffer);
+         } catch (Exception e) {
+-            return wrapInstantiationProblem(e, ctxt);
++            wrapAndThrow(e, _beanType.getRawClass(), propName, ctxt);
++            continue;
+         }
+         return _unwrappedPropertyHandler.processUnwrapped(p, ctxt, bean, tokens);
+     }

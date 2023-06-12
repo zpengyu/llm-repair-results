@@ -1,0 +1,41 @@
+diff --git a/src/main/java/org/jsoup/helper/W3CDom.java b/src/main/java/org/jsoup/helper/W3CDom.java
+index f866f43..f2538d0 100644
+--- a/src/main/java/org/jsoup/helper/W3CDom.java
++++ b/src/main/java/org/jsoup/helper/W3CDom.java
+@@ -87,9 +86,8 @@ public class W3CDom {
+                 String prefix = updateNamespaces(sourceEl);
+                 String namespace = namespacesStack.peek().get(prefix);
+                 String tagName = sourceEl.tagName();
+-
+                 Element el =
+-                    doc.createElementNS(namespace, tagName);
++                        doc.createElementNS(namespace, tagName);
+                 copyAttributes(sourceEl, el);
+                 if (dest == null) { // sets up the root
+                     doc.appendChild(el);
+@@ -113,7 +111,24 @@ public class W3CDom {
+                 // unhandled
+             }
+         }
+-
++        private String updateNamespaces(org.jsoup.nodes.Element sourceEl) {
++            Attributes attrs = sourceEl.attributes();
++            for (Attribute attr : attrs) {
++                if (attr.isNamespaceDeclaration()) {
++                    namespacesStack.peek().put(attr.getKey(), attr.getValue());
++                }
++            }
++            String prefix = sourceEl.namespace();
++            if (prefix != null) {
++                String namespace = namespacesStack.peek().get(prefix);
++                if (namespace == null) { // explicit prefix but no mapping? Use specified prefix
++                    // todo: can this be right? Shouldn't this be ""?
++                    namespacesStack.peek().put(prefix, prefix);
++                    return prefix;
++                }
++            }
++            return prefix;
++        }
+         public void tail(org.jsoup.nodes.Node source, int depth) {
+             if (source instanceof org.jsoup.nodes.Element && dest.getParentNode() instanceof Element) {
+                 dest = (Element) dest.getParentNode(); // undescend. cromulent.

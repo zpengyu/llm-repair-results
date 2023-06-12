@@ -1,0 +1,29 @@
+diff --git a/src/com/google/javascript/jscomp/PeepholeSubstituteAlternateSyntax.java b/src/com/google/javascript/jscomp/PeepholeSubstituteAlternateSyntax.java
+index dee765a1..32630720 100644
+--- a/src/com/google/javascript/jscomp/PeepholeSubstituteAlternateSyntax.java
++++ b/src/com/google/javascript/jscomp/PeepholeSubstituteAlternateSyntax.java
+@@ -218,12 +218,18 @@ class PeepholeSubstituteAlternateSyntax
+       // http://code.google.com/p/closure-compiler/issues/detail?id=759
+       Node value = callTarget.getNext();
+       if (value != null) {
+-        Node addition = IR.add(
+-            IR.string("").srcref(callTarget),
+-            value.detachFromParent());
+-        n.getParent().replaceChild(n, addition);
+-        reportCodeChange();
+-        return addition;
++        // We can't call foldConstants(value) here because we haven't called
++        // traverse yet, so the CSE logic that's a part of traverse wouldn't
++        // have had a chance to run.
++        value = tryFoldConstants(value);
++        if (value.isImmutableValue()) {
++          Node addition = IR.add(
++              IR.string("").srcref(callTarget),
++              value.detachFromParent());
++          n.getParent().replaceChild(n, addition);
++          reportCodeChange();
++          return addition;
++        }
+       }
+     }
+     return n;

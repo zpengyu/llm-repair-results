@@ -1,0 +1,25 @@
+diff --git a/src/com/google/javascript/jscomp/PeepholeFoldConstants.java b/src/com/google/javascript/jscomp/PeepholeFoldConstants.java
+index 0f2a6d44..6cdfb41d 100644
+--- a/src/com/google/javascript/jscomp/PeepholeFoldConstants.java
++++ b/src/com/google/javascript/jscomp/PeepholeFoldConstants.java
+@@ -692,10 +686,16 @@ public class PeepholeFoldConstants extends AbstractPeepholeOptimization {
+           result = lvalInt >> rvalInt;
+           break;
+         case Token.URSH:
+-          // JavaScript handles zero shifts on signed numbers differently than
+-          // Java as an Java int can not represent the unsigned 32-bit number
+-          // where JavaScript can so use a long here.
+-          result = lvalInt >>> rvalInt;
++          // If the shift amount is negative, just output 0.
++          // This is the same as Java and converts -1 >>> 1 to 0.
++          if (rvalInt < 0) {
++            result = 0;
++          } else {
++            // JavaScript handles zero shifts on signed numbers differently than
++            // Java as an Java int can not represent the unsigned 32-bit number
++            // where JavaScript can so use a long here.
++            result = lvalInt >>> rvalInt;
++          }
+           break;
+         default:
+           throw new AssertionError("Unknown shift operator: " +

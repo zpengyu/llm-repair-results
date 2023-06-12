@@ -1,0 +1,49 @@
+diff --git a/src/main/java/com/fasterxml/jackson/core/json/ReaderBasedJsonParser.java b/src/main/java/com/fasterxml/jackson/core/json/ReaderBasedJsonParser.java
+index 1cfcfa1b..b6d10907 100644
+--- a/src/main/java/com/fasterxml/jackson/core/json/ReaderBasedJsonParser.java
++++ b/src/main/java/com/fasterxml/jackson/core/json/ReaderBasedJsonParser.java
+@@ -1984,11 +1982,41 @@ public class ReaderBasedJsonParser // final in 2.3, earlier
+             char[] buf = tb.getTextBuffer();
+             int start = tb.getTextOffset();
+             int len = tb.size();
+-
+-            return _symbols.findSymbol(buf, start, len, hash);
++            return addSymbol(buf, start, len, hash, codes);
+         }
+     }
+-
++    private String addSymbol(char[] buffer, int start, int len, int hash, int[] codes) throws IOException
++    {
++        return _hashToSymbol[_findOffsetForAdd(computeHash(hash))].init(buffer, start, len, hash, codes);
++    }
++    // // // Internal methods
++    private int _findOffsetForAdd(int hash)
++    {
++        int ix = (hash & _hashMask);
++        Bucket bucket = _hashToSymbol[ix];
++        if (bucket != null) {
++            if (bucket.matchesHash(hash)) {
++                return ix;
++            }
++            return _findOffsetForAdd(hash, ix);
++        }
++        return ix;
++    }
++    private int _findOffsetForAdd(int hash, int ix)
++    {
++        // Need to probe
++        final int probeOffset = (hash >> 8) + hash;
++        final int bucketCount = _hashToSymbol.length;
++        int probeIx = (ix + probeOffset) & (_hashToSymbol.length-1);
++        Bucket bucket = _hashToSymbol[probeIx];
++        if (bucket != null) {
++            if (bucket.matchesHash(hash)) {
++                return probeIx;
++            }
++            return _findOffsetForAdd(hash, probeIx);
++        }
++        return probeIx;
++    }
+     @Override
+     protected final void _finishString() throws IOException
+     {

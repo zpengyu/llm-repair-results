@@ -1,0 +1,37 @@
+diff --git a/src/main/java/org/joda/time/chrono/GJChronology.java b/src/main/java/org/joda/time/chrono/GJChronology.java
+index 70884ba5..fbe779a8 100644
+--- a/src/main/java/org/joda/time/chrono/GJChronology.java
++++ b/src/main/java/org/joda/time/chrono/GJChronology.java
+@@ -358,12 +358,31 @@ public final class GJChronology extends AssembledChronology {
+                 (year, monthOfYear, dayOfMonth,
+                  hourOfDay, minuteOfHour, secondOfMinute, millisOfSecond);
+         }
+-
+         // Assume date is Gregorian.
+         long instant;
++        if (year >= iCutoverYear) {
+             instant = iGregorianChronology.getDateTimeMillis
+                 (year, monthOfYear, dayOfMonth,
+                  hourOfDay, minuteOfHour, secondOfMinute, millisOfSecond);
++        } else if (year == iCutoverYearJulian) {
++            // If in cutover year, only call gregorian if it's after
++            // the cutover.
++            if (monthOfYear > iCutoverMonthJulian ||
++                (monthOfYear == iCutoverMonthJulian &&
++                 dayOfMonth >= iCutoverDayJulian)) {
++                instant = iGregorianChronology.getDateTimeMillis
++                    (year, monthOfYear, dayOfMonth,
++                     hourOfDay, minuteOfHour, secondOfMinute, millisOfSecond);
++            } else {
++                instant = iJulianChronology.getDateTimeMillis
++                    (year, monthOfYear, dayOfMonth,
++                     hourOfDay, minuteOfHour, secondOfMinute, millisOfSecond);
++            }
++        } else {
++            instant = iJulianChronology.getDateTimeMillis
++                (year, monthOfYear, dayOfMonth,
++                 hourOfDay, minuteOfHour, secondOfMinute, millisOfSecond);
++        }
+         if (instant < iCutoverMillis) {
+             // Maybe it's Julian.
+             instant = iJulianChronology.getDateTimeMillis

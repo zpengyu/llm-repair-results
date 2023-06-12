@@ -1,0 +1,36 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/deser/std/JdkDeserializers.java b/src/main/java/com/fasterxml/jackson/databind/deser/std/JdkDeserializers.java
+index 2b7efe9c9..0d33a9740 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/deser/std/JdkDeserializers.java
++++ b/src/main/java/com/fasterxml/jackson/databind/deser/std/JdkDeserializers.java
+@@ -10,6 +10,14 @@ import com.fasterxml.jackson.databind.*;
+  * Container class that contains serializers for JDK types that
+  * require special handling for some reason.
+  */
++import java.nio.ByteBuffer;
++import java.util.HashSet;
++import java.util.UUID;
++import java.util.concurrent.atomic.AtomicBoolean;
++import com.fasterxml.jackson.databind.JsonDeserializer;
++import com.fasterxml.jackson.databind.deser.std.FromStringDeserializer;
++import com.fasterxml.jackson.databind.deser.std.UUIDDeserializer;
++import com.fasterxml.jackson.databind.util.ClassUtil;
+ public class JdkDeserializers
+ {
+     private final static HashSet<String> _classNames = new HashSet<String>();
+@@ -21,10 +29,13 @@ public class JdkDeserializers
+                 StackTraceElement.class,
+                 ByteBuffer.class
+         };
+-        for (Class<?> cls : types) { _classNames.add(cls.getName()); }
+-        for (Class<?> cls : FromStringDeserializer.types()) { _classNames.add(cls.getName()); }
++        for (Class<?> cls : types) {
++            _classNames.add(cls.getName());
++        }
++        for (Class<?> cls : FromStringDeserializer.types()) {
++            _classNames.add(cls.getName());
++        }
+     }
+-
+     public static JsonDeserializer<?> find(Class<?> rawType, String clsName)
+     {
+         if (_classNames.contains(clsName)) {

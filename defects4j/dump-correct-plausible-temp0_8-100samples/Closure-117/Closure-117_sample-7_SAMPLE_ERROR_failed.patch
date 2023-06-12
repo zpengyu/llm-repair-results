@@ -1,0 +1,35 @@
+diff --git a/src/com/google/javascript/jscomp/TypeValidator.java b/src/com/google/javascript/jscomp/TypeValidator.java
+index c6d25483..323f0a17 100644
+--- a/src/com/google/javascript/jscomp/TypeValidator.java
++++ b/src/com/google/javascript/jscomp/TypeValidator.java
+@@ -720,11 +720,28 @@ class TypeValidator {
+    * @param n The node.
+    * @param dereference If true, the type of the node will be dereferenced
+    *     to an Object type, if possible.
++   */
++    if (type.isFunctionPrototypeType() ||
++        (type.toObjectType() != null &&
++         type.toObjectType().getConstructor() != null)) {
++      return type.toString();
++    }
++    String qualifiedName = n.getQualifiedName();
++    if (qualifiedName != null) {
++      return qualifiedName;
++    } else if (type.isFunctionType()) {
++      // Don't show complex function names.
++      return "function";
++    } else {
++      return type.toString();
++    }
++  }
++  /**
++   * Returns a human-readable name for the node's type. If dereference == true
++   * then we dereference the node's type.
+    */
+   String getReadableJSTypeName(Node n, boolean dereference) {
+-
+     // The best type name is the actual type name.
+-
+     // If we're analyzing a GETPROP, the property may be inherited by the
+     // prototype chain. So climb the prototype chain and find out where
+     // the property was originally defined.

@@ -1,0 +1,26 @@
+diff --git a/src/main/java/org/apache/commons/math/analysis/solvers/BrentSolver.java b/src/main/java/org/apache/commons/math/analysis/solvers/BrentSolver.java
+index 07c667408..4b704596e 100644
+--- a/src/main/java/org/apache/commons/math/analysis/solvers/BrentSolver.java
++++ b/src/main/java/org/apache/commons/math/analysis/solvers/BrentSolver.java
+@@ -132,13 +126,17 @@ public class BrentSolver extends UnivariateRealSolverImpl {
+         if (yInitial * yMax < 0) {
+             return solve(f, initial, yInitial, max, yMax, initial, yInitial);
+         }
+-
+-
++        // select an endpoint as the initial guess
++        initial = yMin * yMax > 0 ? min + 0.5 * absoluteAccuracy : min;
++        yInitial = f.value(initial);
++        // check again the endpoint as the initial guess
++        if (Math.abs(yInitial) <= functionValueAccuracy) {
++            setResult(initial, 0);
++            return result;
++        }
+         // full Brent algorithm starting with provided initial guess
+         return solve(f, min, yMin, max, yMax, initial, yInitial);
+-
+     }
+-
+     /**
+      * Find a zero in the given interval.
+      * <p>

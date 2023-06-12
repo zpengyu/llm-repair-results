@@ -1,0 +1,29 @@
+diff --git a/src/main/java/org/apache/commons/compress/archivers/tar/TarUtils.java b/src/main/java/org/apache/commons/compress/archivers/tar/TarUtils.java
+index 34ecc5ac..0b704279 100644
+--- a/src/main/java/org/apache/commons/compress/archivers/tar/TarUtils.java
++++ b/src/main/java/org/apache/commons/compress/archivers/tar/TarUtils.java
+@@ -146,10 +141,22 @@ public class TarUtils {
+             result = (result << 3) + (currentByte - '0'); // convert from ASCII
+             // CheckStyle:MagicNumber ON
+         }
+-
+         return result;
+     }
+-
++    private static String exceptionMessage(final byte[] buffer, final int offset, final int length, final int badByteOffset, final byte badByte) {
++        final int printableLength = 20; // Enough to give some context.
++        final String badByteMessage;
++        switch (badByte) {
++        case 0: badByteMessage = "NUL"; break;
++        case ' ': badByteMessage = "SPACE"; break;
++        default:
++            badByteMessage = String.format("0x%02x", badByte);
++        }
++        final String context = new String(buffer, offset, Math.min(length, printableLength), StandardCharsets.UTF_8);
++        return String.format(
++                "Invalid byte 0x%02x at offset %d in '%s' len=%d",
++                badByte, badByteOffset, context, length);
++    }
+     /** 
+      * Compute the value contained in a byte buffer.  If the most
+      * significant bit of the first byte in the buffer is set, this

@@ -1,0 +1,21 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/deser/std/CollectionDeserializer.java b/src/main/java/com/fasterxml/jackson/databind/deser/std/CollectionDeserializer.java
+index af4270610..0a528beb3 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/deser/std/CollectionDeserializer.java
++++ b/src/main/java/com/fasterxml/jackson/databind/deser/std/CollectionDeserializer.java
+@@ -186,14 +186,13 @@ public class CollectionDeserializer
+         // [databind#1043]: allow per-property allow-wrapping of single overrides:
+         // 11-Dec-2015, tatu: Should we pass basic `Collection.class`, or more refined? Mostly
+         //   comes down to "List vs Collection" I suppose... for now, pass Collection
+-        Boolean unwrapSingle = findFormatFeature(ctxt, property, Collection.class,
++        Boolean unwrapSingle = findFormatFeature(ctxt, property, _collectionType.getRawClass(),
+                 JsonFormat.Feature.ACCEPT_SINGLE_VALUE_AS_ARRAY);
+         // also, often value deserializer is resolved here:
+         JsonDeserializer<?> valueDeser = _valueDeserializer;
+-        
+         // May have a content converter
+         valueDeser = findConvertingContentDeserializer(ctxt, property, valueDeser);
+-        final JavaType vt = _collectionType.getContentType();
++        JavaType vt = _collectionType.getContentType();
+         if (valueDeser == null) {
+             valueDeser = ctxt.findContextualValueDeserializer(vt, property);
+         } else { // if directly assigned, probably not yet contextual, so:

@@ -1,0 +1,35 @@
+  private void visitParameterList(NodeTraversal t, Node call,
+      FunctionType functionType) {
+    Iterator<Node> arguments = call.children().iterator();
+    arguments.next(); // skip the function name
+    Iterator<Node> parameters = functionType.getParameters().iterator();
+    int ordinal = 0;
+    Node parameter = null;
+    Node argument = null;
+    while (arguments.hasNext() && parameters.hasNext()) {
+      // If there are no parameters left in the list, then the while loop
+      // above implies that this must be a var_args function.
+      parameter = parameters.next();
+      argument = arguments.next();
+      ordinal++;
+      validator.expectArgumentMatchesParameter(t, argument,
+          getJSType(argument), getJSType(parameter), call, ordinal);
+    }
+    if (parameters.hasNext()) {
+      // If there are still parameters left in the list, then it means
+      // the function requires more arguments than the given call
+      // provides.
+      parameter = parameters.next();
+      report(t, call, WRONG_ARGUMENT_COUNT,
+             validator.getReadableJSTypeName(call.getFirstChild(), false),
+             String.valueOf(ordinal), String.valueOf(ordinal + 1), "");
+    }
+    int numArgs = call.getChildCount() - 1;
+    int maxArgs = functionType.getMaxArguments();
+    if (maxArgs < numArgs) {
+      report(t, call, WRONG_ARGUMENT_COUNT,
+             validator.getReadableJSTypeName(call.getFirstChild(), false),
+             String.valueOf(numArgs), String.valueOf(ordinal),
+             " and no more than " + maxArgs + " argument(s)");
+    }
+  }

@@ -1,0 +1,18 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/deser/std/StdKeyDeserializer.java b/src/main/java/com/fasterxml/jackson/databind/deser/std/StdKeyDeserializer.java
+index d4417f6ad..72a6f44da 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/deser/std/StdKeyDeserializer.java
++++ b/src/main/java/com/fasterxml/jackson/databind/deser/std/StdKeyDeserializer.java
+@@ -311,8 +311,12 @@ public class StdKeyDeserializer extends KeyDeserializer
+             if (key == null) { // is this even legal call?
+                 return null;
+             }
++            // Ugh... should not have to give parser which may or may not be correct one...
++            if (_valueInstantiator != null && _valueInstantiator.canCreateFromString()) {
++                // [databind#1090]: can call factory method directly
++                return _valueInstantiator.createFromString(ctxt, key);
++            }
+             try {
+-                // Ugh... should not have to give parser which may or may not be correct one...
+                 Object result = _delegate.deserialize(ctxt.getParser(), ctxt);
+                 if (result != null) {
+                     return result;

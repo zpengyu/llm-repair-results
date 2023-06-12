@@ -1,0 +1,35 @@
+diff --git a/src/main/java/org/apache/commons/math3/analysis/differentiation/DSCompiler.java b/src/main/java/org/apache/commons/math3/analysis/differentiation/DSCompiler.java
+index fc9944c36..13d572f60 100644
+--- a/src/main/java/org/apache/commons/math3/analysis/differentiation/DSCompiler.java
++++ b/src/main/java/org/apache/commons/math3/analysis/differentiation/DSCompiler.java
+@@ -1412,13 +1407,26 @@ public class DSCompiler {
+             for (int i = 1; i < tmp2.length; ++i) {
+                 result[resultOffset + i] = -2 * tmp2[i]; // +/-pi - 2 * atan(y / (r - x))
+             }
+-
+         }
+-
+         // fix value to take special cases (+0/+0, +0/-0, -0/+0, -0/-0, +/-infinity) correctly
+-
++        for (int i = 0; i < result.length; ++i) {
++            if (Double.isNaN(result[i])) {
++                if (x[i + xOffset] == 0) {
++                    if (y[i + yOffset] == 0) {
++                        result[i + resultOffset] = ((x[i + xOffset] >= 0) ?
++                                FastMath.copySign(FastMath.PI / 2.0, y[i + yOffset]) :
++                                FastMath.copySign(3 * FastMath.PI / 4.0, y[i + yOffset]));
++                    } else {
++                        result[i + resultOffset] = FastMath.copySign(FastMath.PI, y[i + yOffset]);
++                    }
++                } else if (y[i + yOffset] == 0) {
++                    if (x[i + xOffset] < 0) {
++                        result[i + resultOffset] = FastMath.copySign(FastMath.PI, y[i + yOffset]);
++                    }
++                }
++            }
++        }
+     }
+-
+     /** Compute hyperbolic cosine of a derivative structure.
+      * @param operand array holding the operand
+      * @param operandOffset offset of the operand in its array

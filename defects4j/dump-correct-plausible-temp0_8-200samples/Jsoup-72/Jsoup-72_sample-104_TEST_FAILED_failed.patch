@@ -1,0 +1,22 @@
+diff --git a/src/main/java/org/jsoup/parser/CharacterReader.java b/src/main/java/org/jsoup/parser/CharacterReader.java
+index c5d91e0..c5f08c5 100644
+--- a/src/main/java/org/jsoup/parser/CharacterReader.java
++++ b/src/main/java/org/jsoup/parser/CharacterReader.java
+@@ -430,12 +429,14 @@ public final class CharacterReader {
+         int offset = start;
+         for (int i = 0; i < count; i++) {
+             hash = 31 * hash + charBuf[offset++];
++            // check if hash is becoming negative, we use 31 so after multiplication it is still positive
++            if (hash < 0) {
++                hash = hash & Integer.MAX_VALUE;
++            }
+         }
+-
+         // get from cache
+-        final int index = hash & stringCache.length - 1;
++        final int index = hash & (stringCache.length - 1);
+         String cached = stringCache[index];
+-
+         if (cached == null) { // miss, add
+             cached = new String(charBuf, start, count);
+             stringCache[index] = cached;

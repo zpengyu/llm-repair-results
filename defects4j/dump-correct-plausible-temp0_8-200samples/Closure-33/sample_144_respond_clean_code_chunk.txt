@@ -1,0 +1,39 @@
+  public void matchConstraint(ObjectType constraintObj) {
+    // We only want to match contraints on anonymous types.
+    // Handle the case where the constraint object is a record type.
+    //
+    // param constraintObj {{prop: (number|undefined)}}
+    // function f(constraintObj) {}
+    // f({});
+    //
+    // We want to modify the object literal to match the constraint, by
+    // taking any each property on the record and trying to match
+    // properties on this object.
+    if (constraintObj.isRecordType()) {
+      for (String prop : constraintObj.getOwnPropertyNames()) {
+        JSType propType = constraintObj.getPropertyType(prop);
+        if (!isPropertyTypeDeclared(prop)) {
+          JSType typeToInfer = propType;
+          if (!hasProperty(prop)) {
+            typeToInfer = getNativeType(JSTypeNative.VOID_TYPE)
+                .getLeastSupertype(propType);
+          }
+          defineInferredProperty(prop, typeToInfer, null);
+        }
+      }
+    } else {
+      // The constraint object must be an object, so we can match
+      // the object's property types onto the constraint.
+      for (String prop : getOwnPropertyNames()) {
+        if (isPropertyTypeDeclared(prop)) {
+          continue;
+        }
+        JSType propType = getPropertyType(prop);
+        JSType constraintType = constraintObj.getPropertyType(prop);
+        if (constraintType != null) {
+          propType = propType.getLeastSupertype(constraintType);
+        }
+        defineInferredProperty(prop, propType, null);
+      }
+    }
+  }

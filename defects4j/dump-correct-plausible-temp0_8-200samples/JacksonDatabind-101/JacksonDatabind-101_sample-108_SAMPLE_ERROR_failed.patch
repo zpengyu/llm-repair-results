@@ -1,0 +1,27 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/deser/BeanDeserializer.java b/src/main/java/com/fasterxml/jackson/databind/deser/BeanDeserializer.java
+index 3c89dc109..094db6730 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/deser/BeanDeserializer.java
++++ b/src/main/java/com/fasterxml/jackson/databind/deser/BeanDeserializer.java
+@@ -810,20 +807,10 @@ public class BeanDeserializer
+                 tokens.writeFieldName(propName);
+                 tokens.copyCurrentStructure(p);
+             } else {
+-                // Need to copy to a separate buffer first
+-                TokenBuffer b2 = TokenBuffer.asCopyOfValue(p);
+-                tokens.writeFieldName(propName);
+-                tokens.append(b2);
+-                try {
+-                    buffer.bufferAnyProperty(_anySetter, propName,
+-                            _anySetter.deserialize(b2.asParserOnFirstToken(), ctxt));
+-                } catch (Exception e) {
+-                    wrapAndThrow(e, _beanType.getRawClass(), propName, ctxt);
+-                }
+-                continue;
++                buffer.bufferAnyProperty(_anySetter, propName,
++                        _deserializeWithErrorWrapping(p, ctxt, _anySetter));
+             }
+         }
+-
+         // We hit END_OBJECT, so:
+         Object bean;
+         try {

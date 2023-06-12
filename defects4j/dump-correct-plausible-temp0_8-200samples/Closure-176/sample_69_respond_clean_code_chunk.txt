@@ -1,0 +1,99 @@
+  private void updateScopeForTypeChange(
+      FlowScope scope, Node left, JSType leftType, JSType resultType) {
+    Preconditions.checkNotNull(resultType);
+    switch (left.getType()) {
+      case Token.NAME:
+        String varName = left.getString();
+        Var var = syntacticScope.getVar(varName);
+        boolean isVarDeclaration = left.hasChildren();
+        // When looking at VAR initializers for declared VARs, we tend
+        // to use the declared type over the type it's being
+        // initialized to in the global scope.
+        //
+        // For example,
+        // /** @param {number} */ var f = goog.abstractMethod;
+        // it's obvious that the programmer wants you to use
+        // the declared function signature, not the inferred signature.
+        //
+        // Or,
+        // /** @type {Object.<string>} */ var x = {};
+        // the one-time anonymous object on the right side
+        // is as narrow as it can possibly be, but we need to make
+        // sure we back-infer the <string> element constraint on
+        // the left hand side, so we use the left hand side.
+        boolean isVarTypeBetter = !isVarDeclaration || var == null || var.isTypeInferred();
+            // Makes it easier to check for NPEs.
+        // TODO(nicksantos): This might be a better check once we have
+        // back-inference of object/array constraints.  It will probably
+        // introduce more type warnings.  It uses the result type iff it's
+        // strictly narrower than the declared var type.
+        //
+        //boolean isVarTypeBetter = isVarDeclaration &&
+        //    (varType.restrictByNotNullOrUndefined().isSubtype(resultType)
+        //     || !resultType.isSubtype(varType));
+        if (isVarTypeBetter) {
+          redeclareSimpleVar(scope, left, resultType);
+        }
+        left.setJSType(isVarDeclaration || leftType == null ?
+            resultType : null);
+        if (var != null && var.isTypeInferred()) {
+          JSType oldType = var.getType();
+          var.setType(oldType == null ?
+              resultType : oldType.getLeastSupertype(resultType));
+        }
+        break;
+      case Token.GETPROP:
+        String qualifiedName = left.getQualifiedName();
+        if (qualifiedName != null) {
+          scope.inferQualifiedSlot(left, qualifiedName,
+              leftType == null ? unknownType : leftType,
+              resultType);
+        }
+        left.setJSType(resultType);
+        ensurePropertyDefined(left, resultType);
+        break;
+    }
+  }
+  private void ensurePropertyDefined(Node left, JSType type) {
+    Preconditions.checkState(left.isGetProp());
+    Node leftChild = left.getFirstChild();
+    Node rightChild = leftChild.getNext();
+    JSType leftChildType = leftChild.getJSType();
+    JSType rightChildType = rightChild.getJSType();
+    if (leftChildType == null || rightChildType == null) {
+      return;
+    }
+    if (leftChildType.isUnknownType()) {
+      return;
+    }
+    // TODO(user): Remove this check when the type system can properly
+    // handle unknown properties on templatized types.
+    if (leftChildType.isTemplatizedType()) {
+      return;
+    }
+    // Does the property already exist on the type?
+    //
+    // This can happen in 3 ways:
+    // 1) The type is the instance type of a ctor, and the prop is defined
+    //    on the ctor's prototype.
+    // 2) The type is a loose object, and the prop is defined on the
+    //    bottom object.
+    // 3) The type is loose but not the bottom object, but the prop is
+    //    defined on some other object that is a subtype of this type.
+    JSType ctorType = leftChildType.restrictByNotNullOrUndefined();
+    String propName = rightChild.getString();
+    if (ctorType.getConstructor().hasProperty(propName) ||
+        ctorType.isLoose() &&
+        registry.getNativeObjectType(JSTypeNative.OBJECT_TYPE).getImplicitPrototype().
+        hasProperty(propName)) {
+      return;
+    }
+    // It doesn't exist, so add it.
+    FunctionType getterType = registry.createFunctionType(type);
+    getterType.setKind(Type.Kind.GETTER_DEF);
+    FunctionType setterType = registry.createFunctionType(
+        registry.getNativeType(JSTypeNative.VOID_TYPE), type);
+    setterType.setKind(Type.Kind.SETTER_DEF);
+    leftChildType.defineDeclaredProperty(propName,
+        type, getterType, setterType);
+  }

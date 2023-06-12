@@ -1,0 +1,39 @@
+diff --git a/src/java/org/apache/commons/jxpath/ri/compiler/CoreOperationCompare.java b/src/java/org/apache/commons/jxpath/ri/compiler/CoreOperationCompare.java
+index cc45a8f..06f3ad3 100644
+--- a/src/java/org/apache/commons/jxpath/ri/compiler/CoreOperationCompare.java
++++ b/src/java/org/apache/commons/jxpath/ri/compiler/CoreOperationCompare.java
+@@ -81,7 +75,33 @@ public abstract class CoreOperationCompare extends CoreOperation {
+         }
+         return equal(l, r);
+     }
+-
++    protected boolean equal(Object l, Object r) {
++        if ((l == null && r != null) || (l != null && r == null)) {
++            return false;
++        }
++        return l.equals(r);
++    }
++    protected boolean findMatch(Iterator l, Iterator r) {
++        while (l.hasNext()) {
++            if (!r.hasNext()) {
++                return false;
++            }
++            Object o1 = l.next();
++            Object o2 = r.next();
++            if (!equal(o1, o2)) {
++                return false;
++            }
++        }
++        return !r.hasNext();
++    }
++    protected boolean contains(Iterator iterator, Object value) {
++        while (iterator.hasNext()) {
++            if (equal(iterator.next(), value)) {
++                return true;
++            }
++        }
++        return false;
++    }
+     protected boolean contains(Iterator it, Object value) {
+         while (it.hasNext()) {
+             Object element = it.next();

@@ -1,0 +1,30 @@
+diff --git a/src/main/java/org/apache/commons/compress/archivers/ArchiveStreamFactory.java b/src/main/java/org/apache/commons/compress/archivers/ArchiveStreamFactory.java
+index 57b411d0..64a5d781 100644
+--- a/src/main/java/org/apache/commons/compress/archivers/ArchiveStreamFactory.java
++++ b/src/main/java/org/apache/commons/compress/archivers/ArchiveStreamFactory.java
+@@ -199,11 +199,13 @@ public class ArchiveStreamFactory {
+         if (in == null) {
+             throw new IllegalArgumentException("Stream must not be null.");
+         }
+-
+-        if (!in.markSupported()) {
++        try {
++            if (!in.markSupported()) {
++                in = new BufferedInputStream(in);
++            }
++        } catch (Exception e) {
+             throw new IllegalArgumentException("Mark is not supported.");
+         }
+-
+         final byte[] signature = new byte[12];
+         in.mark(signature.length);
+         try {
+@@ -253,7 +253,5 @@ public class ArchiveStreamFactory {
+         } catch (IOException e) {
+             throw new ArchiveException("Could not use reset and mark operations.", e);
+         }
+-
+         throw new ArchiveException("No Archiver found for the stream signature");
+-    }
+-}
++    }}

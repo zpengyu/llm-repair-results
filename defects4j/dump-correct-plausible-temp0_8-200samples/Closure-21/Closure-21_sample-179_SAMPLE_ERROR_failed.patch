@@ -1,0 +1,24 @@
+diff --git a/src/com/google/javascript/jscomp/CheckSideEffects.java b/src/com/google/javascript/jscomp/CheckSideEffects.java
+index d4bd9842..2df41e80 100644
+--- a/src/com/google/javascript/jscomp/CheckSideEffects.java
++++ b/src/com/google/javascript/jscomp/CheckSideEffects.java
+@@ -200,14 +200,14 @@ final class CheckSideEffects extends AbstractPostOrderCallback
+     public void visit(NodeTraversal t, Node n, Node parent) {
+       if (n.isCall()) {
+         Node target = n.getFirstChild();
+-        // TODO(johnlenz): add this to the coding convention
+-        // so we can remove goog.reflect.sinkValue as well.
+         if (target.isName() && target.getString().equals(PROTECTOR_FN)) {
+           Node expr = n.getLastChild();
+-          n.detachChildren();
+-          parent.replaceChild(n, expr);
++          if (expr.getType() != Token.COMMA) {
++            n.detachChildren();
++            parent.replaceChild(n, expr);
++          }
+         }
+       }
+     }
+-  }
++  }  }
+ }

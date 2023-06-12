@@ -1,0 +1,53 @@
+diff --git a/src/java/org/apache/commons/lang/enums/ValuedEnum.java b/src/java/org/apache/commons/lang/enums/ValuedEnum.java
+index 0823e77d..d056637f 100644
+--- a/src/java/org/apache/commons/lang/enums/ValuedEnum.java
++++ b/src/java/org/apache/commons/lang/enums/ValuedEnum.java
+@@ -180,19 +174,45 @@ public abstract class ValuedEnum extends Enum {
+      * @throws NullPointerException if other is <code>null</code>
+      */
+     public int compareTo(Object other) {
+-        return iValue - ((ValuedEnum) other).iValue;
++        if (other == null) {
++            return 1;
++        }
++        if (other.getClass() == this.getClass()) {
++            // same class, so compare values
++            return iValue - ((ValuedEnum) other).iValue;
++        } else if (other.getClass().getName().equals(this.getClass().getName())) {
++            // same class name, but different class loader (i.e. from a different jar)
++            // so use reflection to compare the values
++            return getValueForOther(other);
++        } else {
++            // not the same class
++            throw new ClassCastException(
++                "Different enum class '" + ClassUtils.getShortClassName(other.getClass())
++                + "'");
++        }
+     }
+-
+     /**
+      * <p>Use reflection to return an objects value.</p>
+      *
+      * @param other  the object to determine the value for
+      * @return the value
+      */
++    private int getValueForOther(Object other) {
++        try {
++            Method mth = other.getClass().getMethod(
++                "getValue", ArrayUtils.EMPTY_CLASS_ARRAY);
++            Integer value = (Integer) mth.invoke(other, ArrayUtils.EMPTY_OBJECT_ARRAY);
++            return value.intValue() - this.iValue;
++        } catch (NoSuchMethodException e) {
+             // ignore - should never happen
++        } catch (IllegalAccessException e) {
+             // ignore - should never happen
++        } catch (InvocationTargetException e) {
+             // ignore - should never happen
+-
++        }
++        throw new UnsupportedOperationException(
++            "ValuedEnum: unable to compare object of type " + other.getClass().getName());
++    }
+     /**
+      * <p>Human readable description of this <code>Enum</code> item.</p>
+      *

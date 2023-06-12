@@ -1,0 +1,28 @@
+diff --git a/src/com/google/javascript/jscomp/CodeConsumer.java b/src/com/google/javascript/jscomp/CodeConsumer.java
+index dbdb0a9b..d7cdc025 100644
+--- a/src/com/google/javascript/jscomp/CodeConsumer.java
++++ b/src/com/google/javascript/jscomp/CodeConsumer.java
+@@ -281,9 +240,20 @@ abstract class CodeConsumer {
+    * @return Whether the a line break can be added after the specified BLOCK.
+    */
+   boolean breakAfterBlockFor(Node n, boolean statementContext) {
+-    return statementContext;
++    // Don't allow a line break after a block if
++    // the block is the last thing in a FOR loop.
++    // e.g.
++    // for (; x < 0; x++) {
++    //   y++;
++    // }
++    // vs
++    // do {
++    //   x--;
++    // } while (x > 0);
++    return n.getParent().isFor() &&
++        n.getParent().getChildAtIndex(2) != n
++        ? false : statementContext;
+   }
+-
+   /** Called when we're at the end of a file. */
+   void endFile() {}
+ }
+\ No newline at end of file

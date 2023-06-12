@@ -1,0 +1,33 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/type/TypeFactory.java b/src/main/java/com/fasterxml/jackson/databind/type/TypeFactory.java
+index 87b165830..e8f00406e 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/type/TypeFactory.java
++++ b/src/main/java/com/fasterxml/jackson/databind/type/TypeFactory.java
+@@ -926,9 +923,26 @@ public final class TypeFactory
+          *   for resolution to catch those.
+          */
+         context._addPlaceholder(name);
+-        return _constructType(bounds[0], context);
++        // First: bound may be an array itself, as per [databind#209]
++        JavaType bound = _constructType(bounds[0], context);
++        // 27-May-2016, tatu: As per [databind#1316] need to handle case where
++        //    bound type is still a variable.
++        while (bound.isTypeVariable()) {
++            bound = _fromVariable((TypeVariable<?>) bound.getRawClass(), context);
++        }
++        // [databind#477]: if bound is itself a parameterized type, need to ensure
++        // that we only consider formal type parameters, not ones passed in.
++        while (bound.isGeneric()) {
++            if (bound.getRawClass() == Class.class) {
++                if (bound.getActualTypeArguments().length == 1) {
++                    return _fromClass(null, (Class<?>) bound.getActualTypeArguments()[0], TypeBindings.emptyBindings());
++                }
++                break;
++            }
++            bound = _fromParameterizedClass(null, bound.getRawClass(), bound.getActualTypeArguments());
++        }
++        return bound;
+     }
+-
+     protected JavaType _fromWildcard(WildcardType type, TypeBindings context)
+     {
+         /* Similar to challenges with TypeVariable, we may have

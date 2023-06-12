@@ -1,0 +1,31 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/type/SimpleType.java b/src/main/java/com/fasterxml/jackson/databind/type/SimpleType.java
+index 0fda4d76f..b505a00c9 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/type/SimpleType.java
++++ b/src/main/java/com/fasterxml/jackson/databind/type/SimpleType.java
+@@ -117,7 +117,7 @@ public class SimpleType // note: until 2.6 was final
+     }
+ 
+     @Override
+-    protected JavaType _narrow(Class<?> subclass)
++   protected JavaType _narrow(Class<?> subclass)
+     {
+         if (_class == subclass) {
+             return this;
+@@ -132,10 +132,14 @@ public class SimpleType // note: until 2.6 was final
+         }
+         */
+         // 15-Jan-2015, tatu: Not correct; should really re-resolve...
+-        return new SimpleType(subclass, _bindings, _superClass, _superInterfaces,
+-                _valueHandler, _typeHandler, _asStatic);
++        // 30-May-2017, tatu: I think this should actually work, but for
++        //   some reason, it does not. So for now, use a sub-type that
++        //   does the re-resolution. Note that if/when we change to not
++        //   re-resolve, bit above should be enabled.
++        //return new SimpleType(subclass, _bindings, _superClass, _superInterfaces,
++        //        _valueHandler, _typeHandler, _asStatic);
++        return ((SimpleType) forcedNarrowBy(_class, subclass)).withHandlersFrom(this);
+     }
+-
+     @Override
+     public JavaType withContentType(JavaType contentType) {
+         throw new IllegalArgumentException("Simple types have no content types; can not call withContentType()");

@@ -1,0 +1,33 @@
+diff --git a/src/com/google/javascript/jscomp/PeepholeFoldConstants.java b/src/com/google/javascript/jscomp/PeepholeFoldConstants.java
+index 805db9af..a215b464 100644
+--- a/src/com/google/javascript/jscomp/PeepholeFoldConstants.java
++++ b/src/com/google/javascript/jscomp/PeepholeFoldConstants.java
+@@ -1445,15 +1442,24 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
+       error(INDEX_OUT_OF_BOUNDS_ERROR, right);
+       return n;
+     }
+-
++    if (intIndex == 0 && left.hasOneChild()) {
++      // Replace the entire GETELEM with the value
++      Node elem = left.getFirstChild();
++      if (elem.isEmpty()) {
++        elem = NodeUtil.newUndefinedNode(elem);
++      } else {
++        left.removeChild(elem);
++      }
++      n.getParent().replaceChild(n, elem);
++      reportCodeChange();
++      return elem;
++    }
+     Node current = left.getFirstChild();
+     Node elem = null;
+     for (int i = 0; current != null && i < intIndex; i++) {
+-        elem = current;
+-
++      elem = current;
+       current = current.getNext();
+     }
+-
+     if (elem == null) {
+       error(INDEX_OUT_OF_BOUNDS_ERROR, right);
+       return n;

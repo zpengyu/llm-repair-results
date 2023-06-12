@@ -1,0 +1,35 @@
+    protected JavaType _narrow(Class<?> subclass)
+    {
+        if (_class == subclass) {
+            return this;
+        }
+        // 15-Jan-2015, tatu: Not correct; should really re-resolve...
+        return _narrow(subclass, _bindings);
+    }
+    
+    protected JavaType _narrow(Class<?> subclass, TypeBindings bindings)
+    {
+        // Should we check that there is a sub-class relationship?
+        // 15-Jan-2016, tatu: Almost yes, but there are some complications with
+        //    placeholder values, so no.
+        /*
+        if (!_class.isAssignableFrom(subclass)) {
+            throw new IllegalArgumentException("Class "+subclass.getName()+" not sub-type of "
+                    +_class.getName());
+        }
+        */
+        JavaType newType = new SimpleType(subclass, bindings, _superClass, _superInterfaces,
+                _valueHandler, _typeHandler, _asStatic);
+        // 15-Oct-2017, tatu: See [databind#1951], might need to resolve generic parameters
+        //   which would have been lost when widening
+        if (_superClass != null) {
+            newType = newType.withSuperType(_superClass);
+        }
+        if (_superInterfaces != null) {
+            for (JavaType superInterface : _superInterfaces) {
+                newType = newType.withSuperType(superInterface);
+            }
+        }
+        return newType;
+    }
+

@@ -1,0 +1,57 @@
+diff --git a/src/com/google/javascript/jscomp/NodeUtil.java b/src/com/google/javascript/jscomp/NodeUtil.java
+index 53389622..252dd78d 100644
+--- a/src/com/google/javascript/jscomp/NodeUtil.java
++++ b/src/com/google/javascript/jscomp/NodeUtil.java
+@@ -953,28 +949,36 @@ public final class NodeUtil {
+           && evaluatesToLocalValue(nameNode.getFirstChild())) {
+         return false;
+       }
+-
+       // Functions in the "Math" namespace have no side effects.
+-
+-      if (compiler != null && !compiler.hasRegExpGlobalReferences()) {
+-        if (nameNode.getFirstChild().getType() == Token.REGEXP
+-            && REGEXP_METHODS.contains(nameNode.getLastChild().getString())) {
+-          return false;
+-        } else if (nameNode.getFirstChild().getType() == Token.STRING
+-            && STRING_REGEXP_METHODS.contains(
++      if (nameNode.getFirstChild().getType() == Token.GETPROP
++          && nameNode.getFirstChild().getFirstChild().isName()
++          && nameNode.getFirstChild().getFirstChild().getString().equals("Math")
++          && Math_METHODS_WITHOUT_SIDEEFFECTS.contains(
+                 nameNode.getLastChild().getString())) {
+-          Node param = nameNode.getNext();
+-          if (param != null &&
+-              (param.getType() == Token.STRING
+-                  || param.getType() == Token.REGEXP))
+-          return false;
+-        }
++        return false;
++      }
++      if (nameNode.getFirstChild().getType() == Token.REGEXP
++          && REGEXP_METHODS.contains(nameNode.getLastChild().getString())) {
++        return false;
++      } else if (nameNode.getFirstChild().getType() == Token.STRING
++          && STRING_REGEXP_METHODS.contains(
++              nameNode.getLastChild().getString())) {
++        Node param = nameNode.getNext();
++        if (param != null &&
++            (param.getType() == Token.STRING
++                || param.getType() == Token.REGEXP))
++        return false;
+       }
+     }
+-
+     return true;
+   }
+-
++  private static final ImmutableSet<String> Math_METHODS_WITHOUT_SIDEEFFECTS =
++      ImmutableSet.of(
++          "abs", "acos", "acosh", "asin", "asinh", "atan", "atanh",
++          "cbrt", "ceil", "cos", "cosh", "exp", "expm1", "floor",
++          "hypot", "log", "log10", "log1p", "log2", "sign", "sin", "sinh", "sqrt", "tan", "tanh",
++          "trunc"
++      );
+   /**
+    * @return Whether the call has a local result.
+    */

@@ -1,0 +1,70 @@
+diff --git a/src/java/org/apache/commons/cli/CommandLine.java b/src/java/org/apache/commons/cli/CommandLine.java
+index de23601..cb0ee9a 100644
+--- a/src/java/org/apache/commons/cli/CommandLine.java
++++ b/src/java/org/apache/commons/cli/CommandLine.java
+@@ -160,15 +142,28 @@ public class CommandLine {
+             return ((Option) options.get(key)).getValues();
+         }
+         return null;
+-        }
+-
++    }
+     /**
+      * <p>Retrieves the option object given the long or short option as a String</p>
+      * @param opt short or long name of the option
+      * @return Canonicalized option
+      */
+-
+-
++    public Option getOption(String opt)
++    {
++        opt = Util.stripLeadingHyphens(opt);
++        if (!options.containsKey(opt))
++        {
++            if (names.containsKey(opt))
++            {
++                return (Option) options.get(names.get(opt));
++            }
++            else
++            {
++                return null;
++            }
++        }
++        return (Option) options.get(opt);
++    }
+     /** 
+      * Retrieves the array of values, if any, of an option.
+      *
+@@ -234,29 +222,21 @@ public class CommandLine {
+     {
+         return args;
+     }
+-
+     /** 
+-     * jkeyes
+-     * - commented out until it is implemented properly
+-     * <p>Dump state, suitable for debugging.</p>
++     * Dump state, suitable for debugging.
+      *
+      * @return Stringified form of this object
+      */
+-
+-    /*
+-    public String toString() {
++    public String toString()
++    {
+         StringBuffer buf = new StringBuffer();
+-            
+         buf.append("[ CommandLine: [ options: ");
+         buf.append(options.toString());
+         buf.append(" ] [ args: ");
+         buf.append(args.toString());
+         buf.append(" ] ]");
+-            
+         return buf.toString();
+     }
+-    */
+-
+     /**
+      * Add left-over unrecognized option/argument.
+      *

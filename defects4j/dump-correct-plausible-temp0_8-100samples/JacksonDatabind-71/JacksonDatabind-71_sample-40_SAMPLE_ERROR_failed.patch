@@ -1,0 +1,44 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/deser/std/StdKeyDeserializer.java b/src/main/java/com/fasterxml/jackson/databind/deser/std/StdKeyDeserializer.java
+index 88312dac2..88e192880 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/deser/std/StdKeyDeserializer.java
++++ b/src/main/java/com/fasterxml/jackson/databind/deser/std/StdKeyDeserializer.java
+@@ -113,8 +112,38 @@ public class StdKeyDeserializer extends KeyDeserializer
+             return null;
+         }
+         return new StdKeyDeserializer(kind, raw);
++    } else if (raw == Calendar.class) {
++            kind = TYPE_CALENDAR;
++        // then less common ones...
++        } else if (raw == Boolean.class) {
++            kind = TYPE_BOOLEAN;
++        } else if (raw == Byte.class) {
++            kind = TYPE_BYTE;
++        } else if (raw == Character.class) {
++            kind = TYPE_CHAR;
++        } else if (raw == Short.class) {
++            kind = TYPE_SHORT;
++        } else if (raw == Float.class) {
++            kind = TYPE_FLOAT;
++        } else if (raw == Double.class) {
++            kind = TYPE_DOUBLE;
++        } else if (raw == URI.class) {
++            kind = TYPE_URI;
++        } else if (raw == URL.class) {
++            kind = TYPE_URL;
++        } else if (raw == Class.class) {
++            kind = TYPE_CLASS;
++        } else if (raw == Locale.class) {
++            FromStringDeserializer<?> deser = FromStringDeserializer.findDeserializer(Locale.class);
++            return new StdKeyDeserializer(TYPE_LOCALE, raw, deser);
++        } else if (raw == Currency.class) {
++            FromStringDeserializer<?> deser = FromStringDeserializer.findDeserializer(Currency.class);
++            return new StdKeyDeserializer(TYPE_CURRENCY, raw, deser);
++        } else {
++            return null;
++        }
++        return new StdKeyDeserializer(kind, raw);
+     }    
+-    
+     @Override
+     public Object deserializeKey(String key, DeserializationContext ctxt)
+         throws IOException

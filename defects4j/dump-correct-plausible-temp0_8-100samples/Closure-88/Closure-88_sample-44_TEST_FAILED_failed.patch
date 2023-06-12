@@ -1,0 +1,25 @@
+diff --git a/src/com/google/javascript/jscomp/DeadAssignmentsElimination.java b/src/com/google/javascript/jscomp/DeadAssignmentsElimination.java
+index 19b8b6bd..1cad7d39 100644
+--- a/src/com/google/javascript/jscomp/DeadAssignmentsElimination.java
++++ b/src/com/google/javascript/jscomp/DeadAssignmentsElimination.java
+@@ -331,8 +331,12 @@ class DeadAssignmentsElimination extends AbstractPostOrderCallback implements
+       } else {
+         return VariableLiveness.READ;
+       }
++    } else if (NodeUtil.isForIn(n) && NodeUtil.isVar(n.getFirstChild())) {
++      // TODO(user): ForIn loop variables will always be live, so it's
++      // unnecessary to traverse inside. A more in depth analysis would
++      // consider the case where the loop variable is reassigned.
++      return VariableLiveness.MAYBE_LIVE;
+     }
+-
+     // Expressions are evaluated left-right, depth first.
+     for (Node child = n.getFirstChild();
+         child != null; child = child.getNext()) {
+@@ -344,5 +348,4 @@ class DeadAssignmentsElimination extends AbstractPostOrderCallback implements
+       }
+     }
+     return VariableLiveness.MAYBE_LIVE;
+-  }
+-}
++  }}

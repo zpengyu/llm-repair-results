@@ -1,0 +1,27 @@
+diff --git a/src/main/java/org/joda/time/format/PeriodFormatterBuilder.java b/src/main/java/org/joda/time/format/PeriodFormatterBuilder.java
+index a6bf55c7..3ca197d3 100644
+--- a/src/main/java/org/joda/time/format/PeriodFormatterBuilder.java
++++ b/src/main/java/org/joda/time/format/PeriodFormatterBuilder.java
+@@ -798,9 +798,22 @@ public class PeriodFormatterBuilder {
+         int size = elementPairs.size();
+         if (size >= 2 && elementPairs.get(0) instanceof Separator) {
+             Separator sep = (Separator) elementPairs.get(0);
++            if (sep.iAfterParser == null && sep.iAfterPrinter == null) {
+                 PeriodFormatter f = toFormatter(elementPairs.subList(2, size), notPrinter, notParser);
+                 sep = sep.finish(f.getPrinter(), f.getParser());
+                 return new PeriodFormatter(sep, sep);
++            }
++            if (sep.iAfterParser == null) {
++                sep = sep.finish(null, sep.iAfterPrinter);
++                PeriodFormatter f = toFormatter(elementPairs.subList(2, size), notPrinter, notParser);
++                return new PeriodFormatter(new Composite(sep, f.getPrinter()), f.getParser());
++            }
++            if (sep.iAfterPrinter == null) {
++                sep = sep.finish(sep.iAfterParser, null);
++                PeriodFormatter f = toFormatter(elementPairs.subList(2, size), notPrinter, notParser);
++                return new PeriodFormatter(f.getPrinter(), new Composite(sep, f.getParser()));
++            }
++            throw new IllegalStateException("Builder has created a malformed formatter");
+         }
+         Object[] comp = createComposite(elementPairs);
+         if (notPrinter) {

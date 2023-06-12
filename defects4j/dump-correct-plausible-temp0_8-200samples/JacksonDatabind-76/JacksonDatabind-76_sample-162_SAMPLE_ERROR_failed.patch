@@ -1,0 +1,72 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/deser/BuilderBasedDeserializer.java b/src/main/java/com/fasterxml/jackson/databind/deser/BuilderBasedDeserializer.java
+index 316efa3a9..53e01a69a 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/deser/BuilderBasedDeserializer.java
++++ b/src/main/java/com/fasterxml/jackson/databind/deser/BuilderBasedDeserializer.java
+@@ -580,28 +578,26 @@ public class BuilderBasedDeserializer
+             // creator property?
+             SettableBeanProperty creatorProp = creator.findCreatorProperty(propName);
+             if (creatorProp != null) {
+-                if (buffer.assignParameter(creatorProp, creatorProp.deserialize(p, ctxt))) {
+-                    t = p.nextToken();
+-                    Object bean;
+-                    try {
+-                        bean = creator.build(ctxt, buffer);
+-                    } catch (Exception e) {
+-                        wrapAndThrow(e, _beanType.getRawClass(), propName, ctxt);
+-                        continue;
+-                    }
+-                    while (t == JsonToken.FIELD_NAME) {
+-                        p.nextToken();
+-                        tokens.copyCurrentStructure(p);
+-                        t = p.nextToken();
+-                    }
+-                    tokens.writeEndObject();
+-                    if (bean.getClass() != _beanType.getRawClass()) {
+-                        ctxt.reportMappingException("Can not create polymorphic instances with unwrapped values");
+-                        return null;
+-                    }
+-                    return _unwrappedPropertyHandler.processUnwrapped(p, ctxt, bean, tokens);
++                if (!buffer.assignParameter(creatorProp, _deserializeWithErrorWrapping(p, ctxt, creatorProp))) {
++                    continue;
+                 }
+-                continue;
++                Object bean;
++                try {
++                    bean = creator.build(ctxt, buffer);
++                } catch (Exception e) {
++                    wrapAndThrow(e, _beanType.getRawClass(), propName, ctxt);
++                    continue;
++                }
++                // if so, need to copy all remaining tokens into buffer
++                while (p.nextToken() != JsonToken.END_OBJECT) {
++                    tokens.copyCurrentStructure(p);
++                }
++                tokens.writeEndObject();
++                if (bean.getClass() != _beanType.getRawClass()) {
++                    ctxt.reportMappingException("Can not create polymorphic instances with unwrapped values");
++                    return null;
++                }
++                return _unwrappedPropertyHandler.processUnwrapped(p, ctxt, bean, tokens);
+             }
+             // Object Id property?
+             if (buffer.readIdProperty(propName)) {
+@@ -610,7 +606,7 @@ public class BuilderBasedDeserializer
+             // regular property? needs buffering
+             SettableBeanProperty prop = _beanProperties.find(propName);
+             if (prop != null) {
+-                buffer.bufferProperty(prop, prop.deserialize(p, ctxt));
++                buffer.bufferProperty(prop, _deserializeWithErrorWrapping(p, ctxt, prop));
+                 continue;
+             }
+             if (_ignorableProps != null && _ignorableProps.contains(propName)) {
+@@ -624,10 +620,8 @@ public class BuilderBasedDeserializer
+                 buffer.bufferAnyProperty(_anySetter, propName, _anySetter.deserialize(p, ctxt));
+             }
+         }
+-
+         // We hit END_OBJECT, so:
+         Object bean;
+-        // !!! 15-Feb-2012, tatu: Need to modify creator to use Builder!
+         try {
+             bean = creator.build(ctxt, buffer);
+         } catch (Exception e) {

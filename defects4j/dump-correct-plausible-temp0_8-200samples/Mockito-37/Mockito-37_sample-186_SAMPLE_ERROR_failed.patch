@@ -1,0 +1,27 @@
+diff --git a/src/org/mockito/internal/stubbing/answers/AnswersValidator.java b/src/org/mockito/internal/stubbing/answers/AnswersValidator.java
+index 5d8057846..041ec4838 100644
+--- a/src/org/mockito/internal/stubbing/answers/AnswersValidator.java
++++ b/src/org/mockito/internal/stubbing/answers/AnswersValidator.java
+@@ -57,7 +45,21 @@ public class AnswersValidator {
+         if (throwable instanceof RuntimeException || throwable instanceof Error) {
+             return;
+         }
+-        
++        if (!invocation.isValidException(throwable)) {
++            reporter.checkedExceptionInvalid(throwable);
++        }
++        if(answer instanceof ThrowsExceptionWithCause) {
++        	validateCause((ThrowsExceptionWithCause) answer, invocation);
++        }
++    }
++    private void validateCause(ThrowsExceptionWithCause answer, Invocation invocation) {
++    	Throwable throwable = answer.getCause();
++        if (throwable == null) {
++            reporter.causeCannotBeNull();
++        }
++        if (throwable instanceof RuntimeException || throwable instanceof Error) {
++            return;
++        }
+         if (!invocation.isValidException(throwable)) {
+             reporter.checkedExceptionInvalid(throwable);
+         }

@@ -1,0 +1,27 @@
+diff --git a/src/com/google/javascript/jscomp/TypedScopeCreator.java b/src/com/google/javascript/jscomp/TypedScopeCreator.java
+index a5b356fb..99589c39 100644
+--- a/src/com/google/javascript/jscomp/TypedScopeCreator.java
++++ b/src/com/google/javascript/jscomp/TypedScopeCreator.java
+@@ -896,10 +894,20 @@ final class TypedScopeCreator implements ScopeCreator {
+       // scope where the root object appears. This helps out people
+       // who declare "global" names in an anonymous namespace.
+       Scope scopeToDeclareIn = scope;
+-
+         // don't try to declare in the global scope if there's
+         // already a symbol there with this name.
+-
++      if (scopeToDeclareIn.isGlobal()) {
++        Var oldVar = scopeToDeclareIn.getVar(variableName);
++        if (oldVar != null) {
++          if (oldVar.isExtern()) {
++            // Don't complain about redeclaring an extern variable.
++            return;
++          }
++          // It's a bug to overwrite a non-extern variable.
++          validator.expectUndeclaredVariable(
++              sourceName, n, parent, oldVar, variableName, type);
++        }
++      }
+       // declared in closest scope?
+       if (scopeToDeclareIn.isDeclared(variableName, false)) {
+         Var oldVar = scopeToDeclareIn.getVar(variableName);

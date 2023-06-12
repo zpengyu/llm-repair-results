@@ -1,0 +1,24 @@
+diff --git a/src/java/org/apache/commons/jxpath/ri/model/beans/NullPropertyPointer.java b/src/java/org/apache/commons/jxpath/ri/model/beans/NullPropertyPointer.java
+index 2d1a815..777261f 100644
+--- a/src/java/org/apache/commons/jxpath/ri/model/beans/NullPropertyPointer.java
++++ b/src/java/org/apache/commons/jxpath/ri/model/beans/NullPropertyPointer.java
+@@ -123,10 +109,17 @@ public class NullPropertyPointer extends PropertyPointer {
+                 PropertyOwnerPointer pop = (PropertyOwnerPointer) newParent;
+                 newParent = pop.getPropertyPointer();
+             }
+-            return newParent.createChild(context, getName(), getIndex());
++            if (newParent.isContainer()) {
++                return newParent.createChild(context, getName(), getIndex());
++            }
++            else {
++                throw new JXPathInvalidAccessException(
++                    "Cannot create collection: "
++                        + asPath()
++                        + ", path does not match a changeable location");
++            }
+         }
+     }
+-
+     public NodePointer createPath(JXPathContext context, Object value) {
+         NodePointer newParent = parent.createPath(context);
+         if (isAttribute()) {

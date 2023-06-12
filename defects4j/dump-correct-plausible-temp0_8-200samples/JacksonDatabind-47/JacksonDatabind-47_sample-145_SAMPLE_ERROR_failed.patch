@@ -1,0 +1,51 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/AnnotationIntrospector.java b/src/main/java/com/fasterxml/jackson/databind/AnnotationIntrospector.java
+index 624a1fd7e..a3567dda3 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/AnnotationIntrospector.java
++++ b/src/main/java/com/fasterxml/jackson/databind/AnnotationIntrospector.java
+@@ -803,10 +802,16 @@ public abstract class AnnotationIntrospector
+         //    direct sub-class not yet retrofitted may only override
+         //    those methods. With 2.8 or later we may consider removal
+         //    of these methods
+-
+-        
++        boolean useSecondary = (type.getClass() != com.fasterxml.jackson.databind.JavaType.class);
+         // Ok: start by refining the main type itself; common to all types
+         Class<?> serClass = findSerializationType(a);
++        if (useSecondary) {
++            if (serClass == null) {
++                serClass = _findSerializationType2(a);
++            } else {
++                _handleSingleArgumentException(a, serClass);
++            }
++        }
+         if (serClass != null) {
+             if (type.hasRawClass(serClass)) {
+                 // 30-Nov-2015, tatu: As per [databind#1023], need to allow forcing of
+@@ -831,6 +835,13 @@ public abstract class AnnotationIntrospector
+         if (type.isMapLikeType()) {
+             JavaType keyType = type.getKeyType();
+             Class<?> keyClass = findSerializationKeyType(a, keyType);
++            if (useSecondary) {
++                if (keyClass == null) {
++                    keyClass = _findSerializationKeyType2(a, keyType);
++                } else {
++                    _handleSingleArgumentException(a, keyClass);
++                }
++            }
+             if (keyClass != null) {
+                 if (keyType.hasRawClass(keyClass)) {
+                     keyType = keyType.withStaticTyping();
+@@ -864,6 +874,13 @@ public abstract class AnnotationIntrospector
+         if (contentType != null) { // collection[like], map[like], array, reference
+             // And then value types for all containers:
+            Class<?> contentClass = findSerializationContentType(a, contentType);
++           if (useSecondary) {
++               if (contentClass == null) {
++                   contentClass = _findSerializationContentType2(a, contentType);
++               } else {
++                   _handleSingleArgumentException(a, contentClass);
++               }
++           }
+            if (contentClass != null) {
+                if (contentType.hasRawClass(contentClass)) {
+                    contentType = contentType.withStaticTyping();

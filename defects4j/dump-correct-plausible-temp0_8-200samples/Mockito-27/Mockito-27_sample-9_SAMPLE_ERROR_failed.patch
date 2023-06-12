@@ -1,0 +1,16 @@
+diff --git a/src/org/mockito/internal/util/MockUtil.java b/src/org/mockito/internal/util/MockUtil.java
+index 3c20596b0..b95e71ea1 100644
+--- a/src/org/mockito/internal/util/MockUtil.java
++++ b/src/org/mockito/internal/util/MockUtil.java
+@@ -64,8 +64,10 @@ public class MockUtil {
+         MockHandler<T> newMockHandler = new MockHandler<T>(oldMockHandler);
+         MethodInterceptorFilter newFilter = new MethodInterceptorFilter(newMockHandler, (MockSettingsImpl) org.mockito.Mockito.withSettings().defaultAnswer(org.mockito.Mockito.RETURNS_DEFAULTS));
+         ((Factory) mock).setCallback(0, newFilter);
++        if (oldMockHandler.getMockSettings().isStubOnly()) {
++            newMockHandler.setAnswersForStubbing(oldMockHandler.pullAnswersForStubbing());
++        }
+     }
+-
+     private <T> MethodInterceptorFilter newMethodInterceptorFilter(MockSettingsImpl settings) {
+         MockHandler<T> mockHandler = new MockHandler<T>(settings);
+         InvocationNotifierHandler<T> invocationNotifierHandler = new InvocationNotifierHandler<T>(mockHandler, settings);

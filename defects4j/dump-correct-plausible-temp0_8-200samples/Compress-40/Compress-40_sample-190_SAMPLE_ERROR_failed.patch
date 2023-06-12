@@ -1,0 +1,42 @@
+diff --git a/src/main/java/org/apache/commons/compress/utils/BitInputStream.java b/src/main/java/org/apache/commons/compress/utils/BitInputStream.java
+index 4086c8b5..33bbe724 100644
+--- a/src/main/java/org/apache/commons/compress/utils/BitInputStream.java
++++ b/src/main/java/org/apache/commons/compress/utils/BitInputStream.java
+@@ -82,8 +82,11 @@ public class BitInputStream implements Closeable {
+         if (count < 0 || count > MAXIMUM_CACHE_SIZE) {
+             throw new IllegalArgumentException("count must not be negative or greater than " + MAXIMUM_CACHE_SIZE);
+         }
++        long bitsOut = 0;
++        long nextByte = 0;
++        long MASKS = 0;
+         while (bitsCachedSize < count) {
+-            final long nextByte = in.read();
++            nextByte = in.read();
+             if (nextByte < 0) {
+                 return nextByte;
+             }
+@@ -95,16 +98,12 @@ public class BitInputStream implements Closeable {
+             }
+             bitsCachedSize += 8;
+         }
+-            // bitsCachedSize >= 57 and left-shifting it 8 bits would cause an overflow
+-
+-        final long bitsOut;
+-            if (byteOrder == ByteOrder.LITTLE_ENDIAN) {
+-                bitsOut = (bitsCached & MASKS[count]);
+-                bitsCached >>>= count;
+-            } else {
+-                bitsOut = (bitsCached >> (bitsCachedSize - count)) & MASKS[count];
+-            }
+-            bitsCachedSize -= count;
++        if (byteOrder == ByteOrder.LITTLE_ENDIAN) {
++            bitsOut = (bitsCached & MASKS[count]);
++            bitsCached >>>= count;
++        } else {
++            bitsOut = (bitsCached >> (bitsCachedSize - count)) & MASKS[count];
++        }
++        bitsCachedSize -= count;
+         return bitsOut;
+-    }
+-}
++    }}

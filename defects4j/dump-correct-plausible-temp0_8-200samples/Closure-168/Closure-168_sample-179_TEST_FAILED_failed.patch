@@ -1,0 +1,36 @@
+diff --git a/src/com/google/javascript/jscomp/TypedScopeCreator.java b/src/com/google/javascript/jscomp/TypedScopeCreator.java
+index 5e7bfa3f..42ad4804 100644
+--- a/src/com/google/javascript/jscomp/TypedScopeCreator.java
++++ b/src/com/google/javascript/jscomp/TypedScopeCreator.java
+@@ -2024,19 +2020,21 @@ final class TypedScopeCreator implements ScopeCreator {
+         }
+       } else if (n.isGetProp() && n.isUnscopedQualifiedName() &&
+           NodeUtil.isLValue(n)) {
+-        String name = NodeUtil.getRootOfQualifiedName(n).getString();
+-        Scope scope = t.getScope();
+-        Var var = scope.getVar(name);
+-        if (var != null) {
+-          Scope ownerScope = var.getScope();
+-          if (scope != ownerScope && ownerScope.isLocal()) {
+-            data.get(ownerScope.getRootNode())
+-                .recordEscapedQualifiedName(n.getQualifiedName());
++        Node rootOfQname = NodeUtil.getRootOfQualifiedName(n);
++        if (rootOfQname.isName()) {
++          String name = rootOfQname.getString();
++          Scope scope = t.getScope();
++          Var var = scope.getVar(name);
++          if (var != null) {
++            Scope ownerScope = var.getScope();
++            if (scope != ownerScope && ownerScope.isLocal()) {
++              data.get(ownerScope.getRootNode())
++                  .recordEscapedQualifiedName(n.getQualifiedName());
++            }
+           }
+         }
+       }
+-    }
+-  }
++    }  }
+ 
+   private AstFunctionContents getFunctionAnalysisResults(@Nullable Node n) {
+     if (n == null) {

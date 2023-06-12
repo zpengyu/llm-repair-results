@@ -1,0 +1,155 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/ser/PropertyBuilder.java b/src/main/java/com/fasterxml/jackson/databind/ser/PropertyBuilder.java
+index 9a9d91ebf..0c74b7bd1 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/ser/PropertyBuilder.java
++++ b/src/main/java/com/fasterxml/jackson/databind/ser/PropertyBuilder.java
+@@ -169,7 +162,149 @@ public class PropertyBuilder
+         }
+         return bpw;
+     }
+-
++class ArrayStack {
++  private Object[] data;
++  private int size;
++  public ArrayStack() {
++    data = new Object[10];
++    size = 0;
++  }
++  private void ensureCapacity() {
++    if (data.length == size) {
++      Object[] newData = new Object[data.length * 2];
++      System.arraycopy(data, 0, newData, 0, size);
++      data = newData;
++    }
++  }
++  public void push(Object o) {
++    ensureCapacity();
++    data[size++] = o;
++  }
++  public Object pop() {
++    if (size == 0) {
++      throw new IllegalStateException("Stack is empty");
++    }
++    return data[--size];
++  }
++  public boolean isEmpty() {
++    return size == 0;
++  }
++}
++void insert(RecordNode rn) {
++        if (this.isEmpty()) {
++            listhead = rn;
++            rn.setNext(null);
++            count++;
++        } else {
++            RecordNode current = listhead;
++            RecordNode prev = null;
++            while (current != null) {
++                if (rn.getIid() < current.getIid()) {
++                    if (prev == null) {
++                        rn.setNext(listhead);
++                        listhead = rn;
++                    } else {
++                        rn.setNext(current);
++                        prev.setNext(rn);
++                    }
++                    count++;
++                    break;
++                } else if (current.getNext() != null) {
++                    prev = current;
++                    current = current.getNext();
++                } else {
++                    current.setNext(rn);
++                    count++;
++                    break;
++                }
++            }
++        }
++    }
++void insert(RecordNode rn) {
++        if (this.isEmpty()) {
++            listhead = rn;
++            rn.setNext(null);
++            count++;
++        } else {
++            RecordNode current = listhead;
++            RecordNode prev = null;
++            while (current != null) {
++                if (rn.getIid() < current.getIid()) {
++                    if (prev == null) {
++                        rn.setNext(listhead);
++                        listhead = rn;
++                    } else {
++                        rn.setNext(current);
++                        prev.setNext(rn);
++                    }
++                    count++;
++                    break;
++                } else if (current.getNext() != null) {
++                    prev = current;
++                    current = current.getNext();
++                } else {
++                    current.setNext(rn);
++                    count++;
++                    break;
++                }
++            }
++        }
++    }
++    //Check your code
++    /**
++ * Complete the function below.
++ */
++    static int[] getMaxStreaks(int[] toss) {
++        int[] ans = new int[2];
++        int hCount = 0;
++        int tCount = 0;
++        int maxHCount = 0;
++        int maxTCount = 0;
++        int max = 0;
++        int min = toss.length;
++        int maxIndex = 0;
++        int minIndex = 0;
++        int i = 0;
++        for (int num : toss) {
++            if (num == 0) {
++                hCount = hCount + 1;
++                tCount = 0;
++            } else if (num == 1) {
++                tCount = tCount + 1;
++                hCount = 0;
++            }
++            if (hCount >= maxHCount) {
++                maxHCount = hCount;
++            }
++            if (tCount >= maxTCount) {
++                maxTCount = tCount;
++            }
++            if (maxHCount >= maxTCount) {
++                max = maxHCount;
++                maxIndex = i;
++                min = maxTCount;
++            } else if (maxTCount > maxHCount) {
++                max = maxTCount;
++                maxIndex = i;
++                min = maxHCount;
++            }
++            if (maxTCount == maxHCount) {
++                max = maxHCount;
++                maxIndex = i;
++                min = maxTCount;
++            }
++            i++;
++        }
++        ans[0] = max;
++        ans[1] = min;
++        if (min != 0 && maxIndex < toss.length - 1) {
++            ans[1] = maxIndex + 1;
++        }
++        if (min != 0 && maxIndex == toss.length - 1) {
++            ans[1] = 0;
++        }
++        return ans;
++    }
+     /*
+     /**********************************************************
+     /* Helper methods; annotation access

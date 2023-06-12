@@ -1,0 +1,29 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/deser/std/StringCollectionDeserializer.java b/src/main/java/com/fasterxml/jackson/databind/deser/std/StringCollectionDeserializer.java
+index 42c6f0491..fbcd198ad 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/deser/std/StringCollectionDeserializer.java
++++ b/src/main/java/com/fasterxml/jackson/databind/deser/std/StringCollectionDeserializer.java
+@@ -97,7 +97,7 @@ public final class StringCollectionDeserializer
+     /**********************************************************
+      */
+     @Override
+-    public JsonDeserializer<?> createContextual(DeserializationContext ctxt,
++   public JsonDeserializer<?> createContextual(DeserializationContext ctxt,
+             BeanProperty property) throws JsonMappingException
+     {
+         // May need to resolve types for delegate-based creators:
+@@ -130,9 +130,13 @@ public final class StringCollectionDeserializer
+         if (isDefaultDeserializer(valueDeser)) {
+             valueDeser = null;
+         }
+-        return withResolved(delegate, valueDeser, nuller, unwrapSingle);
++        JsonDeserializer<?> deser = withResolved(delegate, valueDeser, nuller, unwrapSingle);
++        TypeDeserializer typeDeser = _valueTypeDeserializer;
++        if (typeDeser != null) {
++            typeDeser = typeDeser.forProperty(property);
++        }
++        return withResolved(delegate, valueDeser, typeDeser, unwrapSingle);
+     }    
+-    
+     /*
+     /**********************************************************
+     /* ContainerDeserializerBase API

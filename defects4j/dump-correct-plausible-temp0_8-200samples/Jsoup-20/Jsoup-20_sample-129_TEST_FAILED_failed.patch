@@ -1,0 +1,30 @@
+diff --git a/src/main/java/org/jsoup/helper/DataUtil.java b/src/main/java/org/jsoup/helper/DataUtil.java
+index 4bdf4fe..31fee77 100644
+--- a/src/main/java/org/jsoup/helper/DataUtil.java
++++ b/src/main/java/org/jsoup/helper/DataUtil.java
+@@ -83,7 +83,11 @@ public class DataUtil {
+                 if (foundCharset != null && foundCharset.length() != 0 && !foundCharset.equals(defaultCharset)) { // need to re-decode
+                     charsetName = foundCharset;
+                     byteData.rewind();
+-                    docData = Charset.forName(foundCharset).decode(byteData).toString();
++                    if (foundCharset.equals("utf-8")) {
++                        docData = Charset.forName(foundCharset).decode(byteData).toString();
++                    } else {
++                        docData = Charset.forName(foundCharset).decode(byteData).toString();
++                    }
+                     doc = null;
+                 }
+             }
+@@ -95,7 +99,11 @@ public class DataUtil {
+             // there are times where there is a spurious byte-order-mark at the start of the text. Shouldn't be present
+             // in utf-8. If after decoding, there is a BOM, strip it; otherwise will cause the parser to go straight
+             // into head mode
+-
++            if (charsetName.equals("utf-8")) {
++                if (docData.length() > 0 && docData.charAt(0) == 65279) {
++                    docData = docData.substring(1);
++                }
++            }
+             doc = parser.parseInput(docData, baseUri);
+             doc.outputSettings().charset(charsetName);
+         }

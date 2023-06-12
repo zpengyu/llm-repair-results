@@ -1,0 +1,30 @@
+diff --git a/src/main/java/org/apache/commons/lang3/SerializationUtils.java b/src/main/java/org/apache/commons/lang3/SerializationUtils.java
+index 5d4b161b..a39d5ffa 100644
+--- a/src/main/java/org/apache/commons/lang3/SerializationUtils.java
++++ b/src/main/java/org/apache/commons/lang3/SerializationUtils.java
+@@ -235,9 +235,8 @@ public class SerializationUtils {
+      * <p>For more in-depth information about the problem for which this
+      * class here is a workaround, see the JIRA issue LANG-626. </p>
+      */
+-     static class ClassLoaderAwareObjectInputStream extends ObjectInputStream {
++    static class ClassLoaderAwareObjectInputStream extends ObjectInputStream {
+         private ClassLoader classLoader;
+-
+         /**
+          * Constructor.
+          * @param in The <code>InputStream</code>.
+@@ -265,10 +262,11 @@ public class SerializationUtils {
+             try {
+                 return Class.forName(name, false, classLoader);
+             } catch (ClassNotFoundException ex) {
+-                    return Class.forName(name, false, Thread.currentThread().getContextClassLoader());
++                if (classLoader == null) {
++                    classLoader = Thread.currentThread().getContextClassLoader();
++                }
++                return Class.forName(name, false, classLoader);
+             }
+         }
+-
+     }
+-
+ }

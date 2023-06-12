@@ -1,0 +1,32 @@
+diff --git a/src/com/google/javascript/jscomp/NodeUtil.java b/src/com/google/javascript/jscomp/NodeUtil.java
+index 93f078fa..c0d9ccef 100644
+--- a/src/com/google/javascript/jscomp/NodeUtil.java
++++ b/src/com/google/javascript/jscomp/NodeUtil.java
+@@ -323,19 +323,24 @@ public final class NodeUtil {
+       case Token.NUMBER:
+       case Token.TRUE:
+       case Token.FALSE:
++      case Token.OBJECTLIT:
+         return true;
+-
+       // Binary operators are only valid if both children are valid.
+       case Token.BITAND:
+       case Token.BITNOT:
+       case Token.BITOR:
+       case Token.BITXOR:
+-
++      case Token.DIV:
++      case Token.MOD:
++      case Token.MUL:
++      case Token.SUB:
++        return isValidDefineValue(val.getFirstChild(), defines)
++            && isValidDefineValue(val.getLastChild(), defines);
+       // Uniary operators are valid if the child is valid.
+       case Token.NOT:
+       case Token.NEG:
++      case Token.POS:
+         return isValidDefineValue(val.getFirstChild(), defines);
+-
+       // Names are valid if and only if they are defines themselves.
+       case Token.NAME:
+       case Token.GETPROP:

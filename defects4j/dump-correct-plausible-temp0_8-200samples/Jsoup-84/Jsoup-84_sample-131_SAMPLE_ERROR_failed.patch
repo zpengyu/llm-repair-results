@@ -1,0 +1,25 @@
+diff --git a/src/main/java/org/jsoup/helper/W3CDom.java b/src/main/java/org/jsoup/helper/W3CDom.java
+index f866f43..60bedc8 100644
+--- a/src/main/java/org/jsoup/helper/W3CDom.java
++++ b/src/main/java/org/jsoup/helper/W3CDom.java
+@@ -113,7 +111,19 @@ public class W3CDom {
+                 // unhandled
+             }
+         }
+-
++        private String updateNamespaces(org.jsoup.nodes.Element sourceEl) {
++            String prefix;
++            if (sourceEl.hasAttr("xmlns")) { // default namespace
++                namespacesStack.peek().put("", sourceEl.attr("xmlns"));
++                prefix = "";
++            } else {
++                prefix = sourceEl.prefix();
++            }
++            if (sourceEl.hasAttr("xmlns:" + prefix)) {
++                namespacesStack.peek().put(prefix, sourceEl.attr("xmlns:" + prefix));
++            }
++            return prefix;
++        }
+         public void tail(org.jsoup.nodes.Node source, int depth) {
+             if (source instanceof org.jsoup.nodes.Element && dest.getParentNode() instanceof Element) {
+                 dest = (Element) dest.getParentNode(); // undescend. cromulent.

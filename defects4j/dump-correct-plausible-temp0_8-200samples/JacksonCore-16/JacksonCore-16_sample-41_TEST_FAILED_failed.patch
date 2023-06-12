@@ -1,0 +1,23 @@
+diff --git a/src/main/java/com/fasterxml/jackson/core/util/JsonParserSequence.java b/src/main/java/com/fasterxml/jackson/core/util/JsonParserSequence.java
+index bed27f2b..7c166e74 100644
+--- a/src/main/java/com/fasterxml/jackson/core/util/JsonParserSequence.java
++++ b/src/main/java/com/fasterxml/jackson/core/util/JsonParserSequence.java
+@@ -94,12 +87,15 @@ public class JsonParserSequence extends JsonParserDelegate
+      * delegation does not work
+      *******************************************************
+      */
+-    
+     @Override
+     public void close() throws IOException {
+-        do { delegate.close(); } while (switchToNext());
++        do {
++            if(delegate.getCurrentToken() != null){
++                delegate.clearCurrentToken();
++            }
++            delegate.close();
++        } while (switchToNext());
+     }
+-
+     @Override
+     public JsonToken nextToken() throws IOException, JsonParseException
+     {

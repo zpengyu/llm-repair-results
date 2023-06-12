@@ -1,0 +1,21 @@
+    public void serialize(Object value, JsonGenerator jgen, SerializerProvider provider) throws IOException {
+        String str;
+        if (value instanceof Date) {
+            Date date = (Date) value;
+            if (_useTimestamp) {
+                provider.defaultSerializeDateKey(date, jgen);
+            } else {
+                // 31-Dec-2012, tatu: As per [databind#163], may need to use timestamp
+                jgen.writeFieldName(date.toString());
+            }
+            return;
+        } else {
+            if (value instanceof Calendar) {
+                Calendar cal = (Calendar) value;
+                str = (_useTimestamp) ? ISO8601Utils.format(cal.getTime()) : cal.getTime().toString();
+            } else {
+                str = value.toString();
+            }
+        }
+        jgen.writeFieldName(str);
+    }

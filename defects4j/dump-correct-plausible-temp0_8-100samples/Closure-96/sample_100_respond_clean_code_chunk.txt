@@ -1,0 +1,32 @@
+  private void visitParameterList(NodeTraversal t, Node call,
+      FunctionType functionType) {
+    Iterator<Node> arguments = call.children().iterator();
+    arguments.next(); // skip the function name
+    List<Node> parameters = functionType.getParameters();
+    List<String> parameterNames = Lists.newArrayList();
+    for (Node parameter : parameters) {
+      parameterNames.add(parameter.getString());
+    }
+    int ordinal = 0;
+    Node argument = null;
+    while (arguments.hasNext()) {
+      Node parameter = null;
+      if (ordinal < parameters.size()) {
+        parameter = parameters.get(ordinal);
+      }
+      argument = arguments.next();
+      validator.expectArgumentMatchesParameter(t, argument,
+          getJSType(argument), getJSType(parameter), call, ordinal);
+      ordinal++;
+    }
+    int numArgs = call.getChildCount() - 1;
+    int minArgs = functionType.getMinArguments();
+    int maxArgs = functionType.getMaxArguments();
+    if (minArgs > numArgs || maxArgs < numArgs) {
+      report(t, call, WRONG_ARGUMENT_COUNT,
+              validator.getReadableJSTypeName(call.getFirstChild(), false),
+              String.valueOf(numArgs), String.valueOf(minArgs),
+              maxArgs != Integer.MAX_VALUE ?
+              " and no more than " + maxArgs + " argument(s)" : "");
+    }
+  }

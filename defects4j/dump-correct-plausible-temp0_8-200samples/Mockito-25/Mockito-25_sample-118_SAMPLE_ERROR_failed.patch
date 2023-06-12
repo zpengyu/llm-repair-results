@@ -1,0 +1,24 @@
+diff --git a/src/org/mockito/internal/stubbing/defaultanswers/ReturnsDeepStubs.java b/src/org/mockito/internal/stubbing/defaultanswers/ReturnsDeepStubs.java
+index 6fa773f53..361c83370 100644
+--- a/src/org/mockito/internal/stubbing/defaultanswers/ReturnsDeepStubs.java
++++ b/src/org/mockito/internal/stubbing/defaultanswers/ReturnsDeepStubs.java
+@@ -87,12 +73,16 @@ public class ReturnsDeepStubs implements Answer<Object>, Serializable {
+                 return mock;
+             }
+         }, false);
+-
++        if (isLocalMockCreation(container)) {
++            container.getStubbedInvocations().removeLast();
++        }
+         return mock;
+     }
+-
+     protected GenericMetadataSupport actualParameterizedType(Object mock) {
+         CreationSettings mockSettings = (CreationSettings) new MockUtil().getMockHandler(mock).getMockSettings();
+         return GenericMetadataSupport.inferFrom(mockSettings.getTypeToMock());
+     }
++    private boolean isLocalMockCreation(InvocationContainerImpl container) {
++        return container.getStubbedInvocations().size() > 0;
++    }
+ }
+\ No newline at end of file

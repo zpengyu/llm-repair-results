@@ -1,0 +1,29 @@
+diff --git a/src/org/mockito/internal/MockHandler.java b/src/org/mockito/internal/MockHandler.java
+index 9452f1664..78396514f 100644
+--- a/src/org/mockito/internal/MockHandler.java
++++ b/src/org/mockito/internal/MockHandler.java
+@@ -76,13 +73,22 @@ public class MockHandler<T> implements MockitoInvocationHandler, MockHandlerInte
+             // - see VerifyingWithAnExtraCallToADifferentMockTest (bug 138)
+             if (verificationMode instanceof MockAwareVerificationMode && ((MockAwareVerificationMode) verificationMode).getMock() == invocation.getMock()) {
+                 VerificationDataImpl data = new VerificationDataImpl(invocationContainerImpl, invocationMatcher);
+-                verificationMode.verify(data);
++                //if there are some extra interaction, then they are invalid. 
++                //We need to remove verification mode to not affect verification of other mocks (see next if)
++                //see also https://github.com/mockito/mockito/issues/430
++                try {
++                    verificationMode.verify(data);
++                } catch (MockitoAssertionError e) {
++                    mockingProgress.verificationStarted(null);
++                    throw e;
++                }
+                 return null;
++            } else {
+                 // this means there is an invocation on a different mock. Re-adding verification mode 
+                 // - see VerifyingWithAnExtraCallToADifferentMockTest (bug 138)
++                mockingProgress.verificationStarted(verificationMode);
+             }
+         }
+-        
+         invocationContainerImpl.setInvocationForPotentialStubbing(invocationMatcher);
+         OngoingStubbingImpl<T> ongoingStubbing = new OngoingStubbingImpl<T>(invocationContainerImpl);
+         mockingProgress.reportOngoingStubbing(ongoingStubbing);

@@ -1,0 +1,50 @@
+diff --git a/src/com/google/javascript/jscomp/PeepholeFoldConstants.java b/src/com/google/javascript/jscomp/PeepholeFoldConstants.java
+index 0f2a6d44..53abeed2 100644
+--- a/src/com/google/javascript/jscomp/PeepholeFoldConstants.java
++++ b/src/com/google/javascript/jscomp/PeepholeFoldConstants.java
+@@ -683,25 +678,27 @@ public class PeepholeFoldConstants extends AbstractPeepholeOptimization {
+         error(FRACTIONAL_BITWISE_OPERAND, right);
+         return n;
+       }
+-
+-      switch (n.getType()) {
+-        case Token.LSH:
+-          result = lvalInt << rvalInt;
+-          break;
+-        case Token.RSH:
+-          result = lvalInt >> rvalInt;
+-          break;
+-        case Token.URSH:
+-          // JavaScript handles zero shifts on signed numbers differently than
+-          // Java as an Java int can not represent the unsigned 32-bit number
+-          // where JavaScript can so use a long here.
+-          result = lvalInt >>> rvalInt;
+-          break;
+-        default:
+-          throw new AssertionError("Unknown shift operator: " +
+-              Node.tokenToName(n.getType()));
++      if (n.getType() == Token.LSH) {
++        if (rvalInt < 0) {
++          error(SHIFT_AMOUNT_NEGATIVE, right);
++          return n;
++        }
++        result = lvalInt << rvalInt;
++      } else if (n.getType() == Token.RSH) {
++        if (rvalInt < 0) {
++          error(SHIFT_AMOUNT_NEGATIVE, right);
++          return n;
++        }
++        result = lvalInt >> rvalInt;
++      } else if (n.getType() == Token.URSH) {
++        // JavaScript handles zero shifts on signed numbers differently than
++        // Java as an Java int can not represent the unsigned 32-bit number
++        // where JavaScript can so use a long here.
++        result = lvalInt >>> rvalInt;
++      } else {
++        throw new AssertionError("Unknown shift operator: " +
++            Node.tokenToName(n.getType()));
+       }
+-
+       Node newNumber = Node.newNumber(result);
+       n.getParent().replaceChild(n, newNumber);
+       reportCodeChange();

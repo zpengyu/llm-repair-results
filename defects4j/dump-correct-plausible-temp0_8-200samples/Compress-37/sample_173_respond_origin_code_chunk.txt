@@ -1,0 +1,65 @@
+    Map<String, String> parsePaxHeaders(final InputStream i)
+        throws IOException {
+        final Map<String, String> headers = new HashMap<String, String>(globalPaxHeaders);
+        // Format is "length keyword=value\n";
+        final byte[] buf = new byte[80];
+        final byte[] vbuf = new byte[1024];
+        while(true){ // get length
+            int ch;
+            int len = 0;
+            int read = 0;
+            while((ch = i.read()) != -1) {
+                read++;
+                if (ch == ' '){
+                    // Get keyword
+                    int len2 = 0;
+                    while((ch = i.read()) != -1) {
+                        read++;
+                        if (ch == '='){ // end of keyword
+                            final String keyword = new String(buf, 0, len2);
+                            // Get rest of entry
+                            final int restLen = len - read;
+                            if (restLen == 1) { // only NL
+                                headers.remove(keyword);
+                            } else {
+                                int got = 0;
+                                while(got < restLen) {
+                                    final int delta = IOUtils.readFully(i, vbuf, got, restLen - got);
+                                    if (delta == -1) {
+                                        throw new IOException("Failed to read "
+                                             + "Paxheader. Expected "
+                                             + restLen
+                                             + " bytes, read "
+                                             + got);
+                                    }
+                                    got += delta;
+                                }
+                                // Drop trailing NL
+                                final String value = new String(vbuf, 0,
+                                    restLen - 1, CharsetNames.UTF_8);
+                                headers.put(keyword, value);
+                            }
+                            break;
+                        }
+                        if (len2 >= buf.length) {
+                            final byte[] nb = new byte[buf.length * 2];
+                            System.arraycopy(buf, 0, nb, 0, len2);
+                            buf[len2] = (byte) ch;
+                            buf = nb;
+                        } else {
+                            buf[len2] = (byte) ch;
+                        }
+                        len2++;
+                    }
+                    break; // Processed single header
+                }
+                len *= 10;
+                len += ch - '0';
+            }
+            if (ch == -1){ // EOF
+                break;
+            }
+        }
+        return headers;
+    }
+

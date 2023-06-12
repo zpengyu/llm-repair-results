@@ -1,0 +1,31 @@
+diff --git a/src/com/google/javascript/jscomp/parsing/IRFactory.java b/src/com/google/javascript/jscomp/parsing/IRFactory.java
+index 32a15610..fe196f45 100644
+--- a/src/com/google/javascript/jscomp/parsing/IRFactory.java
++++ b/src/com/google/javascript/jscomp/parsing/IRFactory.java
+@@ -558,9 +555,24 @@ public class IRFactory {
+       Node bodyNode = transform(functionNode.getBody());
+       parseDirectives(bodyNode);
+       node.addChildToBack(bodyNode);
+-     return node;
++      // The original Rhino parser didn't automatically add an empty return to
++      // functions that end in an open brace.  Correct the problem.
++      // TODO(bowdidge): fix in tree.
++      if (bodyNode.getLastChild().isBlock()) {
++        if (NodeUtil.has(bodyNode.getLastChild(), Token.RETURN,
++                Predicates.<Node>alwaysTrue())) {
++          return node;
++        }
++        // TODO(johnlenz): adjust the newline count.
++        Node n = newNode(Token.RETURN);
++        n.addChildToBack(newNode(Token.VOID, 0));
++        n.setLineno(bodyNode.getLineno());
++        // TODO(johnlenz): Record a better char number.
++        n.setCharno(0);
++        bodyNode.getLastChild().addChildToBack(n);
++      }
++      return node;
+     }
+-
+     @Override
+     Node processIfStatement(IfStatement statementNode) {
+       Node node = newNode(Token.IF);

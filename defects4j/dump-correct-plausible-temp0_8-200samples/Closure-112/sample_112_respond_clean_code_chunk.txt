@@ -1,0 +1,21 @@
+  private boolean inferTemplatedTypesForCall(
+      Node n, FunctionType fnType) {
+    final ImmutableList<TemplateType> keys = fnType.getTemplateTypeMap()
+        .getTemplateKeys();
+    if (keys.isEmpty()) {
+      return false;
+    }
+    // Try to infer the template types
+    Map<TemplateType, JSType> inferred =
+        inferTemplateTypesFromParameters(fnType, n);
+    // Replace all template types. If we couldn't find a replacement, we
+    // replace it with UNKNOWN.
+    TemplateTypeReplacer replacer = new TemplateTypeReplacer(
+        registry, inferred);
+    Node callTarget = n.getFirstChild();
+    JSType replacementType = callTarget.getJSType().visit(replacer);
+    Preconditions.checkNotNull(replacementType);
+    callTarget.setJSType(replacementType);
+    n.setJSType(replacementType.restrictByNotNullOrUndefined());
+    return replacer.madeChanges;
+  }

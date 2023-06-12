@@ -1,0 +1,47 @@
+diff --git a/src/main/java/org/joda/time/chrono/GJChronology.java b/src/main/java/org/joda/time/chrono/GJChronology.java
+index 70884ba5..279aef4e 100644
+--- a/src/main/java/org/joda/time/chrono/GJChronology.java
++++ b/src/main/java/org/joda/time/chrono/GJChronology.java
+@@ -358,25 +358,27 @@ public final class GJChronology extends AssembledChronology {
+                 (year, monthOfYear, dayOfMonth,
+                  hourOfDay, minuteOfHour, secondOfMinute, millisOfSecond);
+         }
+-
+-        // Assume date is Gregorian.
+-        long instant;
+-            instant = iGregorianChronology.getDateTimeMillis
++        if (isAfterCutover(year, monthOfYear, dayOfMonth)) {
++            return iGregorianChronology.getDateTimeMillis
+                 (year, monthOfYear, dayOfMonth,
+                  hourOfDay, minuteOfHour, secondOfMinute, millisOfSecond);
+-        if (instant < iCutoverMillis) {
+-            // Maybe it's Julian.
+-            instant = iJulianChronology.getDateTimeMillis
+-                (year, monthOfYear, dayOfMonth,
+-                 hourOfDay, minuteOfHour, secondOfMinute, millisOfSecond);
+-            if (instant >= iCutoverMillis) {
+-                // Okay, it's in the illegal cutover gap.
+-                throw new IllegalArgumentException("Specified date does not exist");
+-            }
+         }
+-        return instant;
++        return iJulianChronology.getDateTimeMillis
++            (year, monthOfYear, dayOfMonth,
++             hourOfDay, minuteOfHour, secondOfMinute, millisOfSecond);
++    }
++    private boolean isAfterCutover(int year, int monthOfYear, int dayOfMonth) {
++        int gregorianMonth = iGregorianCutoverDate.getMonthOfYear();
++        int gregorianDom = iGregorianCutoverDate.getDayOfMonth();
++        if (year == iGregorianCutoverDate.getYear()) {
++            return monthOfYear > gregorianMonth ||
++                (monthOfYear == gregorianMonth && dayOfMonth >= gregorianDom);
++        } else if (year > iGregorianCutoverDate.getYear()) {
++            return true;
++        } else {
++            return false;
++        }
+     }
+-
+     /**
+      * Gets the cutover instant between Gregorian and Julian chronologies.
+      * @return the cutover instant

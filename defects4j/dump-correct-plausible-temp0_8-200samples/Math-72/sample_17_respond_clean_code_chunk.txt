@@ -1,0 +1,22 @@
+    public double solve(final UnivariateRealFunction f,
+                        final double min, final double max, final double initial)
+        throws MaxIterationsExceededException, FunctionEvaluationException {
+        clearResult();
+        verifySequence(min, initial, max);
+        // return the initial guess if it is good enough
+        double yInitial = f.value(initial);
+        if (Math.abs(yInitial) <= functionValueAccuracy) {
+            setResult(initial, 0);
+            return result;
+        }
+        // reduce interval if min and initial bracket the root
+        if (Math.signum(f.value(min)) * Math.signum(yInitial) < 0) {
+            return solve(f, min, initial);
+        }
+        // reduce interval if initial and max bracket the root
+        if (Math.signum(f.value(max)) * Math.signum(yInitial) < 0) {
+            return solve(f, initial, max);
+        }
+        throw MathRuntimeException.createIllegalArgumentException(
+                  NON_BRACKETING_MESSAGE, min, max, f.value(min), f.value(max));
+    }

@@ -1,0 +1,29 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/deser/BuilderBasedDeserializer.java b/src/main/java/com/fasterxml/jackson/databind/deser/BuilderBasedDeserializer.java
+index 316efa3a9..c9e0e407d 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/deser/BuilderBasedDeserializer.java
++++ b/src/main/java/com/fasterxml/jackson/databind/deser/BuilderBasedDeserializer.java
+@@ -589,17 +587,17 @@ public class BuilderBasedDeserializer
+                         wrapAndThrow(e, _beanType.getRawClass(), propName, ctxt);
+                         continue;
+                     }
+-                    while (t == JsonToken.FIELD_NAME) {
+-                        p.nextToken();
+-                        tokens.copyCurrentStructure(p);
+-                        t = p.nextToken();
+-                    }
+-                    tokens.writeEndObject();
++                    //  found a regular property? If so, may need to close open
++                    //  object
+                     if (bean.getClass() != _beanType.getRawClass()) {
+                         ctxt.reportMappingException("Can not create polymorphic instances with unwrapped values");
+                         return null;
+                     }
+-                    return _unwrappedPropertyHandler.processUnwrapped(p, ctxt, bean, tokens);
++                    if (t == JsonToken.FIELD_NAME) {
++                        // if next token is not END_OBJECT, then is not unwrapped!
++                        return processUnwrapped(p, ctxt, bean, tokens);
++                    }
++                    return bean;
+                 }
+                 continue;
+             }

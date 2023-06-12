@@ -1,0 +1,57 @@
+diff --git a/src/main/java/org/apache/commons/math3/util/MathArrays.java b/src/main/java/org/apache/commons/math3/util/MathArrays.java
+index 9ef28e3d8..6ab30c6f0 100644
+--- a/src/main/java/org/apache/commons/math3/util/MathArrays.java
++++ b/src/main/java/org/apache/commons/math3/util/MathArrays.java
+@@ -840,25 +836,34 @@ public class MathArrays {
+                                                   aHigh * bLow);
+             prodLowSum += prodLow;
+         }
+-
+-
+-        final double prodHighCur = prodHigh[0];
+-        double prodHighNext = prodHigh[1];
+-        double sHighPrev = prodHighCur + prodHighNext;
+-        double sPrime = sHighPrev - prodHighNext;
+-        double sLowSum = (prodHighNext - (sHighPrev - sPrime)) + (prodHighCur - sPrime);
+-
+-        final int lenMinusOne = len - 1;
+-        for (int i = 1; i < lenMinusOne; i++) {
+-            prodHighNext = prodHigh[i + 1];
+-            final double sHighCur = sHighPrev + prodHighNext;
+-            sPrime = sHighCur - prodHighNext;
+-            sLowSum += (prodHighNext - (sHighCur - sPrime)) + (sHighPrev - sPrime);
+-            sHighPrev = sHighCur;
++        double hY = prodHigh[0];
++        double hX = hY;
++        double lY = prodLowSum + prodHigh[0];
++        double lX = lY;
++        for (int i = 1; i < len; i++) {
++            final double y = prodHigh[i];
++            final double hY2 = hY + y;
++            lY += y - (hY2 - hY);
++            hY = hY2;
++            final double x = prodHigh[i - 1];
++            final double hX2 = hX + x;
++            lX += x - (hX2 - hX);
++            hX = hX2;
++            if (FastMath.abs(hX) > FastMath.abs(hY)) {
++                final double c = SPLIT_FACTOR * hX;
++                final double hXs = c - (c - hX);
++                final double lXs = hX - hXs;
++                lX += lXs;
++                hX = hXs;
++            } else {
++                final double c = SPLIT_FACTOR * hY;
++                final double hYs = c - (c - hY);
++                final double lYs = hY - hYs;
++                lY += lYs;
++                hY = hYs;
++            }
+         }
+-
+-        double result = sHighPrev + (prodLowSum + sLowSum);
+-
++        double result = hX + hY;
+         if (Double.isNaN(result)) {
+             // either we have split infinite numbers or some coefficients were NaNs,
+             // just rely on the naive implementation and let IEEE754 handle this

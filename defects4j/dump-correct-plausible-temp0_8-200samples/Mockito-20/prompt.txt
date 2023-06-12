@@ -1,0 +1,79 @@
+###Provide a fix for the buggy function
+###Buggy Function
+class FibonacciExample {
+    public static void main(String args[]) {
+        int n1 = 0, n2 = 1, n3, i, count = 10;
+
+        System.out.print(n1 + " " + n2);
+
+        for (i = 2; i < count; ++i) {
+            n3 = n1 - n2;
+            System.out.print(" " + n3);
+            n1 = n2;
+            n2 = n3;
+        }
+    }
+}
+
+###Fixed Function
+class FibonacciExample {
+    public static void main(String args[]) {
+        int n1 = 0, n2 = 1, n3, i, count = 10;
+
+        System.out.print(n1 + " " + n2);
+
+        for (i = 2; i < count; ++i) {
+            n3 = n1 + n2;
+            System.out.print(" " + n3);
+            n1 = n2;
+            n2 = n3;
+        }
+    }
+}
+
+###Provide a fix for the buggy function
+###Buggy Function
+public Object answer(InvocationOnMock invocation) throws Throwable {
+    return invocation.callRealMethod();
+}
+###Fixed Function
+public Object answer(InvocationOnMock invocation) throws Throwable {
+	if (Modifier.isAbstract(invocation.getMethod().getModifiers())) {
+		return new GloballyConfiguredAnswer().answer(invocation);
+	}
+    return invocation.callRealMethod();
+}
+###Provide a fix for the buggy function
+###Buggy Function
+    public <T> T createMock(MockCreationSettings<T> settings, MockHandler handler) {
+        if (settings.getSerializableMode() == SerializableMode.ACROSS_CLASSLOADERS) {
+            throw new MockitoException("Serialization across classloaders not yet supported with ByteBuddyMockMaker");
+        }
+        Class<? extends T> mockedProxyType = cachingMockBytecodeGenerator.get(
+                settings.getTypeToMock(),
+                settings.getExtraInterfaces()
+        );
+        T mockInstance = null;
+        try {
+            mockInstance = classInstantiator.instantiate(mockedProxyType);
+            MockMethodInterceptor.MockAccess mockAccess = (MockMethodInterceptor.MockAccess) mockInstance;
+            mockAccess.setMockitoInterceptor(new MockMethodInterceptor(asInternalMockHandler(handler), settings));
+
+            return ensureMockIsAssignableToMockedType(settings, mockInstance);
+        } catch (ClassCastException cce) {
+            throw new MockitoException(join(
+                    "ClassCastException occurred while creating the mockito mock :",
+                    "  class to mock : " + describeClass(mockedProxyType),
+                    "  created class : " + describeClass(settings.getTypeToMock()),
+                    "  proxy instance class : " + describeClass(mockInstance),
+                    "  instance creation by : " + classInstantiator.getClass().getSimpleName(),
+                    "",
+                    "You might experience classloading issues, please ask the mockito mailing-list.",
+                    ""
+            ),cce);
+        } catch (org.mockito.internal.creation.instance.InstantiationException e) {
+            throw new MockitoException("Unable to create mock instance of type '" + mockedProxyType.getSuperclass().getSimpleName() + "'", e);
+        }
+    }
+
+###Fixed Function

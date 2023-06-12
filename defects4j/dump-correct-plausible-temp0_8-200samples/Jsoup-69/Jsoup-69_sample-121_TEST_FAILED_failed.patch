@@ -1,0 +1,26 @@
+diff --git a/src/main/java/org/jsoup/nodes/FormElement.java b/src/main/java/org/jsoup/nodes/FormElement.java
+index baffcf1..201d337 100644
+--- a/src/main/java/org/jsoup/nodes/FormElement.java
++++ b/src/main/java/org/jsoup/nodes/FormElement.java
+@@ -42,6 +39,8 @@ public class FormElement extends Element {
+      * @return this form element, for chaining
+      */
+     public FormElement addElement(Element element) {
++        if (!element.tag().isFormSubmittable())
++            throw new IllegalArgumentException("cannot submit " + element.tagName());
+         elements.add(element);
+         return this;
+     }
+@@ -96,10 +89,9 @@ public class FormElement extends Element {
+             } else if ("checkbox".equalsIgnoreCase(type) || "radio".equalsIgnoreCase(type)) {
+                 // only add checkbox or radio if they have the checked attribute
+                 if (el.hasAttr("checked")) {
+-                    final String val = el.val().length() >  0 ? el.val() : "on";
+-                    data.add(HttpConnection.KeyVal.create(name, val));
++                    data.add(HttpConnection.KeyVal.create(name, el.val()));
+                 }
+-            } else {
++            } else if (el.hasAttr("name")) {
+                 data.add(HttpConnection.KeyVal.create(name, el.val()));
+             }
+         }

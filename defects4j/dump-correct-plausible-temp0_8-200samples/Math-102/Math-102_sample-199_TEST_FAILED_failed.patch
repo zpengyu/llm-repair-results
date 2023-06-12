@@ -1,0 +1,37 @@
+diff --git a/src/java/org/apache/commons/math/stat/inference/ChiSquareTestImpl.java b/src/java/org/apache/commons/math/stat/inference/ChiSquareTestImpl.java
+index 73503abfc..a362e5634 100644
+--- a/src/java/org/apache/commons/math/stat/inference/ChiSquareTestImpl.java
++++ b/src/java/org/apache/commons/math/stat/inference/ChiSquareTestImpl.java
+@@ -63,19 +63,29 @@ public class ChiSquareTestImpl implements UnknownDistributionChiSquareTest {
+      */
+     public double chiSquare(double[] expected, long[] observed)
+         throws IllegalArgumentException {
+-        if ((expected.length < 2) || (expected.length != observed.length)) {
++        if (expected.length < 2) {
+             throw new IllegalArgumentException(
+                     "observed, expected array lengths incorrect");
+         }
+-        if (!isPositive(expected) || !isNonNegative(observed)) {
++        if (expected.length != observed.length) {
+             throw new IllegalArgumentException(
+-                "observed counts must be non-negative and expected counts must be postive");
++                    "observed, expected array lengths incorrect");
++        }
++        if (!isPositive(expected)) {
++            throw new IllegalArgumentException(
++                "expected counts must be postive");
++        }
++        if (!isNonNegative(observed)) {
++            throw new IllegalArgumentException(
++                "observed counts must be non-negative");
+         }
+         double sumSq = 0.0d;
+         double dev = 0.0d;
+         for (int i = 0; i < observed.length; i++) {
++            if (((double) observed[i] - expected[i]) > 0.0d) {
+                 dev = ((double) observed[i] - expected[i]);
+                 sumSq += dev * dev / expected[i];
++            }
+         }
+         return sumSq;
+     }

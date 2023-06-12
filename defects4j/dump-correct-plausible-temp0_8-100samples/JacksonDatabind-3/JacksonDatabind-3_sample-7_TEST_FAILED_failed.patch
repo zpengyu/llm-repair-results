@@ -1,0 +1,21 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/deser/std/StringArrayDeserializer.java b/src/main/java/com/fasterxml/jackson/databind/deser/std/StringArrayDeserializer.java
+index f8cb03e1c..ffa160669 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/deser/std/StringArrayDeserializer.java
++++ b/src/main/java/com/fasterxml/jackson/databind/deser/std/StringArrayDeserializer.java
+@@ -123,9 +110,15 @@ public final class StringArrayDeserializer
+             }
+             throw ctxt.mappingException(_valueClass);
+         }
++        // this is only for empty String
++        if (jp.getCurrentToken() == JsonToken.VALUE_STRING) {
++            String value = jp.getText();
++            if (value.length() == 0) {
++                return new String[] { value };
++            }
++        }
+         return new String[] { (jp.getCurrentToken() == JsonToken.VALUE_NULL) ? null : _parseString(jp, ctxt) };
+     }
+-
+     /**
+      * Contextualization is needed to see whether we can "inline" deserialization
+      * of String values, or if we have to use separate value deserializer.

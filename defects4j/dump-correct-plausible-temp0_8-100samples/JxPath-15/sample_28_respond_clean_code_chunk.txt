@@ -1,0 +1,31 @@
+public class UnionContext extends NodeSetContext {
+    private EvalContext contexts[];
+    private int currentContextIndex;
+    private boolean prepared;
+    public UnionContext(EvalContext parentContext, EvalContext contexts[]) {
+        super(parentContext, new BasicNodeSet());
+        this.contexts = contexts;
+        this.currentContextIndex = 0;
+    }
+    public int getDocumentOrder() {
+        return contexts.length > 1 ? 1 : super.getDocumentOrder();
+    }
+    public boolean setPosition(int position) {
+        if (!prepared) {
+            prepared = true;
+            BasicNodeSet nodeSet = (BasicNodeSet) getNodeSet();
+            ArrayList pointers = new ArrayList();
+            while (contexts[currentContextIndex].nextSet()) {
+                while (contexts[currentContextIndex].nextNode()) {
+                    NodePointer ptr = contexts[currentContextIndex].getCurrentNodePointer();
+                    if (!pointers.contains(ptr)) {
+                        nodeSet.add(ptr);
+                        pointers.add(ptr);
+                    }
+                }
+                currentContextIndex++;
+            }
+        }
+        return super.setPosition(position);
+    }
+}

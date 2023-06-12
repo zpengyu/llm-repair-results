@@ -1,0 +1,39 @@
+diff --git a/src/com/google/javascript/jscomp/ProcessClosurePrimitives.java b/src/com/google/javascript/jscomp/ProcessClosurePrimitives.java
+index 385e8b07..17a81632 100644
+--- a/src/com/google/javascript/jscomp/ProcessClosurePrimitives.java
++++ b/src/com/google/javascript/jscomp/ProcessClosurePrimitives.java
+@@ -292,7 +292,7 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback
+   /**
+    * Handles a goog.require call.
+    */
+-  private void processRequireCall(NodeTraversal t, Node n, Node parent) {
++    private void processRequireCall(NodeTraversal t, Node n, Node parent) {
+     Node left = n.getFirstChild();
+     Node arg = left.getNext();
+     if (verifyLastArgumentIsString(t, left, arg)) {
+@@ -303,13 +303,12 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback
+             new UnrecognizedRequire(n, ns, t.getSourceName()));
+       } else {
+         JSModule providedModule = provided.explicitModule;
+-
+         // This must be non-null, because there was an explicit provide.
+         Preconditions.checkNotNull(providedModule);
+-
+         JSModule module = t.getModule();
+         if (moduleGraph != null &&
+-            module != providedModule &&
++            module != null &&
++            providedModule != null &&
+             !moduleGraph.dependsOn(module, providedModule)) {
+           compiler.report(
+               t.makeError(n, XMODULE_REQUIRE_ERROR, ns,
+@@ -331,8 +328,7 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback
+         compiler.reportCodeChange();
+       }
+     }
+-  }
+-
++}
+   /**
+    * Handles a goog.provide call.
+    */

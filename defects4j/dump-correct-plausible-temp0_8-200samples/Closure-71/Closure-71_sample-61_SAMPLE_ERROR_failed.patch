@@ -1,0 +1,23 @@
+diff --git a/src/com/google/javascript/jscomp/CheckAccessControls.java b/src/com/google/javascript/jscomp/CheckAccessControls.java
+index c4ecc477..756dfa53 100644
+--- a/src/com/google/javascript/jscomp/CheckAccessControls.java
++++ b/src/com/google/javascript/jscomp/CheckAccessControls.java
+@@ -494,6 +488,18 @@ class CheckAccessControls implements ScopedCallback, HotSwapCompilerPass {
+                     validator.getReadableJSTypeName(
+                         getprop.getFirstChild(), true)));
+           }
++        } else if (visibility == Visibility.PACKAGE) {
++          // This is a package-private access. The current class must be
++          // defined in the same package.
++          if (currentClass == null ||
++              !currentClass.isSubtype(ownerType) ||
++              !inSamePackage(objectType, currentClass)) {
++            compiler.report(
++                t.makeError(getprop,  BAD_PACKAGE_PROPERTY_ACCESS,
++                    propertyName,
++                    validator.getReadableJSTypeName(
++                        getprop.getFirstChild(), true)));
++          }
+         }
+       }
+     }

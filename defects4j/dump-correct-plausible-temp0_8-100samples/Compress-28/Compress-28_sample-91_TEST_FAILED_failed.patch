@@ -1,0 +1,47 @@
+diff --git a/src/main/java/org/apache/commons/compress/archivers/tar/TarArchiveInputStream.java b/src/main/java/org/apache/commons/compress/archivers/tar/TarArchiveInputStream.java
+index 0c76c60a..78d66e78 100644
+--- a/src/main/java/org/apache/commons/compress/archivers/tar/TarArchiveInputStream.java
++++ b/src/main/java/org/apache/commons/compress/archivers/tar/TarArchiveInputStream.java
+@@ -567,21 +567,35 @@ public class TarArchiveInputStream extends ArchiveInputStream {
+      */
+     @Override
+     public int read(byte[] buf, int offset, int numToRead) throws IOException {
+-    	int totalRead = 0;
+-
+-        if (hasHitEOF || entryOffset >= entrySize) {
++        int totalRead = 0;
++        if (hasHitEOF) {
+             return -1;
+         }
+-
++        if (offset < 0 || offset > buf.length) {
++            throw new IndexOutOfBoundsException(
++                    "Offset out of bounds: " + offset);
++        }
++        if (numToRead < 0 || numToRead > buf.length) {
++            throw new IndexOutOfBoundsException(
++                    "Length out of bounds: " + numToRead);
++        }
++        if ((offset + numToRead) > buf.length) {
++            throw new IndexOutOfBoundsException(
++                    "Offset+length out of bounds: " + (offset + numToRead));
++        }
++        if (offset + numToRead < 0) {
++            throw new IndexOutOfBoundsException(
++                    "Offset+length out of bounds: " + (offset + numToRead));
++        }
+         if (currEntry == null) {
+             throw new IllegalStateException("No current tar entry");
+         }
+-
+         numToRead = Math.min(numToRead, available());
+-
++        if (numToRead == 0) {
++            return -1;
++        }
+         totalRead = is.read(buf, offset, numToRead);
+         count(totalRead);
+-
+         if (totalRead == -1) {
+             hasHitEOF = true;
+         } else {

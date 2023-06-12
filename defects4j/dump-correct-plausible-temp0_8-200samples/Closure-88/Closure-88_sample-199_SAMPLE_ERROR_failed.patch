@@ -1,0 +1,24 @@
+diff --git a/src/com/google/javascript/jscomp/DeadAssignmentsElimination.java b/src/com/google/javascript/jscomp/DeadAssignmentsElimination.java
+index 19b8b6bd..3d71bb4f 100644
+--- a/src/com/google/javascript/jscomp/DeadAssignmentsElimination.java
++++ b/src/com/google/javascript/jscomp/DeadAssignmentsElimination.java
+@@ -328,6 +328,12 @@ class DeadAssignmentsElimination extends AbstractPostOrderCallback implements
+         // the RHS is evaluated (normal left to right evaluation) but the KILL
+         // occurs after the RHS is evaluated.
+         return VariableLiveness.KILL;
++      } else if(n.getParent().isDestructuringLhs()) {
++        // Check if the variable is an inner variable in a destructuring pattern.
++        // For example:
++        //   var [a, b] = getData();
++        // In this case, the variable b is a destructuring pattern.
++        return VariableLiveness.MAYBE_LIVE;
+       } else {
+         return VariableLiveness.READ;
+       }
+@@ -344,5 +349,4 @@ class DeadAssignmentsElimination extends AbstractPostOrderCallback implements
+       }
+     }
+     return VariableLiveness.MAYBE_LIVE;
+-  }
+-}
++  }}

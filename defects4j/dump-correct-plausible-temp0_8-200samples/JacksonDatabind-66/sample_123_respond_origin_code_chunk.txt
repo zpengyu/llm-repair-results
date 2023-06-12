@@ -1,0 +1,25 @@
+        public final Object deserializeKey(String key, DeserializationContext ctxt)
+            throws IOException
+        {
+            if (key == null) { // is this even legal call?
+                return null;
+            }
+            try {
+                // Ugh... should not have to give parser which may or may not be correct one...
+                Object result = _delegate.deserialize(ctxt.getParser(), ctxt);
+                if (result != null) {
+                    return result;
+                }
+                if (_keyDeserializer == null) {
+                    ctxt.reportInputMismatch(BaseNodeKeyDeserializers.class,
+                            "Cannot deserialize Object from String \"%s\": no single-String deserializer",
+                            key);
+                    // can not throw, so return a bogus value
+                    return new Object();
+                }
+                return ctxt.handleWeirdKey(_keyClass, key, "not a valid representation");
+            } catch (Exception re) {
+                return ctxt.handleWeirdKey(_keyClass, key, "not a valid representation: %s", re.getMessage());
+            }
+        }
+

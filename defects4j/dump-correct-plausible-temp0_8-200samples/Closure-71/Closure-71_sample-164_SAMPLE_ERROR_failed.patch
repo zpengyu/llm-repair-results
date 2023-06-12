@@ -1,0 +1,37 @@
+diff --git a/src/com/google/javascript/jscomp/CheckAccessControls.java b/src/com/google/javascript/jscomp/CheckAccessControls.java
+index c4ecc477..1b594bc9 100644
+--- a/src/com/google/javascript/jscomp/CheckAccessControls.java
++++ b/src/com/google/javascript/jscomp/CheckAccessControls.java
+@@ -498,7 +492,31 @@ class CheckAccessControls implements ScopedCallback, HotSwapCompilerPass {
+       }
+     }
+   }
+-
++  /**
++   * Returns whether an access to a private constructor is valid.
++   *
++   * A call is valid if it is inside a constructor of the same class.
++   *
++   * @param n The node performing the access (getprop or call)
++   */
++  private boolean isValidPrivateConstructorAccess(Node n) {
++    while (n != null) {
++      if (n.isFunction()) {
++        JSDocInfo fnDoc = NodeUtil.getFunctionDocInfo(n);
++        if (fnDoc != null && fnDoc.isConstructor()) {
++          JSType ownerType = normalizeClassType(currentClass);
++          JSType type = n.getFirstChild().getJSType();
++          if (type != null && type.isConstructor() &&
++              type.toMaybeFunctionType().getOwnerType().isEquivalentTo(
++                  ownerType)) {
++            return true;
++          }
++        }
++      }
++      n = n.getParent();
++    }
++    return false;
++  }
+   /**
+    * Whether the given access of a private constructor is legal.
+    *

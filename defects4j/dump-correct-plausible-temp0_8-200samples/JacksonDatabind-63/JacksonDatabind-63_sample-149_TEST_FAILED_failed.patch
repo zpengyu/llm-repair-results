@@ -1,0 +1,22 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/JsonMappingException.java b/src/main/java/com/fasterxml/jackson/databind/JsonMappingException.java
+index 693c1132e..0a6e378ca 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/JsonMappingException.java
++++ b/src/main/java/com/fasterxml/jackson/databind/JsonMappingException.java
+@@ -133,7 +132,16 @@ public class JsonMappingException
+                         sb.append(pkgName);
+                         sb.append('.');
+                     }
+-                    sb.append(cls.getSimpleName());
++                    String className = cls.getSimpleName();
++                    if (className == null || className.isEmpty()) {
++                        className = cls.getName();
++                        // see [databind#1406]; may need to strip `[]` of array descriptor (if any)
++                        int ix = className.indexOf('[');
++                        if (ix > 0) {
++                            className = className.substring(0, ix);
++                        }
++                    }
++                    sb.append(className);
+                 }
+                 sb.append('[');
+                 if (_fieldName != null) {

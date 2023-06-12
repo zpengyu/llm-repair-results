@@ -1,0 +1,42 @@
+diff --git a/src/main/java/org/jsoup/safety/Cleaner.java b/src/main/java/org/jsoup/safety/Cleaner.java
+index c6879b1..1945787 100644
+--- a/src/main/java/org/jsoup/safety/Cleaner.java
++++ b/src/main/java/org/jsoup/safety/Cleaner.java
+@@ -79,24 +70,31 @@ public class Cleaner {
+                     ElementMeta meta = createSafeElement(sourceEl);
+                     Element destChild = meta.el;
+                     destination.appendChild(destChild);
+-
+                     numDiscarded += meta.numAttribsDiscarded;
+                     numDiscarded += copySafeNodes(sourceEl, destChild);
++                } else if (!isWhitelistTag(sourceEl)) { // not a whitelist tag, but ok, recurse
++                    numDiscarded += copySafeNodes(sourceEl, destination);
+                 } else {
+                     numDiscarded++;
+-                    numDiscarded += copySafeNodes(sourceEl, destination);
+                 }
+             } else if (source instanceof TextNode) {
+                 TextNode sourceText = (TextNode) source;
+                 TextNode destText = new TextNode(sourceText.getWholeText(), source.baseUri());
+                 destination.appendChild(destText);
+-            }
++            } // else, we don't care about comments, xml proc instructions, etc
+         }
+         return numDiscarded;
+-
+-
+     }
+-
++    boolean isWhitelistTag(Element sourceEl) {
++        return sourceEl.tag().getName().equals("a") || sourceEl.tag().getName().equals("b") || sourceEl.tag().getName().equals("blockquote")
++                || sourceEl.tag().getName().equals("br") || sourceEl.tag().getName().equals("cite") || sourceEl.tag().getName().equals("code")
++                || sourceEl.tag().getName().equals("dd") || sourceEl.tag().getName().equals("dl") || sourceEl.tag().getName().equals("dt")
++                || sourceEl.tag().getName().equals("em") || sourceEl.tag().getName().equals("i") || sourceEl.tag().getName().equals("li")
++                || sourceEl.tag().getName().equals("ol") || sourceEl.tag().getName().equals("p") || sourceEl.tag().getName().equals("pre")
++                || sourceEl.tag().getName().equals("q") || sourceEl.tag().getName().equals("small") || sourceEl.tag().getName().equals("strike")
++                || sourceEl.tag().getName().equals("strong") || sourceEl.tag().getName().equals("sub") || sourceEl.tag().getName().equals("sup")
++                || sourceEl.tag().getName().equals("u") || sourceEl.tag().getName().equals("ul");
++    }
+     private ElementMeta createSafeElement(Element sourceEl) {
+         String sourceTag = sourceEl.tagName();
+         Attributes destAttrs = new Attributes();

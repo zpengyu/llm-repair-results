@@ -1,0 +1,116 @@
+###Provide a fix for the buggy function
+###Buggy Function
+class FibonacciExample {
+    public static void main(String args[]) {
+        int n1 = 0, n2 = 1, n3, i, count = 10;
+
+        System.out.print(n1 + " " + n2);
+
+        for (i = 2; i < count; ++i) {
+            n3 = n1 - n2;
+            System.out.print(" " + n3);
+            n1 = n2;
+            n2 = n3;
+        }
+    }
+}
+
+###Fixed Function
+class FibonacciExample {
+    public static void main(String args[]) {
+        int n1 = 0, n2 = 1, n3, i, count = 10;
+
+        System.out.print(n1 + " " + n2);
+
+        for (i = 2; i < count; ++i) {
+            n3 = n1 + n2;
+            System.out.print(" " + n3);
+            n1 = n2;
+            n2 = n3;
+        }
+    }
+}
+
+###Provide a fix for the buggy function
+###Buggy Function
+protected void setName(String name) {
+    this.name = name;
+}
+###Fixed Function
+protected void setName(String name) {
+   if (name != null && getPlatform() == PLATFORM_FAT
+       && name.indexOf("/") == -1) {
+       name = name.replace('\\', '/');
+   }
+}
+###Provide a fix for the buggy function
+###Buggy Function
+    public TarArchiveEntry getNextTarEntry() throws IOException {
+        if (hasHitEOF) {
+            return null;
+        }
+
+        if (currEntry != null) {
+            long numToSkip = entrySize - entryOffset;
+
+            while (numToSkip > 0) {
+                long skipped = skip(numToSkip);
+                if (skipped <= 0) {
+                    throw new RuntimeException("failed to skip current tar entry");
+                }
+                numToSkip -= skipped;
+            }
+
+            readBuf = null;
+        }
+
+        byte[] headerBuf = getRecord();
+
+        if (hasHitEOF) {
+            currEntry = null;
+            return null;
+        }
+
+        currEntry = new TarArchiveEntry(headerBuf);
+        entryOffset = 0;
+        entrySize = currEntry.getSize();
+
+        if (currEntry.isGNULongNameEntry()) {
+            // read in the name
+            StringBuffer longName = new StringBuffer();
+            byte[] buf = new byte[SMALL_BUFFER_SIZE];
+            int length = 0;
+            while ((length = read(buf)) >= 0) {
+                longName.append(new String(buf, 0, length));
+            }
+            getNextEntry();
+            if (currEntry == null) {
+                // Bugzilla: 40334
+                // Malformed tar file - long entry name not followed by entry
+                return null;
+            }
+            // remove trailing null terminator
+            if (longName.length() > 0
+                && longName.charAt(longName.length() - 1) == 0) {
+                longName.deleteCharAt(longName.length() - 1);
+            }
+            currEntry.setName(longName.toString());
+        }
+
+        if (currEntry.isPaxHeader()){ // Process Pax headers
+            paxHeaders();
+        }
+
+        if (currEntry.isGNUSparse()){ // Process sparse files
+            readGNUSparse();
+        }
+
+        // If the size of the next element in the archive has changed
+        // due to a new size being reported in the posix header
+        // information, we update entrySize here so that it contains
+        // the correct value.
+        entrySize = currEntry.getSize();
+        return currEntry;
+    }
+
+###Fixed Function

@@ -1,0 +1,27 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/deser/impl/CreatorCollector.java b/src/main/java/com/fasterxml/jackson/databind/deser/impl/CreatorCollector.java
+index fd590d628..c7c942ad6 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/deser/impl/CreatorCollector.java
++++ b/src/main/java/com/fasterxml/jackson/databind/deser/impl/CreatorCollector.java
+@@ -288,8 +287,11 @@ public class CreatorCollector
+                 }
+                 // both explicit: verify
+                 // otherwise only verify if neither explicitly annotated.
++            } else if (explicit) { // but override if explicitly annotated
++                _creators[typeIndex] = _fixAccess(newOne);
++                _explicitCreators |= mask;
++                return;
+             }
+-
+             // one more thing: ok to override in sub-class
+             if (oldOne.getClass() == newOne.getClass()) {
+                 // [databind#667]: avoid one particular class of bogus problems
+@@ -300,8 +301,7 @@ public class CreatorCollector
+                     // new type more generic, use old
+                 // new type more specific, use it
+             }
+-        }
+-        if (explicit) {
++        } else if (explicit) {
+             _explicitCreators |= mask;
+         }
+         _creators[typeIndex] = _fixAccess(newOne);

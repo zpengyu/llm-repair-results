@@ -1,0 +1,45 @@
+diff --git a/src/main/java/org/jsoup/parser/Parser.java b/src/main/java/org/jsoup/parser/Parser.java
+index 5f71aaf..95a759f 100644
+--- a/src/main/java/org/jsoup/parser/Parser.java
++++ b/src/main/java/org/jsoup/parser/Parser.java
+@@ -185,30 +185,27 @@ public class Parser {
+         tq.consumeWhitespace();
+         if (tq.matchChomp("=")) {
+             tq.consumeWhitespace();
+-
+-            if (tq.matchChomp(SQ)) {
+-                value = tq.chompTo(SQ);
+-            } else if (tq.matchChomp(DQ)) {
++            // the canonical delimiters for a double quoted attribute are '"'
++            if (tq.matchChomp(DQ)) {
+                 value = tq.chompTo(DQ);
++                // value = TokenQueue.unescape(value); // doesn't unescape "/", so "&foo;" doesn't make it through
++                tq.consume(DQ); // move to after the closing '"'
++            } else if (tq.matchChomp(SQ)) {
++                value = tq.chompTo(SQ);
++                // value = TokenQueue.unescape(value);
++                tq.consume(SQ); // move to after the closing '\''
+             } else {
+                 StringBuilder valueAccum = new StringBuilder();
+                 // no ' or " to look for, so scan to end tag or space (or end of stream)
+-                while (!tq.matchesAny("<", "/>", ">") && !tq.matchesWhitespace() && !tq.isEmpty()) {
++                while (!tq.matchesAny('\'' + "'" + '>' + '<' + '=') && !tq.isEmpty()) {
+                     valueAccum.append(tq.consume());
+                 }
+                 value = valueAccum.toString();
+             }
+             tq.consumeWhitespace();
+         }
+-        if (key.length() != 0)
+-            return Attribute.createFromEncoded(key, value);
+-        else {
+-            tq.consume();
+-
+-            return null;
+-        }
++        return new Attribute(key, value);
+     }
+-
+     private void parseTextNode() {
+         TextNode textNode;
+         // special case: handle string like "hello < there". first char will be "<", because of matchStartTag

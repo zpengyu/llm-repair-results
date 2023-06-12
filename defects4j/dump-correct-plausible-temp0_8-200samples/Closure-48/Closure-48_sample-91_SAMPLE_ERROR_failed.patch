@@ -1,0 +1,37 @@
+diff --git a/src/com/google/javascript/jscomp/TypedScopeCreator.java b/src/com/google/javascript/jscomp/TypedScopeCreator.java
+index 9489dc30..b964ccdb 100644
+--- a/src/com/google/javascript/jscomp/TypedScopeCreator.java
++++ b/src/com/google/javascript/jscomp/TypedScopeCreator.java
+@@ -1557,9 +1549,31 @@ final class TypedScopeCreator implements ScopeCreator {
+             defineSlot(n, parent, getNativeType(BOOLEAN_TYPE), true);
+           }
+         }
++      } else if (codingConvention.isPropertyTestFunction(ownerName, propName)) {
++        // We declare these as booleans so that the type system will
++        // not give false negatives in cases where an object literal
++        // is passed to a property test function.
++        //
++        // For example, if the user has defined:
++        //
++        // /**
++        //  * @param {Object} o
++        //  */
++        // goog.isFoo = function(o) { ... };
++        //
++        // then we need to make sure that
++        // goog.isFoo({foo: 3}) // ok
++        // goog.isFoo({bar: 3}) // ok
++        //
++        // but not
++        // goog.isFoo({foo: 'string'}) // error
++        //
++        // The current algorithm is very simplistic, and it doesn't distinguish
++        // between properties that are optional and properties that are
++        // required (it just says that all properties are optional).
++        defineSlot(n, parent, getNativeType(BOOLEAN_TYPE), true);
+       }
+     }
+-
+     /**
+      * Find the ObjectType associated with the given slot.
+      * @param slotName The name of the slot to find the type in.

@@ -1,0 +1,30 @@
+diff --git a/src/java/org/apache/commons/math/util/MathUtils.java b/src/java/org/apache/commons/math/util/MathUtils.java
+index 6ee916469..300c8262d 100644
+--- a/src/java/org/apache/commons/math/util/MathUtils.java
++++ b/src/java/org/apache/commons/math/util/MathUtils.java
+@@ -424,12 +424,10 @@ public final class MathUtils {
+             v = -v;
+         } // make v negative
+         // B1. [Find power of 2]
+-        int k = 0;
+-        while ((u & 1) == 0 && (v & 1) == 0 && k < 31) { // while u and v are
+-                                                            // both even...
+-            u /= 2;
+-            v /= 2;
+-            k++; // cast out twos.
++        int k;
++        for (k = 0; ((u | v) & 1) == 0; ++k) {
++            u >>= 1;
++            v >>= 1;
+         }
+         if (k == 31) {
+             throw new ArithmeticException("overflow: gcd is 2^31");
+@@ -443,7 +441,7 @@ public final class MathUtils {
+             /* assert u<0 && v<0; */
+             // B4/B3: cast out twos from t.
+             while ((t & 1) == 0) { // while t is even..
+-                t /= 2; // cast out twos
++                t >>= 1; // cast out twos
+             }
+             // B5 [reset max(u,v)]
+             if (t > 0) {

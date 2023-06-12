@@ -1,0 +1,33 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/jsontype/impl/AsWrapperTypeDeserializer.java b/src/main/java/com/fasterxml/jackson/databind/jsontype/impl/AsWrapperTypeDeserializer.java
+index e9bf3cdcb..7725e41e1 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/jsontype/impl/AsWrapperTypeDeserializer.java
++++ b/src/main/java/com/fasterxml/jackson/databind/jsontype/impl/AsWrapperTypeDeserializer.java
+@@ -78,7 +78,6 @@ public class AsWrapperTypeDeserializer
+     @SuppressWarnings("resource")
+     private final Object _deserialize(JsonParser p, DeserializationContext ctxt) throws IOException
+     {
+-        // 02-Aug-2013, tatu: May need to use native type ids
+         if (p.canReadTypeId()) {
+             Object typeId = p.getTypeId();
+             if (typeId != null) {
+@@ -109,13 +107,16 @@ public class AsWrapperTypeDeserializer
+             p = JsonParserSequence.createFlattened(tb.asParser(p), p);
+             p.nextToken();
+         }
+-        
+-        Object value = deser.deserialize(p, ctxt);
++        final Object value;
++        if (_valueTypeDeserializer != null) {
++            value = _valueDeserializer.deserializeWithType(p, ctxt, _valueTypeDeserializer);
++        } else {
++            value = _valueDeserializer.deserialize(p, ctxt);
++        }
+         // And then need the closing END_OBJECT
+         if (p.nextToken() != JsonToken.END_OBJECT) {
+             throw ctxt.wrongTokenException(p, JsonToken.END_OBJECT,
+                     "expected closing END_OBJECT after type information and deserialized value");
+         }
+         return value;
+-    }
+-}
++    }}

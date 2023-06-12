@@ -1,0 +1,24 @@
+diff --git a/src/main/java/org/apache/commons/compress/archivers/ArchiveStreamFactory.java b/src/main/java/org/apache/commons/compress/archivers/ArchiveStreamFactory.java
+index e2847a61..7a5a85ac 100644
+--- a/src/main/java/org/apache/commons/compress/archivers/ArchiveStreamFactory.java
++++ b/src/main/java/org/apache/commons/compress/archivers/ArchiveStreamFactory.java
+@@ -246,10 +242,16 @@ public class ArchiveStreamFactory {
+                 // autodetection, simply not a TAR
+                 // ignored
+             }
++            // Tar needs an even bigger buffer to check the signature; read the first block
++            final byte[] cpiosig = new byte[110];
++            in.mark(cpiosig.length);
++            signatureLength = in.read(cpiosig);
++            in.reset();
++            if (CpioArchiveInputStream.matches(cpiosig, signatureLength)) {
++                return new CpioArchiveInputStream(in);
++            }
+         } catch (IOException e) {
+             throw new ArchiveException("Could not use reset and mark operations.", e);
+         }
+-
+         throw new ArchiveException("No Archiver found for the stream signature");
+-    }
+-}
++    }}

@@ -1,0 +1,47 @@
+diff --git a/src/java/org/apache/commons/cli/GnuParser.java b/src/java/org/apache/commons/cli/GnuParser.java
+index 14a9cc0..ab62a42 100644
+--- a/src/java/org/apache/commons/cli/GnuParser.java
++++ b/src/java/org/apache/commons/cli/GnuParser.java
+@@ -51,10 +51,8 @@ public class GnuParser extends Parser {
+      */
+     protected String[] flatten(Options options, String[] arguments, boolean stopAtNonOption)
+     {
+-        List tokens = new ArrayList();
+-
++        List<String> tokens = new ArrayList<String>();
+         boolean eatTheRest = false;
+-
+         for (int i = 0; i < arguments.length; i++)
+         {
+             String arg = arguments[i];
+@@ -78,12 +74,16 @@ public class GnuParser extends Parser {
+                 }
+                 else
+                 {
+-                    if (options.hasOption(arg.substring(0, 2)))
++                    if (opt.length() > 2 && options.hasOption(arg.substring(0, 2)))
+                     {
+                         // the format is --foo=value or -foo=value
+-                        // the format is a special properties option (-Dproperty=value)
+-                        tokens.add(arg.substring(0, 2)); // -D
+-                        tokens.add(arg.substring(2)); // property=value
++                        String longOpt = arg.substring(0, 2); // --foo
++                        tokens.add(longOpt);
++                        String value = arg.substring(2); // =value
++                        if (value.startsWith("=")) {
++                            value = value.substring(1);
++                        }
++                        tokens.add(value);
+                     }
+                     else
+                     {
+@@ -105,7 +104,5 @@ public class GnuParser extends Parser {
+                 }
+             }
+         }
+-
+-        return (String[]) tokens.toArray(new String[tokens.size()]);
+-    }
+-}
++        return tokens.toArray(new String[tokens.size()]);
++    }}

@@ -1,0 +1,37 @@
+diff --git a/src/java/org/apache/commons/lang/text/StrBuilder.java b/src/java/org/apache/commons/lang/text/StrBuilder.java
+index f24e67f2..4cec51aa 100644
+--- a/src/java/org/apache/commons/lang/text/StrBuilder.java
++++ b/src/java/org/apache/commons/lang/text/StrBuilder.java
+@@ -1757,7 +1757,7 @@ public class StrBuilder implements Cloneable {
+      * @param startIndex  the index to start at, invalid index rounded to edge
+      * @return the first index of the string, or -1 if not found
+      */
+-    public int indexOf(String str, int startIndex) {
++public int indexOf(String str, int startIndex) {
+         startIndex = (startIndex < 0 ? 0 : startIndex);
+         if (str == null || startIndex >= size) {
+             return -1;
+@@ -1774,14 +1774,18 @@ public class StrBuilder implements Cloneable {
+         }
+         char[] thisBuf = buffer;
+         int len = thisBuf.length - strLen;
+-        outer:
++        int lastIndex = strLen - 1;
++        char firstChar = str.charAt(0);
+         for (int i = startIndex; i < len; i++) {
+-            for (int j = 0; j < strLen; j++) {
+-                if (str.charAt(j) != thisBuf[i + j]) {
+-                    continue outer;
++            char c = thisBuf[i];
++            if (c == firstChar) {
++                for (int j = 0; j < lastIndex; j++) {
++                    if (str.charAt(j + 1) != thisBuf[i + j + 1]) {
++                        break;
++                    }
+                 }
++                return i;
+             }
+-            return i;
+         }
+         return -1;
+     }

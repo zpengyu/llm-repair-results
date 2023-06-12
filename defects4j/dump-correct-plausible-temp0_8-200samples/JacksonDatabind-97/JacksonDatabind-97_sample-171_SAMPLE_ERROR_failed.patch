@@ -1,0 +1,23 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/node/POJONode.java b/src/main/java/com/fasterxml/jackson/databind/node/POJONode.java
+index d1452fc54..e329dfb56 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/node/POJONode.java
++++ b/src/main/java/com/fasterxml/jackson/databind/node/POJONode.java
+@@ -111,10 +111,16 @@ public class POJONode
+         } else {
+             // 25-May-2018, tatu: [databind#1991] do not call via generator but through context;
+             //    this to preserve contextual information
+-            gen.writeObject(_value);
++            if (ctxt.isEnabled(SerializationFeature.WRITE_SINGLE_ELEM_ARRAYS_UNWRAPPED)
++                && hasSingleElement(_value)) {
++                serializeContents(gen, ctxt, _value);
++                return;
++            }
++            gen.writeStartArray();
++            serializeContents(gen, ctxt, _value);
++            gen.writeEndArray();
+         }
+     }
+-
+     /*
+     /**********************************************************
+     /* Extended API

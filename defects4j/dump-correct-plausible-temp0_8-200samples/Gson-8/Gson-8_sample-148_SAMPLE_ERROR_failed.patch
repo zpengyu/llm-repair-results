@@ -1,0 +1,44 @@
+diff --git a/gson/src/main/java/com/google/gson/internal/UnsafeAllocator.java b/gson/src/main/java/com/google/gson/internal/UnsafeAllocator.java
+index a72d3d10..a2b1cbc1 100644
+--- a/gson/src/main/java/com/google/gson/internal/UnsafeAllocator.java
++++ b/gson/src/main/java/com/google/gson/internal/UnsafeAllocator.java
+@@ -45,6 +44,9 @@ public abstract class UnsafeAllocator {
+         @Override
+         @SuppressWarnings("unchecked")
+         public <T> T newInstance(Class<T> c) throws Exception {
++          if (Modifier.isInterface(c.getModifiers()) || Modifier.isAbstract(c.getModifiers())) {
++            throw new UnsupportedOperationException("Cannot allocate " + c);
++          }
+           return (T) allocateInstance.invoke(unsafe, c);
+         }
+       };
+@@ -68,6 +69,9 @@ public abstract class UnsafeAllocator {
+         @Override
+         @SuppressWarnings("unchecked")
+         public <T> T newInstance(Class<T> c) throws Exception {
++          if (Modifier.isInterface(c.getModifiers()) || Modifier.isAbstract(c.getModifiers())) {
++            throw new UnsupportedOperationException("Cannot allocate " + c);
++          }
+           return (T) newInstance.invoke(null, c, constructorId);
+         }
+       };
+@@ -87,6 +90,9 @@ public abstract class UnsafeAllocator {
+         @Override
+         @SuppressWarnings("unchecked")
+         public <T> T newInstance(Class<T> c) throws Exception {
++          if (Modifier.isInterface(c.getModifiers()) || Modifier.isAbstract(c.getModifiers())) {
++            throw new UnsupportedOperationException("Cannot allocate " + c);
++          }
+           return (T) newInstance.invoke(null, c, Object.class);
+         }
+       };
+@@ -97,6 +102,9 @@ public abstract class UnsafeAllocator {
+     return new UnsafeAllocator() {
+       @Override
+       public <T> T newInstance(Class<T> c) {
++        if (Modifier.isInterface(c.getModifiers()) || Modifier.isAbstract(c.getModifiers())) {
++          throw new UnsupportedOperationException("Cannot allocate " + c);
++        }
+         throw new UnsupportedOperationException("Cannot allocate " + c);
+       }
+     };

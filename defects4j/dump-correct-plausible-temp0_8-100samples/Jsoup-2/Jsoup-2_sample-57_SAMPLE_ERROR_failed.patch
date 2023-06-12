@@ -1,0 +1,25 @@
+diff --git a/src/main/java/org/jsoup/parser/Parser.java b/src/main/java/org/jsoup/parser/Parser.java
+index 8cc01d2..a737c88 100644
+--- a/src/main/java/org/jsoup/parser/Parser.java
++++ b/src/main/java/org/jsoup/parser/Parser.java
+@@ -162,8 +155,19 @@ public class Parser {
+                 doc.setBaseUri(href); // set on the doc so doc.createElement(Tag) will get updated base
+             }
+         }
++        // <link rel=dns-prefetch href=http://otherdomain.com>: dns prefetch hint
++        if (child.tagName().equals("link") && "dns-prefetch".equals(child.attr("rel")) && child.attr("href").length() > 0) {
++            String href = child.absUrl("href");
++            if (href.length() != 0) // ignore <link rel=dns-prefetch target> etc
++                doc.addDNSPrefetch(href);
++        }
++        // <?xml-stylesheet ... ?>: set attributes as stylesheet data
++        if (child.tagName().equals("xml-stylesheet")) {
++            if (child.attr("href").length() > 0) { // ignore <?xml-stylesheet target=""?> etc
++                doc.addStyleSheet(child.attr("href"), child.attr("type"), child.attr("title"), child.attr("media"));
++            }
++        }
+     }
+-
+     private Attribute parseAttribute() {
+         tq.consumeWhitespace();
+         String key = tq.consumeAttributeKey();

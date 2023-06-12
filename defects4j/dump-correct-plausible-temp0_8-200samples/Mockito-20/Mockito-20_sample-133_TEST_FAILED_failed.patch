@@ -1,0 +1,16 @@
+diff --git a/src/org/mockito/internal/creation/bytebuddy/ByteBuddyMockMaker.java b/src/org/mockito/internal/creation/bytebuddy/ByteBuddyMockMaker.java
+index ddaada2f1..e4c6d75d2 100644
+--- a/src/org/mockito/internal/creation/bytebuddy/ByteBuddyMockMaker.java
++++ b/src/org/mockito/internal/creation/bytebuddy/ByteBuddyMockMaker.java
+@@ -34,8 +34,9 @@ public class ByteBuddyMockMaker implements MockMaker {
+             mockInstance = classInstantiator.instantiate(mockedProxyType);
+             MockMethodInterceptor.MockAccess mockAccess = (MockMethodInterceptor.MockAccess) mockInstance;
+             mockAccess.setMockitoInterceptor(new MockMethodInterceptor(asInternalMockHandler(handler), settings));
+-
+-            return ensureMockIsAssignableToMockedType(settings, mockInstance);
++            if(!mockedProxyType.isInterface())
++            	return ensureMockIsAssignableToMockedType(settings, mockInstance);
++            return mockInstance;
+         } catch (ClassCastException cce) {
+             throw new MockitoException(join(
+                     "ClassCastException occurred while creating the mockito mock :",

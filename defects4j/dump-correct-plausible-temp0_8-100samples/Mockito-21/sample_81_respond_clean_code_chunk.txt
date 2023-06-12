@@ -1,0 +1,15 @@
+private <T> T withOuterClass(Class<T> cls) {
+	try {
+		Constructor<?>[] ctors = cls.getDeclaredConstructors();
+		for (Constructor<?> ctor : ctors) {
+			//Constructor<T> c = cls.getDeclaredConstructor(outerClassInstance.getClass());
+			if (ctor.getGenericParameterTypes().length == 1 && ctor.getGenericParameterTypes()[0].equals(outerClassInstance.getClass())) {
+				ctor.setAccessible(true);
+				return (T)ctor.newInstance(outerClassInstance);
+			}
+		}
+	} catch (Exception e) {
+		throw paramsException(cls, e);
+	}
+	return (T) withOuterClass(cls);
+}

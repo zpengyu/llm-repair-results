@@ -1,0 +1,65 @@
+diff --git a/src/java/org/apache/commons/jxpath/ri/compiler/CoreOperationRelationalExpression.java b/src/java/org/apache/commons/jxpath/ri/compiler/CoreOperationRelationalExpression.java
+index cd4ceac..ee25fb4 100644
+--- a/src/java/org/apache/commons/jxpath/ri/compiler/CoreOperationRelationalExpression.java
++++ b/src/java/org/apache/commons/jxpath/ri/compiler/CoreOperationRelationalExpression.java
+@@ -41,12 +40,23 @@ public abstract class CoreOperationRelationalExpression extends CoreOperation {
+     protected CoreOperationRelationalExpression(Expression[] args) {
+         super(args);
+     }
+-
+     public final Object computeValue(EvalContext context) {
+-        return compute(args[0].compute(context), args[1].compute(context))
+-                ? Boolean.TRUE : Boolean.FALSE;
++        Object left = args[0].computeValue(context);
++        Object right = args[1].computeValue(context);
++        if (left instanceof SelfContext) {
++            left = ((EvalContext) left).getSingleNodePointer();
++        }
++        if (right instanceof SelfContext) {
++            right = ((EvalContext) right).getSingleNodePointer();
++        }
++        if (left instanceof Collection) {
++            left = ((Collection) left).iterator();
++        }
++        if (right instanceof Collection) {
++            right = ((Collection) right).iterator();
++        }
++        return compute(left, right) ? Boolean.TRUE : Boolean.FALSE;
+     }
+-
+     protected final int getPrecedence() {
+         return RELATIONAL_EXPR_PRECEDENCE;
+     }
+@@ -69,9 +76,6 @@ public abstract class CoreOperationRelationalExpression extends CoreOperation {
+      * @return operation success/failure
+      */
+     private boolean compute(Object left, Object right) {
+-        left = reduce(left);
+-        right = reduce(right);
+-
+         if (left instanceof InitialContext) {
+             ((InitialContext) left).reset();
+         }
+@@ -97,22 +101,6 @@ public abstract class CoreOperationRelationalExpression extends CoreOperation {
+         }
+         return evaluateCompare(ld == rd ? 0 : ld < rd ? -1 : 1);
+     }
+-
+-    /**
+-     * Reduce an operand for comparison.
+-     * @param o Object to reduce
+-     * @return reduced operand
+-     */
+-    private Object reduce(Object o) {
+-        if (o instanceof SelfContext) {
+-            o = ((EvalContext) o).getSingleNodePointer();
+-        }
+-        if (o instanceof Collection) {
+-            o = ((Collection) o).iterator();
+-        }
+-        return o;
+-    }
+-
+     /**
+      * Learn whether any element returned from an Iterator matches a given value.
+      * @param it Iterator

@@ -1,0 +1,26 @@
+diff --git a/src/java/org/apache/commons/lang3/ArrayUtils.java b/src/java/org/apache/commons/lang3/ArrayUtils.java
+index 9ac66047..f1148ee2 100644
+--- a/src/java/org/apache/commons/lang3/ArrayUtils.java
++++ b/src/java/org/apache/commons/lang3/ArrayUtils.java
+@@ -2956,14 +2956,16 @@ public class ArrayUtils {
+         } else if (array2 == null) {
+             return clone(array1);
+         }
+-        final Class<?> type1 = array1.getClass().getComponentType();
+-        T[] joinedArray = (T[]) Array.newInstance(type1, array1.length + array2.length);
++        Class<?> type1 = array1.getClass().getComponentType();
++        Class<?> type2 = array2.getClass().getComponentType();
++        if (!type1.isAssignableFrom(type2)) {
++            throw new IllegalArgumentException("Cannot store "+type2.getName()+" in an array of " + type1.getName());
++        }
++        final T[] joinedArray = (T[]) Array.newInstance(type1, array1.length + array2.length);
+         System.arraycopy(array1, 0, joinedArray, 0, array1.length);
+-            System.arraycopy(array2, 0, joinedArray, array1.length, array2.length);
+-            // Check if problem is incompatible types
++        System.arraycopy(array2, 0, joinedArray, array1.length, array2.length);
+         return joinedArray;
+     }
+-
+     /**
+      * <p>Adds all the elements of the given arrays into a new array.</p>
+      * <p>The new array contains all of the element of <code>array1</code> followed

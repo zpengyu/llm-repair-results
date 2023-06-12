@@ -1,0 +1,26 @@
+diff --git a/src/com/google/javascript/jscomp/parsing/IRFactory.java b/src/com/google/javascript/jscomp/parsing/IRFactory.java
+index 32a15610..a00326fc 100644
+--- a/src/com/google/javascript/jscomp/parsing/IRFactory.java
++++ b/src/com/google/javascript/jscomp/parsing/IRFactory.java
+@@ -531,7 +531,9 @@ public class IRFactory {
+             functionNode.getLp();
+         newName.setCharno(position2charno(lpColumn));
+       }
+-
++      if (newName.getLineno() == -1) {
++        newName.setLineno(functionNode.getLineno());
++      }
+       node.addChildToBack(newName);
+       Node lp = newNode(Token.LP);
+       // The left paren's complicated because it's not represented by an
+@@ -548,7 +550,9 @@ public class IRFactory {
+       }
+       int lparenCharno = functionNode.getLp() +
+           functionNode.getAbsolutePosition();
+-
++      if (lp.getLineno() == -1) {
++        lp.setLineno(functionNode.getLineno());
++      }
+       lp.setCharno(position2charno(lparenCharno));
+       for (AstNode param : functionNode.getParams()) {
+         lp.addChildToBack(transform(param));

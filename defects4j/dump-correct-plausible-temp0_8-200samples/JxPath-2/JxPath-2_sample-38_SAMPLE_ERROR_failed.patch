@@ -1,0 +1,45 @@
+diff --git a/src/java/org/apache/commons/jxpath/ri/compiler/Expression.java b/src/java/org/apache/commons/jxpath/ri/compiler/Expression.java
+index 927f617..67377a0 100644
+--- a/src/java/org/apache/commons/jxpath/ri/compiler/Expression.java
++++ b/src/java/org/apache/commons/jxpath/ri/compiler/Expression.java
+@@ -67,24 +62,35 @@ public abstract class Expression {
+      * the first element of the node set.
+      */
+     public abstract Object computeValue(EvalContext context);
+-    public abstract Object compute(EvalContext context);
+-
++    public Object compute(EvalContext context) {
++        Object result = computeValue(context);
++        if (result instanceof EvalContext) {
++            Iterator iter = ((EvalContext) result).iteratePointers();
++            return iter.hasNext() ? iter.next() : null;
++        }
++        if (result instanceof Pointer) {
++            return result;
++        }
++        return result == null ? null : new NodePointer(context.getRootContext().getCurrentNodePointer(), result);
++    }
+     public Iterator iterate(EvalContext context) {
+-        Object result = compute(context);
++        Object result = computeValue(context);
+         if (result instanceof EvalContext) {
+             return new ValueIterator((EvalContext) result);
+         }
+         return ValueUtils.iterate(result);
+     }
+-
+     public Iterator iteratePointers(EvalContext context) {
+-        Object result = compute(context);
++        Object result = computeValue(context);
+         if (result == null) {
+             return Collections.EMPTY_LIST.iterator();
+         }
+         if (result instanceof EvalContext) {
+             return (EvalContext) result;
+         }
++        if (result instanceof Pointer) {
++            return Collections.singletonList(result).iterator();
++        }
+         return new PointerIterator(ValueUtils.iterate(result),
+                 new QName(null, "value"),
+                 context.getRootContext().getCurrentNodePointer().getLocale());

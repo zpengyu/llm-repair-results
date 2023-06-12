@@ -1,0 +1,31 @@
+    public String absUrl(String attributeKey) {
+        Validate.notEmpty(attributeKey);
+        String relUrl = attr(attributeKey);
+        if (!hasAttr(attributeKey)) {
+            return ""; // nothing to make absolute with
+        } else {
+            URL base;
+            try {
+                try {
+                    base = new URL(baseUri);
+                } catch (MalformedURLException e) {
+                    // the base is unsuitable, but the attribute may be abs on its own, so try that
+                    URL abs = new URL(relUrl);
+                    return abs.toExternalForm();
+                }
+                // workaround: java resolves '//path/file + ?foo' to '//path/?foo', not '//path/file?foo' as desired
+                // this may be cleaner: https://github.com/jhy/jsoup/issues/23
+                String path = base.getPath();
+                if (relUrl.startsWith("?"))
+                    relUrl = path.replaceFirst("[^/]*$", "") + relUrl;
+                else if (relUrl.startsWith("#"))
+                    relUrl = path + relUrl;
+                else if (!relUrl.startsWith("/") && !base.getFile().equals("/")) // does not start with /, not relative to root
+                    relUrl = path.replaceFirst("[^/]*$", "") + relUrl;
+                URL abs = new URL(base, relUrl);
+                return abs.toExternalForm();
+            } catch (MalformedURLException e) {
+                return "";
+            }
+        }
+    }

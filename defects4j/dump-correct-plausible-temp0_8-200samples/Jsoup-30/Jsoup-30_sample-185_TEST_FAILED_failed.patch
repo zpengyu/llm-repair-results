@@ -1,0 +1,19 @@
+diff --git a/src/main/java/org/jsoup/safety/Cleaner.java b/src/main/java/org/jsoup/safety/Cleaner.java
+index c6879b1..3d056e8 100644
+--- a/src/main/java/org/jsoup/safety/Cleaner.java
++++ b/src/main/java/org/jsoup/safety/Cleaner.java
+@@ -88,8 +78,12 @@ public class Cleaner {
+                 }
+             } else if (source instanceof TextNode) {
+                 TextNode sourceText = (TextNode) source;
+-                TextNode destText = new TextNode(sourceText.getWholeText(), source.baseUri());
+-                destination.appendChild(destText);
++                if (whitelist.isSafeTag(sourceText.getWholeText())) {
++                    TextNode destText = new TextNode(sourceText.getWholeText(), source.baseUri());
++                    destination.appendChild(destText);
++                } else {
++                    numDiscarded++;
++                }
+             }
+         }
+         return numDiscarded;

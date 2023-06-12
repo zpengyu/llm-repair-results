@@ -1,0 +1,28 @@
+diff --git a/src/main/java/com/fasterxml/jackson/core/json/JsonGeneratorImpl.java b/src/main/java/com/fasterxml/jackson/core/json/JsonGeneratorImpl.java
+index 81b90fed..4c2c9b18 100644
+--- a/src/main/java/com/fasterxml/jackson/core/json/JsonGeneratorImpl.java
++++ b/src/main/java/com/fasterxml/jackson/core/json/JsonGeneratorImpl.java
+@@ -194,4 +168,22 @@ public abstract class JsonGeneratorImpl extends GeneratorBase
+         writeFieldName(fieldName);
+         writeString(value);
+     }
++    @Override
++    public void writeString(String text) throws IOException,JsonGenerationException
++    {
++        _verifyValueWrite("write a string");
++        if (text == null) {
++            _writeNull();
++            return;
++        }
++        if (_outputTail >= _outputEnd) {
++            _flushBuffer();
++        }
++        _outputBuffer[_outputTail++] = '"';
++        _writeString(text);
++        if (_outputTail >= _outputEnd) {
++            _flushBuffer();
++        }
++        _outputBuffer[_outputTail++] = '"';
++    }
+ }
+\ No newline at end of file

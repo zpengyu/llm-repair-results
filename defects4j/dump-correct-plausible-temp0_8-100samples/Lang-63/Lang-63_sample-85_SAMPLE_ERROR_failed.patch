@@ -1,0 +1,30 @@
+diff --git a/src/java/org/apache/commons/lang/time/DurationFormatUtils.java b/src/java/org/apache/commons/lang/time/DurationFormatUtils.java
+index 8ced282e..f8e008f9 100644
+--- a/src/java/org/apache/commons/lang/time/DurationFormatUtils.java
++++ b/src/java/org/apache/commons/lang/time/DurationFormatUtils.java
+@@ -260,22 +260,18 @@ public class DurationFormatUtils {
+      * @return the time as a String
+      */
+     public static String formatPeriod(long startMillis, long endMillis, String format, boolean padWithZeros, 
+-            TimeZone timezone) {
+-
++            TimeZone timezone, Locale locale) {
+         long millis = endMillis - startMillis;
+         if (millis < 28 * DateUtils.MILLIS_PER_DAY) {
+             return formatDuration(millis, format, padWithZeros);
+         }
+-
+         Token[] tokens = lexx(format);
+-
+         // timezones get funky around 0, so normalizing everything to GMT 
+         // stops the hours being off
+-        Calendar start = Calendar.getInstance(timezone);
++        Calendar start = Calendar.getInstance(timezone, locale);
+         start.setTime(new Date(startMillis));
+-        Calendar end = Calendar.getInstance(timezone);
++        Calendar end = Calendar.getInstance(timezone, locale);
+         end.setTime(new Date(endMillis));
+-
+         // initial estimates
+         int milliseconds = end.get(Calendar.MILLISECOND) - start.get(Calendar.MILLISECOND);
+         int seconds = end.get(Calendar.SECOND) - start.get(Calendar.SECOND);

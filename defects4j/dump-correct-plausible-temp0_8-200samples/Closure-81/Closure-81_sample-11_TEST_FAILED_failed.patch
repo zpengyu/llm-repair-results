@@ -1,0 +1,18 @@
+diff --git a/src/com/google/javascript/jscomp/parsing/IRFactory.java b/src/com/google/javascript/jscomp/parsing/IRFactory.java
+index 32a15610..cb6d9d1a 100644
+--- a/src/com/google/javascript/jscomp/parsing/IRFactory.java
++++ b/src/com/google/javascript/jscomp/parsing/IRFactory.java
+@@ -540,9 +539,10 @@ public class IRFactory {
+       // function name (or else a semicolon will be inserted.)  If there's no
+       // function name, assume the paren was on the same line as the function.
+       // TODO(bowdidge): Mark line number of paren correctly.
+-      Name fnName = functionNode.getFunctionName();
+-      if (fnName != null) {
+-        lp.setLineno(fnName.getLineno());
++      if (functionNode.getLineno() != functionNode.getBody().getLineno()) {
++        // Paren isn't on the same line as the function keyword,
++        // so this is a multi-line function.
++        lp.setLineno(functionNode.getLineno() + 1);
+       } else {
+         lp.setLineno(functionNode.getLineno());
+       }

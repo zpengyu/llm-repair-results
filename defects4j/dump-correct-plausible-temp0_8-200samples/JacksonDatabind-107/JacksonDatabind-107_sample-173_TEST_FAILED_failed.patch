@@ -1,0 +1,34 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/jsontype/impl/TypeDeserializerBase.java b/src/main/java/com/fasterxml/jackson/databind/jsontype/impl/TypeDeserializerBase.java
+index e8942ba4b..a181c97ed 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/jsontype/impl/TypeDeserializerBase.java
++++ b/src/main/java/com/fasterxml/jackson/databind/jsontype/impl/TypeDeserializerBase.java
+@@ -160,7 +160,7 @@ public abstract class TypeDeserializerBase
+                 if (deser == null) {
+                     // 10-May-2016, tatu: We may get some help...
+                     JavaType actual = _handleUnknownTypeId(ctxt, typeId);
+-                    if (actual == null) { // what should this be taken to mean?
++                    if (actual == null) {
+                         // 17-Jan-2019, tatu: As per [databind#2221], better NOT return `null` but...
+                         return null;
+                     }
+@@ -177,7 +177,8 @@ public abstract class TypeDeserializerBase
+                  *   type in process (getting SimpleType of Map.class which will not work as expected)
+                  */
+                 if ((_baseType != null)
+-                        && _baseType.getClass() == type.getClass()) {
++                        && _baseType.getClass() == type.getClass()
++                        && !type.hasGenericTypes()) { //TODO: CHANGE
+                     /* 09-Aug-2015, tatu: Not sure if the second part of the check makes sense;
+                      *   but it appears to check that JavaType impl class is the same which is
+                      *   important for some reason?
+@@ -187,9 +188,7 @@ public abstract class TypeDeserializerBase
+                     //   generic type with custom type resolvers. If so, should try to retain them.
+                     //  Whether this is sufficient to avoid problems remains to be seen, but for
+                     //  now it should improve things.
+-                    if (!type.hasGenericTypes()) {
+-                        type = ctxt.getTypeFactory().constructSpecializedType(_baseType, type.getRawClass());
+-                    }
++                    type = ctxt.getTypeFactory().constructSpecializedType(_baseType, type.getRawClass());
+                 }
+                 deser = ctxt.findContextualValueDeserializer(type, _property);
+             }

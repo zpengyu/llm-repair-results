@@ -1,0 +1,25 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/ObjectReader.java b/src/main/java/com/fasterxml/jackson/databind/ObjectReader.java
+index 66cc8eac7..27f8bbb4e 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/ObjectReader.java
++++ b/src/main/java/com/fasterxml/jackson/databind/ObjectReader.java
+@@ -1436,12 +1436,16 @@ public class ObjectReader
+         throws IOException, JsonProcessingException
+     {
+         if (_dataFormatReaders != null) {
+-            return _detectBindAndReadValues(_dataFormatReaders.findFormat(src, offset, length), false);
++            _reportUndetectableSource(src);
++        }
++        JsonParser p = _parserFactory.createParser(src, offset, length);
++        p.enable(Feature.ALLOW_NON_NUMERIC_NUMBERS);
++        if (_schema != null) {
++            p.setSchema(_schema);
+         }
+-        return _bindAndReadValues(_considerFilter(_parserFactory.createParser(src),
+-                true));
++        p.nextToken();
++        return _bindAndReadValues(p);
+     }
+-
+     /**
+      * Overloaded version of {@link #readValue(InputStream)}.
+      */

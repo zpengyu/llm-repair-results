@@ -1,0 +1,26 @@
+diff --git a/src/com/google/javascript/jscomp/CollapseProperties.java b/src/com/google/javascript/jscomp/CollapseProperties.java
+index c24c69b2..282944d2 100644
+--- a/src/com/google/javascript/jscomp/CollapseProperties.java
++++ b/src/com/google/javascript/jscomp/CollapseProperties.java
+@@ -193,9 +190,20 @@ class CollapseProperties implements CompilerPass {
+         // added to the worklist.
+         workList.addAll(name.props);
+       }
++      // Add {@code name}'s local aliases to the worklist if it only has one
++      // global set.
++      if (name.globalSets == 1 && name.localSets == 0) {
++        for (Ref ref : name.getRefs()) {
++          if (ref.type == Type.ALIASING_GET &&
++              ref.scope.isLocal() &&
++              ref.getNode().getFirstChild().isQualifiedName()) {
++            Name alias = namespace.getSlot(ref.getNode().getFirstChild().getQualifiedName());
++            workList.add(alias);
++          }
++        }
++      }
+     }
+   }
+-
+   private boolean inlineAliasIfPossible(Ref alias, GlobalNamespace namespace) {
+     // Ensure that the alias is assigned to a local variable at that
+     // variable's declaration. If the alias's parent is a NAME,

@@ -1,0 +1,39 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/type/TypeFactory.java b/src/main/java/com/fasterxml/jackson/databind/type/TypeFactory.java
+index 87b165830..2858ffc3a 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/type/TypeFactory.java
++++ b/src/main/java/com/fasterxml/jackson/databind/type/TypeFactory.java
+@@ -928,7 +925,33 @@ public final class TypeFactory
+         context._addPlaceholder(name);
+         return _constructType(bounds[0], context);
+     }
+-
++    protected JavaType _fromParameterizedClass(Class<?> rawType, List<JavaType> typeParams)
++    {
++        // First: may need to create a placeholder to retain full generic type:
++        if (rawType.getTypeParameters().length != typeParams.size()) {
++            throw new IllegalArgumentException("Parameterized class "+rawType.getName()+" expects "+rawType.getTypeParameters().length+" type parameters, was given "+typeParams.size());
++        }
++        return new ParameterizedTypeImpl(_fromClass(rawType, null),
++                typeParams.toArray(new JavaType[typeParams.size()]), null);
++    }
++    private JavaType _resolveVariableViaSubTypes(HierarchicType subType, String variableName, TypeBindings bindings)
++    {
++        if (subType != null) { // just a sanity check
++            // One more thing: check if variable is bound in subtype itself...
++            if (subType.getBindings() != null) {
++                JavaType boundType = subType.getBindings().findType(variableName);
++                if (boundType != null) {
++                    return boundType;
++                }
++            }
++            // And if no, then subtypes:
++            JavaType boundType = _resolveVariableViaSubTypes(subType.getSubType(), variableName, bindings);
++            if (boundType != null) {
++                return boundType;
++            }
++        }
++        return null;
++    }
+     protected JavaType _fromWildcard(WildcardType type, TypeBindings context)
+     {
+         /* Similar to challenges with TypeVariable, we may have

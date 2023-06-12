@@ -1,0 +1,35 @@
+diff --git a/src/org/mockito/internal/MockHandler.java b/src/org/mockito/internal/MockHandler.java
+index 9452f1664..500593002 100644
+--- a/src/org/mockito/internal/MockHandler.java
++++ b/src/org/mockito/internal/MockHandler.java
+@@ -64,12 +64,13 @@ public class MockHandler<T> implements MockitoInvocationHandler, MockHandlerInte
+             return null;
+         }
+         VerificationMode verificationMode = mockingProgress.pullVerificationMode();
+-
+         InvocationMatcher invocationMatcher = matchersBinder.bindMatchers(mockingProgress.getArgumentMatcherStorage(),
+                         invocation);
+-
+         mockingProgress.validateState();
+-
++        invocationContainerImpl.setInvocationForPotentialStubbing(invocationMatcher);
++        OngoingStubbingImpl<T> ongoingStubbing = new OngoingStubbingImpl<T>(invocationContainerImpl);
++        mockingProgress.reportOngoingStubbing(ongoingStubbing);
++        StubbedInvocationMatcher stubbedInvocation = invocationContainerImpl.findAnswerFor(invocation);
+         //if verificationMode is not null then someone is doing verify()
+         if (verificationMode != null) {
+             //We need to check if verification was started on the correct mock
+@@ -82,13 +83,6 @@ public class MockHandler<T> implements MockitoInvocationHandler, MockHandlerInte
+                 // - see VerifyingWithAnExtraCallToADifferentMockTest (bug 138)
+             }
+         }
+-        
+-        invocationContainerImpl.setInvocationForPotentialStubbing(invocationMatcher);
+-        OngoingStubbingImpl<T> ongoingStubbing = new OngoingStubbingImpl<T>(invocationContainerImpl);
+-        mockingProgress.reportOngoingStubbing(ongoingStubbing);
+-
+-        StubbedInvocationMatcher stubbedInvocation = invocationContainerImpl.findAnswerFor(invocation);
+-
+         if (stubbedInvocation != null) {
+             stubbedInvocation.captureArgumentsFrom(invocation);
+             return stubbedInvocation.answer(invocation);

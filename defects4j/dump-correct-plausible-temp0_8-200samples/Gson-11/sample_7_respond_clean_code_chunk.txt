@@ -1,0 +1,13 @@
+          @Override public T1 read(JsonReader in) throws IOException {
+            if (typeAdapter == null) {
+                typeAdapter = context.getNextAdapter(typeAdapter, requestedType);
+                // from Gson 2.1.0
+                // typeAdapter = context.getAdapter(TypeToken.get(requestedType));
+            }
+            T1 result = typeAdapter.read(in);
+            if (result != null && !requestedType.isInstance(result)) {
+              throw new JsonSyntaxException("Expected a " + requestedType.getName()
+                  + " but was " + result.getClass().getName());
+            }
+            return result;
+          }

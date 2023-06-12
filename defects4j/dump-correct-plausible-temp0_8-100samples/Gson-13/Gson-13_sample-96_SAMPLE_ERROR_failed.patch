@@ -1,0 +1,21 @@
+diff --git a/gson/src/main/java/com/google/gson/stream/JsonReader.java b/gson/src/main/java/com/google/gson/stream/JsonReader.java
+index 4541941d..a9cc0cae 100644
+--- a/gson/src/main/java/com/google/gson/stream/JsonReader.java
++++ b/gson/src/main/java/com/google/gson/stream/JsonReader.java
+@@ -726,7 +718,15 @@ public class JsonReader implements Closeable {
+         }
+       }
+     }
+-
++    // check if number is double or int
++    if(last == NUMBER_CHAR_DIGIT || last == NUMBER_CHAR_FRACTION_DIGIT){
++      String str = String.valueOf(buffer, p, i);
++      Double d = Double.parseDouble(str);
++      if(d == d.intValue()){
++        peekedNumberLength = i;
++        return peeked = PEEKED_INTEGER;
++      }
++    }
+     // We've read a complete number. Decide if it's a PEEKED_LONG or a PEEKED_NUMBER.
+     if (last == NUMBER_CHAR_DIGIT && fitsInLong && (value != Long.MIN_VALUE || negative)) {
+       peekedLong = negative ? value : -value;

@@ -1,0 +1,24 @@
+    private boolean testValidProtocol(Element el, Attribute attr, Set<Protocol> protocols) {
+        // try to resolve relative urls to abs, and optionally update the attribute so output html has abs.
+        // rels without a baseuri get removed
+        String value = el.absUrl(attr.getKey());
+        if (!preserveRelativeLinks)
+            attr.setValue(value);
+        
+        String url;
+        
+        try {
+            url = new URL(value).getProtocol();
+        } catch (MalformedURLException e) {
+            return false;
+        }
+        
+        for (Protocol protocol : protocols) {
+            String prot = protocol.toString() + ":";
+            if (url.equalsIgnoreCase(prot)) {
+                return true;
+            }
+        }
+        return false;
+    }
+ 

@@ -1,0 +1,22 @@
+diff --git a/src/com/google/javascript/jscomp/CheckAccessControls.java b/src/com/google/javascript/jscomp/CheckAccessControls.java
+index c4ecc477..c984916f 100644
+--- a/src/com/google/javascript/jscomp/CheckAccessControls.java
++++ b/src/com/google/javascript/jscomp/CheckAccessControls.java
+@@ -497,8 +491,16 @@ class CheckAccessControls implements ScopedCallback, HotSwapCompilerPass {
+         }
+       }
+     }
++    if (visibility == Visibility.PACKAGE) {
++      if (currentClass == null || !currentClass.isSubtype(ownerType)) {
++        compiler.report(
++            t.makeError(getprop,  BAD_PACKAGE_PROPERTY_ACCESS,
++                propertyName,
++                validator.getReadableJSTypeName(
++                    getprop.getFirstChild(), true)));
++      }
++    }
+   }
+-
+   /**
+    * Whether the given access of a private constructor is legal.
+    *

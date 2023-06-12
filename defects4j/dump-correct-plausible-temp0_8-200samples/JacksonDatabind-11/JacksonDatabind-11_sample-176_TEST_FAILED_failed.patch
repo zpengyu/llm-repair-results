@@ -1,0 +1,27 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/type/TypeFactory.java b/src/main/java/com/fasterxml/jackson/databind/type/TypeFactory.java
+index 87b165830..25dba1650 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/type/TypeFactory.java
++++ b/src/main/java/com/fasterxml/jackson/databind/type/TypeFactory.java
+@@ -895,10 +895,6 @@ public final class TypeFactory
+             return _unknownType();
+         } else {
+             // Ok: here's where context might come in handy!
+-            /* 19-Mar-2015, tatu: As per [databind#609], may need to allow
+-             *   unresolved type variables to handle some cases where bounds
+-             *   are enough. Let's hope it does not hide real fail cases.
+-             */
+             JavaType actualType = context.findType(name);
+             if (actualType != null) {
+                 return actualType;
+@@ -911,7 +906,10 @@ public final class TypeFactory
+          *   current type (for method) since it will be masked.
+          */
+         Type[] bounds = type.getBounds();
+-
++        if (bounds.length == 0) {
++            // most likely to mean "Object"
++            return TypeFactory.unknownType();
++        }
+         // With type variables we must use bound information.
+         // Theoretically this gets tricky, as there may be multiple
+         // bounds ("... extends A & B"); and optimally we might

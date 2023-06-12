@@ -1,0 +1,46 @@
+diff --git a/src/main/java/org/apache/commons/math3/random/BitsStreamGenerator.java b/src/main/java/org/apache/commons/math3/random/BitsStreamGenerator.java
+index 33d350cb1..52c3a327f 100644
+--- a/src/main/java/org/apache/commons/math3/random/BitsStreamGenerator.java
++++ b/src/main/java/org/apache/commons/math3/random/BitsStreamGenerator.java
+@@ -28,9 +28,9 @@ import org.apache.commons.math3.util.FastMath;
+ public abstract class BitsStreamGenerator
+     implements RandomGenerator {
+     /** Serializable version identifier */
++    private static final long serialVersionUID = -6208167944184169458L;
+     /** Next gaussian. */
+     private double nextGaussian;
+-
+     /**
+      * Creates a new random number generator.
+      */
+@@ -78,25 +72,21 @@ public abstract class BitsStreamGenerator
+         int random = next(32);
+         while (i < bytes.length) {
+             bytes[i++] = (byte) (random & 0xff);
+-            random     = random >> 8;
++            random     = random >>> 8;
+         }
+     }
+-
+     /** {@inheritDoc} */
+     public double nextDouble() {
+-        final long high = ((long) next(26)) << 26;
+-        final int  low  = next(26);
+-        return (high | low) * 0x1.0p-52d;
++        final long high = ((long) next(26)) << 27;
++        final int  low  = next(27);
++        return (high | low) * 0x1.0p-53d;
+     }
+-
+     /** {@inheritDoc} */
+     public float nextFloat() {
+-        return next(23) * 0x1.0p-23f;
++        return next(24) * 0x1.0p-24f;
+     }
+-
+     /** {@inheritDoc} */
+     public double nextGaussian() {
+-
+         final double random;
+         if (Double.isNaN(nextGaussian)) {
+             // generate a new pair of gaussian numbers

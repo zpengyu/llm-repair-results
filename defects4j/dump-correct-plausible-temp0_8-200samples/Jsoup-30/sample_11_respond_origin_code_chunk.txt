@@ -1,0 +1,129 @@
+public class Cleaner {
+    private Whitelist whitelist;
+
+    /**
+     * Create a new cleaner, that sanitizes documents using the supplied whitelist.
+     * @param whitelist white-list to clean with
+     */
+    public Cleaner(Whitelist whitelist) {
+        Validate.notNull(whitelist);
+        this.whitelist = whitelist;
+    }
+
+    /**
+     * Creates a new, clean document, from the original dirty document, containing only elements allowed by the whitelist.
+     * The original document is not modified. Only elements from the dirt document's <code>body</code> are used.
+     * @param dirtyDocument Untrusted base document to clean.
+     * @return cleaned document.
+     */
+    public Document clean(Document dirtyDocument) {
+        Validate.notNull(dirtyDocument);
+
+        Document clean = Document.createShell(dirtyDocument.baseUri());
+        if (dirtyDocument.body() != null) // frameset documents won't have a body. the clean doc will have empty body.
+            copySafeNodes(dirtyDocument.body(), clean.body());
+
+        return clean;
+    }
+
+    /**
+     * Determines if the input document is valid, against the whitelist. It is considered valid if all the tags and attributes
+     * in the input HTML are allowed by the whitelist.
+     * <p/>
+     * This method can be used as a validator for user input forms. An invalid document will still be cleaned successfully
+     * using the {@link #clean(Document)} document. If using as a validator, it is recommended to still clean the document
+     * to ensure enforced attributes are set correctly, and that the output is tidied.
+     * @param dirtyDocument document to test
+     * @return true if no tags or attributes need to be removed; false if they do
+     */
+    public boolean isValid(Document dirtyDocument) {
+        Validate.notNull(dirtyDocument);
+
+        Document clean = Document.createShell(dirtyDocument.baseUri());
+        int numDiscarded = copySafeNodes(dirtyDocument.body(), clean.body());
+        return numDiscarded == 0;
+    }
+
+    /**
+     * Iterates the input and copies trusted nodes (tags, attributes, text) into the destination.
+     */
+    private int copySafeNodes(Element sourceRoot, Element destParent) {
+        List<Node> sourceChildren = sourceRoot.childNodes();
+        int numDiscarded = 0;
+
+        for (Node sourceNode : sourceChildren) {
+            if (sourceNode instanceof Element) {
+                Element sourceEl = (Element) sourceNode;
+
+                if (whitelist.isSafeTag(sourceEl.tagName())) { // safe, clone and copy safe attrs
+                    Element destChild = new Element(Tag.valueOf(sourceEl.tagName()), sourceEl.baseUri());
+                    destParent.appendChild(destChild);
+
+                    Attributes sourceAttrs = sourceEl.attributes();
+                    for (Attribute sourceAttr : sourceAttrs) {
+                        if (whitelist.isSafeAttribute(sourceEl.tagName(), sourceEl, sourceAttr))
+                            destChild.attributes().put(sourceAttr);
+                        else
+                            numDiscarded++;
+                    }
+                    numDiscarded += copySafeNodes(sourceEl, destChild);
+                } else { // not a safe tag, but it may have safe children. recurse.
+                    numDiscarded += copySafeNodes(sourceEl, destParent);
+                }
+            } else if (sourceNode instanceof TextNode) {
+                TextNode sourceText = (TextNode) sourceNode;
+                TextNode destText = new TextNode(sourceText.getWholeText(), sourceText.baseUri());
+                destParent.appendChild(destText);
+            }
+        }
+
+        Attributes sourceAttrs = sourceRoot.attributes();
+        Attributes destAttrs = destParent.attributes();
+
+        Attributes forRemoval = new Attributes();
+
+        for (Attribute sourceAttr : sourceAttrs) {
+            if (whitelist.isSafeAttribute(sourceRoot.tagName(), sourceRoot, sourceAttr)
+                    && !destAttrs.hasKeyIgnoreCase(sourceAttr.getKey()))
+                destAttrs.put(sourceAttr);
+            else if (sourceAttr.getKey().equals("style")) {
+                Attributes destStyle = parseStyle(sourceAttr.getValue(), sourceRoot.baseUri());
+                destAttrs.addAll(destStyle);
+                forRemoval.put(sourceAttr);
+            } else
+                forRemoval.put(sourceAttr);
+        }
+        destAttrs.removeAll(forRemoval);
+
+        // remove tags from dest that have been dropped from source.
+        List<Node> toRemove = new ArrayList<Node>();
+        for (Node destChild : destParent.childNodes()) {
+            if (destChild instanceof Element) {
+                Element destEl = (Element) destChild;
+                if (!whitelist.isSafeTag(destEl.tagName()))
+                    toRemove.add(destChild);
+            }
+        }
+        destParent.removeChildren(toRemove);
+
+        return numDiscarded;
+    }
+
+    Attributes parseStyle(String styleText, String baseUri) {
+        Attributes output = new Attributes();
+        Matcher matcher = styleTag.matcher(styleText);
+        while (matcher.find()) {
+            String key = matcher.group(1).trim().toLowerCase();
+            String value = matcher.group(2).trim().toLowerCase();
+            if (!whitelist.isSafeAttribute("style", key, value))
+                continue;
+
+            output.put(key, value);
+        }
+        return output;
+    }
+
+    private static final Pattern styleTag = Pattern.compile("(\\S+?):\\s*(.+)");
+
+}
+

@@ -1,0 +1,37 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/type/SimpleType.java b/src/main/java/com/fasterxml/jackson/databind/type/SimpleType.java
+index 0fda4d76f..4f4c9badc 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/type/SimpleType.java
++++ b/src/main/java/com/fasterxml/jackson/databind/type/SimpleType.java
+@@ -119,9 +119,6 @@ public class SimpleType // note: until 2.6 was final
+     @Override
+     protected JavaType _narrow(Class<?> subclass)
+     {
+-        if (_class == subclass) {
+-            return this;
+-        }
+         // Should we check that there is a sub-class relationship?
+         // 15-Jan-2016, tatu: Almost yes, but there are some complications with
+         //    placeholder values, so no.
+@@ -132,10 +129,20 @@ public class SimpleType // note: until 2.6 was final
+         }
+         */
+         // 15-Jan-2015, tatu: Not correct; should really re-resolve...
+-        return new SimpleType(subclass, _bindings, _superClass, _superInterfaces,
++        if (_class == subclass) {
++            return this;
++        }
++        // 15-Jan-2016, tatu: Commented code, if uncommented, causes regression
++        //    with placeholder values, due to failure to recognize placeholders.
++        // 15-Jan-2016, tatu: As per [databind#1292], need to retain placeholders
++        //   as-is
++        //JavaType newType = new SimpleType(subclass, _bindings, _superClass, _superInterfaces,
++        //        _valueHandler, _typeHandler, _asStatic);
++        //return newType.withHandlersFrom(_thisType);
++        JavaType newType = new SimpleType(subclass, _bindings, _superClass, _superInterfaces,
+                 _valueHandler, _typeHandler, _asStatic);
++        return newType.withHandlersFrom(_thisType);
+     }
+-
+     @Override
+     public JavaType withContentType(JavaType contentType) {
+         throw new IllegalArgumentException("Simple types have no content types; can not call withContentType()");

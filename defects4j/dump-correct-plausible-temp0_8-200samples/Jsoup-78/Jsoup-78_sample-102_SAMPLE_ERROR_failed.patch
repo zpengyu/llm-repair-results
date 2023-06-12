@@ -1,0 +1,43 @@
+diff --git a/src/main/java/org/jsoup/helper/DataUtil.java b/src/main/java/org/jsoup/helper/DataUtil.java
+index bbbd8fb..32b0882 100644
+--- a/src/main/java/org/jsoup/helper/DataUtil.java
++++ b/src/main/java/org/jsoup/helper/DataUtil.java
+@@ -90,7 +90,7 @@ public final class DataUtil {
+         }
+     }
+ 
+-    static Document parseInputStream(InputStream input, String charsetName, String baseUri, Parser parser) throws IOException  {
++static Document parseInputStream(InputStream input, String charsetName, String baseUri, Parser parser) throws IOException {
+         if (input == null) // empty body
+             return new Document(baseUri);
+         input = ConstrainableInputStream.wrap(input, bufferSize, 0);
+@@ -148,9 +142,27 @@ public final class DataUtil {
+             if (charsetName == null)
+                 charsetName = defaultCharset;
+             BufferedReader reader = new BufferedReader(new InputStreamReader(input, charsetName), bufferSize);
+-                doc = parser.parseInput(reader, baseUri);
++            if (fullyRead && reader.ready()) {
++                try {
++                    doc = parser.parseInput(reader, baseUri);
++                } catch (IOException ioe) {
++                    // io exception when parsing (not seen before because reading the stream as we go)
++                    doc = null;
++                }
+                 // io exception when parsing (not seen before because reading the stream as we go)
+-            doc.outputSettings().charset(charsetName);
++            } else {
++                char[] cbuf = new char[bufferSize];
++                int cbufLen = 0;
++                StringBuilder sb = new StringBuilder(bufferSize);
++                while (true) {
++                    int read = reader.read(cbuf);
++                    if (read == -1) break;
++                    cbufLen += read;
++                    sb.append(cbuf, 0, read);
++                }
++                doc = parser.parseInput(sb.toString(), baseUri);
++                doc.outputSettings().charset(charsetName);
++            }
+         }
+         input.close();
+         return doc;

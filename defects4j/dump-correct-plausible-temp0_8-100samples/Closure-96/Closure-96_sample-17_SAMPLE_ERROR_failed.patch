@@ -1,0 +1,36 @@
+diff --git a/src/com/google/javascript/jscomp/TypeCheck.java b/src/com/google/javascript/jscomp/TypeCheck.java
+index 83a73c74..474b0027 100644
+--- a/src/com/google/javascript/jscomp/TypeCheck.java
++++ b/src/com/google/javascript/jscomp/TypeCheck.java
+@@ -1409,10 +1408,9 @@ public class TypeCheck implements NodeTraversal.Callback, CompilerPass {
+            parameters.hasNext()) {
+       // If there are no parameters left in the list, then the while loop
+       // above implies that this must be a var_args function.
+-        parameter = parameters.next();
++      parameter = parameters.next();
+       argument = arguments.next();
+       ordinal++;
+-
+       validator.expectArgumentMatchesParameter(t, argument,
+           getJSType(argument), getJSType(parameter), call, ordinal);
+     }
+@@ -1421,14 +1418,13 @@ public class TypeCheck implements NodeTraversal.Callback, CompilerPass {
+     int minArgs = functionType.getMinArguments();
+     int maxArgs = functionType.getMaxArguments();
+     if (minArgs > numArgs || maxArgs < numArgs) {
+-      report(t, call, WRONG_ARGUMENT_COUNT,
+-              validator.getReadableJSTypeName(call.getFirstChild(), false),
+-              String.valueOf(numArgs), String.valueOf(minArgs),
+-              maxArgs != Integer.MAX_VALUE ?
+-              " and no more than " + maxArgs + " argument(s)" : "");
++      String error = String.format("Function %s: called with %d argument(s). "
++              + "Expected between %d and %s argument(s).",
++          functionType.getDisplayName(), numArgs, minArgs,
++          maxArgs != Integer.MAX_VALUE ? maxArgs + " argument(s)" : "unlimited");
++      report(t, call, WRONG_ARGUMENT_COUNT, error);
+     }
+   }
+-
+   /**
+    * Visits a RETURN node.
+    *

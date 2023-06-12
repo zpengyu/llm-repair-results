@@ -1,0 +1,27 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/type/TypeFactory.java b/src/main/java/com/fasterxml/jackson/databind/type/TypeFactory.java
+index 87b165830..30d913a56 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/type/TypeFactory.java
++++ b/src/main/java/com/fasterxml/jackson/databind/type/TypeFactory.java
+@@ -903,8 +903,21 @@ public final class TypeFactory
+             if (actualType != null) {
+                 return actualType;
+             }
++            /* 05-Nov-2014, tatu: Additionally, if the type variable is within
++             *   the context, can try to resolve using that.
++             */
++            final JavaType boundType = _findBoundType(type, context);
++            if (boundType != null) {
++                return boundType;
++            }
++            // Ok, so no explicit binding. But let's try implicit ones
++            TypeVariable<?>[] typeVars = type.getGenericDeclaration().getTypeParameters();
++            for (int i = 0, len = typeVars.length; i < len; ++i) {
++                if (name.equals(typeVars[i].getName())) {
++                    return context.getType(i);
++                }
++            }
+         }
+-
+         /* 29-Jan-2010, tatu: We used to throw exception here, if type was
+          *   bound: but the problem is that this can occur for generic "base"
+          *   method, overridden by sub-class. If so, we will want to ignore

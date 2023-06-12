@@ -1,0 +1,24 @@
+diff --git a/src/org/mockito/internal/creation/instance/ConstructorInstantiator.java b/src/org/mockito/internal/creation/instance/ConstructorInstantiator.java
+index 972e1a282..f24b05739 100644
+--- a/src/org/mockito/internal/creation/instance/ConstructorInstantiator.java
++++ b/src/org/mockito/internal/creation/instance/ConstructorInstantiator.java
+@@ -38,6 +31,19 @@ public class ConstructorInstantiator implements Instantiator {
+         try {
+             return cls.newInstance();
+         } catch (Exception e) {
++            if(e instanceof InstantiationException) {
++                return tryToCreateInstanceByReflection(cls, e);
++            }
++            throw new InstantationException("Unable to create mock instance of '"
++                    + cls.getSimpleName() + "'.\nPlease ensure it has parameter-less constructor.", e);
++        }
++    }
++    private static <T> T tryToCreateInstanceByReflection(Class<T> cls, Exception e) throws InstantationException {
++        try {
++            Constructor<T> c = cls.getDeclaredConstructor();
++            c.setAccessible(true);
++            return c.newInstance();
++        } catch (Exception e2) {
+             throw new InstantationException("Unable to create mock instance of '"
+                     + cls.getSimpleName() + "'.\nPlease ensure it has parameter-less constructor.", e);
+         }

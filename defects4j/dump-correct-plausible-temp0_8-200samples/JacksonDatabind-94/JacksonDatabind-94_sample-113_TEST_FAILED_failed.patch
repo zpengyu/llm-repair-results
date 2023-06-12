@@ -1,0 +1,30 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/jsontype/impl/SubTypeValidator.java b/src/main/java/com/fasterxml/jackson/databind/jsontype/impl/SubTypeValidator.java
+index 9fe2d40b0..dcb3c42a4 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/jsontype/impl/SubTypeValidator.java
++++ b/src/main/java/com/fasterxml/jackson/databind/jsontype/impl/SubTypeValidator.java
+@@ -19,8 +19,7 @@ import com.fasterxml.jackson.databind.JsonMappingException;
+ public class SubTypeValidator
+ {
+     protected final static String PREFIX_SPRING = "org.springframework.";
+-
+-
++    protected final static String PREFIX_SPRING_EXCLUDED = "org.springframework.aop.";
+     /**
+      * Set of well-known "nasty classes", deserialization of which is considered dangerous
+      * and should (and is) prevented by default.
+@@ -87,6 +77,7 @@ public class SubTypeValidator
+             if (raw.isInterface()) {
+                 ;
+             } else if (full.startsWith(PREFIX_SPRING)) {
++                if (!full.startsWith(PREFIX_SPRING_EXCLUDED)) {
+                 for (Class<?> cls = raw; (cls != null) && (cls != Object.class); cls = cls.getSuperclass()){
+                     String name = cls.getSimpleName();
+                     // looking for "AbstractBeanFactoryPointcutAdvisor" but no point to allow any is there?
+@@ -102,6 +93,7 @@ public class SubTypeValidator
+                 // com.mchange.v2.c3p0.ComboPooledDataSource
+                 // com.mchange.v2.c3p0.debug.AfterCloseLoggingComboPooledDataSource 
+                 }
++                }
+             }
+             return;
+         } while (false);

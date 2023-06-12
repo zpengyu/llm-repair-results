@@ -1,0 +1,60 @@
+diff --git a/src/com/google/javascript/jscomp/CodeConsumer.java b/src/com/google/javascript/jscomp/CodeConsumer.java
+index dbdb0a9b..4eb298da 100644
+--- a/src/com/google/javascript/jscomp/CodeConsumer.java
++++ b/src/com/google/javascript/jscomp/CodeConsumer.java
+@@ -80,10 +72,9 @@ abstract class CodeConsumer {
+   void appendBlockEnd() {
+     append("}");
+   }
+-
+   void startNewLine() {
++    maybeLineBreak();
+   }
+-
+   void maybeLineBreak() {
+     maybeCutLine();
+   }
+@@ -100,10 +87,9 @@ abstract class CodeConsumer {
+   void beginBlock() {
+     if (statementNeedsEnded) {
+       append(";");
+-      maybeLineBreak();
++      startNewLine();
+     }
+     appendBlockStart();
+-
+     endLine();
+     statementNeedsEnded = false;
+   }
+@@ -119,12 +103,10 @@ abstract class CodeConsumer {
+     }
+     statementNeedsEnded = false;
+   }
+-
+   void listSeparator() {
+     add(",");
+-    maybeLineBreak();
++    startNewLine();
+   }
+-
+   /**
+    * Indicates the end of a statement and a ';' may need to be added.
+    * But we don't add it now, in case we're at the end of a block (in which
+@@ -138,7 +119,7 @@ abstract class CodeConsumer {
+   void endStatement(boolean needSemiColon) {
+     if (needSemiColon) {
+       append(";");
+-      maybeLineBreak();
++      startNewLine();
+       statementNeedsEnded = false;
+     } else if (statementStarted) {
+       statementNeedsEnded = true;
+@@ -153,7 +133,7 @@ abstract class CodeConsumer {
+     // Add a ';' if we need to.
+     if (statementNeedsEnded) {
+       append(";");
+-      maybeLineBreak();
++      startNewLine();
+       endLine();
+       statementNeedsEnded = false;
+     }

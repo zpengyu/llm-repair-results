@@ -1,0 +1,24 @@
+diff --git a/src/com/google/javascript/jscomp/PeepholeSubstituteAlternateSyntax.java b/src/com/google/javascript/jscomp/PeepholeSubstituteAlternateSyntax.java
+index dee765a1..9afbe76b 100644
+--- a/src/com/google/javascript/jscomp/PeepholeSubstituteAlternateSyntax.java
++++ b/src/com/google/javascript/jscomp/PeepholeSubstituteAlternateSyntax.java
+@@ -225,6 +225,19 @@ class PeepholeSubstituteAlternateSyntax
+         reportCodeChange();
+         return addition;
+       }
++    } else if (callTarget != null && callTarget.isName() &&
++        callTarget.getString().equals("Number")) {
++      // Fold Number(a) to +(a) on immutable literals,
++      // which allows further optimizations
++      Node value = callTarget.getNext();
++      if (value != null) {
++        Node addition = IR.add(
++            IR.number(0).srcref(callTarget),
++            value.detachFromParent());
++        n.getParent().replaceChild(n, addition);
++        reportCodeChange();
++        return addition;
++      }
+     }
+     return n;
+   }

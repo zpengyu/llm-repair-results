@@ -1,0 +1,21 @@
+diff --git a/src/org/mockito/internal/stubbing/defaultanswers/ReturnsDeepStubs.java b/src/org/mockito/internal/stubbing/defaultanswers/ReturnsDeepStubs.java
+index 6fa773f53..2028b3f4c 100644
+--- a/src/org/mockito/internal/stubbing/defaultanswers/ReturnsDeepStubs.java
++++ b/src/org/mockito/internal/stubbing/defaultanswers/ReturnsDeepStubs.java
+@@ -49,10 +45,14 @@ public class ReturnsDeepStubs implements Answer<Object>, Serializable {
+         if (!new MockCreationValidator().isTypeMockable(rawType)) {
+             return delegate.returnValueFor(rawType);
+         }
+-
++        if (returnTypeGenericMetadata.isSuperClassRawTypeMockable()) {
++            //we don't know what to return here: raw type is not mockable but something deep inside
++            //the generics is mockable (e.g. something like Set<? super BigInteger>), so we can't return empty value
++            //and we can't create mock (throwing exception would be too confusing)
++            return null;
++        }
+         return getMock(invocation);
+     }
+-
+     private Object getMock(InvocationOnMock invocation) throws Throwable {
+     	InternalMockHandler<Object> handler = new MockUtil().getMockHandler(invocation.getMock());
+     	InvocationContainerImpl container = (InvocationContainerImpl) handler.getInvocationContainer();

@@ -1,0 +1,21 @@
+diff --git a/src/com/google/javascript/jscomp/PeepholeSubstituteAlternateSyntax.java b/src/com/google/javascript/jscomp/PeepholeSubstituteAlternateSyntax.java
+index dee765a1..34da733f 100644
+--- a/src/com/google/javascript/jscomp/PeepholeSubstituteAlternateSyntax.java
++++ b/src/com/google/javascript/jscomp/PeepholeSubstituteAlternateSyntax.java
+@@ -225,6 +225,16 @@ class PeepholeSubstituteAlternateSyntax
+         reportCodeChange();
+         return addition;
+       }
++    } else if (callTarget.isGetProp() &&
++        callTarget.getFirstChild().isName() &&
++        callTarget.getFirstChild().getString().equals("goog") &&
++        callTarget.getLastChild().getString().equals("bind")) {
++      Node thisNode = callTarget.getNext();
++      if (thisNode != null && thisNode.isThis()) {
++        n.replaceChild(callTarget,
++            IR.function(IR.name(""), IR.paramList(), IR.block())
++                .srcref(callTarget));
++      }
+     }
+     return n;
+   }

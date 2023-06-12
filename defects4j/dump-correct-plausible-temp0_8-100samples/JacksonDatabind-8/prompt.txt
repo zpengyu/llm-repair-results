@@ -1,0 +1,99 @@
+###Provide a fix for the buggy function
+###Buggy Function
+class FibonacciExample {
+    public static void main(String args[]) {
+        int n1 = 0, n2 = 1, n3, i, count = 10;
+
+        System.out.print(n1 + " " + n2);
+
+        for (i = 2; i < count; ++i) {
+            n3 = n1 - n2;
+            System.out.print(" " + n3);
+            n1 = n2;
+            n2 = n3;
+        }
+    }
+}
+
+###Fixed Function
+class FibonacciExample {
+    public static void main(String args[]) {
+        int n1 = 0, n2 = 1, n3, i, count = 10;
+
+        System.out.print(n1 + " " + n2);
+
+        for (i = 2; i < count; ++i) {
+            n3 = n1 + n2;
+            System.out.print(" " + n3);
+            n1 = n2;
+            n2 = n3;
+        }
+    }
+}
+
+###Provide a fix for the buggy function
+###Buggy Function
+public TokenBuffer deserialize(JsonParser jp, DeserializationContext ctxt) throws IOException
+{
+    copyCurrentStructure(jp);
+    return this;
+}
+###Fixed Function
+public TokenBuffer deserialize(JsonParser jp, DeserializationContext ctxt) throws IOException
+{
+    if (jp.getCurrentTokenId() != JsonToken.FIELD_NAME.id()) {
+        copyCurrentStructure(jp);
+        return this;
+    }
+    /* 28-Oct-2014, tatu: As per #592, need to support a special case of starting from
+     *    FIELD_NAME, which is taken to mean that we are missing START_OBJECT, but need
+     *    to assume one did exist.
+     */
+    JsonToken t;
+    writeStartObject();
+    do {
+        copyCurrentStructure(jp);
+    } while ((t = jp.nextToken()) == JsonToken.FIELD_NAME);
+    if (t != JsonToken.END_OBJECT) {
+        throw ctxt.mappingException("Expected END_OBJECT after copying contents of a JsonParser into TokenBuffer, got "+t);
+    }
+    writeEndObject();
+    return this;
+}
+###Provide a fix for the buggy function
+###Buggy Function
+    protected void verifyNonDup(AnnotatedWithParams newOne, int typeIndex, boolean explicit)
+    {
+        final int mask = (1 << typeIndex);
+        _hasNonDefaultCreator = true;
+        AnnotatedWithParams oldOne = _creators[typeIndex];
+        // already had an explicitly marked one?
+        if (oldOne != null) {
+
+            if ((_explicitCreators & mask) != 0) { // already had explicitly annotated, leave as-is
+                // but skip, if new one not annotated
+                if (!explicit) {
+                    return;
+                }
+                // both explicit: verify
+                // otherwise only verify if neither explicitly annotated.
+            }
+
+            // one more thing: ok to override in sub-class
+            if (oldOne.getClass() == newOne.getClass()) {
+                // [databind#667]: avoid one particular class of bogus problems
+
+                    throw new IllegalArgumentException("Conflicting "+TYPE_DESCS[typeIndex]
+                            +" creators: already had explicitly marked "+oldOne+", encountered "+newOne);
+                // otherwise, which one to choose?
+                    // new type more generic, use old
+                // new type more specific, use it
+            }
+        }
+        if (explicit) {
+            _explicitCreators |= mask;
+        }
+        _creators[typeIndex] = _fixAccess(newOne);
+    }
+
+###Fixed Function

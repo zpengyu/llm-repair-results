@@ -1,0 +1,32 @@
+diff --git a/src/main/java/org/apache/commons/compress/archivers/zip/ZipFile.java b/src/main/java/org/apache/commons/compress/archivers/zip/ZipFile.java
+index fd5d1894..00cd189b 100644
+--- a/src/main/java/org/apache/commons/compress/archivers/zip/ZipFile.java
++++ b/src/main/java/org/apache/commons/compress/archivers/zip/ZipFile.java
+@@ -798,13 +798,14 @@ public class ZipFile {
+      * <p>Also records the offsets for the data to read from the
+      * entries.</p>
+      */
+-    private void resolveLocalFileHeaderData(Map<ZipArchiveEntry, NameAndComment>
++private void resolveLocalFileHeaderData(Map<ZipArchiveEntry, NameAndComment>
+                                             entriesWithoutUTF8Flag)
+         throws IOException {
+         // changing the name of a ZipArchiveEntry is going to change
+         // the hashcode - see COMPRESS-164
+         // Map needs to be reconstructed in order to keep central
+         // directory order
++        Map<ZipArchiveEntry, OffsetEntry> newMap = new LinkedHashMap<ZipArchiveEntry, OffsetEntry>();
+         for (ZipArchiveEntry ze : entries.keySet()) {
+             OffsetEntry offsetEntry = entries.get(ze);
+             long offset = offsetEntry.headerOffset;
+@@ -839,9 +839,10 @@ public class ZipFile {
+                     nameMap.put(ze.getName(), ze);
+                 }
+             }
++            newMap.put(ze, offsetEntry);
+         }
++        entries = newMap;
+     }
+-
+     /**
+      * Checks whether the archive starts with a LFH.  If it doesn't,
+      * it may be an empty archive.

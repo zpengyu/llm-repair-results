@@ -1,0 +1,71 @@
+diff --git a/src/com/google/javascript/jscomp/CodeGenerator.java b/src/com/google/javascript/jscomp/CodeGenerator.java
+index b58df9b3..b406fa64 100644
+--- a/src/com/google/javascript/jscomp/CodeGenerator.java
++++ b/src/com/google/javascript/jscomp/CodeGenerator.java
+@@ -985,11 +985,11 @@ class CodeGenerator {
+   }
+ 
+   /** Helper to escape javascript string as well as regular expression */
+-  static String strEscape(String s, char quote,
+-                          String doublequoteEscape,
+-                          String singlequoteEscape,
+-                          String backslashEscape,
+-                          CharsetEncoder outputCharsetEncoder) {
++private static String strEscape(String s, char quote,
++        String doublequoteEscape,
++        String singlequoteEscape,
++        String backslashEscape,
++        CharsetEncoder outputCharsetEncoder) {
+     StringBuilder sb = new StringBuilder(s.length() + 2);
+     sb.append(quote);
+     for (int i = 0; i < s.length(); i++) {
+@@ -1004,8 +1004,8 @@ class CodeGenerator {
+         case '\'': sb.append(singlequoteEscape); break;
+         case '>':                       // Break --> into --\> or ]]> into ]]\>
+           if (i >= 2 &&
+-              ((s.charAt(i - 1) == '-' && s.charAt(i - 2) == '-') ||
+-               (s.charAt(i - 1) == ']' && s.charAt(i - 2) == ']'))) {
++                  ((s.charAt(i - 1) == '-' && s.charAt(i - 2) == '-') ||
++                          (s.charAt(i - 1) == ']' && s.charAt(i - 2) == ']'))) {
+             sb.append("\\>");
+           } else {
+             sb.append(c);
+@@ -1014,15 +1014,13 @@ class CodeGenerator {
+         case '<':
+           // Break </script into <\/script
+           final String END_SCRIPT = "/script";
+-
+           // Break <!-- into <\!--
+           final String START_COMMENT = "!--";
+-
+           if (s.regionMatches(true, i + 1, END_SCRIPT, 0,
+-                              END_SCRIPT.length())) {
++                  END_SCRIPT.length())) {
+             sb.append("<\\");
+           } else if (s.regionMatches(false, i + 1, START_COMMENT, 0,
+-                                     START_COMMENT.length())) {
++                  START_COMMENT.length())) {
+             sb.append("<\\");
+           } else {
+             sb.append(c);
+@@ -1056,7 +1054,19 @@ class CodeGenerator {
+     sb.append(quote);
+     return sb.toString();
+   }
+-
++  private static void appendHexJavaScriptRepresentation(
++          StringBuilder sb, char c) {
++    // Note that Integer.toHexString(int) returns a lowercase string.
++    sb.append("\\u");
++    if (c < 0x10) {
++      sb.append("000");
++    } else if (c < 0x100) {
++      sb.append("00");
++    } else if (c < 0x1000) {
++      sb.append('0');
++    }
++    sb.append(Integer.toHexString(c));
++  }
+   static String identifierEscape(String s) {
+     // First check if escaping is needed at all -- in most cases it isn't.
+     if (NodeUtil.isLatin(s)) {

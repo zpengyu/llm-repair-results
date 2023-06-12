@@ -1,0 +1,21 @@
+diff --git a/src/com/google/javascript/jscomp/FunctionInjector.java b/src/com/google/javascript/jscomp/FunctionInjector.java
+index c17b3cb3..57891531 100644
+--- a/src/com/google/javascript/jscomp/FunctionInjector.java
++++ b/src/com/google/javascript/jscomp/FunctionInjector.java
+@@ -729,8 +723,15 @@ class FunctionInjector {
+                   block, fnParam.getString()) > 1) {
+             return CanInlineResult.NO;
+           }
++        } else {
++          // Check for arguments that are evaluated more than once.
++          // Note: Unlike block inlining, there it is not possible that a
++          // parameter reference will be in a loop.
++          if (NodeUtil.getNameReferenceCount(
++              block, fnParam.getString()) > 1) {
++            return CanInlineResult.NO;
++          }
+         }
+-
+         // Move to the next name.
+         fnParam = fnParam.getNext();
+       }

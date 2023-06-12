@@ -1,0 +1,34 @@
+diff --git a/src/com/google/javascript/jscomp/FlowSensitiveInlineVariables.java b/src/com/google/javascript/jscomp/FlowSensitiveInlineVariables.java
+index 73531dc5..fceda1e2 100644
+--- a/src/com/google/javascript/jscomp/FlowSensitiveInlineVariables.java
++++ b/src/com/google/javascript/jscomp/FlowSensitiveInlineVariables.java
+@@ -472,7 +472,7 @@ class FlowSensitiveInlineVariables extends AbstractPostOrderCallback
+      * numUseWithinUseCfgNode.
+      */
+     private void getNumUseInUseCfgNode(final Node cfgNode) {
+-
++      final boolean isAssignChain = cfgNode.isAssign();
+       numUsesWithinCfgNode = 0;
+       AbstractCfgNodeTraversalCallback gatherCb =
+           new AbstractCfgNodeTraversalCallback() {
+@@ -485,18 +484,14 @@ class FlowSensitiveInlineVariables extends AbstractPostOrderCallback
+             // will happen after the inlining of the right hand side.
+             // TODO(blickly): Make the SIDE_EFFECT_PREDICATE check more exact
+             //   and remove this special case.
+-              !(parent.isAssign() &&
+-               (parent.getFirstChild() == n))) {
++              !isAssignChain) {
+               // Don't count lhs of top-level assignment chain
+               numUsesWithinCfgNode++;
+           }
+         }
+-
+       };
+-
+       NodeTraversal.traverse(compiler, cfgNode, gatherCb);
+-    }
+-  }
++    }  }
+ 
+   /**
+    * Given an expression by its root and sub-expression n, return true if there

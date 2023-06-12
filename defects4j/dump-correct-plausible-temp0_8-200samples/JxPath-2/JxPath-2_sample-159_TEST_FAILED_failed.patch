@@ -1,0 +1,29 @@
+diff --git a/src/java/org/apache/commons/jxpath/ri/compiler/Expression.java b/src/java/org/apache/commons/jxpath/ri/compiler/Expression.java
+index 927f617..b5e783c 100644
+--- a/src/java/org/apache/commons/jxpath/ri/compiler/Expression.java
++++ b/src/java/org/apache/commons/jxpath/ri/compiler/Expression.java
+@@ -68,9 +63,11 @@ public abstract class Expression {
+      */
+     public abstract Object computeValue(EvalContext context);
+     public abstract Object compute(EvalContext context);
+-
+     public Iterator iterate(EvalContext context) {
+         Object result = compute(context);
++        if (result instanceof Iterator) {
++            return (Iterator) result;
++        }
+         if (result instanceof EvalContext) {
+             return new ValueIterator((EvalContext) result);
+         }
+@@ -85,6 +81,11 @@ public abstract class Expression {
+         if (result instanceof EvalContext) {
+             return (EvalContext) result;
+         }
++        if (result instanceof Iterator) {
++            return new PointerIterator((Iterator) result,
++                    new QName(null, "value"),
++                    context.getRootContext().getCurrentNodePointer().getLocale());
++        }
+         return new PointerIterator(ValueUtils.iterate(result),
+                 new QName(null, "value"),
+                 context.getRootContext().getCurrentNodePointer().getLocale());

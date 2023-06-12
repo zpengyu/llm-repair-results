@@ -1,0 +1,30 @@
+diff --git a/src/main/java/org/apache/commons/compress/archivers/zip/ZipFile.java b/src/main/java/org/apache/commons/compress/archivers/zip/ZipFile.java
+index fd5d1894..3ab717e0 100644
+--- a/src/main/java/org/apache/commons/compress/archivers/zip/ZipFile.java
++++ b/src/main/java/org/apache/commons/compress/archivers/zip/ZipFile.java
+@@ -798,7 +798,7 @@ public class ZipFile {
+      * <p>Also records the offsets for the data to read from the
+      * entries.</p>
+      */
+-    private void resolveLocalFileHeaderData(Map<ZipArchiveEntry, NameAndComment>
++ private void resolveLocalFileHeaderData(Map<ZipArchiveEntry, NameAndComment>
+                                             entriesWithoutUTF8Flag)
+         throws IOException {
+         // changing the name of a ZipArchiveEntry is going to change
+@@ -826,9 +826,13 @@ public class ZipFile {
+             byte[] localExtraData = new byte[extraFieldLen];
+             archive.readFully(localExtraData);
+             ze.setExtra(localExtraData);
+-            offsetEntry.dataOffset = offset + LFH_OFFSET_FOR_FILENAME_LENGTH
+-                + SHORT + SHORT + fileNameLen + extraFieldLen;
+-
++            if (ze.getPlatform() == PLATFORM_FAT) {
++                offsetEntry.dataOffset = offset + LFH_OFFSET_FOR_FILENAME_LENGTH
++                    + SHORT + SHORT + fileNameLen + extraFieldLen;
++            } else {
++                offsetEntry.dataOffset = offset + LFH_OFFSET_FOR_FILENAME_LENGTH
++                    + SHORT + SHORT + fileNameLen + extraFieldLen - 2;
++            }
+             if (entriesWithoutUTF8Flag.containsKey(ze)) {
+                 String orig = ze.getName();
+                 NameAndComment nc = entriesWithoutUTF8Flag.get(ze);

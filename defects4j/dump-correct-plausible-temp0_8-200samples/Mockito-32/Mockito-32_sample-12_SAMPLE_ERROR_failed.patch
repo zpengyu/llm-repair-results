@@ -1,0 +1,29 @@
+diff --git a/src/org/mockito/internal/configuration/SpyAnnotationEngine.java b/src/org/mockito/internal/configuration/SpyAnnotationEngine.java
+index e292e1300..353f33dd6 100644
+--- a/src/org/mockito/internal/configuration/SpyAnnotationEngine.java
++++ b/src/org/mockito/internal/configuration/SpyAnnotationEngine.java
+@@ -40,9 +40,8 @@ public class SpyAnnotationEngine implements AnnotationEngine {
+                                   "Example of correct usage of @Spy:\n" +
+                             	  "   @Spy List mock = new LinkedList();\n" +
+                             	  "   //also, don't forget about MockitoAnnotations.initMocks();");
+-
+                     }
+-                    if (new MockUtil().isMock(instance)) { 
++                    if (new MockUtil().isMock(instance) || !isEmpty(instance)) { 
+                         // instance has been spied earlier
+                         Mockito.reset(instance);
+                     } else {
+@@ -56,7 +55,12 @@ public class SpyAnnotationEngine implements AnnotationEngine {
+             }
+         }
+     }
+-    
++private boolean isEmpty(Object o) {
++	if (o instanceof List<?> && ((List<?>) o).isEmpty()) {
++		return true;
++	}
++	return false;
++}    
+     //TODO duplicated elsewhere
+     void assertNoAnnotations(Class annotation, Field field, Class ... undesiredAnnotations) {
+         for (Class u : undesiredAnnotations) {

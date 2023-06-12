@@ -1,0 +1,46 @@
+diff --git a/src/main/java/org/jsoup/helper/W3CDom.java b/src/main/java/org/jsoup/helper/W3CDom.java
+index f866f43..5229bea 100644
+--- a/src/main/java/org/jsoup/helper/W3CDom.java
++++ b/src/main/java/org/jsoup/helper/W3CDom.java
+@@ -94,21 +92,37 @@ public class W3CDom {
+                 if (dest == null) { // sets up the root
+                     doc.appendChild(el);
+                 } else {
+-                    dest.appendChild(el);
++                    if (dest.hasChildNodes()) {
++                        dest.insertBefore(el, dest.getFirstChild());
++                    } else {
++                        dest.appendChild(el);
++                    }
+                 }
+                 dest = el; // descend
+             } else if (source instanceof org.jsoup.nodes.TextNode) {
+                 org.jsoup.nodes.TextNode sourceText = (org.jsoup.nodes.TextNode) source;
+                 Text text = doc.createTextNode(sourceText.getWholeText());
+-                dest.appendChild(text);
++                if (dest.hasChildNodes()) {
++                    dest.insertBefore(text, dest.getFirstChild());
++                } else {
++                    dest.appendChild(text);
++                }
+             } else if (source instanceof org.jsoup.nodes.Comment) {
+                 org.jsoup.nodes.Comment sourceComment = (org.jsoup.nodes.Comment) source;
+                 Comment comment = doc.createComment(sourceComment.getData());
+-                dest.appendChild(comment);
++                if (dest.hasChildNodes()) {
++                    dest.insertBefore(comment, dest.getFirstChild());
++                } else {
++                    dest.appendChild(comment);
++                }
+             } else if (source instanceof org.jsoup.nodes.DataNode) {
+                 org.jsoup.nodes.DataNode sourceData = (org.jsoup.nodes.DataNode) source;
+                 Text node = doc.createTextNode(sourceData.getWholeData());
+-                dest.appendChild(node);
++                if (dest.hasChildNodes()) {
++                    dest.insertBefore(node, dest.getFirstChild());
++                } else {
++                    dest.appendChild(node);
++                }
+             } else {
+                 // unhandled
+             }

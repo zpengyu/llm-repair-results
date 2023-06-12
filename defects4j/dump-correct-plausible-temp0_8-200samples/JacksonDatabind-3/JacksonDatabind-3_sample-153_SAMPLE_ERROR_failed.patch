@@ -1,0 +1,54 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/deser/std/StringArrayDeserializer.java b/src/main/java/com/fasterxml/jackson/databind/deser/std/StringArrayDeserializer.java
+index f8cb03e1c..aa8917b8c 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/deser/std/StringArrayDeserializer.java
++++ b/src/main/java/com/fasterxml/jackson/databind/deser/std/StringArrayDeserializer.java
+@@ -50,20 +45,14 @@ public final class StringArrayDeserializer
+         if (_elementDeserializer != null) {
+             return _deserializeCustom(jp, ctxt);
+         }
+-
+         final ObjectBuffer buffer = ctxt.leaseObjectBuffer();
+         Object[] chunk = buffer.resetAndStart();
+-        
+         int ix = 0;
+         JsonToken t;
+-        
+         while ((t = jp.nextToken()) != JsonToken.END_ARRAY) {
+             // Ok: no need to convert Strings, but must recognize nulls
+-            String value;
+-            if (t == JsonToken.VALUE_STRING) {
+-                value = jp.getText();
+-            } else if (t == JsonToken.VALUE_NULL) {
+-                value = _elementDeserializer.getNullValue();
++            if (t == JsonToken.VALUE_NULL) {
++                value = null;
+             } else {
+                 value = _parseString(jp, ctxt);
+             }
+@@ -113,19 +97,16 @@ public final class StringArrayDeserializer
+     {
+         // [JACKSON-526]: implicit arrays from single values?
+         if (!ctxt.isEnabled(DeserializationFeature.ACCEPT_SINGLE_VALUE_AS_ARRAY)) {
+-            // [JACKSON-620] Empty String can become null...
+-            if ((jp.getCurrentToken() == JsonToken.VALUE_STRING)
+-                    && ctxt.isEnabled(DeserializationFeature.ACCEPT_EMPTY_STRING_AS_NULL_OBJECT)) {
+-                String str = jp.getText();
+-                if (str.length() == 0) {
+-                    return null;
+-                }
+-            }
+             throw ctxt.mappingException(_valueClass);
+         }
+-        return new String[] { (jp.getCurrentToken() == JsonToken.VALUE_NULL) ? null : _parseString(jp, ctxt) };
++        String[] result = new String[1];
++        if (jp.getCurrentToken() == JsonToken.VALUE_NULL) {
++            result[0] = null;
++        } else {
++            result[0] = _parseString(jp, ctxt);
++        }
++        return result;
+     }
+-
+     /**
+      * Contextualization is needed to see whether we can "inline" deserialization
+      * of String values, or if we have to use separate value deserializer.

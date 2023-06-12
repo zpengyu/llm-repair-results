@@ -1,0 +1,42 @@
+diff --git a/src/com/google/javascript/jscomp/CheckAccessControls.java b/src/com/google/javascript/jscomp/CheckAccessControls.java
+index c4ecc477..6d772ede 100644
+--- a/src/com/google/javascript/jscomp/CheckAccessControls.java
++++ b/src/com/google/javascript/jscomp/CheckAccessControls.java
+@@ -404,7 +404,7 @@ class CheckAccessControls implements ScopedCallback, HotSwapCompilerPass {
+    * @param t The current traversal.
+    * @param getprop The getprop node.
+    */
+-  private void checkPropertyVisibility(NodeTraversal t,
++   private void checkPropertyVisibility(NodeTraversal t,
+       Node getprop, Node parent) {
+     ObjectType objectType =
+         ObjectType.cast(dereference(getprop.getFirstChild().getJSType()));
+@@ -494,6 +488,28 @@ class CheckAccessControls implements ScopedCallback, HotSwapCompilerPass {
+                     validator.getReadableJSTypeName(
+                         getprop.getFirstChild(), true)));
+           }
++        } else if (visibility == Visibility.PACKAGE &&
++            (currentClass == null || ownerType.differsFrom(currentClass))) {
++          JSType containingType = objectType.getOwnerFunction().getTypeOfThis();
++          // If there is no containing type, then this visibility was specified
++          // on a @fileoverview block. In this case, the name of the file
++          // is the containing type, or the containing type is unknown.
++          if (containingType == null) {
++            String containingFile = docInfo.getContainingFile();
++            if (containingFile != null) {
++              containingType = getTypeRegistry().getType(containingFile);
++            }
++          }
++          if (containingType != null) {
++            if (currentClass == null ||
++                !containingType.isSubtype(currentClass)) {
++              compiler.report(
++                  t.makeError(getprop,  BAD_PACKAGE_PROPERTY_ACCESS,
++                      propertyName,
++                      validator.getReadableJSTypeName(
++                          getprop.getFirstChild(), true)));
++            }
++          }
+         }
+       }
+     }

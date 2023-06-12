@@ -1,0 +1,71 @@
+###Provide a fix for the buggy function
+###Buggy Function
+class FibonacciExample {
+    public static void main(String args[]) {
+        int n1 = 0, n2 = 1, n3, i, count = 10;
+
+        System.out.print(n1 + " " + n2);
+
+        for (i = 2; i < count; ++i) {
+            n3 = n1 - n2;
+            System.out.print(" " + n3);
+            n1 = n2;
+            n2 = n3;
+        }
+    }
+}
+
+###Fixed Function
+class FibonacciExample {
+    public static void main(String args[]) {
+        int n1 = 0, n2 = 1, n3, i, count = 10;
+
+        System.out.print(n1 + " " + n2);
+
+        for (i = 2; i < count; ++i) {
+            n3 = n1 + n2;
+            System.out.print(" " + n3);
+            n1 = n2;
+            n2 = n3;
+        }
+    }
+}
+
+###Provide a fix for the buggy function
+###Buggy Function
+protected BasePeriod(long duration) {
+    this(duration, null, null);
+    // bug [3264409]
+}
+###Fixed Function
+protected BasePeriod(long duration) {
+    super();
+    // bug [3264409]
+    iType = PeriodType.time();
+    int[] values = ISOChronology.getInstanceUTC().get(this, duration);
+    iType = PeriodType.standard();
+    iValues = new int[8];
+    System.arraycopy(values, 0, iValues, 4, 4);
+}
+###Provide a fix for the buggy function
+###Buggy Function
+    public int[] add(ReadablePartial partial, int fieldIndex, int[] values, int valueToAdd) {
+        // overridden as superclass algorithm can't handle
+        // 2004-02-29 + 48 months -> 2008-02-29 type dates
+        if (valueToAdd == 0) {
+            return values;
+        }
+            // month is largest field and being added to, such as month-day
+        if (DateTimeUtils.isContiguous(partial)) {
+            long instant = 0L;
+            for (int i = 0, isize = partial.size(); i < isize; i++) {
+                instant = partial.getFieldType(i).getField(iChronology).set(instant, values[i]);
+            }
+            instant = add(instant, valueToAdd);
+            return iChronology.get(partial, instant);
+        } else {
+            return super.add(partial, fieldIndex, values, valueToAdd);
+        }
+    }
+
+###Fixed Function

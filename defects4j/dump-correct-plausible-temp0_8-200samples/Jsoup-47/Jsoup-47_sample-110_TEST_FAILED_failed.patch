@@ -1,0 +1,31 @@
+diff --git a/src/main/java/org/jsoup/nodes/Entities.java b/src/main/java/org/jsoup/nodes/Entities.java
+index 5a2b368..8fa72d3 100644
+--- a/src/main/java/org/jsoup/nodes/Entities.java
++++ b/src/main/java/org/jsoup/nodes/Entities.java
+@@ -142,18 +139,23 @@ public class Entities {
+                         else if (map.containsKey(c))
+                             accum.append('&').append(map.get(c)).append(';');
+                         else
+-                            accum.append("&#x").append(Integer.toHexString(codePoint)).append(';');
++                            appendEncoded(accum, codePoint);
+                 }
+             } else {
+                 final String c = new String(Character.toChars(codePoint));
+                 if (encoder.canEncode(c)) // uses fallback encoder for simplicity
+                     accum.append(c);
+                 else
+-                    accum.append("&#x").append(Integer.toHexString(codePoint)).append(';');
++                    appendEncoded(accum, codePoint);
+             }
+         }
+     }
+-
++    static void appendEncoded(StringBuilder accum, int codePoint) {
++        if (codePoint >= Character.MIN_SUPPLEMENTARY_CODE_POINT)
++            accum.append(String.format("&#x%x;", codePoint));
++        else
++            accum.append(String.format("&#x%x;", codePoint));
++    }
+     static String unescape(String string) {
+         return unescape(string, false);
+     }

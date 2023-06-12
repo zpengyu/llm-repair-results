@@ -1,0 +1,51 @@
+diff --git a/src/main/java/org/joda/time/DateTimeZone.java b/src/main/java/org/joda/time/DateTimeZone.java
+index 17672725..97b2767a 100644
+--- a/src/main/java/org/joda/time/DateTimeZone.java
++++ b/src/main/java/org/joda/time/DateTimeZone.java
+@@ -879,23 +879,37 @@ public abstract class DateTimeZone implements Serializable {
+      */
+     public int getOffsetFromLocal(long instantLocal) {
+         // get the offset at instantLocal (first estimate)
+-        final int offsetLocal = getOffset(instantLocal);
++        int offsetLocal = getOffset(instantLocal);
+         // adjust instantLocal using the estimate and recalc the offset
+-        final long instantAdjusted = instantLocal - offsetLocal;
+-        final int offsetAdjusted = getOffset(instantAdjusted);
++        long instantAdjusted = instantLocal - offsetLocal;
++        int offsetAdjusted = getOffset(instantAdjusted);
+         // if the offsets differ, we must be near a DST boundary
+         if (offsetLocal != offsetAdjusted) {
+             // we need to ensure that time is always after the DST gap
+             // this happens naturally for positive offsets, but not for negative
+-            if ((offsetLocal - offsetAdjusted) < 0) {
+-                // if we just return offsetAdjusted then the time is pushed
+-                // back before the transition, whereas it should be
+-                // on or after the transition
+-                long nextLocal = nextTransition(instantAdjusted);
+-                long nextAdjusted = nextTransition(instantLocal - offsetAdjusted);
++            if (offsetLocal > 0 && offsetAdjusted > 0) {
++                // If both offsets are positive, there's no problem
++            } else if (offsetLocal > 0 && offsetAdjusted < 0) {
++                // If we go from positive to negative, there's no problem
++            } else if (offsetLocal < 0 && offsetAdjusted > 0) {
++                // Going from negative to positive requires an adjustment
++                instantAdjusted = instantAdjusted - offsetLocal;
++                offsetAdjusted = getOffset(instantAdjusted);
++                if (instantAdjusted - instantLocal - offsetAdjusted < 0) {
++                    offsetAdjusted = offsetLocal;
++                }
++            } else if (offsetLocal < 0 && offsetAdjusted < 0) {
++                // Staying negative requires an adjustment
++                long nextLocal = nextTransition(instantLocal - offsetLocal);
++                long nextAdjusted = nextTransition(instantAdjusted);
+                 if (nextLocal != nextAdjusted) {
+                     return offsetLocal;
+                 }
++                instantAdjusted = nextLocal;
++                offsetAdjusted = getOffset(instantAdjusted);
++                if (instantAdjusted - instantLocal - offsetAdjusted < 0) {
++                    offsetAdjusted = offsetLocal;
++                }
+             }
+         } else if (offsetLocal > 0) {
+             long prev = previousTransition(instantAdjusted);

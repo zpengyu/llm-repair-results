@@ -1,0 +1,31 @@
+diff --git a/gson/src/main/java/com/google/gson/internal/ConstructorConstructor.java b/gson/src/main/java/com/google/gson/internal/ConstructorConstructor.java
+index cd5c2f6c..ac0a2118 100644
+--- a/gson/src/main/java/com/google/gson/internal/ConstructorConstructor.java
++++ b/gson/src/main/java/com/google/gson/internal/ConstructorConstructor.java
+@@ -125,8 +125,6 @@ public final class ConstructorConstructor {
+    * subtypes.
+    */
+   @SuppressWarnings("unchecked") // use runtime checks to guarantee that 'T' is what it is
+-  private <T> ObjectConstructor<T> newDefaultImplementationConstructor(
+-      final Type type, Class<? super T> rawType) {
+     if (Collection.class.isAssignableFrom(rawType)) {
+       if (SortedSet.class.isAssignableFrom(rawType)) {
+         return new ObjectConstructor<T>() {
+@@ -193,10 +190,15 @@ public final class ConstructorConstructor {
+         };
+       }
+     }
+-
++    else if (rawType == new DefaultConstructorCreator().getClass()) {
++      return new ObjectConstructor<T>() {
++        @Override public T construct() {
++          return (T) new DefaultConstructorCreator();
++        }
++      };
++    }
+     return null;
+   }
+-
+   private <T> ObjectConstructor<T> newUnsafeAllocator(
+       final Type type, final Class<? super T> rawType) {
+     return new ObjectConstructor<T>() {

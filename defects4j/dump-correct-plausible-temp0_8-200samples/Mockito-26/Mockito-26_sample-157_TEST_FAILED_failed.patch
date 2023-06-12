@@ -1,0 +1,39 @@
+diff --git a/src/org/mockito/internal/util/Primitives.java b/src/org/mockito/internal/util/Primitives.java
+index b44b8253d..876f0b932 100644
+--- a/src/org/mockito/internal/util/Primitives.java
++++ b/src/org/mockito/internal/util/Primitives.java
+@@ -14,19 +13,28 @@ public class Primitives {
+         if(clazz.isPrimitive()) {
+             return clazz;
+         }
+-        return (Class<T>) primitiveTypes.get(clazz);
++        Class<T> type = (Class<T>) primitiveTypes.get(clazz);
++        if (type == null) {
++            throw new IllegalArgumentException("No primitive type of " + clazz);
++        }
++        return type;
+     }
+-
+     public static boolean isPrimitiveWrapper(Class<?> type) {
+         return wrapperReturnValues.containsKey(type);
+     }
+-
+     public static <T> T primitiveWrapperOf(Class<T> type) {
+-        return (T) wrapperReturnValues.get(type);
++        T val = (T) wrapperReturnValues.get(type);
++        if (val == null) {
++            throw new IllegalArgumentException("No primitive value of " + type);
++        }
++        return val;
+     }
+-
+     public static <T> T primitiveValueOrNullFor(Class<T> primitiveType) {
+-        return (T) primitiveValues.get(primitiveType);
++        T val = (T) primitiveValues.get(primitiveType);
++        if (val == null) {
++            throw new IllegalArgumentException("No primitive value of " + primitiveType);
++        }
++        return val;
+     }
+     private static Map<Class<?>, Class<?>> wrapperTypes = new HashMap<Class<?>, Class<?>>();
+     private static Map<Class<?>, Class<?>> primitiveTypes = new HashMap<Class<?>, Class<?>>();

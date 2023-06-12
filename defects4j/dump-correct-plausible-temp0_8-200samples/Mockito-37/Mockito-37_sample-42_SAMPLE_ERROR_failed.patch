@@ -1,0 +1,35 @@
+diff --git a/src/org/mockito/internal/stubbing/answers/AnswersValidator.java b/src/org/mockito/internal/stubbing/answers/AnswersValidator.java
+index 5d8057846..6055d1861 100644
+--- a/src/org/mockito/internal/stubbing/answers/AnswersValidator.java
++++ b/src/org/mockito/internal/stubbing/answers/AnswersValidator.java
+@@ -24,10 +20,10 @@ public class AnswersValidator {
+         if (answer instanceof DoesNothing) {
+             validateDoNothing((DoesNothing) answer, invocation);
+         }
+-        
++        if(answer instanceof ReturnsArgumentAt){
++        	validateArgumentAt((ReturnsArgumentAt) answer, invocation);
++        }
+     }
+-
+-
+     private void validateDoNothing(DoesNothing answer, Invocation invocation) {
+         if (!invocation.isVoid()) {
+             reporter.onlyVoidMethodsCanBeSetToDoNothing();
+@@ -62,4 +52,15 @@ public class AnswersValidator {
+             reporter.checkedExceptionInvalid(throwable);
+         }
+     }
++    private void validateArgumentAt(ReturnsArgumentAt answer, Invocation invocation) {
++        if(answer.getIndex() < 0){
++        	reporter.cannotReturnNegativeIndex();
++        }
++        if(answer.getIndex() >= invocation.getArguments().length){
++        	reporter.cannotReturnIndexLargerThanActualArgumentCount(invocation.getArguments().length);
++        }
++        if(answer.getIndex() == 0){
++        	reporter.cannotReturnNullBecauseIndexIsZero();
++        }
++    }
+ }
+\ No newline at end of file

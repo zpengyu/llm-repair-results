@@ -1,0 +1,39 @@
+diff --git a/src/com/google/javascript/jscomp/UnreachableCodeElimination.java b/src/com/google/javascript/jscomp/UnreachableCodeElimination.java
+index 60bfd244..bc7b5f32 100644
+--- a/src/com/google/javascript/jscomp/UnreachableCodeElimination.java
++++ b/src/com/google/javascript/jscomp/UnreachableCodeElimination.java
+@@ -48,15 +48,8 @@ class UnreachableCodeElimination extends AbstractPostOrderCallback
+     implements CompilerPass, ScopedCallback  {
+   private static final Logger logger =
+     Logger.getLogger(UnreachableCodeElimination.class.getName());
+-
+   private final AbstractCompiler compiler;
+   private final boolean removeNoOpStatements;
+-
+-  Deque<ControlFlowGraph<Node>> cfgStack =
+-      new LinkedList<ControlFlowGraph<Node>>();
+-
+-  ControlFlowGraph<Node> curCfg = null;
+-
+   UnreachableCodeElimination(AbstractCompiler compiler,
+       boolean removeNoOpStatements) {
+     this.compiler = compiler;
+@@ -70,18 +61,10 @@ class UnreachableCodeElimination extends AbstractPostOrderCallback
+     // Computes the control flow graph.
+     ControlFlowAnalysis cfa = new ControlFlowAnalysis(compiler, false, false);
+     cfa.process(null, scope.getRootNode());
+-    cfgStack.push(curCfg);
+     curCfg = cfa.getCfg();
+-
+     new GraphReachability<Node, ControlFlowGraph.Branch>(curCfg)
+         .compute(curCfg.getEntry().getValue());
+   }
+-
+-  @Override
+-  public void exitScope(NodeTraversal t) {
+-    curCfg = cfgStack.pop();
+-  }
+-
+   @Override
+   public void process(Node externs, Node root) {
+     NodeTraversal.traverse(compiler, root, this);

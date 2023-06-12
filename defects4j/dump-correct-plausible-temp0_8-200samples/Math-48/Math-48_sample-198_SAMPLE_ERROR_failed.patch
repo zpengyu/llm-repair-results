@@ -1,0 +1,61 @@
+diff --git a/src/main/java/org/apache/commons/math/analysis/solvers/BaseSecantSolver.java b/src/main/java/org/apache/commons/math/analysis/solvers/BaseSecantSolver.java
+index d944dfc79..b02b7b417 100644
+--- a/src/main/java/org/apache/commons/math/analysis/solvers/BaseSecantSolver.java
++++ b/src/main/java/org/apache/commons/math/analysis/solvers/BaseSecantSolver.java
+@@ -249,7 +240,55 @@ public abstract class BaseSecantSolver
+             }
+         }
+     }
+-
++    double y = F(x);
++    double sign = y / FastMath.abs(y);
++    double y0 = 0;
++    while (y0 != y) {
++        y0 = y;
++        if (y0 == 0) {
++            return 0;
++        }
++        x = x - (y / sign);
++        y = F(x);
++        if (sign != y / FastMath.abs(y)) {
++            y = -y;
++        }
++    }
++    return x;
++    double increment = 1.6;
++    double y = F(x);
++    if (y == 0) {
++        return 0;
++    }
++    if (y > 0) {
++        increment = -increment;
++    }
++    double y1 = 0;
++    while (y1 != y) {
++        y1 = y;
++        y = F(x += increment);
++        increment *= 2;
++    }
++    return x;
++    double y = F(x);
++    double increment = 1.6;
++    if (y == 0) {
++        return 0;
++    }
++    if (y > 0) {
++        increment = -increment;
++    }
++    double y1 = 0;
++    while (y1 != y) {
++        y1 = y;
++        y = F(x += increment);
++        if (y > 0) {
++            increment = -Math.abs(increment) / 2;
++        } else {
++            increment = Math.abs(increment);
++        }
++    }
++    return x;
+     /** <em>Secant</em>-based root-finding methods. */
+     protected enum Method {
+ 

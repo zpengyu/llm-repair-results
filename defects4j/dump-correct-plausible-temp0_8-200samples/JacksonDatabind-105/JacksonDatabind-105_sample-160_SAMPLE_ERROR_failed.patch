@@ -1,0 +1,22 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/deser/std/JdkDeserializers.java b/src/main/java/com/fasterxml/jackson/databind/deser/std/JdkDeserializers.java
+index 2b7efe9c9..e91ce63a6 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/deser/std/JdkDeserializers.java
++++ b/src/main/java/com/fasterxml/jackson/databind/deser/std/JdkDeserializers.java
+@@ -45,6 +44,17 @@ public class JdkDeserializers
+             if (rawType == ByteBuffer.class) {
+                 return new ByteBufferDeserializer();
+             }
++        } else if(rawType.isEnum()) {
++            // We must check rawType.isEnum() before calling Class.forName()
++            // because Class.forName() doesn't work with Enum class.
++            try {
++                Class<?> enumClass = Class.forName(clsName, true, Thread.currentThread().getContextClassLoader());
++                if(enumClass.isEnum())
++                    return StdKeyDeserializers.constructEnumKeyDeserializer(ctxt, enumClass);
++            } catch(Exception ex) {
++                // ClassNotFoundException, LinkageError, ExceptionInInitializerError
++                // all possible, due to various invalid descriptors
++            }
+         }
+         return null;
+     }

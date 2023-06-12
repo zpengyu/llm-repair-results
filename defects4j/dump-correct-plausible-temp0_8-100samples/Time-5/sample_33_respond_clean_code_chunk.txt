@@ -1,0 +1,30 @@
+    public Period normalizedStandard(PeriodType type) {
+        type = DateTimeUtils.getPeriodType(type);
+        long millis = getMillis();  // no overflow can happen, even with Integer.MAX_VALUEs
+        millis += (getSeconds() * DateTimeConstants.MILLIS_PER_SECOND);
+        millis += (getMinutes() * DateTimeConstants.MILLIS_PER_MINUTE);
+        millis += (getHours() * DateTimeConstants.MILLIS_PER_HOUR);
+        millis += (getDays() * DateTimeConstants.MILLIS_PER_DAY);
+        millis += (getWeeks() * DateTimeConstants.MILLIS_PER_WEEK);
+        Period result = new Period(millis, type, ISOChronology.getInstanceUTC());
+        int years = getYears();
+        int months = getMonths();
+        if (years != 0 || months != 0) {
+            years = FieldUtils.safeAdd(years, months / 12);
+            months = months % 12;
+            if (years != 0) {
+                result = result.withYears(years);
+            }
+            if (months != 0) {
+                result = result.withMonths(months);
+            }
+        }
+        return result;
+    }
+1. Fork it (https://github.com/BugBusterSWE/stackoverflow_Fixed_Code/fork)
+2. Create your feature branch (`git checkout -b my-new-feature`)
+3. Commit your changes (`git commit -am 'Add some feature'`)
+4. Push to the branch (`git push origin my-new-feature`)
+5. Create a new Pull Request
+- [BugBusterSWE](https://github.com/BugBusterSWE) BugBusterSWE - creator, maintainer
+- [overflow](https://github.com/overflow) overflow - contributor

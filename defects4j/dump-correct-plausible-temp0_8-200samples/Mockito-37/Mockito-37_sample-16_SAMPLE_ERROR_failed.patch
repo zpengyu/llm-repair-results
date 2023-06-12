@@ -1,0 +1,25 @@
+diff --git a/src/org/mockito/internal/stubbing/answers/AnswersValidator.java b/src/org/mockito/internal/stubbing/answers/AnswersValidator.java
+index 5d8057846..6e21c904d 100644
+--- a/src/org/mockito/internal/stubbing/answers/AnswersValidator.java
++++ b/src/org/mockito/internal/stubbing/answers/AnswersValidator.java
+@@ -42,12 +33,15 @@ public class AnswersValidator {
+         if (answer.returnsNull() && invocation.returnsPrimitive()) {
+             reporter.wrongTypeOfReturnValue(invocation.printMethodReturnType(), "null", invocation.getMethodName());
+         } 
+-
+-        if (!answer.returnsNull() && !invocation.isValidReturnType(answer.getReturnType())) {
+-            reporter.wrongTypeOfReturnValue(invocation.printMethodReturnType(), answer.printReturnType(), invocation.getMethodName());
+-        }
++		if (!answer.returnsNull()) {
++			if (!invocation.isValidReturnType(answer.getReturnType())) {
++				reporter.wrongTypeOfReturnValue(invocation.printMethodReturnType(), answer.printReturnType(), invocation.getMethodName());
++			}
++			if (!invocation.isPrimitive() && !invocation.isValidReturnType(answer.getReturnType())) {
++				reporter.wrongTypeOfReturnValue(invocation.printMethodReturnType(), answer.printReturnType(), invocation.getMethodName());
++			}
++		}
+     }
+-
+     private void validateException(ThrowsException answer, Invocation invocation) {
+         Throwable throwable = answer.getThrowable();
+         if (throwable == null) {

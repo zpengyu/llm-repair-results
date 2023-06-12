@@ -1,0 +1,17 @@
+    protected JavaType _narrow(Class<?> subclass)
+    {
+        if (_class == subclass) {
+            return this;
+        }
+        // Should we check that there is a sub-class relationship?
+        if (!_class.isAssignableFrom(subclass)) {
+            throw new IllegalArgumentException("Class "+subclass.getName()+" not sub-type of "
+                    +_class.getName());
+        }
+        // 15-Jan-2015, tatu: Not correct; should really re-resolve...
+        // return new SimpleType(subclass, _bindings, _superClass, _superInterfaces,
+        //        _valueHandler, _typeHandler, _asStatic);
+        final TypeBindings newBindings = _bindings.narrowBy(subclass);
+        return new SimpleType(subclass, newBindings, _superClass, _superInterfaces,
+                _valueHandler, _typeHandler, _asStatic);
+    }

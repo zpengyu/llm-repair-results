@@ -1,0 +1,63 @@
+diff --git a/src/main/java/org/apache/commons/lang3/time/FastDateParser.java b/src/main/java/org/apache/commons/lang3/time/FastDateParser.java
+index 24fa134a..85726941 100644
+--- a/src/main/java/org/apache/commons/lang3/time/FastDateParser.java
++++ b/src/main/java/org/apache/commons/lang3/time/FastDateParser.java
+@@ -124,9 +121,8 @@ public class FastDateParser implements DateParser, Serializable {
+         if(!patternMatcher.lookingAt()) {
+             throw new IllegalArgumentException("Invalid pattern");
+         }
+-
+         currentFormatField= patternMatcher.group();
+-        Strategy currentStrategy= getStrategy(currentFormatField);
++        Strategy currentStrategy= getStrategy(currentFormatField, null);
+         for(;;) {
+             patternMatcher.region(patternMatcher.end(), patternMatcher.regionEnd());
+             if(!patternMatcher.lookingAt()) {
+@@ -134,7 +130,7 @@ public class FastDateParser implements DateParser, Serializable {
+                 break;
+             }
+             String nextFormatField= patternMatcher.group();
+-            nextStrategy = getStrategy(nextFormatField);
++            nextStrategy = getStrategy(nextFormatField, currentStrategy);
+             if(currentStrategy.addRegex(this, regex)) {
+                 collector.add(currentStrategy);
+             }
+@@ -148,7 +144,37 @@ public class FastDateParser implements DateParser, Serializable {
+         strategies= collector.toArray(new Strategy[collector.size()]);
+         parsePattern= Pattern.compile(regex.toString());
+     }
+-
++    private Strategy getStrategy(String formatField, Strategy nextStrategy) {
++        switch (formatField.charAt(0)) {
++            case '\'':
++                return new CopyQuotedStrategy(formatField);
++            case 'G':
++                return new GStrategy(formatField, nextStrategy);
++            case 'y':
++            case 'M':
++            case 'w':
++            case 'W':
++            case 'D':
++            case 'd':
++            case 'F':
++            case 'E':
++            case 'a':
++                return new TextStrategy(formatField);
++            case 'H':
++            case 'k':
++            case 'K':
++            case 'h':
++            case 'm':
++            case 's':
++            case 'S':
++            case 'Z':
++                return new NumberStrategy(formatField);
++            case 'z':
++                return new TimeZoneStrategy(formatField);
++            default:
++                throw new IllegalArgumentException("Format '" + formatField + "' not supported");
++        }
++    }
+     // Accessors
+     //-----------------------------------------------------------------------
+     /* (non-Javadoc)

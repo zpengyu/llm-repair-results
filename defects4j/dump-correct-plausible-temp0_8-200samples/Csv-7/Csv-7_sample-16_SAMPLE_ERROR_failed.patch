@@ -1,0 +1,22 @@
+diff --git a/src/main/java/org/apache/commons/csv/CSVParser.java b/src/main/java/org/apache/commons/csv/CSVParser.java
+index e64800a..27443cf 100644
+--- a/src/main/java/org/apache/commons/csv/CSVParser.java
++++ b/src/main/java/org/apache/commons/csv/CSVParser.java
+@@ -371,6 +369,17 @@ public final class CSVParser implements Iterable<CSVRecord>, Closeable {
+                     hdrMap.put(header[i], Integer.valueOf(i));
+                 }
+             }
++        } else {
++            // read the header from the first line of the file
++            final CSVRecord nextRecord = this.nextRecord();
++            if (nextRecord != null) {
++                final String[] values = nextRecord.values();
++                hdrMap = new LinkedHashMap<String, Integer>();
++                // build the name to index mappings
++                for (int i = 0; i < values.length; i++) {
++                    hdrMap.put(values[i], Integer.valueOf(i));
++                }
++            }
+         }
+         return hdrMap;
+     }

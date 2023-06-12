@@ -1,0 +1,37 @@
+diff --git a/src/main/java/org/apache/commons/compress/archivers/zip/ZipArchiveInputStream.java b/src/main/java/org/apache/commons/compress/archivers/zip/ZipArchiveInputStream.java
+index 84eb7403..3c7b4cec 100644
+--- a/src/main/java/org/apache/commons/compress/archivers/zip/ZipArchiveInputStream.java
++++ b/src/main/java/org/apache/commons/compress/archivers/zip/ZipArchiveInputStream.java
+@@ -171,18 +171,21 @@ public class ZipArchiveInputStream extends ArchiveInputStream {
+      * will try to read STORED entries that use a data descriptor
+      * @since 1.1
+      */
+-    public ZipArchiveInputStream(InputStream inputStream,
+-                                 String encoding,
+-                                 boolean useUnicodeExtraFields,
+-                                 boolean allowStoredEntriesWithDataDescriptor) {
+-        zipEncoding = ZipEncodingHelper.getZipEncoding(encoding);
+-        this.useUnicodeExtraFields = useUnicodeExtraFields;
+-        in = new PushbackInputStream(inputStream, buf.capacity());
+-        this.allowStoredEntriesWithDataDescriptor =
+-            allowStoredEntriesWithDataDescriptor;
+-        // haven't read anything so far
++public ZipArchiveInputStream(InputStream inputStream,
++                             String encoding,
++                             boolean useUnicodeExtraFields,
++                             boolean allowStoredEntriesWithDataDescriptor) {
++    if (inputStream instanceof BZip2CompressorInputStream ||
++            inputStream instanceof CBZip2InputStream) {
++        throw new IllegalArgumentException();
+     }
+-
++    zipEncoding = ZipEncodingHelper.getZipEncoding(encoding);
++    this.useUnicodeExtraFields = useUnicodeExtraFields;
++    in = new PushbackInputStream(inputStream, buf.capacity());
++    this.allowStoredEntriesWithDataDescriptor =
++        allowStoredEntriesWithDataDescriptor;
++    // haven't read anything so far
++}
+     public ZipArchiveEntry getNextZipEntry() throws IOException {
+         boolean firstEntry = true;
+         if (closed || hitCentralDirectory) {

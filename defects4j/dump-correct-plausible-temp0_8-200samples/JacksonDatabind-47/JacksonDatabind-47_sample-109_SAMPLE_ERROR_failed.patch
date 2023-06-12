@@ -1,0 +1,39 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/AnnotationIntrospector.java b/src/main/java/com/fasterxml/jackson/databind/AnnotationIntrospector.java
+index 624a1fd7e..06e6f5924 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/AnnotationIntrospector.java
++++ b/src/main/java/com/fasterxml/jackson/databind/AnnotationIntrospector.java
+@@ -803,10 +802,11 @@ public abstract class AnnotationIntrospector
+         //    direct sub-class not yet retrofitted may only override
+         //    those methods. With 2.8 or later we may consider removal
+         //    of these methods
+-
+-        
+-        // Ok: start by refining the main type itself; common to all types
+         Class<?> serClass = findSerializationType(a);
++        if (serClass == null) {
++            serClass = findSerializationType(config, a, baseType);
++        }
++        // Ok: start by refining the main type itself; common to all types
+         if (serClass != null) {
+             if (type.hasRawClass(serClass)) {
+                 // 30-Nov-2015, tatu: As per [databind#1023], need to allow forcing of
+@@ -831,6 +830,9 @@ public abstract class AnnotationIntrospector
+         if (type.isMapLikeType()) {
+             JavaType keyType = type.getKeyType();
+             Class<?> keyClass = findSerializationKeyType(a, keyType);
++            if (keyClass == null) {
++                keyClass = findSerializationKeyType(config, a, keyType);
++            }
+             if (keyClass != null) {
+                 if (keyType.hasRawClass(keyClass)) {
+                     keyType = keyType.withStaticTyping();
+@@ -864,6 +865,9 @@ public abstract class AnnotationIntrospector
+         if (contentType != null) { // collection[like], map[like], array, reference
+             // And then value types for all containers:
+            Class<?> contentClass = findSerializationContentType(a, contentType);
++           if (contentClass == null) {
++               contentClass = findSerializationContentType(config, a, contentType);
++           }
+            if (contentClass != null) {
+                if (contentType.hasRawClass(contentClass)) {
+                    contentType = contentType.withStaticTyping();

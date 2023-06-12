@@ -1,0 +1,66 @@
+diff --git a/src/main/java/org/jsoup/nodes/LeafNode.java b/src/main/java/org/jsoup/nodes/LeafNode.java
+index 0e068b5..d5b4359 100644
+--- a/src/main/java/org/jsoup/nodes/LeafNode.java
++++ b/src/main/java/org/jsoup/nodes/LeafNode.java
+@@ -31,11 +26,13 @@ abstract class LeafNode extends Node {
+     String coreValue() {
+         return attr(nodeName());
+     }
+-
+     void coreValue(String value) {
+-        attr(nodeName(), value);
++        if (value == null) {
++            removeAttr(nodeName());
++        } else {
++            attr(nodeName(), value);
++        }
+     }
+-
+     @Override
+     public String attr(String key) {
+         Validate.notNull(key);
+@@ -44,14 +41,18 @@ abstract class LeafNode extends Node {
+         }
+         return super.attr(key);
+     }
+-
+     @Override
+     public Node attr(String key, String value) {
+-        if (!hasAttributes() && key.equals(nodeName())) {
+-            this.value = value;
++        Validate.notEmpty(key);
++        if (value == null) {
++            removeAttr(key);
+         } else {
+-            ensureAttributes();
+-            super.attr(key, value);
++            if (!hasAttributes() && key.equals(nodeName())) {
++                this.value = value;
++            } else {
++                ensureAttributes();
++                super.attr(key, value);
++            }
+         }
+         return this;
+     }
+@@ -61,13 +61,16 @@ abstract class LeafNode extends Node {
+         ensureAttributes();
+         return super.hasAttr(key);
+     }
+-
+     @Override
+     public Node removeAttr(String key) {
+-        ensureAttributes();
+-        return super.removeAttr(key);
++        Validate.notEmpty(key);
++        if (hasAttributes()) {
++            super.removeAttr(key);
++        } else if (key.equals(nodeName())) {
++            value = null;
++        }
++        return this;
+     }
+-
+     @Override
+     public String absUrl(String key) {
+         ensureAttributes();

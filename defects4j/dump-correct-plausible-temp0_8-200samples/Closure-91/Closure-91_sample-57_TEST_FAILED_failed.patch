@@ -1,0 +1,62 @@
+diff --git a/src/com/google/javascript/jscomp/CheckGlobalThis.java b/src/com/google/javascript/jscomp/CheckGlobalThis.java
+index d6770e15..a5b740da 100644
+--- a/src/com/google/javascript/jscomp/CheckGlobalThis.java
++++ b/src/com/google/javascript/jscomp/CheckGlobalThis.java
+@@ -110,33 +107,32 @@ final class CheckGlobalThis implements Callback {
+             pType == Token.NUMBER)) {
+         return false;
+       }
+-
+       // Don't traverse functions that are getting lent to a prototype.
+-    }
+-
+-    if (parent != null && parent.getType() == Token.ASSIGN) {
+-      Node lhs = parent.getFirstChild();
+-      Node rhs = lhs.getNext();
+-
+-      if (n == lhs) {
+-        // Always traverse the left side of the assignment. To handle
+-        // nested assignments properly (e.g., (a = this).property = c;),
+-        // assignLhsChild should not be overridden.
+-        if (assignLhsChild == null) {
+-          assignLhsChild = lhs;
+-        }
+-      } else {
+-        // Only traverse the right side if it's not an assignment to a prototype
+-        // property or subproperty.
+-        if (NodeUtil.isGet(lhs)) {
+-          if (lhs.getType() == Token.GETPROP &&
+-              lhs.getLastChild().getString().equals("prototype")) {
+-            return false;
++      // TODO(user): Should we also exclude functions being assigned to
++      // properties (i.e. a.b = function(...) {})
++      if (parent != null && parent.getType() == Token.ASSIGN) {
++        Node lhs = parent.getFirstChild();
++        Node rhs = lhs.getNext();
++        if (n == lhs) {
++          // Always traverse the left side of the assignment. To handle
++          // nested assignments properly (e.g., (a = this).property = c;),
++          // assignLhsChild should not be overridden.
++          if (assignLhsChild == null) {
++            assignLhsChild = lhs;
+           }
+-          Node llhs = lhs.getFirstChild();
+-          if (llhs.getType() == Token.GETPROP &&
+-              llhs.getLastChild().getString().equals("prototype")) {
+-            return false;
++        } else {
++          // Only traverse the right side if it's not an assignment to a
++          // prototype property or subproperty.
++          if (NodeUtil.isGet(lhs)) {
++            if (lhs.getType() == Token.GETPROP &&
++                lhs.getLastChild().getString().equals("prototype")) {
++              return false;
++            }
++            Node llhs = lhs.getFirstChild();
++            if (llhs.getType() == Token.GETPROP &&
++                llhs.getLastChild().getString().equals("prototype")) {
++              return false;
++            }
+           }
+         }
+       }

@@ -1,0 +1,24 @@
+	protected void registerTypeVariablesOn(Type classType) {
+		if (!(classType instanceof ParameterizedType)) {
+			return;
+		}
+		ParameterizedType parameterizedType = (ParameterizedType) classType;
+		TypeVariable[] typeParameters = ((Class<?>) parameterizedType.getRawType()).getTypeParameters();
+		Type[] actualTypeArguments = parameterizedType.getActualTypeArguments();
+		for (int i = 0; i < actualTypeArguments.length; i++) {
+			TypeVariable typeParameter = typeParameters[i];
+			Type actualTypeArgument = actualTypeArguments[i];
+			TypeVariable<?> typeParameter2;
+			if (typeParameter.getGenericDeclaration() instanceof Class<?>) {
+				typeParameter2 = ((Class<?>) typeParameter.getGenericDeclaration()).getTypeParameters()[0];
+			} else {
+				typeParameter2 = ((Method) typeParameter.getGenericDeclaration()).getTypeParameters()[0];
+			}
+			if (actualTypeArgument instanceof WildcardType) {
+				contextualActualTypeParameters.put(typeParameter2, boundsOf((WildcardType) actualTypeArgument));
+			} else {
+				contextualActualTypeParameters.put(typeParameter2, actualTypeArgument);
+			}
+			// logger.log("For '" + parameterizedType + "' found type variable : { '" + typeParameter + "(" + System.identityHashCode(typeParameter) + ")" + "' : '" + actualTypeArgument + "(" + System.identityHashCode(typeParameter) + ")" + "' }");
+		}
+	}

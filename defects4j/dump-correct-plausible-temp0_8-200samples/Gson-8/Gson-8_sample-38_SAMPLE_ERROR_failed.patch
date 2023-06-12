@@ -1,0 +1,35 @@
+diff --git a/gson/src/main/java/com/google/gson/internal/UnsafeAllocator.java b/gson/src/main/java/com/google/gson/internal/UnsafeAllocator.java
+index a72d3d10..b35999f9 100644
+--- a/gson/src/main/java/com/google/gson/internal/UnsafeAllocator.java
++++ b/gson/src/main/java/com/google/gson/internal/UnsafeAllocator.java
+@@ -92,7 +89,18 @@ public abstract class UnsafeAllocator {
+       };
+     } catch (Exception ignored) {
+     }
+-
++    // try public constructor
++    try {
++      Constructor<?> ctor = Object.class.getConstructor();
++      return new UnsafeAllocator() {
++        @Override
++        @SuppressWarnings("unchecked")
++        public <T> T newInstance(Class<T> c) throws Exception {
++          return (T) ctor.newInstance();
++        }
++      };
++    } catch (Exception ignored) {
++    }
+     // give up
+     return new UnsafeAllocator() {
+       @Override
+@@ -107,4 +114,9 @@ public abstract class UnsafeAllocator {
+    * throw an {@link java.lang.UnsupportedOperationException}
+    * @param c instance of the class to be checked
+    */
++  public static void checkClassInstance(Class c) {
++    int modifiers = c.getModifiers();
++    if (Modifier.isInterface(modifiers) || Modifier.isAbstract(modifiers))
++      throw new UnsupportedOperationException("Interface can't be instantiated! Interface name: " + c.getName());
++  }
+ }
+\ No newline at end of file

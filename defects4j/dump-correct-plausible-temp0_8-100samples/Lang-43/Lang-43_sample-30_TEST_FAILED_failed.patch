@@ -1,0 +1,20 @@
+diff --git a/src/java/org/apache/commons/lang/text/ExtendedMessageFormat.java b/src/java/org/apache/commons/lang/text/ExtendedMessageFormat.java
+index c63fbf6d..29fcf6e2 100644
+--- a/src/java/org/apache/commons/lang/text/ExtendedMessageFormat.java
++++ b/src/java/org/apache/commons/lang/text/ExtendedMessageFormat.java
+@@ -433,6 +433,15 @@ public class ExtendedMessageFormat extends MessageFormat {
+             switch (c[pos.getIndex()]) {
+             case QUOTE:
+                 next(pos);
++                if (i < pattern.length()) {
++                    if (pattern.substring(i).startsWith(ESCAPED_QUOTE)) {
++                        appendTo.append(c, lastHold, pos.getIndex() - lastHold)
++                                .append(QUOTE);
++                        pos.setIndex(i + ESCAPED_QUOTE.length());
++                        lastHold = pos.getIndex();
++                        continue;
++                    }
++                }
+                 return appendTo == null ? null : appendTo.append(c, lastHold,
+                         pos.getIndex() - lastHold);
+             default:

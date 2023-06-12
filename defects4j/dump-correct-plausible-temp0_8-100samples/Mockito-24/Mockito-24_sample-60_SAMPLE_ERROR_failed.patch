@@ -1,0 +1,19 @@
+diff --git a/src/org/mockito/internal/stubbing/defaultanswers/ReturnsEmptyValues.java b/src/org/mockito/internal/stubbing/defaultanswers/ReturnsEmptyValues.java
+index 820c09ceb..bd716f6e8 100644
+--- a/src/org/mockito/internal/stubbing/defaultanswers/ReturnsEmptyValues.java
++++ b/src/org/mockito/internal/stubbing/defaultanswers/ReturnsEmptyValues.java
+@@ -75,11 +75,12 @@ public class ReturnsEmptyValues implements Answer<Object>, Serializable {
+             //Only for compareTo() method by the Comparable interface
+             return 1;
+         }
+-
+         Class<?> returnType = invocation.getMethod().getReturnType();
++        if (returnType.isPrimitive()) {
++            return primitiveFor(returnType);
++        }
+         return returnValueFor(returnType);
+     }    
+-    
+     Object returnValueFor(Class<?> type) {
+         if (Primitives.isPrimitiveOrWrapper(type)) {
+             return Primitives.defaultValueForPrimitiveOrWrapper(type);

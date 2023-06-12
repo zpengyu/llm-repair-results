@@ -1,0 +1,36 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/deser/BeanDeserializerFactory.java b/src/main/java/com/fasterxml/jackson/databind/deser/BeanDeserializerFactory.java
+index bc8e6736f..db3ed841e 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/deser/BeanDeserializerFactory.java
++++ b/src/main/java/com/fasterxml/jackson/databind/deser/BeanDeserializerFactory.java
+@@ -707,12 +707,30 @@ public class BeanDeserializerFactory
+     {
+         // need to ensure method is callable (for non-public)
+         AnnotatedMember mutator = propDef.getNonConstructorMutator();
+-
++        if (mutator instanceof AnnotatedMethod) {
++            // [databind#677]: require type for creatability
++            Method m = ((AnnotatedMethod) mutator).getAnnotated();
++            if (!Modifier.isStatic(m.getModifiers())
++                    && !Modifier.isAbstract(m.getModifiers())) {
++                Class<?>[] paramTypes = m.getParameterTypes();
++                if (paramTypes.length == 1) {
++                    Class<?> type = paramTypes[0];
++                    // [databind#738]: allow abstract types
++                    if (!type.isAssignableFrom(propType0.getRawClass())) {
++                        ctxt.reportBadTypeDefinition(beanDesc,
++"Argument #0 type for factory method ("+m.getDeclaringClass().getName()+"#"+m.getName()+") not suitable, \n"
+++"type "+propType0.getRawClass().getName()+" not compatible with method parameters ("+type.getName()+")");
++                    }
++                }
++            }
++        }
+         if (ctxt.canOverrideAccessModifiers()) {
+             // [databind#877]: explicitly prevent forced access to `cause` of `Throwable`;
+             // never needed and attempts may cause problems on some platforms.
+             // !!! NOTE: should be handled better for 2.8 and later
++            if (!Modifier.isAbstract(mutator.getModifiers())) {
+                 mutator.fixAccess(ctxt.isEnabled(MapperFeature.OVERRIDE_PUBLIC_ACCESS_MODIFIERS));
++            }
+         }
+         // note: this works since we know there's exactly one argument for methods
+         BeanProperty.Std property = new BeanProperty.Std(propDef.getFullName(),

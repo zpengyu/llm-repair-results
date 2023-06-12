@@ -1,0 +1,26 @@
+diff --git a/src/main/java/org/joda/time/DateTimeZone.java b/src/main/java/org/joda/time/DateTimeZone.java
+index 6c2eec91..b55c8663 100644
+--- a/src/main/java/org/joda/time/DateTimeZone.java
++++ b/src/main/java/org/joda/time/DateTimeZone.java
+@@ -281,12 +281,16 @@ public abstract class DateTimeZone implements Serializable {
+         }
+         int offset = 0;
+         try {
+-            int hoursInMinutes = hoursOffset * 60;
+-            if (hoursInMinutes < 0) {
+-                minutesOffset = hoursInMinutes - minutesOffset;
+-            } else {
+-                minutesOffset = hoursInMinutes + minutesOffset;
++            if (hoursOffset < 0) {
++                hoursOffset = -hoursOffset;
++                minutesOffset = -minutesOffset;
++            }
++            if (minutesOffset < 0) {
++                minutesOffset += 60;
++                hoursOffset--;
+             }
++            int hoursInMinutes = hoursOffset * 60;
++            minutesOffset = hoursInMinutes + minutesOffset;
+             offset = FieldUtils.safeMultiply(minutesOffset, DateTimeConstants.MILLIS_PER_MINUTE);
+         } catch (ArithmeticException ex) {
+             throw new IllegalArgumentException("Offset is too large");

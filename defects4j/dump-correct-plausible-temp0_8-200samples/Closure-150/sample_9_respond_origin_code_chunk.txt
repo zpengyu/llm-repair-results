@@ -1,0 +1,24 @@
+    @Override public void visit(NodeTraversal t, Node n, Node parent) {
+      if (n.getType() == Token.FUNCTION
+          || NodeUtil.isGetOrSetKey(parent)) {
+        return;
+      }
+      attachLiteralTypes(n);
+      switch (n.getType()) {
+        case Token.LP:
+          if (parent == scope.getRootNode()) {
+            handleFunctionInputs(parent);
+          }
+          break;
+        case Token.FUNCTION:
+          defineDeclaredFunction(n, parent);
+          break;
+        case Token.CATCH:
+          defineCatch(n, parent);
+          break;
+        case Token.VAR:
+          defineVar(n, parent);
+          break;
+      }
+    }
+  }

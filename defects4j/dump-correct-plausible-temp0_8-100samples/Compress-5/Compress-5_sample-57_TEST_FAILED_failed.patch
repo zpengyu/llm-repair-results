@@ -1,0 +1,20 @@
+diff --git a/src/main/java/org/apache/commons/compress/archivers/zip/ZipArchiveInputStream.java b/src/main/java/org/apache/commons/compress/archivers/zip/ZipArchiveInputStream.java
+index fc7b80d5..2874c1b9 100644
+--- a/src/main/java/org/apache/commons/compress/archivers/zip/ZipArchiveInputStream.java
++++ b/src/main/java/org/apache/commons/compress/archivers/zip/ZipArchiveInputStream.java
+@@ -237,7 +236,14 @@ public class ZipArchiveInputStream extends ArchiveInputStream {
+                 throw new ZipException(e.getMessage());
+             }
+             if (read == 0 && inf.finished()) {
+-                return -1;
++                // return read of -1 only if EOF and no bytes read
++                // -1 is interpreted as panic by callers;
++                // 0 is interpreted as a hint that more data may be coming
++                if (inf.getRemaining() == 0 && buffer.length - start == 0) {
++                    return -1;
++                } else {
++                    return 0;
++                }
+             }
+             crc.update(buffer, start, read);
+             return read;

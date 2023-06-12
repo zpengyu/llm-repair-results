@@ -1,0 +1,63 @@
+
+static boolean functionCallHasSideEffects(Node callNode,
+    @Nullable AbstractCompiler compiler) {
+  checkArgument(callNode.isCall(), callNode);
+  return !NodeUtil.functionCallHasNoSideEffects(callNode, compiler);
+}
+
+static boolean functionCallHasNoSideEffects(Node callNode,
+    @Nullable AbstractCompiler compiler) {
+  checkArgument(callNode.isCall(), callNode);
+  if (callNode.isNoSideEffectsCall()) {
+    return true;
+  }
+
+  Node nameNode = callNode.getFirstChild();
+  if (!nameNode.isQualifiedName()) {
+    return false;
+  }
+
+  if (isNoSideEffectsProperty(compiler, callNode, nameNode)) {
+    return true;
+  }
+
+  if (callNode.isOnlyModifiesThisCall()
+      && evaluatesToLocalValue(nameNode.getFirstChild())) {
+    return true;
+  }
+
+  // Functions in the "Math" namespace have no side effects.
+  if ("Math".equals(nameNode.getQualifiedName())) {
+    return true;
+  }
+
+  // Functions in the "goog.math" namespace have no side effects.
+  if ("goog.math".equals(nameNode.getQualifiedName())) {
+    return true;
+  }
+
+  // eval has side effects.
+  if ("eval".equals(nameNode.getQualifiedName())) {
+    return false;
+  }
+
+  return false;
+}
+
+private static boolean isNoSideEffectsProperty(
+    @Nullable AbstractCompiler compiler, Node callNode, Node nameNode) {
+  if (compiler != null && !compiler.hasRegExpGlobalReferences()) {
+    if (nameNode.getFirstChild().getType() == Token.REGEXP
+        && REGEXP_METHODS.contains(nameNode.getLastChild().getString())) {
+      return true;
+    }
+    if (nameNode.getFirstChild().getType() == Token.STRING
+        && STRING_REGEXP_METHODS.contains(nameNode.getLastChild().getString())) {
+      Node param = callNode.getSecondChild();
+      return param != null &&
+          (param.getType() == Token.STRING || param.getType() == Token.REGEXP);
+    }
+  }
+  return false;
+}
+

@@ -1,0 +1,34 @@
+diff --git a/src/java/org/apache/commons/lang/time/DurationFormatUtils.java b/src/java/org/apache/commons/lang/time/DurationFormatUtils.java
+index 8ced282e..1093240c 100644
+--- a/src/java/org/apache/commons/lang/time/DurationFormatUtils.java
++++ b/src/java/org/apache/commons/lang/time/DurationFormatUtils.java
+@@ -332,7 +326,8 @@ public class DurationFormatUtils {
+                 years = 0;
+             } else {
+                 // TODO: this is a bit weak, needs work to know about leap years
+-                days += 365 * years;
++                // days += 365 * years;
++                days += numberOfLeapYears(start, end) * 366 + (years - numberOfLeapYears(start, end)) * 365;
+                 years = 0;
+             }
+         }
+@@ -356,10 +351,17 @@ public class DurationFormatUtils {
+             milliseconds += 1000 * seconds;
+             seconds = 0;
+         }
+-
+         return format(tokens, years, months, days, hours, minutes, seconds, milliseconds, padWithZeros);
+     }
+-
++    private static int numberOfLeapYears(Calendar start, Calendar end) {
++        int result = 0;
++        int startYear = start.get(Calendar.YEAR);
++        int endYear = end.get(Calendar.YEAR);
++        result += (endYear / 4) - ((startYear - 1) / 4);
++        result -= (endYear / 100) - ((startYear - 1) / 100);
++        result += (endYear / 400) - ((startYear - 1) / 400);
++        return result;
++    }
+     //-----------------------------------------------------------------------
+     /**
+      * <p>The internal method to do the formatting.</p>

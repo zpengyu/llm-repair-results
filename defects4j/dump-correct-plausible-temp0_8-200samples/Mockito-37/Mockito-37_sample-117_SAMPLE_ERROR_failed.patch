@@ -1,0 +1,36 @@
+diff --git a/src/org/mockito/internal/stubbing/answers/AnswersValidator.java b/src/org/mockito/internal/stubbing/answers/AnswersValidator.java
+index 5d8057846..783d6b14f 100644
+--- a/src/org/mockito/internal/stubbing/answers/AnswersValidator.java
++++ b/src/org/mockito/internal/stubbing/answers/AnswersValidator.java
+@@ -24,10 +20,10 @@ public class AnswersValidator {
+         if (answer instanceof DoesNothing) {
+             validateDoNothing((DoesNothing) answer, invocation);
+         }
+-        
++        if (answer instanceof ThrowsExceptionClass) {
++            validateException((ThrowsExceptionClass) answer, invocation);
++        }
+     }
+-
+-
+     private void validateDoNothing(DoesNothing answer, Invocation invocation) {
+         if (!invocation.isVoid()) {
+             reporter.onlyVoidMethodsCanBeSetToDoNothing();
+@@ -62,4 +52,16 @@ public class AnswersValidator {
+             reporter.checkedExceptionInvalid(throwable);
+         }
+     }
++    private void validateException(ThrowsExceptionClass answer, Invocation invocation) {
++        Class throwableClass = answer.getThrowableClass();
++        if (throwableClass == null) {
++            reporter.cannotStubWithNullThrowable();
++        }
++        if (throwableClass == RuntimeException.class || throwableClass == Error.class) {
++            return;
++        }
++        if (!invocation.isValidException(throwableClass)) {
++            reporter.checkedExceptionInvalid(throwableClass);
++        }
++    }
+ }
+\ No newline at end of file

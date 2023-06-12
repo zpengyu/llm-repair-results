@@ -1,0 +1,103 @@
+###Provide a fix for the buggy function
+###Buggy Function
+class FibonacciExample {
+    public static void main(String args[]) {
+        int n1 = 0, n2 = 1, n3, i, count = 10;
+
+        System.out.print(n1 + " " + n2);
+
+        for (i = 2; i < count; ++i) {
+            n3 = n1 - n2;
+            System.out.print(" " + n3);
+            n1 = n2;
+            n2 = n3;
+        }
+    }
+}
+
+###Fixed Function
+class FibonacciExample {
+    public static void main(String args[]) {
+        int n1 = 0, n2 = 1, n3, i, count = 10;
+
+        System.out.print(n1 + " " + n2);
+
+        for (i = 2; i < count; ++i) {
+            n3 = n1 + n2;
+            System.out.print(" " + n3);
+            n1 = n2;
+            n2 = n3;
+        }
+    }
+}
+
+###Provide a fix for the buggy function
+###Buggy Function
+public Object answer(InvocationOnMock invocation) throws Throwable {
+    return invocation.callRealMethod();
+}
+###Fixed Function
+public Object answer(InvocationOnMock invocation) throws Throwable {
+	if (Modifier.isAbstract(invocation.getMethod().getModifiers())) {
+		return new GloballyConfiguredAnswer().answer(invocation);
+	}
+    return invocation.callRealMethod();
+}
+###Provide a fix for the buggy function
+###Buggy Function
+public class AnswersValidator {
+
+    private Reporter reporter = new Reporter();
+    
+    public void validate(Answer<?> answer, Invocation invocation) {
+        if (answer instanceof ThrowsException) {
+            validateException((ThrowsException) answer, invocation);
+        }
+        
+        if (answer instanceof Returns) {
+            validateReturnValue((Returns) answer, invocation);
+        }
+        
+        if (answer instanceof DoesNothing) {
+            validateDoNothing((DoesNothing) answer, invocation);
+        }
+        
+    }
+
+
+    private void validateDoNothing(DoesNothing answer, Invocation invocation) {
+        if (!invocation.isVoid()) {
+            reporter.onlyVoidMethodsCanBeSetToDoNothing();
+        }
+    }
+
+    private void validateReturnValue(Returns answer, Invocation invocation) {
+        if (invocation.isVoid()) {
+            reporter.cannotStubVoidMethodWithAReturnValue();
+        }
+        
+        if (answer.returnsNull() && invocation.returnsPrimitive()) {
+            reporter.wrongTypeOfReturnValue(invocation.printMethodReturnType(), "null", invocation.getMethodName());
+        } 
+
+        if (!answer.returnsNull() && !invocation.isValidReturnType(answer.getReturnType())) {
+            reporter.wrongTypeOfReturnValue(invocation.printMethodReturnType(), answer.printReturnType(), invocation.getMethodName());
+        }
+    }
+
+    private void validateException(ThrowsException answer, Invocation invocation) {
+        Throwable throwable = answer.getThrowable();
+        if (throwable == null) {
+            reporter.cannotStubWithNullThrowable();
+        }
+        
+        if (throwable instanceof RuntimeException || throwable instanceof Error) {
+            return;
+        }
+        
+        if (!invocation.isValidException(throwable)) {
+            reporter.checkedExceptionInvalid(throwable);
+        }
+    }
+}
+###Fixed Function

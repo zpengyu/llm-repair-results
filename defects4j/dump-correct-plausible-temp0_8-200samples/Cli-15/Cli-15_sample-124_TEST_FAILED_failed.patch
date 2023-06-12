@@ -1,0 +1,39 @@
+diff --git a/src/java/org/apache/commons/cli2/commandline/WriteableCommandLineImpl.java b/src/java/org/apache/commons/cli2/commandline/WriteableCommandLineImpl.java
+index 6220b91..b3aa03e 100644
+--- a/src/java/org/apache/commons/cli2/commandline/WriteableCommandLineImpl.java
++++ b/src/java/org/apache/commons/cli2/commandline/WriteableCommandLineImpl.java
+@@ -109,10 +109,10 @@ public class WriteableCommandLineImpl
+     }
+ 
+     public List getValues(final Option option,
+-                          List defaultValues) {
++        List defaultValues) {
+         // initialize the return list
+         List valueList = (List) values.get(option);
+-
++        List copyList=new ArrayList(valueList);
+         // grab the correct default values
+         if ((valueList == null) || valueList.isEmpty()) {
+             valueList = defaultValues;
+@@ -122,13 +121,16 @@ public class WriteableCommandLineImpl
+         if ((valueList == null) || valueList.isEmpty()) {
+             valueList = (List) this.defaultValues.get(option);
+         }
+-                // if there are more default values as specified, add them to
+-                // the list.
++        // if there are more default values as specified, add them to
++        // the list.
+                     // copy the list first
+-
+-        return valueList == null ? Collections.EMPTY_LIST : valueList;
++                    if(defaultValues!=null){
++                        for(int i=copyList.size();i<defaultValues.size();i++){
++                            copyList.add(defaultValues.get(i));
++                        }
++                    }
++        return valueList == null ? Collections.EMPTY_LIST : copyList;
+     }
+-
+     public List getUndefaultedValues(Option option) {
+       // First grab the command line values
+       List valueList = (List) values.get(option);

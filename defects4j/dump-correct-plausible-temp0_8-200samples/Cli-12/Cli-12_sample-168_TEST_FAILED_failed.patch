@@ -1,0 +1,33 @@
+diff --git a/src/java/org/apache/commons/cli/GnuParser.java b/src/java/org/apache/commons/cli/GnuParser.java
+index 14a9cc0..84f179a 100644
+--- a/src/java/org/apache/commons/cli/GnuParser.java
++++ b/src/java/org/apache/commons/cli/GnuParser.java
+@@ -87,8 +83,17 @@ public class GnuParser extends Parser {
+                     }
+                     else
+                     {
+-                        eatTheRest = stopAtNonOption;
+-                        tokens.add(arg);
++                        // this is a properties option (-Dfoo=bar)
++                        if (arg.startsWith("-D"))
++                        {
++                            tokens.add(arg.substring(0, 2)); // -D
++                            tokens.add(arg.substring(2)); // property=value
++                        }
++                        else
++                        {
++                            eatTheRest = stopAtNonOption;
++                            tokens.add(arg);
++                        }
+                     }
+                 }
+             }
+@@ -105,7 +109,5 @@ public class GnuParser extends Parser {
+                 }
+             }
+         }
+-
+         return (String[]) tokens.toArray(new String[tokens.size()]);
+-    }
+-}
++    }}

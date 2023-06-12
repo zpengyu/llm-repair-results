@@ -1,0 +1,86 @@
+###Provide a fix for the buggy function
+###Buggy Function
+class FibonacciExample {
+    public static void main(String args[]) {
+        int n1 = 0, n2 = 1, n3, i, count = 10;
+
+        System.out.print(n1 + " " + n2);
+
+        for (i = 2; i < count; ++i) {
+            n3 = n1 - n2;
+            System.out.print(" " + n3);
+            n1 = n2;
+            n2 = n3;
+        }
+    }
+}
+
+###Fixed Function
+class FibonacciExample {
+    public static void main(String args[]) {
+        int n1 = 0, n2 = 1, n3, i, count = 10;
+
+        System.out.print(n1 + " " + n2);
+
+        for (i = 2; i < count; ++i) {
+            n3 = n1 + n2;
+            System.out.print(" " + n3);
+            n1 = n2;
+            n2 = n3;
+        }
+    }
+}
+
+###Provide a fix for the buggy function
+###Buggy Function
+public String title() {
+    // title is a preserve whitespace tag (for document output), but normalised here 
+    Element titleEl = getElementsByTag("title").first();
+    return titleEl != null ? titleEl.text().trim() : "";
+}
+###Fixed Function
+public String title() {
+    // title is a preserve whitespace tag (for document output), but normalised here
+    Element titleEl = getElementsByTag("title").first();
+    return titleEl != null ? StringUtil.normaliseWhitespace(titleEl.text()).trim() : "";
+}
+###Provide a fix for the buggy function
+###Buggy Function
+    public List<Connection.KeyVal> formData() {
+        ArrayList<Connection.KeyVal> data = new ArrayList<>();
+
+        // iterate the form control elements and accumulate their values
+        for (Element el: elements) {
+            if (!el.tag().isFormSubmittable()) continue; // contents are form listable, superset of submitable
+            if (el.hasAttr("disabled")) continue; // skip disabled form inputs
+            String name = el.attr("name");
+            if (name.length() == 0) continue;
+            String type = el.attr("type");
+
+
+            if ("select".equals(el.normalName())) {
+                Elements options = el.select("option[selected]");
+                boolean set = false;
+                for (Element option: options) {
+                    data.add(HttpConnection.KeyVal.create(name, option.val()));
+                    set = true;
+                }
+                if (!set) {
+                    Element option = el.select("option").first();
+                    if (option != null)
+                        data.add(HttpConnection.KeyVal.create(name, option.val()));
+                }
+            } else if ("checkbox".equalsIgnoreCase(type) || "radio".equalsIgnoreCase(type)) {
+                // only add checkbox or radio if they have the checked attribute
+                if (el.hasAttr("checked")) {
+                    final String val = el.val().length() >  0 ? el.val() : "on";
+                    data.add(HttpConnection.KeyVal.create(name, val));
+                }
+            } else {
+                data.add(HttpConnection.KeyVal.create(name, el.val()));
+            }
+        }
+        return data;
+    }
+
+###Fixed Function

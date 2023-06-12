@@ -1,0 +1,32 @@
+diff --git a/src/main/java/org/apache/commons/compress/archivers/tar/TarArchiveOutputStream.java b/src/main/java/org/apache/commons/compress/archivers/tar/TarArchiveOutputStream.java
+index da6bbfde..9781831b 100644
+--- a/src/main/java/org/apache/commons/compress/archivers/tar/TarArchiveOutputStream.java
++++ b/src/main/java/org/apache/commons/compress/archivers/tar/TarArchiveOutputStream.java
+@@ -451,7 +451,7 @@ public class TarArchiveOutputStream extends ArchiveOutputStream {
+      * Writes a PAX extended header with the given map as contents.
+      * @since 1.4
+      */
+-    void writePaxHeaders(String entryName,
++   void writePaxHeaders(String entryName,
+                          Map<String, String> headers) throws IOException {
+         String name = "./PaxHeaders.X/" + stripTo7Bits(entryName);
+             // TarEntry's constructor would think this is a directory
+@@ -461,8 +461,7 @@ public class TarArchiveOutputStream extends ArchiveOutputStream {
+         }
+         TarArchiveEntry pex = new TarArchiveEntry(name,
+                                                   TarConstants.LF_PAX_EXTENDED_HEADER_LC);
+-
+-        StringWriter w = new StringWriter();
++        StringBuilder w = new StringBuilder();
+         for (Map.Entry<String, String> h : headers.entrySet()) {
+             String key = h.getKey();
+             String value = h.getValue();
+@@ -481,7 +480,7 @@ public class TarArchiveOutputStream extends ArchiveOutputStream {
+                 line = len + " " + key + "=" + value + "\n";
+                 actualLength = line.getBytes(CharsetNames.UTF_8).length;
+             }
+-            w.write(line);
++            w.append(line);
+         }
+         byte[] data = w.toString().getBytes(CharsetNames.UTF_8);
+         pex.setSize(data.length);

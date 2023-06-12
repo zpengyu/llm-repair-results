@@ -1,0 +1,45 @@
+diff --git a/src/com/google/javascript/jscomp/TypeValidator.java b/src/com/google/javascript/jscomp/TypeValidator.java
+index c6d25483..d728ece0 100644
+--- a/src/com/google/javascript/jscomp/TypeValidator.java
++++ b/src/com/google/javascript/jscomp/TypeValidator.java
+@@ -742,13 +740,35 @@ class TypeValidator {
+             objectType = objectType.getImplicitPrototype();
+           }
+         }
+-
+         // Don't show complex function names or anonymous types.
+         // Instead, try to get a human-readable type name.
+-        if (objectType != null &&
+-            (objectType.getConstructor() != null ||
+-             objectType.isFunctionPrototypeType())) {
+-          return objectType.toString() + "." + propName;
++        if (objectType != null) {
++          JSType propType = objectType.getPropertyType(propName);
++          if (propType != null) {
++            JSType objectTypePropType = null;
++            if (objectType.getConstructor() != null) {
++              objectTypePropType = objectType.getConstructor().getPropertyType(propName);
++            } else if (objectType.isFunctionPrototypeType()) {
++              FunctionType funType = objectType.toObjectType().getOwnerFunction();
++              if (funType != null) {
++                objectTypePropType = funType.getPropertyType(propName);
++              }
++            }
++            if (objectTypePropType != null) {
++              JSType lubType = propType.getLeastSupertype(objectTypePropType);
++              if (lubType != null && lubType.toObjectType() != null) {
++                if (lubType.toObjectType().getConstructor() != null) {
++                  return lubType.toString() + "." + propName;
++                } else if (lubType.toObjectType().isFunctionPrototypeType()) {
++                  return lubType.toString();
++                }
++              }
++            }
++          }
++          if (objectType.getConstructor() != null ||
++              objectType.isFunctionPrototypeType()) {
++            return objectType.toString() + "." + propName;
++          }
+         }
+       }
+     }

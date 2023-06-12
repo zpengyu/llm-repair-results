@@ -1,0 +1,38 @@
+diff --git a/src/main/java/org/joda/time/chrono/BasicMonthOfYearDateTimeField.java b/src/main/java/org/joda/time/chrono/BasicMonthOfYearDateTimeField.java
+index 98e6912c..04cea45d 100644
+--- a/src/main/java/org/joda/time/chrono/BasicMonthOfYearDateTimeField.java
++++ b/src/main/java/org/joda/time/chrono/BasicMonthOfYearDateTimeField.java
+@@ -206,7 +206,6 @@ class BasicMonthOfYearDateTimeField extends ImpreciseDateTimeField {
+         if (valueToAdd == 0) {
+             return values;
+         }
+-            // month is largest field and being added to, such as month-day
+         if (DateTimeUtils.isContiguous(partial)) {
+             long instant = 0L;
+             for (int i = 0, isize = partial.size(); i < isize; i++) {
+@@ -215,10 +214,23 @@ class BasicMonthOfYearDateTimeField extends ImpreciseDateTimeField {
+             instant = add(instant, valueToAdd);
+             return iChronology.get(partial, instant);
+         } else {
+-            return super.add(partial, fieldIndex, values, valueToAdd);
++            int[] values2 = values;
++            int[] tmp = new int[iValues.length];
++            // copy specified field and following fields
++            System.arraycopy(iValues, fieldIndex, tmp, fieldIndex, (iValues.length - fieldIndex));
++            // copy original fields prior to specified field
++            System.arraycopy(values, 0, tmp, 0, fieldIndex);
++            // set the specified field
++            tmp[fieldIndex] = FieldUtils.safeAdd(tmp[fieldIndex], valueToAdd);
++            // set the value in the chronology
++            long instant = iChronology.set(this, tmp, partial, 0);
++            // convert back to an array of values
++            iValues = iChronology.get(this, instant);
++            // copy specified field and following fields
++            System.arraycopy(iValues, fieldIndex, values2, fieldIndex, (iValues.length - fieldIndex));
++            return values2;
+         }
+     }
+-
+     //-----------------------------------------------------------------------
+     /**
+      * Add to the Month component of the specified time instant

@@ -1,0 +1,31 @@
+     public int[] add(ReadablePartial partial, int fieldIndex, int[] values, int valueToAdd) {
+        // overridden as superclass algorithm can't handle
+        // 2004-02-29 + 48 months -> 2008-02-29 type dates
+        if (valueToAdd == 0) {
+            return values;
+        }
+
+        if (DateTimeUtils.isContiguous(partial)) {
+            long instant = 0L;
+            for (int i = 0, isize = partial.size(); i < isize; i++) {
+                instant = partial.getFieldType(i).getField(iChronology).set(instant, values[i]);
+            }
+            instant = add(instant, valueToAdd);
+            return iChronology.get(partial, instant);
+        }
+
+        long instant;
+        if (fieldIndex == 0) {
+            // add to field 0, 1, or 2
+            // cannot add to months as may change year, so add to milliseconds
+            instant = iChronology.getDateTimeMillis(values[0], values[1], values[2], 0, 0, 0, 0);
+            instant = iChronology.monthOfYear().add(instant, valueToAdd);
+        } else {
+            // add to field 4, 5, 6, or 7
+            instant = iChronology.getDateTimeMillis(values[0], values[1], values[2], values[3], values[4], values[5], values[6]);
+            instant = iChronology.millisOfDay().add(instant, valueToAdd);
+        }
+
+        return iChronology.get(partial, instant);
+    }
+

@@ -1,0 +1,42 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/ser/PropertyBuilder.java b/src/main/java/com/fasterxml/jackson/databind/ser/PropertyBuilder.java
+index 9a9d91ebf..d078fcea9 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/ser/PropertyBuilder.java
++++ b/src/main/java/com/fasterxml/jackson/databind/ser/PropertyBuilder.java
+@@ -81,8 +80,12 @@ public class PropertyBuilder
+              *    revisited if this causes problems.
+              */
+             if (serializationType == null) {
+-//                serializationType = TypeFactory.type(am.getGenericType(), _beanDesc.getType());
+                 serializationType = declaredType;
++                // force static typing
++                if (serializationType.isContainerType()
++                        && !serializationType.isTrueContainerType()) {
++                    serializationType = serializationType.getTrueContainerType();
++                }
+             }
+             JavaType ct = serializationType.getContentType();
+             // Not exactly sure why, but this used to occur; better check explicitly:
+@@ -93,10 +96,21 @@ public class PropertyBuilder
+             serializationType = serializationType.withContentTypeHandler(contentTypeSer);
+             ct = serializationType.getContentType();
+         }
+-        
++        boolean staticTyping = (serializationType != null && serializationType.isContainerType());
++        // Is there a custom typing (serializer) for contents? If not, we might need to
++        // force static typing:
++        JsonSerializer<Object> contentSerializer = null;
++        if (ser == null) {
++            ser = _findContentSerializer(prov, propDef.getMember());
++        } else {
++            contentSerializer = _findContentSerializer(prov, propDef.getMember());
++        }
++        // One more thing: is the serializer "untyped"? If so, we may want to force static typing
++        if (ser != null && !staticTyping) {
++            staticTyping = _serializerStaticTyping(prov, propDef.getMember(), ser);
++        }
+         Object valueToSuppress = null;
+         boolean suppressNulls = false;
+-
+         JsonInclude.Value inclV = _defaultInclusion.withOverrides(propDef.findInclusion());
+         JsonInclude.Include inclusion = inclV.getValueInclusion();
+         if (inclusion == JsonInclude.Include.USE_DEFAULTS) { // should not occur but...

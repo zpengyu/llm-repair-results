@@ -1,0 +1,29 @@
+diff --git a/src/com/google/javascript/jscomp/ControlFlowAnalysis.java b/src/com/google/javascript/jscomp/ControlFlowAnalysis.java
+index 0f5c5421..dd2ea97a 100644
+--- a/src/com/google/javascript/jscomp/ControlFlowAnalysis.java
++++ b/src/com/google/javascript/jscomp/ControlFlowAnalysis.java
+@@ -748,19 +747,21 @@ final class ControlFlowAnalysis implements Callback, CompilerPass {
+       case Token.TRY:
+         // If we are coming out of the TRY block...
+         if (parent.getFirstChild() == node) {
+-          if (NodeUtil.hasFinally(parent)) { // and have FINALLY block.
++          if (NodeUtil.hasCatchHandler(parent)) { // and have FINALLY block.
++            return computeFollowNode(fromNode, parent.getLastChild(), cfa);
++          } else if (NodeUtil.hasFinally(parent)) { // and have FINALLY block.
+             return computeFallThrough(parent.getLastChild());
+           } else { // and have no FINALLY.
+             return computeFollowNode(fromNode, parent, cfa);
+           }
+-        // CATCH block.
++          // CATCH block.
+         } else if (NodeUtil.getCatchBlock(parent) == node){
+           if (NodeUtil.hasFinally(parent)) { // and have FINALLY block.
+             return computeFallThrough(node.getNext());
+           } else {
+             return computeFollowNode(fromNode, parent, cfa);
+           }
+-        // If we are coming out of the FINALLY block...
++          // If we are coming out of the FINALLY block...
+         } else if (parent.getLastChild() == node){
+           if (cfa != null) {
+             for (Node finallyNode : cfa.finallyMap.get(parent)) {

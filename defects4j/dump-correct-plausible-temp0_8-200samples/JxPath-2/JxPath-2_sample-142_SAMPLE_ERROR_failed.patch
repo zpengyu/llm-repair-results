@@ -1,0 +1,76 @@
+diff --git a/src/java/org/apache/commons/jxpath/ri/compiler/Expression.java b/src/java/org/apache/commons/jxpath/ri/compiler/Expression.java
+index 927f617..d266e40 100644
+--- a/src/java/org/apache/commons/jxpath/ri/compiler/Expression.java
++++ b/src/java/org/apache/commons/jxpath/ri/compiler/Expression.java
+@@ -87,33 +80,59 @@ public abstract class Expression {
+         }
+         return new PointerIterator(ValueUtils.iterate(result),
+                 new QName(null, "value"),
+-                context.getRootContext().getCurrentNodePointer().getLocale());
++                context.getRootContext().getCurrentNodePointer().getLocale(),
++                null);
++    }
++    /**
++     * @deprecated Use the method that takes a NamespaceManager
++     */
++    public Iterator iteratePointers(EvalContext context, Locale locale) {
++        return iteratePointers(context, new QName(null, "value"), locale);
++    }
++    public Iterator iteratePointers(EvalContext context, QName qname) {
++        return iteratePointers(context, qname, null);
++    }
++    public Iterator iteratePointers(EvalContext context, QName qname, Locale locale) {
++        Object result = compute(context);
++        if (result == null) {
++            return Collections.EMPTY_LIST.iterator();
++        }
++        if (result instanceof EvalContext) {
++            return (EvalContext) result;
++        }
++        return new PointerIterator(ValueUtils.iterate(result), qname, locale, null);
++    }
++    public Iterator iteratePointers(EvalContext context, QName qname, Locale locale,
++                                    NamespaceManager nsManager) {
++        Object result = compute(context);
++        if (result == null) {
++            return Collections.EMPTY_LIST.iterator();
++        }
++        if (result instanceof EvalContext) {
++            return (EvalContext) result;
++        }
++        return new PointerIterator(ValueUtils.iterate(result), qname, locale, nsManager);
+     }
+-
+     public static class PointerIterator implements Iterator {
+         private Iterator iterator;
+         private QName qname;
+         private Locale locale;
+-
+-        //to what method does the following comment refer?
+-        /**
+-         * @deprecated Use the method that takes a NamespaceManager
+-         */
+-        public PointerIterator(Iterator it, QName qname, Locale locale) {
++        private NamespaceManager nsManager;
++        public PointerIterator(Iterator it, QName qname, Locale locale,
++                               NamespaceManager nsManager) {
+             this.iterator = it;
+             this.qname = qname;
+             this.locale = locale;
++            this.nsManager = nsManager;
+         }
+-
+         public boolean hasNext() {
+             return iterator.hasNext();
+         }
+-
+         public Object next() {
+             Object o = iterator.next();
+-            return o instanceof Pointer ? o : NodePointer.newNodePointer(qname, o, locale);
++            return o instanceof Pointer ? o : NodePointer.newNodePointer(qname, o, locale,
++                    nsManager);
+         }
+-
+         public void remove() {
+             throw new UnsupportedOperationException();
+         }

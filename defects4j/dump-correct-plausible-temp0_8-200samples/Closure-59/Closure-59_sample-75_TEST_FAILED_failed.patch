@@ -1,0 +1,24 @@
+diff --git a/src/com/google/javascript/jscomp/Compiler.java b/src/com/google/javascript/jscomp/Compiler.java
+index f96ec5db..9e7e5358 100644
+--- a/src/com/google/javascript/jscomp/Compiler.java
++++ b/src/com/google/javascript/jscomp/Compiler.java
+@@ -283,10 +277,17 @@ public class Compiler extends AbstractCompiler {
+       composedGuards.addGuard(new DiagnosticGroupWarningsGuard(
+           DiagnosticGroups.CHECK_VARIABLES, CheckLevel.OFF));
+     }
+-
+     this.warningsGuard = composedGuards;
++    // Added code
++    // Also turn off the parser type warnings if DiagnosticGroups did not override
++    // the plain checkTypes option, and checkTypes is disabled.
++    if (!options.checkTypes) {
++      options.setWarningLevel(
++          DiagnosticGroup.forType(
++              RhinoErrorReporter.TYPE_PARSE_ERROR),
++          CheckLevel.OFF);
++    }
+   }
+-
+   /**
+    * Initializes the instance state needed for a compile job.
+    */

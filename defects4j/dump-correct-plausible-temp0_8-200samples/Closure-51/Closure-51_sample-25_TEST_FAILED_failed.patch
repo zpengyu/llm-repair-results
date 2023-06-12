@@ -1,0 +1,20 @@
+diff --git a/src/com/google/javascript/jscomp/CodeConsumer.java b/src/com/google/javascript/jscomp/CodeConsumer.java
+index dbdb0a9b..048c114a 100644
+--- a/src/com/google/javascript/jscomp/CodeConsumer.java
++++ b/src/com/google/javascript/jscomp/CodeConsumer.java
+@@ -237,7 +201,14 @@ abstract class CodeConsumer {
+     if (x < 0 && prev == '-') {
+       add(" ");
+     }
+-
++    // If the number is not an integer, it is safer to add a space after it.
++    // For example, if you have "return -.2" then a line break could be inserted
++    // after the "-", and then you would have "return - .2", which would be
++    // misparsed.
++    boolean isInteger = (long) x == x;
++    if (!isInteger) {
++      add(" ");
++    }
+     if ((long) x == x) {
+       long value = (long) x;
+       long mantissa = value;

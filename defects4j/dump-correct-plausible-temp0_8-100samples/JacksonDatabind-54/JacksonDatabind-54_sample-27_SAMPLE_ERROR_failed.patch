@@ -1,0 +1,77 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/ser/PropertyBuilder.java b/src/main/java/com/fasterxml/jackson/databind/ser/PropertyBuilder.java
+index 9a9d91ebf..44d104aa2 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/ser/PropertyBuilder.java
++++ b/src/main/java/com/fasterxml/jackson/databind/ser/PropertyBuilder.java
+@@ -73,7 +73,13 @@ public class PropertyBuilder
+     {
+         // do we have annotation that forces type to use (to declared type or its super type)?
+         JavaType serializationType = findSerializationType(am, defaultUseStaticTyping, declaredType);
+-
++        boolean staticTyping;
++        if (serializationType != null) {
++            staticTyping = true;
++        } else {
++            staticTyping = (defaultUseStaticTyping ||
++                hasSchemaPropertyAnnotation(prov, am));
++        }
+         // Container types can have separate type serializers for content (value / element) type
+         if (contentTypeSer != null) {
+             /* 04-Feb-2010, tatu: Let's force static typing for collection, if there is
+@@ -92,11 +98,15 @@ public class PropertyBuilder
+             }
+             serializationType = serializationType.withContentTypeHandler(contentTypeSer);
+             ct = serializationType.getContentType();
++            /* 11-Feb-2011, tatu: As per [JACKSON-456], need to link managed content type
++             *   back
++             */
++            if (staticTyping && !ct.isJavaLangObject()) {
++                staticTyping = ct.getRawClass() != Object.class;
++            }
+         }
+-        
+         Object valueToSuppress = null;
+         boolean suppressNulls = false;
+-
+         JsonInclude.Value inclV = _defaultInclusion.withOverrides(propDef.findInclusion());
+         JsonInclude.Include inclusion = inclV.getValueInclusion();
+         if (inclusion == JsonInclude.Include.USE_DEFAULTS) { // should not occur but...
+@@ -169,7 +175,38 @@ public class PropertyBuilder
+         }
+         return bpw;
+     }
+-
++    private boolean hasSchemaPropertyAnnotation(SerializerProvider prov, Annotated am) {
++        if (_nonTrivialBaseType != null) {
++            return false;
++        }
++        JsonFormat.Value format = prov.getAnnotationIntrospector().findFormat(am);
++        // serialization-wise, only inclusion matters
++        if (format != null) {
++            JsonInclude.Include incl = format.getFeature(JsonFormat.Feature.WRITE_SCHEMA);
++            if (incl == JsonInclude.Include.USE_DEFAULTS) {
++                return false;
++            }
++        }
++        return true;
++    }
++    /**
++     * Helper method used to determine "default value" to use, if any, to filter out
++     * non-writable values (ones that are considered equal to their default)
++     */
++    private Object getDefaultValue(JavaType type) {
++        Class<?> cls = type.getRawClass();
++        if (cls == String.class) {
++            return "";
++        }
++        if (cls.isPrimitive()) {
++            if (cls == Boolean.TYPE) {
++                return Boolean.FALSE;
++            }
++            // should not have to worry about other primitives...
++            throw new IllegalStateException("Internal error: primitive type "+type+" but no default value");
++        }
++        return null;
++    }
+     /*
+     /**********************************************************
+     /* Helper methods; annotation access

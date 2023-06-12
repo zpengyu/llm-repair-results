@@ -1,0 +1,28 @@
+diff --git a/src/main/java/org/jsoup/parser/HtmlTreeBuilderState.java b/src/main/java/org/jsoup/parser/HtmlTreeBuilderState.java
+index 9bb0006..be51996 100644
+--- a/src/main/java/org/jsoup/parser/HtmlTreeBuilderState.java
++++ b/src/main/java/org/jsoup/parser/HtmlTreeBuilderState.java
+@@ -767,8 +767,11 @@ enum HtmlTreeBuilderState {
+                 Element node = stack.get(pos);
+                 if (node.nodeName().equals(name)) {
+                     tb.generateImpliedEndTags(name);
+-                    if (!name.equals(tb.currentElement().nodeName()))
+-                        tb.error(this);
++                    if (!name.equals(tb.currentElement().nodeName())) {
++                        if (!tb.currentElement().nodeName().equals("body")) {
++                            tb.error(this);
++                        }
++                    }
+                     tb.popStackToClose(name);
+                     break;
+                 } else {
+@@ -779,8 +782,7 @@ enum HtmlTreeBuilderState {
+                 }
+             }
+             return true;
+-        }
+-    },
++        }    },
+     Text {
+         // in script, style etc. normally treated as data tags
+         boolean process(Token t, HtmlTreeBuilder tb) {

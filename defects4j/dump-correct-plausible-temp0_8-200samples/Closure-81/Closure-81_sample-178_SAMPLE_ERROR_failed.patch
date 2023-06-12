@@ -1,0 +1,20 @@
+diff --git a/src/com/google/javascript/jscomp/parsing/IRFactory.java b/src/com/google/javascript/jscomp/parsing/IRFactory.java
+index 32a15610..533868c6 100644
+--- a/src/com/google/javascript/jscomp/parsing/IRFactory.java
++++ b/src/com/google/javascript/jscomp/parsing/IRFactory.java
+@@ -558,9 +555,14 @@ public class IRFactory {
+       Node bodyNode = transform(functionNode.getBody());
+       parseDirectives(bodyNode);
+       node.addChildToBack(bodyNode);
++      if (functionNode.isExpressionClosure()) {
++        // Because the SpiderMonkey AST is more detailed than Rhino's, we need to
++        // add the information that this was originally an expression closure
++        // for optimizations like the SimplifyExpressions pass.
++        node.putBooleanProp(Node.EXPRESSION_CLOSURE_PROP, true);
++      }
+      return node;
+     }
+-
+     @Override
+     Node processIfStatement(IfStatement statementNode) {
+       Node node = newNode(Token.IF);

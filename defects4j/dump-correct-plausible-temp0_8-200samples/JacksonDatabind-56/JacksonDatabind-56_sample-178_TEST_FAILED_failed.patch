@@ -1,0 +1,26 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/deser/std/FromStringDeserializer.java b/src/main/java/com/fasterxml/jackson/databind/deser/std/FromStringDeserializer.java
+index 01a819a9f..b60d7a2b2 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/deser/std/FromStringDeserializer.java
++++ b/src/main/java/com/fasterxml/jackson/databind/deser/std/FromStringDeserializer.java
+@@ -257,7 +252,11 @@ public abstract class FromStringDeserializer<T> extends StdScalarDeserializer<T>
+                                 "Bracketed IPv6 address must contain closing bracket",
+                                 value, InetSocketAddress.class);
+                     }
+-
++                    if (i + 1 < value.length() && value.charAt(i + 1) != ':') {
++                        throw new InvalidFormatException(ctxt.getParser(),
++                                "Bracketed IPv6 address must contain closing bracket followed by ':' and port number",
++                                value, InetSocketAddress.class);
++                    }
+                     int j = value.indexOf(':', i);
+                     int port = j > -1 ? Integer.parseInt(value.substring(j + 1)) : 0;
+                     return new InetSocketAddress(value.substring(0, i + 1), port);
+@@ -287,7 +285,4 @@ public abstract class FromStringDeserializer<T> extends StdScalarDeserializer<T>
+             }
+             return super._deserializeFromEmptyString();
+         }
+-
+-
+-    }
+-}
++    }}

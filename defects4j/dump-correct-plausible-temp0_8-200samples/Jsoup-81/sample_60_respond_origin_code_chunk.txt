@@ -1,0 +1,71 @@
+static Document parseInputStream(InputStream input, String charsetName, String baseUri, Parser parser) throws IOException {
+    if (input == null) // empty body
+        return new Document(baseUri);
+
+    // check if already a buffered stream
+    if (input instanceof BufferedInputStream && ((BufferedInputStream) input).markSupported()) {
+        if (bufferSize < 0) // no buffer size hint, so just ensure we can mark
+            input = new BufferedInputStream(input);
+        else
+            input = new BufferedInputStream(input, bufferSize);
+    } else { // wrap with buffered stream, will do the mark for us
+        input = new BufferedInputStream(input, bufferSize);
+    }
+
+    // look for a BOM
+    input.mark(bufferSize);
+    ByteBuffer firstBytes = readToByteBuffer(input, firstReadBufferSize);
+    BomCharset bomCharset = detectCharsetFromBom(firstBytes);
+    if (bomCharset != null)
+        charsetName = bomCharset.charset;
+    input.reset();
+
+    // now read the file into a buffer
+    ByteBuffer byteData = readToByteBuffer(input, Integer.MAX_VALUE);
+    if (bomCharset != null && bomCharset.offset)
+        byteData.position(1); // include byte order mark in charset detection
+
+    // look for meta charset
+    String foundCharset = null;
+    if (charsetName == null) {
+        foundCharset = getCharsetFromContentType(byteData);
+        if (foundCharset == null) {
+            foundCharset = getCharsetFromMeta(byteData);
+            if (foundCharset != null) {
+                foundCharset = foundCharset.replace(" ", ""); // remove charset spaces
+                foundCharset = foundCharset.toLowerCase(); // case insensitive
+                foundCharset = foundCharset.replace("charset=", "");
+                foundCharset = foundCharset.replace("\"", ""); // quotes
+                foundCharset = foundCharset.replace("'", ""); // quotes
+                foundCharset = foundCharset.replace(";", ""); // trailing semi-colon
+                foundCharset = foundCharset.replace("iso-8859-1", "windows-1252"); // replace meta charset of ISO-8859-1 with windows-1252
+            }
+        }
+    }
+
+    // only use found charset if no charset passed in, or found is compatible with the passed
+    if (charsetName == null || foundCharset != null && foundCharset.toLowerCase().equals(charsetName.toLowerCase()))
+        charsetName = foundCharset;
+
+    // ensure charset is valid and supported
+    charsetName = validateCharset(charsetName);
+
+    Document doc = null;
+
+    // only use found charset if no charset passed in, or found is compatible with the passed
+    if (charsetName == null || foundCharset != null && foundCharset.toLowerCase().equals(charsetName.toLowerCase()))
+        charsetName = foundCharset;
+
+    // ensure charset is valid and supported
+    charsetName = validateCharset(charsetName);
+
+    if (charsetName == null) // no charset
+        charsetName = defaultCharset;
+
+    // parse the input
+    doc = parser.parseInput(byteData, charsetName, baseUri);
+    doc.outputSettings().charset(charsetName);
+
+    input.close();
+    return doc;
+}

@@ -1,0 +1,42 @@
+diff --git a/src/com/google/javascript/jscomp/CodeConsumer.java b/src/com/google/javascript/jscomp/CodeConsumer.java
+index dbdb0a9b..8c9cb9a1 100644
+--- a/src/com/google/javascript/jscomp/CodeConsumer.java
++++ b/src/com/google/javascript/jscomp/CodeConsumer.java
+@@ -281,9 +240,34 @@ abstract class CodeConsumer {
+    * @return Whether the a line break can be added after the specified BLOCK.
+    */
+   boolean breakAfterBlockFor(Node n, boolean statementContext) {
+-    return statementContext;
++    return statementContext && !hasSideEffects(n);
++  }
++  /**
++   * @return Whether the specified node has side effects.
++   */
++  boolean hasSideEffects(Node n) {
++    switch (n.getType()) {
++      case Token.BLOCK:
++      case Token.EXPR_RESULT:
++      case Token.IF:
++      case Token.SWITCH:
++      case Token.WHILE:
++      case Token.DO:
++      case Token.FOR:
++      case Token.TRY:
++      case Token.WITH:
++      case Token.CATCH:
++      case Token.FINALLY:
++      case Token.THROW:
++      case Token.RETURN:
++      case Token.VAR:
++      case Token.LET:
++      case Token.CONST:
++      case Token.DEBUGGER:
++        return true;
++    }
++    return NodeUtil.mayHaveSideEffects(n);
+   }
+-
+   /** Called when we're at the end of a file. */
+   void endFile() {}
+ }
+\ No newline at end of file

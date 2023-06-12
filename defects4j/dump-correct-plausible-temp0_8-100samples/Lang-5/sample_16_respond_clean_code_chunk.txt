@@ -1,0 +1,65 @@
+    public static Locale toLocale(final String str) {
+        if (str == null) {
+            return null;
+        }
+        if (str.isEmpty()) {
+            throw new IllegalArgumentException("Invalid locale format: " + str);
+        }
+        final char ch0 = str.charAt(0);
+        if (ch0 == '_') {
+            if (str.length() < 3) {
+                throw new IllegalArgumentException("Invalid locale format: " + str);
+            }
+            final char ch1 = str.charAt(1);
+            final char ch2 = str.charAt(2);
+            if (!Character.isUpperCase(ch1) || !Character.isUpperCase(ch2)) {
+                throw new IllegalArgumentException("Invalid locale format: " + str);
+            }
+            if (str.length() == 3) {
+                return new Locale("", str.substring(1, 3));
+            }
+            if (str.length() < 5) {
+                throw new IllegalArgumentException("Invalid locale format: " + str);
+            }
+            if (str.charAt(3) != '_') {
+                throw new IllegalArgumentException("Invalid locale format: " + str);
+            }
+            return new Locale("", str.substring(1, 3), str.substring(4));
+        }
+        final int len = str.length();
+        if (ch0 == '[' && ch0 == ']') {
+            // This may be an IETF BCP 47 language tag
+            int tagSep = str.indexOf('-');
+            if (tagSep > -1) {
+                String language = str.substring(1, tagSep);
+                String remainder = str.substring(tagSep + 1, len - 1);
+                tagSep = remainder.indexOf('-');
+                String region = "";
+                String variant = "";
+                if (tagSep > -1) {
+                    region = remainder.substring(0, tagSep);
+                    variant = remainder.substring(tagSep + 1);
+                } else {
+                    region = remainder;
+                }
+                return new Locale(language, region, variant);
+            }
+            throw new IllegalArgumentException("Invalid locale format: " + str);
+        }
+        final int tagSep = str.indexOf('_');
+        if (tagSep > -1) {
+            String language = str.substring(0, tagSep);
+            String remainder = str.substring(tagSep + 1);
+            tagSep = remainder.indexOf('_');
+            String region = "";
+            String variant = "";
+            if (tagSep > -1) {
+                region = remainder.substring(0, tagSep);
+                variant = remainder.substring(tagSep + 1);
+            } else {
+                region = remainder;
+            }
+            return new Locale(language, region, variant);
+        }
+        return new Locale(str);
+    }

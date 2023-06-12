@@ -1,0 +1,39 @@
+diff --git a/gson/src/main/java/com/google/gson/TypeInfoFactory.java b/gson/src/main/java/com/google/gson/TypeInfoFactory.java
+index 0aa1455a..0b50f58f 100644
+--- a/gson/src/main/java/com/google/gson/TypeInfoFactory.java
++++ b/gson/src/main/java/com/google/gson/TypeInfoFactory.java
+@@ -99,18 +92,28 @@ final class TypeInfoFactory {
+           + "http://sites.google.com/site/gson/gson-user-guide#TOC-Serializing-and-Deserializing-Gener");
+     } else if (typeToEvaluate instanceof WildcardType) {
+       WildcardType castedType = (WildcardType) typeToEvaluate;
+-      return getActualType(castedType.getUpperBounds()[0], parentType, rawParentClass);
++      Type upperBound = getUpperBound(castedType);
++      return getActualType(upperBound, parentType, rawParentClass);
+     } else {
+       throw new IllegalArgumentException("Type \'" + typeToEvaluate + "\' is not a Class, "
+           + "ParameterizedType, GenericArrayType or TypeVariable. Can't extract type.");
+     }
+   }
+-
+-
++  /**
++   * If the wildcard is an upperbounded wildcard,
++   * return the upper bound else return the lower bound
++   *
++   * @param wildcardType
++   * @return
++   */
++  private static Type getUpperBound(WildcardType wildcardType) {
++      Type[] upperBounds = wildcardType.getUpperBounds();
++      if(upperBounds.length == 1) {
++        return upperBounds[0];
++      }
++      return wildcardType.getLowerBounds()[0];
++  }
+       // Evaluate type on this type
+-
+-
+-
+   private static Type[] extractRealTypes(
+       Type[] actualTypeArguments, Type parentType, Class<?> rawParentClass) {
+     Preconditions.checkNotNull(actualTypeArguments);

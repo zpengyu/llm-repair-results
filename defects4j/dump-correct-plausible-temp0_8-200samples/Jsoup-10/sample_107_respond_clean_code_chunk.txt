@@ -1,0 +1,31 @@
+public String absUrl(String attributeKey) {
+    Validate.notEmpty(attributeKey);
+    String relUrl = attr(attributeKey);
+    if (!hasAttr(attributeKey)) {
+        return ""; // nothing to make absolute with
+    } else {
+        URL base;
+        try {
+            try {
+                base = new URL(baseUri);
+            } catch (MalformedURLException e) {
+                // the base is unsuitable, but the attribute may be abs on its own, so try that
+                if (relUrl.startsWith("?")) {
+                    base = new URL(baseUri + relUrl);
+                } else {
+                    base = new URL(relUrl);
+                }
+                return base.toExternalForm();
+            }
+            // workaround: java resolves '//path/file + ?foo' to '//path/?foo', not '//path/file?foo' as desired
+            if (relUrl.startsWith("?")) {
+                base = new URL(baseUri + relUrl);
+            } else {
+                base = new URL(base, relUrl);
+            }
+            return base.toExternalForm();
+        } catch (MalformedURLException e) {
+            return "";
+        }
+    }
+}

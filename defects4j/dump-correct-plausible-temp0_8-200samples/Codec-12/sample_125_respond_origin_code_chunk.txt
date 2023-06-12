@@ -1,0 +1,24 @@
+
+@Override
+public long skip(long n) throws IOException {
+    if (n < 0) {
+        throw new IllegalArgumentException("Negative skip length: " + n);
+    }
+    final int bufferLength = doEncode ? 4096 : 8192;
+    final byte[] skipBuffer = new byte[bufferLength];
+    long remaining = n;
+    while (remaining > 0) {
+        final int skipped = read(skipBuffer, 0, (int) Math.min(bufferLength, remaining));
+        if (skipped == EOF) {
+            break;
+        }
+        remaining -= skipped;
+    }
+    return n - remaining;
+}
+
+@Override
+public int available() throws IOException {
+    return baseNCodec.hasData() ? 1 : 0;
+}
+

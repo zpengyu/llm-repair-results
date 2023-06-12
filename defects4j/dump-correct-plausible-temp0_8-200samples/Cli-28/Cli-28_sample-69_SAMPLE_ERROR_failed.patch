@@ -1,0 +1,58 @@
+diff --git a/src/java/org/apache/commons/cli/Parser.java b/src/java/org/apache/commons/cli/Parser.java
+index 7bef0c6..6e9acd3 100644
+--- a/src/java/org/apache/commons/cli/Parser.java
++++ b/src/java/org/apache/commons/cli/Parser.java
+@@ -259,42 +258,21 @@ public abstract class Parser implements CommandLineParser
+         for (Enumeration e = properties.propertyNames(); e.hasMoreElements();)
+         {
+             String option = e.nextElement().toString();
+-
+-            if (!cmd.hasOption(option))
++            // ignore already processed options
++            if (cmd.hasOption(option))
+             {
+-                Option opt = getOptions().getOption(option);
+-
+-                // get the value from the properties instance
+-                String value = properties.getProperty(option);
+-
+-                if (opt.hasArg())
+-                {
+-                    if (opt.getValues() == null || opt.getValues().length == 0)
+-                    {
+-                        try
+-                        {
+-                            opt.addValueForProcessing(value);
+-                        }
+-                        catch (RuntimeException exp)
+-                        {
+-                            // if we cannot add the value don't worry about it
+-                        }
+-                    }
+-                }
+-                else if (!("yes".equalsIgnoreCase(value)
+-                        || "true".equalsIgnoreCase(value)
+-                        || "1".equalsIgnoreCase(value)))
+-                {
+-                    // if the value is not yes, true or 1 then don't add the
+-                    // option to the CommandLine
+-                    break;
+-                }
+-
+-                cmd.addOption(opt);
++                continue;
+             }
++            // get the value from the properties instance
++            String value = properties.getProperty(option);
++            // create a new option
++            Option opt = getOption(option);
++            // set the option value
++            opt.setValue(value);
++            // add the option to the CommandLine
++            cmd.addOption(opt);
+         }
+     }
+-
+     /**
+      * Throws a {@link MissingOptionException} if all of the required options
+      * are not present.

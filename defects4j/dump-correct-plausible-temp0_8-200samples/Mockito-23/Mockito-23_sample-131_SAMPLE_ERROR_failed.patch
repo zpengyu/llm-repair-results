@@ -1,0 +1,25 @@
+diff --git a/src/org/mockito/internal/stubbing/defaultanswers/ReturnsDeepStubs.java b/src/org/mockito/internal/stubbing/defaultanswers/ReturnsDeepStubs.java
+index c4384f7fc..f6ea2311d 100644
+--- a/src/org/mockito/internal/stubbing/defaultanswers/ReturnsDeepStubs.java
++++ b/src/org/mockito/internal/stubbing/defaultanswers/ReturnsDeepStubs.java
+@@ -52,12 +48,16 @@ public class ReturnsDeepStubs implements Answer<Object>, Serializable {
+         if (!mockitoCore.isTypeMockable(rawType)) {
+             return delegate.returnValueFor(rawType);
+         }
+-
++        if (rawType.isArray()) {
++        	Class<?> compType = rawType.getComponentType();
++        	if (mockitoCore.isTypeMockable(compType)) {
++        		Object array = Array.newInstance(compType, 1);
++        		Array.set(array, 0, getMock(invocation, returnTypeGenericMetadata));
++        		return array;
++        	}
++        }
+         return getMock(invocation, returnTypeGenericMetadata);
+     }
+-
+-
+-
+     private Object getMock(InvocationOnMock invocation, GenericMetadataSupport returnTypeGenericMetadata) throws Throwable {
+     	InternalMockHandler<Object> handler = new MockUtil().getMockHandler(invocation.getMock());
+     	InvocationContainerImpl container = (InvocationContainerImpl) handler.getInvocationContainer();

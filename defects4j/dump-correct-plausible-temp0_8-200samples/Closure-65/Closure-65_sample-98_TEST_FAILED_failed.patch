@@ -1,0 +1,52 @@
+diff --git a/src/com/google/javascript/jscomp/CodeGenerator.java b/src/com/google/javascript/jscomp/CodeGenerator.java
+index 5b684191..912809eb 100644
+--- a/src/com/google/javascript/jscomp/CodeGenerator.java
++++ b/src/com/google/javascript/jscomp/CodeGenerator.java
+@@ -1012,13 +1012,27 @@ class CodeGenerator {
+     for (int i = 0; i < s.length(); i++) {
+       char c = s.charAt(i);
+       switch (c) {
+-        case '\0': sb.append("\\0"); break;
+-        case '\n': sb.append("\\n"); break;
+-        case '\r': sb.append("\\r"); break;
+-        case '\t': sb.append("\\t"); break;
+-        case '\\': sb.append(backslashEscape); break;
+-        case '\"': sb.append(doublequoteEscape); break;
+-        case '\'': sb.append(singlequoteEscape); break;
++        case '\0':
++          sb.append("\\0");
++          break;
++        case '\n':
++          sb.append("\\n");
++          break;
++        case '\r':
++          sb.append("\\r");
++          break;
++        case '\t':
++          sb.append("\\t");
++          break;
++        case '\\':
++          sb.append(backslashEscape);
++          break;
++        case '\"':
++          sb.append(doublequoteEscape);
++          break;
++        case '\'':
++          sb.append(singlequoteEscape);
++          break;
+         case '>':                       // Break --> into --\> or ]]> into ]]\>
+           if (i >= 2 &&
+               ((s.charAt(i - 1) == '-' && s.charAt(i - 2) == '-') ||
+@@ -1059,7 +1071,11 @@ class CodeGenerator {
+             // No charsetEncoder provided - pass straight latin characters
+             // through, and escape the rest.  Doing the explicit character
+             // check is measurably faster than using the CharsetEncoder.
+-            if (c > 0x1f && c < 0x7f) {
++            if ((c >= 0x0000 && c <= 0x001F) || (c >= 0x007F && c <= 0x009F) ||
++                (c >= 0xD800 && c <= 0xDFFF) || (c >= 0xFDD0 && c <= 0xFDEF) ||
++                (c >= 0xFFFE && c <= 0xFFFF)) {
++              appendHexJavaScriptRepresentation(sb, c);
++            } else if (c > 0x1f && c < 0x7f) {
+               sb.append(c);
+             } else {
+               // Other characters can be misinterpreted by some js parsers,

@@ -1,0 +1,34 @@
+diff --git a/src/java/org/apache/commons/jxpath/ri/compiler/CoreOperationRelationalExpression.java b/src/java/org/apache/commons/jxpath/ri/compiler/CoreOperationRelationalExpression.java
+index cd4ceac..dbbf2b1 100644
+--- a/src/java/org/apache/commons/jxpath/ri/compiler/CoreOperationRelationalExpression.java
++++ b/src/java/org/apache/commons/jxpath/ri/compiler/CoreOperationRelationalExpression.java
+@@ -87,17 +80,25 @@ public abstract class CoreOperationRelationalExpression extends CoreOperation {
+         if (right instanceof Iterator) {
+             return containsMatch((Iterator) right, left);
+         }
++        return evaluateCompare(compare(left, right));
++    }
++    /**
++     * Compare left to right.
++     * @param left left operand
++     * @param right right operand
++     * @return the result of the comparison
++     */
++    private int compare(Object left, Object right) {
+         double ld = InfoSetUtil.doubleValue(left);
+         if (Double.isNaN(ld)) {
+-            return false;
++            return -1;
+         }
+         double rd = InfoSetUtil.doubleValue(right);
+         if (Double.isNaN(rd)) {
+-            return false;
++            return 1;
+         }
+-        return evaluateCompare(ld == rd ? 0 : ld < rd ? -1 : 1);
++        return ld == rd ? 0 : ld < rd ? -1 : 1;
+     }
+-
+     /**
+      * Reduce an operand for comparison.
+      * @param o Object to reduce

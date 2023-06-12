@@ -1,0 +1,43 @@
+diff --git a/src/java/org/apache/commons/lang/enums/ValuedEnum.java b/src/java/org/apache/commons/lang/enums/ValuedEnum.java
+index 0823e77d..ae6ccce3 100644
+--- a/src/java/org/apache/commons/lang/enums/ValuedEnum.java
++++ b/src/java/org/apache/commons/lang/enums/ValuedEnum.java
+@@ -139,7 +135,7 @@ public abstract class ValuedEnum extends Enum {
+      * @return the enum object, or null if the enum does not exist
+      * @throws IllegalArgumentException if the enum class is <code>null</code>
+      */
+-    protected static Enum getEnum(Class enumClass, int value) {
++    protected static ValuedEnum getEnum(Class enumClass, int value) {
+         if (enumClass == null) {
+             throw new IllegalArgumentException("The Enum Class must not be null");
+         }
+@@ -189,10 +182,25 @@ public abstract class ValuedEnum extends Enum {
+      * @param other  the object to determine the value for
+      * @return the value
+      */
+-            // ignore - should never happen
+-            // ignore - should never happen
+-            // ignore - should never happen
+-
++    private int checkIllegalCast(Object other) {
++        Class otherClass = other.getClass();
++        if (otherClass.equals(getEnumClass()) == false) {
++            throw new ClassCastException(
++                "Different enum class '" + ClassUtils.getShortClassName(otherClass)
++                    + "'");
++        }
++        if (other == this) {
++            return 0;
++        }
++        int thisValue = getValue();
++        int otherValue = 0;
++        try {
++            otherValue = ((ValuedEnum) other).getValue();
++        } catch (Exception ex) {
++            otherValue = ((Enum) other).ordinal();
++        }
++        return (thisValue < otherValue) ? -1 : (thisValue == otherValue) ? 0 : 1;
++    }
+     /**
+      * <p>Human readable description of this <code>Enum</code> item.</p>
+      *

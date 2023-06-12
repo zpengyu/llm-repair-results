@@ -1,0 +1,96 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/type/ResolvedRecursiveType.java b/src/main/java/com/fasterxml/jackson/databind/type/ResolvedRecursiveType.java
+index 7b8c69af7..013e95b54 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/type/ResolvedRecursiveType.java
++++ b/src/main/java/com/fasterxml/jackson/databind/type/ResolvedRecursiveType.java
+@@ -7,18 +7,13 @@ import com.fasterxml.jackson.databind.JavaType;
+  *
+  * @since 2.7
+  */
+-public class ResolvedRecursiveType extends TypeBase
+-{
++public class ResolvedRecursiveType extends TypeBase {
+     private static final long serialVersionUID = 1L;
+-
+     protected JavaType _referencedType;
+-
+     public ResolvedRecursiveType(Class<?> erasedType, TypeBindings bindings) {
+         super(erasedType, bindings, null, null, 0, null, null, false);
+     }
+-
+-    public void setReference(JavaType ref)
+-    {
++    public void setReference(JavaType ref) {
+         // sanity check; should not be called multiple times
+         if (_referencedType != null) {
+             throw new IllegalStateException("Trying to re-set self reference; old value = "+_referencedType+", new = "+ref);
+@@ -43,53 +33,27 @@ public class ResolvedRecursiveType extends TypeBase
+     public JavaType withContentType(JavaType contentType) {
+         return this;
+     }
+-    
+-    @Override
+-    public JavaType withTypeHandler(Object h) {
+-        return this;
+-    }
+-
+-    @Override
+-    public JavaType withContentTypeHandler(Object h) {
+-        return this;
+-    }
+-
+-    @Override
+-    public JavaType withValueHandler(Object h) {
+-        return this;
+-    }
+-
+-    @Override
+-    public JavaType withContentValueHandler(Object h) {
+-        return this;
+-    }
+-
+     @Override
+     public JavaType withStaticTyping() {
+         return this;
+     }
+-
+-    @Deprecated // since 2.7
+-    @Override
+-    protected JavaType _narrow(Class<?> subclass) {
+-        return this;
+-    }
+-
+     @Override
+     public JavaType refine(Class<?> rawType, TypeBindings bindings,
+             JavaType superClass, JavaType[] superInterfaces) {
+-        return null;
++        throw new UnsupportedOperationException("Internal error: should never call this method on "+getClass().getName());
+     }
+-
+     @Override
+     public boolean isContainerType() {
+         return false;
+     }
+-
++    @Override
++    public StringBuilder getGenericShortDescription(StringBuilder sb) {
++        return _referencedType.getGenericShortDescription(sb);
++    }
+     @Override
+     public String toString() {
+         StringBuilder sb = new StringBuilder(40)
+-                .append("[recursive type; ");
++            .append("[recursive type; ");
+         if (_referencedType == null) {
+             sb.append("UNRESOLVED");
+         } else {
+@@ -111,4 +74,9 @@ public class ResolvedRecursiveType extends TypeBase
+         return (o.getClass() == getClass()
+                 && _referencedType.equals(((ResolvedRecursiveType) o).getSelfReferencedType()));
+     }
++    @Override
++    public int hashCode() {
++        // Don't include reference, to differentiate it from unresolved
++        return _bindings.hashCode() + _class.getName().hashCode();
++    }
+ }
+\ No newline at end of file

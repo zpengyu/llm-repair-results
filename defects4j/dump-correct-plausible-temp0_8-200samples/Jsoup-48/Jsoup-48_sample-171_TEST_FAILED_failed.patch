@@ -1,0 +1,44 @@
+diff --git a/src/main/java/org/jsoup/helper/HttpConnection.java b/src/main/java/org/jsoup/helper/HttpConnection.java
+index 0b7fa7e..baa64be 100644
+--- a/src/main/java/org/jsoup/helper/HttpConnection.java
++++ b/src/main/java/org/jsoup/helper/HttpConnection.java
+@@ -755,8 +755,8 @@ public class HttpConnection implements Connection {
+                 String name = entry.getKey();
+                 if (name == null)
+                     continue; // http/1.1 line
+-
+                 List<String> values = entry.getValue();
++                StringBuilder valueBuilder = new StringBuilder();
+                 if (name.equalsIgnoreCase("Set-Cookie")) {
+                     for (String value : values) {
+                         if (value == null)
+@@ -766,12 +766,25 @@ public class HttpConnection implements Connection {
+                         String cookieVal = cd.consumeTo(";").trim();
+                         // ignores path, date, domain, validateTLSCertificates et al. req'd?
+                         // name not blank, value not null
+-                        if (cookieName.length() > 0)
+-                            cookie(cookieName, cookieVal);
++                        if (cookieName.length() > 0) {
++                            if (valueBuilder.length() > 0) {
++                                valueBuilder.append("; ");
++                            }
++                            valueBuilder.append(cookieName + "=" + cookieVal);
++                        }
+                     }
+                 } else { // combine same header names with comma: http://www.w3.org/Protocols/rfc2616/rfc2616-sec4.html#sec4.2
+-                    if (!values.isEmpty())
+-                        header(name, values.get(0));
++                    if (!values.isEmpty()) {
++                        for (String value : values) {
++                            if (valueBuilder.length() > 0) {
++                                valueBuilder.append(", ");
++                            }
++                            valueBuilder.append(value);
++                        }
++                    }
++                }
++                if (valueBuilder.length() > 0) {
++                    header(name, valueBuilder.toString());
+                 }
+             }
+         }

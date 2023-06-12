@@ -1,0 +1,73 @@
+diff --git a/src/java/org/apache/commons/cli/GnuParser.java b/src/java/org/apache/commons/cli/GnuParser.java
+index 14a9cc0..ca7d6cb 100644
+--- a/src/java/org/apache/commons/cli/GnuParser.java
++++ b/src/java/org/apache/commons/cli/GnuParser.java
+@@ -78,17 +74,51 @@ public class GnuParser extends Parser {
+                 }
+                 else
+                 {
+-                    if (options.hasOption(arg.substring(0, 2)))
++                    if (arg.startsWith("--"))
+                     {
+-                        // the format is --foo=value or -foo=value
+-                        // the format is a special properties option (-Dproperty=value)
+-                        tokens.add(arg.substring(0, 2)); // -D
+-                        tokens.add(arg.substring(2)); // property=value
++                        if (opt.indexOf('=') != -1 && options.hasOption(opt.substring(0, opt.indexOf('='))))
++                        {
++                            // the format is --foo=value or -foo=value
++                            tokens.add(arg.substring(0, arg.indexOf('='))); // --foo
++                            tokens.add(arg.substring(arg.indexOf('=') + 1)); // value
++                        }
++                        else if (options.hasOption(arg.substring(0, 3)))
++                        {
++                            // the format is --foo value
++                            tokens.add(arg.substring(0, 3)); // --foo
++                            tokens.add(arg.substring(3)); // value
++                        }
++                        else
++                        {
++                            if (stopAtNonOption)
++                            {
++                                eatTheRest = true;
++                            }
++                            tokens.add(arg);
++                        }
+                     }
+-                    else
++                    else if (arg.startsWith("-"))
+                     {
+-                        eatTheRest = stopAtNonOption;
+-                        tokens.add(arg);
++                        if (opt.indexOf('=') != -1 && options.hasOption(opt.substring(0, opt.indexOf('='))))
++                        {
++                            // the format is -foo=value
++                            tokens.add(arg.substring(0, arg.indexOf('='))); // -foo
++                            tokens.add(arg.substring(arg.indexOf('=') + 1)); // value
++                        }
++                        else if (options.hasOption(arg.substring(0, 2)))
++                        {
++                            // the format is -foo value
++                            tokens.add(arg.substring(0, 2)); // -foo
++                            tokens.add(arg.substring(2)); // value
++                        }
++                        else
++                        {
++                            if (stopAtNonOption)
++                            {
++                                eatTheRest = true;
++                            }
++                            tokens.add(arg);
++                        }
+                     }
+                 }
+             }
+@@ -105,7 +134,5 @@ public class GnuParser extends Parser {
+                 }
+             }
+         }
+-
+         return (String[]) tokens.toArray(new String[tokens.size()]);
+-    }
+-}
++    }}

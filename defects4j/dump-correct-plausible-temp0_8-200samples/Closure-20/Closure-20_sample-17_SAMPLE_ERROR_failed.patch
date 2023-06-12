@@ -1,0 +1,40 @@
+diff --git a/src/com/google/javascript/jscomp/PeepholeSubstituteAlternateSyntax.java b/src/com/google/javascript/jscomp/PeepholeSubstituteAlternateSyntax.java
+index dee765a1..8c3232c7 100644
+--- a/src/com/google/javascript/jscomp/PeepholeSubstituteAlternateSyntax.java
++++ b/src/com/google/javascript/jscomp/PeepholeSubstituteAlternateSyntax.java
+@@ -217,7 +217,7 @@ class PeepholeSubstituteAlternateSyntax
+       // slightly different semantics than '' + (a). See
+       // http://code.google.com/p/closure-compiler/issues/detail?id=759
+       Node value = callTarget.getNext();
+-      if (value != null) {
++      if (value != null && isImmutableValue(value)) {
+         Node addition = IR.add(
+             IR.string("").srcref(callTarget),
+             value.detachFromParent());
+@@ -228,7 +228,25 @@ class PeepholeSubstituteAlternateSyntax
+     }
+     return n;
+   }
+-
++  private static boolean isImmutableValue(Node n) {
++    // If we have a number or a string literal, or a function that only
++    // has immutable arguments, then we can perform the optimization
++    // because there is no way that this will have side effects.
++    switch (n.getType()) {
++      case Token.NUMBER:
++      case Token.STRING:
++        return true;
++      case Token.FUNCTION:
++        for (Node a : n.getSecondChild().children()) {
++          if (!isImmutableValue(a)) {
++            return false;
++          }
++        }
++        return true;
++      default:
++        return false;
++    }
++  }
+   private Node tryFoldImmediateCallToBoundFunction(Node n) {
+     // Rewriting "(fn.bind(a,b))()" to "fn.call(a,b)" makes it inlinable
+     Preconditions.checkState(n.isCall());

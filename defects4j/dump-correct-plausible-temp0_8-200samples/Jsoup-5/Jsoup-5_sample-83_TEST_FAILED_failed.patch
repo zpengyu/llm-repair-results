@@ -1,0 +1,54 @@
+diff --git a/src/main/java/org/jsoup/parser/Parser.java b/src/main/java/org/jsoup/parser/Parser.java
+index 5f71aaf..a85b028 100644
+--- a/src/main/java/org/jsoup/parser/Parser.java
++++ b/src/main/java/org/jsoup/parser/Parser.java
+@@ -181,34 +181,35 @@ public class Parser {
+     private Attribute parseAttribute() {
+         tq.consumeWhitespace();
+         String key = tq.consumeAttributeKey();
+-        String value = "";
++        if (key.length() == 0) {
++            tq.consume();
++            return null;
++        }
+         tq.consumeWhitespace();
+         if (tq.matchChomp("=")) {
+             tq.consumeWhitespace();
+-
+             if (tq.matchChomp(SQ)) {
+-                value = tq.chompTo(SQ);
++                String value = tq.chompTo(SQ);
++                tq.consumeWhitespace();
++                return Attribute.createFromEncoded(key, value);
+             } else if (tq.matchChomp(DQ)) {
+-                value = tq.chompTo(DQ);
++                String value = tq.chompTo(DQ);
++                tq.consumeWhitespace();
++                return Attribute.createFromEncoded(key, value);
+             } else {
+                 StringBuilder valueAccum = new StringBuilder();
+                 // no ' or " to look for, so scan to end tag or space (or end of stream)
+                 while (!tq.matchesAny("<", "/>", ">") && !tq.matchesWhitespace() && !tq.isEmpty()) {
+                     valueAccum.append(tq.consume());
+                 }
+-                value = valueAccum.toString();
++                String value = valueAccum.toString();
++                tq.consumeWhitespace();
++                return Attribute.createFromEncoded(key, value);
+             }
+-            tq.consumeWhitespace();
+-        }
+-        if (key.length() != 0)
+-            return Attribute.createFromEncoded(key, value);
+-        else {
+-            tq.consume();
+-
+-            return null;
++        } else {
++            return Attribute.createFromEncoded(key, "");
+         }
+     }
+-
+     private void parseTextNode() {
+         TextNode textNode;
+         // special case: handle string like "hello < there". first char will be "<", because of matchStartTag

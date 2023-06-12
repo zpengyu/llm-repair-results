@@ -1,0 +1,20 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/deser/impl/ExternalTypeHandler.java b/src/main/java/com/fasterxml/jackson/databind/deser/impl/ExternalTypeHandler.java
+index b0797059f..ab1b186a3 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/deser/impl/ExternalTypeHandler.java
++++ b/src/main/java/com/fasterxml/jackson/databind/deser/impl/ExternalTypeHandler.java
+@@ -299,11 +297,13 @@ public class ExternalTypeHandler
+                 }
+             }
+         }
++        // Then things second: set any values from the creator (property-based, may be
++        // partial)
+         Object bean = creator.build(ctxt, buffer);
+-        // third: assign non-creator properties
+         for (int i = 0; i < len; ++i) {
+             SettableBeanProperty prop = _properties[i].getProperty();
+-            if (prop.getCreatorIndex() < 0) {
++            // third: assign non-creator properties
++            if (prop.getCreatorIndex() >= 0) {
+                 prop.set(bean, values[i]);
+             }
+         }

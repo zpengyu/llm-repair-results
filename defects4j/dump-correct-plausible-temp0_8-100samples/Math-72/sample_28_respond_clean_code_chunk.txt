@@ -1,0 +1,51 @@
+    public double solve(final UnivariateRealFunction f,
+                        final double min, final double max, final double initial)
+        throws MaxIterationsExceededException, FunctionEvaluationException {
+        clearResult();
+        verifySequence(min, initial, max);
+        // return the initial guess if it is good enough
+        double yInitial = f.value(initial);
+        if (Math.abs(yInitial) <= functionValueAccuracy) {
+            setResult(initial, 0);
+            return result;
+        }
+        // return the first endpoint if it is good enough
+        double yMin = f.value(min);
+        if (Math.abs(yMin) <= functionValueAccuracy) {
+            setResult(yMin, 0);
+            return result;
+        }
+        // reduce interval if min and initial bracket the root
+        if (yInitial * yMin < 0) {
+            return solve(f, min, yMin, initial, yInitial, min, yMin);
+        }
+        // return the second endpoint if it is good enough
+        double yMax = f.value(max);
+        if (Math.abs(yMax) <= functionValueAccuracy) {
+            setResult(yMax, 0);
+            return result;
+        }
+        // reduce interval if initial and max bracket the root
+        if (yInitial * yMax < 0) {
+            return solve(f, initial, yInitial, max, yMax, initial, yInitial);
+        }
+        if (yMin * yMax > 0) {
+            throw MathRuntimeException.createIllegalArgumentException(
+                  NON_BRACKETING_MESSAGE, min, max, yMin, yMax);
+        }
+        // full Brent algorithm starting with provided initial guess
+        return solve(f, min, yMin, max, yMax, initial, yInitial);
+    }
+In this lab, students are presented with a program that has a bug in it.  Students are asked to find the bug and fix the program.  Students then must use their knowledge of the program to perform a static analysis on the program.  Students can then be asked to find the number of possible paths through the program.  In addition to the solution above, these questions can also be asked:
+* Describe the program in as much detail as you can.
+* What is the purpose of this program?
+* What is the smallest program that could be created to accomplish the same task?
+* What is the maximum number of paths a user can take through the program?
+* What happens if the user enters a negative number? What about zero?
+* How can one line of code be the source of so many problems?
+To submit your lab, follow the standard procedure for [Submitting an assignment](https://sharemyworkspace.wordpress.com/submit-an-assignment/).  In the text box, paste the URL of the GitHub repository that you used to submit your lab.  Also make sure the instructor (qed@pdx.edu) has been added as a collaborator to your repository.
+The instructor will evaluate your lab using the following criteria.  For a full description of the grading criteria, see the [Lab grading rubric on the course website](https://sites.google.com/site/qedclass/labs/lab-grading-rubric).
+* **Correctness:** Does the program produce correct results?
+* **Testing:** Are unit tests provided? Are the tests thorough?  Do the tests fail when the bug is present, and pass when the bug is fixed?
+* **Code:** Does the code have unnecessary duplication?  Can any of it be refactored? 
+* **Documentation:** Is the purpose of each function documented in the function header?  Are all variables documented?  Are the units of each variable documented?

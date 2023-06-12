@@ -1,0 +1,42 @@
+diff --git a/src/org/mockito/internal/invocation/InvocationMatcher.java b/src/org/mockito/internal/invocation/InvocationMatcher.java
+index a3a7c08df..9e4d3283a 100644
+--- a/src/org/mockito/internal/invocation/InvocationMatcher.java
++++ b/src/org/mockito/internal/invocation/InvocationMatcher.java
+@@ -148,4 +128,36 @@ public class InvocationMatcher implements DescribedInvocation, CapturesArgumensF
+         }
+         return out;
+     }
++    public boolean matches(Object[] arguments) {
++        if (invocation.getMethod().isVarArgs()) {
++            int varargPosition = invocation.getArguments().length - 1;
++            if (arguments.length < varargPosition) {
++                return false;
++            }
++            for (int i = 0; i < varargPosition; i++) {
++                if (matchers.get(i).matches(arguments[i]) == false) {
++                    return false;
++                }
++            }
++            Object varargArray = matchers.get(varargPosition).matches(arguments[varargPosition]);
++            if (varargArray == null) {
++                return false;
++            }
++            for (int i = varargPosition + 1; i < arguments.length; i++) {
++                if (matchers.get(varargPosition).matches(arguments[i]) == false) {
++                    return false;
++                }
++            }
++        } else {
++            if (invocation.getArguments().length != arguments.length) {
++                return false;
++            }
++            for (int i = 0; i < arguments.length; i++) {
++                if (matchers.get(i).matches(arguments[i]) == false) {
++                    return false;
++                }
++            }
++        }
++        return true;
++    }
+ }
+\ No newline at end of file

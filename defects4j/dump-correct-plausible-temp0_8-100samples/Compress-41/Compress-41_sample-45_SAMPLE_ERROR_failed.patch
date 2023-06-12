@@ -1,0 +1,47 @@
+diff --git a/src/main/java/org/apache/commons/compress/archivers/zip/ZipArchiveInputStream.java b/src/main/java/org/apache/commons/compress/archivers/zip/ZipArchiveInputStream.java
+index 5d4c0a82..221d21e5 100644
+--- a/src/main/java/org/apache/commons/compress/archivers/zip/ZipArchiveInputStream.java
++++ b/src/main/java/org/apache/commons/compress/archivers/zip/ZipArchiveInputStream.java
+@@ -246,12 +244,10 @@ public ZipArchiveEntry getNextZipEntry() throws IOException {
+             skipRemainderOfArchive();
+         }
+         if (!sig.equals(ZipLong.LFH_SIG)) {
+-            return null;
++            throw new IOException("Wrong Central Directory signature");
+         }
+-
+         int off = WORD;
+         current = new CurrentEntry();
+-
+         final int versionMadeBy = ZipShort.getValue(LFH_BUF, off);
+         off += SHORT;
+         current.entry.setPlatform((versionMadeBy >> ZipFile.BYTE_SHIFT) & ZipFile.NIBLET_MASK);
+@@ -318,7 +299,27 @@ public ZipArchiveEntry getNextZipEntry() throws IOException {
+                 current.in = new BZip2CompressorInputStream(new BoundedInputStream(in, current.entry.getCompressedSize()));
+             }
+         }
+-        
++        else if (hasUnreliableExtraFields) {
++            /*
++             * It is technically possible that an archive has an entry where
++             * the local file header contains extra fields but no compressed
++             * size value.
++             * 
++             * This can for instance happen if the zip file was truncated due
++             * to a transfer error.
++             * 
++             * If there is no compressed size value, the only reliable way to
++             * check for the end of the entry is to read until the end of the
++             * entry is reached.
++             * 
++             * ReadUntilEndOfEntryInputStream is an input stream that reads
++             * everything until the entry ends, discarding any extra data.
++             * 
++             * The read(byte[]) methods are specially optimized to avoid copying
++             * data whenever possible.
++             */
++            current.in = new ReadUntilEndOfEntryInputStream(in, current.entry);
++        }
+         entriesRead++;
+         return current.entry;
+     }

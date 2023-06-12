@@ -1,0 +1,24 @@
+        public final Object deserializeKey(String key, DeserializationContext ctxt)
+            throws IOException
+        {
+            if (key == null) { // is this even legal call?
+                return null;
+            }
+            try {
+                Object result = _delegate.deserialize(ctxt.getParser(), ctxt);
+                if (result != null) {
+                    return result;
+                }
+                // 07-Jul-2015, tatu: [databind#922] Support other-than-String keys too
+                return ctxt.handleWeirdKey(_keyClass, key,
+                        "not a valid representation: \"%s\"", key);
+            } catch (Exception re) {
+                return ctxt.handleWeirdKey(_keyClass, key,
+                        "not a valid representation (of type %s): %s",
+                        _keyClass.getName(), re.getMessage());
+            }
+        }
+ 
+ 
+ 
+ 

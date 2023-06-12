@@ -1,0 +1,20 @@
+diff --git a/gson/src/main/java/com/google/gson/internal/UnsafeAllocator.java b/gson/src/main/java/com/google/gson/internal/UnsafeAllocator.java
+index a72d3d10..220bb3c5 100644
+--- a/gson/src/main/java/com/google/gson/internal/UnsafeAllocator.java
++++ b/gson/src/main/java/com/google/gson/internal/UnsafeAllocator.java
+@@ -107,4 +102,14 @@ public abstract class UnsafeAllocator {
+    * throw an {@link java.lang.UnsupportedOperationException}
+    * @param c instance of the class to be checked
+    */
++  public void checkInstantiable(Class<?> c) {
++    String name = c.getName();
++    checkArgument(
++        !name.startsWith("java.") && !name.startsWith("javax.") && !name.startsWith("android."),
++        "Cannot allocate .* ([\\p{javaJavaIdentifierStart}_$][\\p{javaJavaIdentifierPart}_$]*\\.)*[\\p{javaJavaIdentifierStart}_$][\\p{javaJavaIdentifierPart}_$]*");
++    checkArgument(!c.isPrimitive(), "Cannot allocate primitive type: " + name);
++    checkArgument(!c.isArray(), "Cannot allocate array type: " + name);
++    checkArgument(c.isInterface() || !Modifier.isAbstract(c.getModifiers()),
++        "Cannot allocate abstract type: " + name);
++  }
+ }
+\ No newline at end of file

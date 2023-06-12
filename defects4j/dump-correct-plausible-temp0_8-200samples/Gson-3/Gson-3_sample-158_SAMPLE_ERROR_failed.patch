@@ -1,0 +1,33 @@
+diff --git a/gson/src/main/java/com/google/gson/internal/ConstructorConstructor.java b/gson/src/main/java/com/google/gson/internal/ConstructorConstructor.java
+index cd5c2f6c..e9588a89 100644
+--- a/gson/src/main/java/com/google/gson/internal/ConstructorConstructor.java
++++ b/gson/src/main/java/com/google/gson/internal/ConstructorConstructor.java
+@@ -193,10 +192,26 @@ public final class ConstructorConstructor {
+         };
+       }
+     }
+-
++    if (TimeUnit.class.isAssignableFrom(rawType)) {
++      return new ObjectConstructor<T>() {
++          @SuppressWarnings("rawtypes")
++          @Override public T construct() {
++            if (type instanceof ParameterizedType) {
++              Type elementType = ((ParameterizedType) type).getActualTypeArguments()[0];
++              if (elementType instanceof Class) {
++                TimeUnit unit = TimeUnit.MILLISECONDS;
++                return (T) unit;
++              } else {
++                throw new JsonIOException("Invalid TimeUnit type: " + type.toString());
++              }
++            } else {
++              throw new JsonIOException("Invalid TimeUnit type: " + type.toString());
++            }
++          }
++        };
++    }
+     return null;
+   }
+-
+   private <T> ObjectConstructor<T> newUnsafeAllocator(
+       final Type type, final Class<? super T> rawType) {
+     return new ObjectConstructor<T>() {

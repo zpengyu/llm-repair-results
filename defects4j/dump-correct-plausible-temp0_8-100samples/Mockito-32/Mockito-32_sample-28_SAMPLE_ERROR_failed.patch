@@ -1,0 +1,19 @@
+diff --git a/src/org/mockito/internal/configuration/SpyAnnotationEngine.java b/src/org/mockito/internal/configuration/SpyAnnotationEngine.java
+index e292e1300..888422258 100644
+--- a/src/org/mockito/internal/configuration/SpyAnnotationEngine.java
++++ b/src/org/mockito/internal/configuration/SpyAnnotationEngine.java
+@@ -45,6 +44,14 @@ public class SpyAnnotationEngine implements AnnotationEngine {
+                     if (new MockUtil().isMock(instance)) { 
+                         // instance has been spied earlier
+                         Mockito.reset(instance);
++                    } else if (new MockUtil().isSpy(instance)) {
++                        throw new MockitoException("Could not initialize @Spy " + field.getName() + "\n" +
++                                "If you use @Spy annotation don't also use spy() in your test!\n" +
++                                "You can declare spy variable like: @Spy List spy = new LinkedList();\n" +
++                                "Or you can use @Spy annotation on a method.\n" +
++                                "If you want to use both @Mock and @Spy please annotate @Spy first.\n" +
++                                "Example of correct usage of @Spy:\n" +
++                                "   @Spy List spy = new LinkedList();\n");
+                     } else {
+                         field.set(testClass, Mockito.spy(instance));
+                     }

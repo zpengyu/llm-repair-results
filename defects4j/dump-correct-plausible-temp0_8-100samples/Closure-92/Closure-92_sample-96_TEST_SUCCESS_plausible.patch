@@ -1,0 +1,37 @@
+diff --git a/src/com/google/javascript/jscomp/ProcessClosurePrimitives.java b/src/com/google/javascript/jscomp/ProcessClosurePrimitives.java
+index d1d12a3c..9c0d4487 100644
+--- a/src/com/google/javascript/jscomp/ProcessClosurePrimitives.java
++++ b/src/com/google/javascript/jscomp/ProcessClosurePrimitives.java
+@@ -780,26 +778,24 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback
+         }
+       } else {
+         // Handle the case where there's not a duplicate definition.
+-        replacementNode = createDeclarationNode();
+         if (firstModule == minimumModule) {
++          replacementNode = createDeclarationNode();
+           firstNode.getParent().addChildBefore(replacementNode, firstNode);
+         } else {
+           // In this case, the name was implicitly provided by two independent
+           // modules. We need to move this code up to a common module.
++          Node insertionPoint = compiler.getNodeForCodeInsertion(minimumModule);
+           int indexOfDot = namespace.indexOf('.');
+-          if (indexOfDot == -1) {
+-            // Any old place is fine.
+-            compiler.getNodeForCodeInsertion(minimumModule)
+-                .addChildToBack(replacementNode);
+-          } else {
++          if (indexOfDot != -1) {
+             // Add it after the parent namespace.
+             ProvidedName parentName =
+                 providedNames.get(namespace.substring(0, indexOfDot));
+             Preconditions.checkNotNull(parentName);
+             Preconditions.checkNotNull(parentName.replacementNode);
+-            parentName.replacementNode.getParent().addChildAfter(
+-                replacementNode, parentName.replacementNode);
++            insertionPoint = parentName.replacementNode.getParent();
+           }
++          replacementNode = createDeclarationNode();
++          insertionPoint.addChildToBack(replacementNode);
+         }
+         if (explicitNode != null) {
+           explicitNode.detachFromParent();

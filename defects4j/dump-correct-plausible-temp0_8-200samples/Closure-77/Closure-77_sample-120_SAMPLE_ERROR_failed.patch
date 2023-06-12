@@ -1,0 +1,41 @@
+diff --git a/src/com/google/javascript/jscomp/CodeGenerator.java b/src/com/google/javascript/jscomp/CodeGenerator.java
+index a9d0a5b0..e66cc4ea 100644
+--- a/src/com/google/javascript/jscomp/CodeGenerator.java
++++ b/src/com/google/javascript/jscomp/CodeGenerator.java
+@@ -954,10 +954,10 @@ class CodeGenerator {
+ 
+   /** Helper to escape javascript string as well as regular expression */
+   static String strEscape(String s, char quote,
+-                          String doublequoteEscape,
+-                          String singlequoteEscape,
+-                          String backslashEscape,
+-                          CharsetEncoder outputCharsetEncoder) {
++          String doublequoteEscape,
++          String singlequoteEscape,
++          String backslashEscape,
++          CharsetEncoder outputCharsetEncoder) {
+     StringBuilder sb = new StringBuilder(s.length() + 2);
+     sb.append(quote);
+     for (int i = 0; i < s.length(); i++) {
+@@ -1023,7 +1021,20 @@ class CodeGenerator {
+     sb.append(quote);
+     return sb.toString();
+   }
+-
++  private static void appendHexJavaScriptRepresentation(
++          StringBuilder sb, char c) {
++    sb.append("\\u");
++    appendHexJavaScriptRepresentation(sb, (byte)(c >> 8));
++    appendHexJavaScriptRepresentation(sb, (byte)c);
++  }
++  private static void appendHexJavaScriptRepresentation(
++          StringBuilder sb, byte b) {
++    b &= 0xff;
++    if (b < 0x10) {
++      sb.append('0');
++    }
++    sb.append(Integer.toHexString(b));
++  }
+   static String identifierEscape(String s) {
+     // First check if escaping is needed at all -- in most cases it isn't.
+     if (NodeUtil.isLatin(s)) {

@@ -1,0 +1,30 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/ser/PropertyBuilder.java b/src/main/java/com/fasterxml/jackson/databind/ser/PropertyBuilder.java
+index 9a9d91ebf..e2c0bf382 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/ser/PropertyBuilder.java
++++ b/src/main/java/com/fasterxml/jackson/databind/ser/PropertyBuilder.java
+@@ -92,11 +91,14 @@ public class PropertyBuilder
+             }
+             serializationType = serializationType.withContentTypeHandler(contentTypeSer);
+             ct = serializationType.getContentType();
++            // also: if reference type, we'll consider it "always as array"
++            if (ct.isReferenceType()) {
++                serializationType = serializationType.withContentTypeHandler(null);
++            }
+         }
+-        
+         Object valueToSuppress = null;
+         boolean suppressNulls = false;
+-
++        boolean suppressableValue = false;
+         JsonInclude.Value inclV = _defaultInclusion.withOverrides(propDef.findInclusion());
+         JsonInclude.Include inclusion = inclV.getValueInclusion();
+         if (inclusion == JsonInclude.Include.USE_DEFAULTS) { // should not occur but...
+@@ -125,7 +125,7 @@ public class PropertyBuilder
+                     valueToSuppress = ArrayBuilders.getArrayComparator(valueToSuppress);
+                 }
+             }
+-
++            suppressableValue = (valueToSuppress != null);
+             break;
+         case NON_ABSENT: // new with 2.6, to support Guava/JDK8 Optionals
+             // always suppress nulls

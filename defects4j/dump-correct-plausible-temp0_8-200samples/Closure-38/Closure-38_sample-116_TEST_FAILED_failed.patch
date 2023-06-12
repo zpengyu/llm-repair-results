@@ -1,0 +1,38 @@
+diff --git a/src/com/google/javascript/jscomp/CodeConsumer.java b/src/com/google/javascript/jscomp/CodeConsumer.java
+index 47ecfb1d..1e372441 100644
+--- a/src/com/google/javascript/jscomp/CodeConsumer.java
++++ b/src/com/google/javascript/jscomp/CodeConsumer.java
+@@ -245,27 +245,14 @@ abstract class CodeConsumer {
+     if (x < 0 && prev == '-') {
+       add(" ");
+     }
+-
+-    if ((long) x == x && !negativeZero) {
+-      long value = (long) x;
+-      long mantissa = value;
+-      int exp = 0;
+-      if (Math.abs(x) >= 100) {
+-        while (mantissa / 10 * Math.pow(10, exp + 1) == value) {
+-          mantissa /= 10;
+-          exp++;
+-        }
+-      }
+-      if (exp > 2) {
+-        add(Long.toString(mantissa) + "E" + Integer.toString(exp));
+-      } else {
+-        add(Long.toString(value));
+-      }
+-    } else {
+-      add(String.valueOf(x));
++    String xString = String.valueOf(x);
++    if (negativeZero) {
++      xString = "-0";
++    } else if (xString.endsWith(".0")) {
++      xString = xString.substring(0, xString.length() - 2);
+     }
++    add(xString);
+   }
+-
+   static boolean isNegativeZero(double x) {
+     return x == 0.0 && Math.copySign(1, x) == -1.0;
+   }

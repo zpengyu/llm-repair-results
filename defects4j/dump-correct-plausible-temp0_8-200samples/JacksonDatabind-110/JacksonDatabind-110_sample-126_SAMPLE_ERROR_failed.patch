@@ -1,0 +1,49 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/deser/impl/JavaUtilCollectionsDeserializers.java b/src/main/java/com/fasterxml/jackson/databind/deser/impl/JavaUtilCollectionsDeserializers.java
+index ddadb9ea8..91a27defd 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/deser/impl/JavaUtilCollectionsDeserializers.java
++++ b/src/main/java/com/fasterxml/jackson/databind/deser/impl/JavaUtilCollectionsDeserializers.java
+@@ -45,7 +38,7 @@ public abstract class JavaUtilCollectionsDeserializers
+      *    which we essentially coerce into the other one
+      */
+     private final static Class<?> CLASS_UNMODIFIABLE_MAP;
+-
++    private final static Class<?> CLASS_ALT_UNMODIFIABLE_MAP;
+     static {
+         Set<?> set = Collections.singleton(Boolean.TRUE);
+         CLASS_SINGLETON_SET = set.getClass();
+@@ -55,12 +47,15 @@ public abstract class JavaUtilCollectionsDeserializers
+         CLASS_SINGLETON_LIST = list.getClass();
+         CLASS_UNMODIFIABLE_LIST = Collections.unmodifiableList(list).getClass();
+         // for [databind#2265]
+-
++        list = Collections.unmodifiableList(list);
++        CLASS_ALT_UNMODIFIABLE_LIST = list.getClass();
+         Map<?,?> map = Collections.singletonMap("a", "b");
+         CLASS_SINGLETON_MAP = map.getClass();
+         CLASS_UNMODIFIABLE_MAP = Collections.unmodifiableMap(map).getClass();
++        // for [databind#2265]
++        map = Collections.unmodifiableMap(map);
++        CLASS_ALT_UNMODIFIABLE_MAP = map.getClass();
+     }
+-
+     public static JsonDeserializer<?> findForCollection(DeserializationContext ctxt,
+             JavaType type)
+         throws JsonMappingException
+@@ -75,7 +69,7 @@ public abstract class JavaUtilCollectionsDeserializers
+         } else if (type.hasRawClass(CLASS_SINGLETON_SET)) {
+             conv = converter(TYPE_SINGLETON_SET, type, Set.class);
+         // [databind#2265]: we may have another impl type for unmodifiable Lists, check both
+-        } else if (type.hasRawClass(CLASS_UNMODIFIABLE_LIST)) {
++        } else if (type.hasRawClass(CLASS_UNMODIFIABLE_LIST) || type.hasRawClass(CLASS_ALT_UNMODIFIABLE_LIST)) {
+             conv = converter(TYPE_UNMODIFIABLE_LIST, type, List.class);
+         } else if (type.hasRawClass(CLASS_UNMODIFIABLE_SET)) {
+             conv = converter(TYPE_UNMODIFIABLE_SET, type, Set.class);
+@@ -94,7 +86,7 @@ public abstract class JavaUtilCollectionsDeserializers
+         // 10-Jan-2017, tatu: Some types from `java.util.Collections`/`java.util.Arrays` need bit of help...
+         if (type.hasRawClass(CLASS_SINGLETON_MAP)) {
+             conv = converter(TYPE_SINGLETON_MAP, type, Map.class);
+-        } else if (type.hasRawClass(CLASS_UNMODIFIABLE_MAP)) {
++        } else if (type.hasRawClass(CLASS_UNMODIFIABLE_MAP) || type.hasRawClass(CLASS_ALT_UNMODIFIABLE_MAP)) {
+             conv = converter(TYPE_UNMODIFIABLE_MAP, type, Map.class);
+         } else {
+             return null;

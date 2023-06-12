@@ -1,0 +1,18 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/type/ReferenceType.java b/src/main/java/com/fasterxml/jackson/databind/type/ReferenceType.java
+index 1f21190da..f397d39c3 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/type/ReferenceType.java
++++ b/src/main/java/com/fasterxml/jackson/databind/type/ReferenceType.java
+@@ -150,7 +150,12 @@ public class ReferenceType extends SimpleType
+     @Override
+     public StringBuilder getGenericSignature(StringBuilder sb)
+     {
+-        _classSignature(_class, sb, false);
++        // As per [databind#1677], may not be able to use generics for resolution
++        TypeParameterResolver resolver = resolver();
++        if (resolver == null) {
++            return sb;
++        }
++        sb = _classSignature(_class, sb, resolver.hasTypeParameters(this));
+         sb.append('<');
+         sb = _referencedType.getGenericSignature(sb);
+         sb.append(';');

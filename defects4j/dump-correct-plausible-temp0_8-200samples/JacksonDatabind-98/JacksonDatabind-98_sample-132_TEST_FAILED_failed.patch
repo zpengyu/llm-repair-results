@@ -1,0 +1,35 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/deser/impl/ExternalTypeHandler.java b/src/main/java/com/fasterxml/jackson/databind/deser/impl/ExternalTypeHandler.java
+index b0797059f..d26f2fcf2 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/deser/impl/ExternalTypeHandler.java
++++ b/src/main/java/com/fasterxml/jackson/databind/deser/impl/ExternalTypeHandler.java
+@@ -282,21 +282,16 @@ public class ExternalTypeHandler
+                         "Missing property '%s' for external type id '%s'",
+                         prop.getName(), _properties[i].getTypePropertyName());
+             }
++            if (_tokens[i] == null) {
++                continue;
++            }
+             values[i] = _deserialize(p, ctxt, i, typeId);
+-
+-            final SettableBeanProperty prop = extProp.getProperty();
+-            // also: if it's creator prop, fill in
+-            if (prop.getCreatorIndex() >= 0) {
+-                buffer.assignParameter(prop, values[i]);
+-
+-                // [databind#999] And maybe there's creator property for type id too?
+-                SettableBeanProperty typeProp = extProp.getTypeProperty();
+-                // for now, should only be needed for creator properties, too
+-                if ((typeProp != null) && (typeProp.getCreatorIndex() >= 0)) {
+-                    // 31-May-2018, tatu: [databind#1328] if id is NOT plain `String`, need to
+-                    //    apply deserializer... fun fun.
+-                    buffer.assignParameter(typeProp, typeId);
+-                }
++        }
++        // any properties not associated with creators?
++        for (int i = 0; i < len; ++i) {
++            SettableBeanProperty prop = _properties[i].getProperty();
++            if (prop.getCreatorIndex() < 0) {
++                buffer.bufferProperty(prop, values[i]);
+             }
+         }
+         Object bean = creator.build(ctxt, buffer);

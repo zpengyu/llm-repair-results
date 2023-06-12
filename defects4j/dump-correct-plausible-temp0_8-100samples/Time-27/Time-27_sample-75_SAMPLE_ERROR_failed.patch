@@ -1,0 +1,37 @@
+diff --git a/src/main/java/org/joda/time/format/PeriodFormatterBuilder.java b/src/main/java/org/joda/time/format/PeriodFormatterBuilder.java
+index a6bf55c7..0e7463ed 100644
+--- a/src/main/java/org/joda/time/format/PeriodFormatterBuilder.java
++++ b/src/main/java/org/joda/time/format/PeriodFormatterBuilder.java
+@@ -798,9 +798,29 @@ public class PeriodFormatterBuilder {
+         int size = elementPairs.size();
+         if (size >= 2 && elementPairs.get(0) instanceof Separator) {
+             Separator sep = (Separator) elementPairs.get(0);
+-                PeriodFormatter f = toFormatter(elementPairs.subList(2, size), notPrinter, notParser);
+-                sep = sep.finish(f.getPrinter(), f.getParser());
+-                return new PeriodFormatter(sep, sep);
++            if (!notPrinter && elementPairs.get(1) instanceof PeriodPrinter) {
++                PeriodPrinter p = (PeriodPrinter) elementPairs.get(1);
++                PeriodParser parser = sep.finish(p, null);
++                if (parser == null && size == 2) {
++                    return new PeriodFormatter(p, null);
++                }
++                if (size > 2) {
++                    return new PeriodFormatter(p, parser.with(toFormatter(elementPairs.subList(2, size), false, notParser).getParser()));
++                }
++                return new PeriodFormatter(p, parser);
++            } else if (!notParser && elementPairs.get(1) instanceof PeriodParser) {
++                PeriodParser p = (PeriodParser) elementPairs.get(1);
++                PeriodPrinter printer = sep.finish(null, p);
++                if (printer == null && size == 2) {
++                    return new PeriodFormatter(null, p);
++                }
++                if (size > 2) {
++                    return new PeriodFormatter(printer.with(toFormatter(elementPairs.subList(2, size), notPrinter, false).getPrinter()), p);
++                }
++                return new PeriodFormatter(printer, p);
++            } else {
++                throw new IllegalStateException("Builder has created neither a printer nor a parser");
++            }
+         }
+         Object[] comp = createComposite(elementPairs);
+         if (notPrinter) {

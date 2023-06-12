@@ -1,0 +1,17 @@
+    public final void serialize(JsonGenerator gen, SerializerProvider ctxt) throws IOException
+    {
+        if (_value == null) {
+            ctxt.defaultSerializeNull(gen);
+        } else if (_value instanceof JsonSerializable) {
+            ((JsonSerializable) _value).serialize(gen, ctxt);
+        } else {
+            // 25-May-2018, tatu: [databind#1991] do not call via generator but through context;
+            //    this to preserve contextual information
+            Class<?> cls = _value.getClass();
+            if (cls == String.class || cls == JSONObject.class) {
+                gen.writeObject(_value);
+            } else {
+                ctxt.findTypedValueSerializer(cls, true, null).serialize(_value, gen, ctxt);
+            }
+        }
+    }

@@ -1,0 +1,40 @@
+diff --git a/src/main/java/org/jsoup/nodes/FormElement.java b/src/main/java/org/jsoup/nodes/FormElement.java
+index baffcf1..11721bd 100644
+--- a/src/main/java/org/jsoup/nodes/FormElement.java
++++ b/src/main/java/org/jsoup/nodes/FormElement.java
+@@ -45,8 +42,20 @@ public class FormElement extends Element {
+         elements.add(element);
+         return this;
+     }
+-
+-
++    /**
++     * Get the form element's value by name.
++     * @param name name of form element to get
++     * @return ordered list of values of the form element, or empty list if no form controls with that name
++     */
++    public List<String> getValuesByName(String name) {
++        ArrayList<String> list = new ArrayList<>();
++        for (Element el: elements) {
++            if (name.equals(el.attr("name"))) {
++                list.add(el.val());
++            }
++        }
++        return list;
++    }
+     /**
+      * Prepare to submit this form. A Connection object is created with the request set up from the form values. You
+      * can then set up other options (like user-agent, timeout, cookies), then execute it.
+@@ -99,6 +104,12 @@ public class FormElement extends Element {
+                     final String val = el.val().length() >  0 ? el.val() : "on";
+                     data.add(HttpConnection.KeyVal.create(name, val));
+                 }
++            } else if (name.endsWith("[]")) {
++                data.add(HttpConnection.KeyVal.create(name, el.val()));
++            } else if (el instanceof MultipleSelectElement) {
++                for (Element option: el.select("option").select("[selected]")) {
++                    data.add(HttpConnection.KeyVal.create(name, option.val()));
++                }
+             } else {
+                 data.add(HttpConnection.KeyVal.create(name, el.val()));
+             }

@@ -1,0 +1,47 @@
+diff --git a/src/main/java/org/joda/time/Period.java b/src/main/java/org/joda/time/Period.java
+index 8fce39c6..ccfaf4e5 100644
+--- a/src/main/java/org/joda/time/Period.java
++++ b/src/main/java/org/joda/time/Period.java
+@@ -1615,26 +1615,24 @@ public final class Period
+      */
+     public Period normalizedStandard(PeriodType type) {
+         type = DateTimeUtils.getPeriodType(type);
+-        long millis = getMillis();  // no overflow can happen, even with Integer.MAX_VALUEs
+-        millis += (((long) getSeconds()) * ((long) DateTimeConstants.MILLIS_PER_SECOND));
+-        millis += (((long) getMinutes()) * ((long) DateTimeConstants.MILLIS_PER_MINUTE));
+-        millis += (((long) getHours()) * ((long) DateTimeConstants.MILLIS_PER_HOUR));
+-        millis += (((long) getDays()) * ((long) DateTimeConstants.MILLIS_PER_DAY));
+-        millis += (((long) getWeeks()) * ((long) DateTimeConstants.MILLIS_PER_WEEK));
+-        Period result = new Period(millis, type, ISOChronology.getInstanceUTC());
+-        int years = getYears();
+-        int months = getMonths();
+-        if (years != 0 || months != 0) {
+-            years = FieldUtils.safeAdd(years, months / 12);
+-            months = months % 12;
+-            if (years != 0) {
+-                result = result.withYears(years);
++        int[] values = getValues();
++        //this is the new fix
++        if (this.getPeriodType().isSupported(DurationFieldType.weeks()) && !type.isSupported(DurationFieldType.weeks())) {
++            values = values.clone();
++            int weeks = values[DurationFieldType.weeks().getIndex()];
++            if (weeks != 0) {
++                values[DurationFieldType.days().getIndex()] = FieldUtils.safeAdd(values[DurationFieldType.days().getIndex()], weeks * 7);
++                values[DurationFieldType.weeks().getIndex()] = 0;
+             }
+-            if (months != 0) {
+-                result = result.withMonths(months);
++        }
++        //end of new fix
++        long millis = 0;
++        int i = 0;
++        for (; i < values.length; i++) {
++            if (values[i] != 0) {
++                millis += type.getFieldType(i).getField(ISOChronology.getInstanceUTC()).getUnitMillis() * (long) values[i];
+             }
+         }
+-        return result;
++        return new Period(millis, type, ISOChronology.getInstanceUTC());
+     }
+-
+ }

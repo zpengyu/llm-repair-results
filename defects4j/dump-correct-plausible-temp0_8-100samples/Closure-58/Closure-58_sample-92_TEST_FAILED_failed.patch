@@ -1,0 +1,33 @@
+diff --git a/src/com/google/javascript/jscomp/LiveVariablesAnalysis.java b/src/com/google/javascript/jscomp/LiveVariablesAnalysis.java
+index 94e813d8..17e62003 100644
+--- a/src/com/google/javascript/jscomp/LiveVariablesAnalysis.java
++++ b/src/com/google/javascript/jscomp/LiveVariablesAnalysis.java
+@@ -203,12 +200,15 @@ class LiveVariablesAnalysis extends
+             // for(var x in y) {...}
+             lhs = lhs.getLastChild();
+           }
+-            addToSetIfLocal(lhs, kill);
+-            addToSetIfLocal(lhs, gen);
+-          computeGenKill(rhs, gen, kill, conditional);
++          if (NodeUtil.isName(lhs)) {
++              addToSetIfLocal(lhs, kill);
++              addToSetIfLocal(lhs, gen);
++            computeGenKill(rhs, gen, kill, conditional);
++          } else {
++            computeGenKill(rhs, gen, kill, conditional);
++          }
+         }
+         return;
+-
+       case Token.VAR:
+         for (Node c = n.getFirstChild(); c != null; c = c.getNext()) {
+           if (c.hasChildren()) {
+@@ -253,6 +249,8 @@ class LiveVariablesAnalysis extends
+             addToSetIfLocal(lhs, gen);
+           }
+           computeGenKill(lhs.getNext(), gen, kill, conditional);
++        } else if (NodeUtil.isGetOrSetKey(n)) {
++          return;
+         } else {
+           for (Node c = n.getFirstChild(); c != null; c = c.getNext()) {
+             computeGenKill(c, gen, kill, conditional);

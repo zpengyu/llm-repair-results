@@ -1,0 +1,27 @@
+    protected JavaType _narrow(Class<?> subclass)
+    {
+        if (_class == subclass) {
+            return this;
+        }
+        // Should we check that there is a sub-class relationship?
+        // 15-Jan-2016, tatu: Almost yes, but there are some complications with
+        //    placeholder values (`Void`, `NoClass`), so can not quite do yet.
+        if (!_class.isAssignableFrom(subclass)) { // not strictly needed, but...
+            throw new IllegalArgumentException("Class "+subclass.getName()+" not sub-type of "
+                    +_class.getName());
+        }
+        // Otherwise, stitch together the hierarchy. First, super-class
+        JavaType superClass = _findSuperClassChain(subclass);
+        if (superClass != null) {
+            return superClass.narrowBy(subclass);
+        }
+        // if not found, try a super-interface
+        for (JavaType intType : _superInterfaces) {
+            JavaType intClass = _findSuperInterfaceChain(subclass, intType);
+            if (intClass != null) {
+                return intClass.narrowBy(subclass);
+            }
+        }
+        // should not get here but...
+        throw new IllegalArgumentException("Internal error: class "+subclass.getName()+" not sub-type of "+_class.getName());
+    }

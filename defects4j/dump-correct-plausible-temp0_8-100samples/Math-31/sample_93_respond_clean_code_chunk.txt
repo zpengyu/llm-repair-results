@@ -1,0 +1,29 @@
+    public double evaluate(double x, double epsilon, int maxIterations) {
+        double hPrev = getA(0, x);
+        if (FastMath.abs(hPrev) < epsilon) {
+            hPrev = epsilon;
+        }
+        int n = 1;
+        double dPrev = 0.0;
+        double cPrev = hPrev;
+        double hN = hPrev;
+        while (n < maxIterations) {
+            final double a = getA(n, x);
+            final double b = getB(n, x);
+            final double cN = a + b / cPrev;
+            final double q2 = cN * cPrev;
+            final double deltaN = cN - hN;
+            hN = cN;
+            if (FastMath.abs(deltaN - 1.0) < epsilon) {
+                break;
+            }
+            dPrev = q2;
+            cPrev = cN;
+            n++;
+        }
+        if (n >= maxIterations) {
+            throw new MaxCountExceededException(LocalizedFormats.NON_CONVERGENT_CONTINUED_FRACTION,
+                                                maxIterations, x);
+        }
+        return hN;
+    }

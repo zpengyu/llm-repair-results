@@ -1,0 +1,33 @@
+diff --git a/src/com/google/javascript/jscomp/PeepholeReplaceKnownMethods.java b/src/com/google/javascript/jscomp/PeepholeReplaceKnownMethods.java
+index c64b2ffd..36c954d4 100644
+--- a/src/com/google/javascript/jscomp/PeepholeReplaceKnownMethods.java
++++ b/src/com/google/javascript/jscomp/PeepholeReplaceKnownMethods.java
+@@ -370,24 +369,17 @@ class PeepholeReplaceKnownMethods extends AbstractPeepholeOptimization{
+     if (callTarget == null || !NodeUtil.isGetProp(callTarget)) {
+       return n;
+     }
+-
+     Node right = callTarget.getNext();
+-    if (right != null) {
+-      if (!NodeUtil.isImmutableValue(right)) {
+-        return n;
+-      }
++    if (right != null && !NodeUtil.isImmutableValue(right)) {
++      return n;
+     }
+-
+     Node arrayNode = callTarget.getFirstChild();
+     Node functionName = arrayNode.getNext();
+-
+-    if ((arrayNode.getType() != Token.ARRAYLIT) ||
++    if (arrayNode.getType() != Token.ARRAYLIT ||
+         !functionName.getString().equals("join")) {
+       return n;
+     }
+-
+-      // "," is the default, it doesn't need to be explicit
+-
++    // "," is the default, it doesn't need to be explicit.
+     String joinString = (right == null) ? "," : NodeUtil.getStringValue(right);
+     List<Node> arrayFoldedChildren = Lists.newLinkedList();
+     StringBuilder sb = null;

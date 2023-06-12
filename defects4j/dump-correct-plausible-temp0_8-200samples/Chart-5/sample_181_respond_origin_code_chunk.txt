@@ -1,0 +1,43 @@
+    public XYDataItem addOrUpdate(Number x, Number y) {
+        if (x == null) {
+            throw new IllegalArgumentException("Null 'x' argument.");
+        }
+        if (this.autoSort) {
+            int index = Collections.binarySearch(this.data, new XYDataItem(x,
+                    null));
+            if (index < 0) {
+                this.data.add(-index - 1, new XYDataItem(x, y));
+                fireSeriesChanged();
+            }
+            else {
+                XYDataItem overwritten = (XYDataItem) this.data.get(index);
+                overwritten.setY(y);
+            }
+        }
+        else {
+            // if the series is sorted, the negative index is a result from
+            // Collections.binarySearch() and tells us where to insert the
+            // new item...otherwise it will be just -1 and we should just
+            // append the value to the list...
+            if (this.autoSort) {
+                this.data.add(-index - 1, new XYDataItem(x, y));
+            }
+            else {
+                // update y value for existing item...
+                int index = indexOf(x);
+                if (index >= 0) {
+                    XYDataItem item = (XYDataItem) this.data.get(index);
+                    item.setY(y);
+                }
+                else {
+                    this.data.add(new XYDataItem(x, y));
+                }
+                // check if this addition will exceed the maximum item count...
+                if (getItemCount() > this.maximumItemCount) {
+                    this.data.remove(0);
+                }
+            }
+            fireSeriesChanged();
+            return null;
+        }
+    }

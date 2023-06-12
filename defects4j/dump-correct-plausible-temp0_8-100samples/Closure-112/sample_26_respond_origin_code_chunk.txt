@@ -1,0 +1,35 @@
+  private boolean inferTemplatedTypesForCall(
+      Node n, FunctionType fnType) {
+    final ImmutableList<TemplateType> keys = fnType.getTemplateTypeMap()
+        .getTemplateKeys();
+    if (keys.isEmpty()) {
+      return false;
+    }
+
+    // Try to infer the template types
+    Map<TemplateType, JSType> inferred =
+        inferTemplateTypesFromParameters(fnType, n);
+
+    // Replace all template types. If we couldn't find a replacement, we
+    // replace it with UNKNOWN.
+    TemplateTypeReplacer replacer = new TemplateTypeReplacer(
+        registry, inferred);
+    Node callTarget = n.getFirstChild();
+
+    FunctionType replacementFnType = fnType.visit(replacer)
+        .toMaybeFunctionType();
+    Preconditions.checkNotNull(replacementFnType);
+
+    // Avoid replacing the type of the call target if it's a GETPROP.
+    // Inferring on a GETPROP (or any expression, really) should change the
+    // type of the expression, not the type of the base node.
+    JSType replacementCallTargetType = (callTarget.isGetProp())
+        ? replacementFnType
+        : replacementFnType.getReturnType();
+    callTarget.setJSType(replacementCallTargetType);
+
+    n.setJSType(replacementFnType.getReturnType());
+
+    return replacer.madeChanges;
+  }
+

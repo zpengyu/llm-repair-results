@@ -1,0 +1,30 @@
+diff --git a/src/main/java/org/apache/commons/compress/archivers/tar/TarUtils.java b/src/main/java/org/apache/commons/compress/archivers/tar/TarUtils.java
+index 19d68e84..756c175e 100644
+--- a/src/main/java/org/apache/commons/compress/archivers/tar/TarUtils.java
++++ b/src/main/java/org/apache/commons/compress/archivers/tar/TarUtils.java
+@@ -148,10 +143,23 @@ public class TarUtils {
+             result = (result << 3) + (currentByte - '0'); // convert from ASCII
+             // CheckStyle:MagicNumber ON
+         }
+-
+         return result;
+     }
+-
++    private static String exceptionMessage(final byte[] buffer, final int offset,
++            final int length, final int badByte, final int currentByte) {
++        final StringBuilder msg = new StringBuilder("Bad octal digit ");
++        if (badByte >= 0 && badByte < 256) {
++            msg.append("0x");
++            msg.append(Integer.toHexString(currentByte).toUpperCase());
++        } else {
++            msg.append(currentByte);
++        }
++        msg.append(" in \"");
++        msg.append(BufferUtils.toString(buffer, offset, length));
++        msg.append("\" at offset ");
++        msg.append(badByte);
++        return msg.toString();
++    }
+     /** 
+      * Compute the value contained in a byte buffer.  If the most
+      * significant bit of the first byte in the buffer is set, this

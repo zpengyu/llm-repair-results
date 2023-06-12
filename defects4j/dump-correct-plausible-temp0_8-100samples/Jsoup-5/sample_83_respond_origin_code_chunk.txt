@@ -1,0 +1,34 @@
+    private Attribute parseAttribute() {
+        tq.consumeWhitespace();
+        String key = tq.consumeAttributeKey();
+        if (key.length() == 0) {
+            tq.consume();
+            return null;
+        }
+        tq.consumeWhitespace();
+        if (tq.matchChomp("=")) {
+            tq.consumeWhitespace();
+
+            if (tq.matchChomp(SQ)) {
+                String value = tq.chompTo(SQ);
+                tq.consumeWhitespace();
+                return Attribute.createFromEncoded(key, value);
+            } else if (tq.matchChomp(DQ)) {
+                String value = tq.chompTo(DQ);
+                tq.consumeWhitespace();
+                return Attribute.createFromEncoded(key, value);
+            } else {
+                StringBuilder valueAccum = new StringBuilder();
+                // no ' or " to look for, so scan to end tag or space (or end of stream)
+                while (!tq.matchesAny("<", "/>", ">") && !tq.matchesWhitespace() && !tq.isEmpty()) {
+                    valueAccum.append(tq.consume());
+                }
+                String value = valueAccum.toString();
+                tq.consumeWhitespace();
+                return Attribute.createFromEncoded(key, value);
+            }
+        } else {
+            return Attribute.createFromEncoded(key, "");
+        }
+    }
+

@@ -1,0 +1,27 @@
+diff --git a/src/main/java/org/jsoup/parser/Parser.java b/src/main/java/org/jsoup/parser/Parser.java
+index 8cc01d2..091db75 100644
+--- a/src/main/java/org/jsoup/parser/Parser.java
++++ b/src/main/java/org/jsoup/parser/Parser.java
+@@ -145,15 +140,18 @@ public class Parser {
+         if (tag.isData()) {
+             String data = tq.chompTo("</" + tagName);
+             tq.chompTo(">");
+-
+             Node dataNode;
+-            if (tag.equals(titleTag) || tag.equals(textareaTag)) // want to show as text, but not contain inside tags (so not a data tag?)
++            if (tag.equals(titleTag) || tag.equals(textareaTag)) { // want to show as text, but not contain inside tags (so not a data tag?)
+                 dataNode = TextNode.createFromEncoded(data, baseUri);
+-            else
++            } else if (tag.equals(styleTag)) {
++                dataNode = new DataNode(data, baseUri, isStyle);
++            } else if (tag.equals(scriptTag)) {
++                dataNode = new DataNode(data, baseUri, isScript);
++            } else {
+                 dataNode = new DataNode(data, baseUri); // data not encoded but raw (for " in script)
++            }
+             child.appendChild(dataNode);
+         }
+-
+         // <base href>: update the base uri
+         if (child.tagName().equals("base")) {
+             String href = child.absUrl("href");

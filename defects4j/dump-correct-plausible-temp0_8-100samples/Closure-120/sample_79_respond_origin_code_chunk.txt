@@ -1,0 +1,25 @@
+    boolean isAssignedOnceInLifetime() {
+      Reference ref = getOneAndOnlyAssignment();
+      if (ref == null) {
+        return false;
+      }
+
+      // Make sure this assignment is not in a loop.
+      for (BasicBlock block = ref.getBasicBlock();
+           block != null; block = block.getParent()) {
+        if (block.isFunction) {
+          break;
+        } else if (block.isLoop) {
+          if (ref.isParam()) {
+            // If the assignment is a param, then it's only assigned
+            // once in the lifetime of the function.
+            return true;
+          } else {
+            return false;
+          }
+        }
+      }
+
+      return true;
+    }
+

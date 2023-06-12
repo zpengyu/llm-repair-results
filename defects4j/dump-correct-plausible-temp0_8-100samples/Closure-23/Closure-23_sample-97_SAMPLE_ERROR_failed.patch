@@ -1,0 +1,25 @@
+diff --git a/src/com/google/javascript/jscomp/PeepholeFoldConstants.java b/src/com/google/javascript/jscomp/PeepholeFoldConstants.java
+index 805db9af..ba9c0aa4 100644
+--- a/src/com/google/javascript/jscomp/PeepholeFoldConstants.java
++++ b/src/com/google/javascript/jscomp/PeepholeFoldConstants.java
+@@ -1419,7 +1419,7 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
+     return false;
+   }
+ 
+-  private Node tryFoldArrayAccess(Node n, Node left, Node right) {
++Node tryFoldArrayAccess(Node n, Node left, Node right) {
+     Node parent = n.getParent();
+     // If GETPROP/GETELEM is used as assignment target the array literal is
+     // acting as a temporary we can't fold it here:
+@@ -1464,9 +1457,9 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
+     } else {
+       left.removeChild(elem);
+     }
+-
+     // Replace the entire GETELEM with the value
+-    n.getParent().replaceChild(n, elem);
++    NodeUtil.markFunctionsDeleted(elem, compiler);
++    parent.replaceChild(n, elem);
+     reportCodeChange();
+     return elem;
+   }

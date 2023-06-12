@@ -1,0 +1,44 @@
+diff --git a/gson/src/main/java/com/google/gson/internal/UnsafeAllocator.java b/gson/src/main/java/com/google/gson/internal/UnsafeAllocator.java
+index a72d3d10..b7a29a5f 100644
+--- a/gson/src/main/java/com/google/gson/internal/UnsafeAllocator.java
++++ b/gson/src/main/java/com/google/gson/internal/UnsafeAllocator.java
+@@ -45,6 +44,7 @@ public abstract class UnsafeAllocator {
+         @Override
+         @SuppressWarnings("unchecked")
+         public <T> T newInstance(Class<T> c) throws Exception {
++          checkNotInterfaceOrAbstract(c);
+           return (T) allocateInstance.invoke(unsafe, c);
+         }
+       };
+@@ -68,6 +67,7 @@ public abstract class UnsafeAllocator {
+         @Override
+         @SuppressWarnings("unchecked")
+         public <T> T newInstance(Class<T> c) throws Exception {
++          checkNotInterfaceOrAbstract(c);
+           return (T) newInstance.invoke(null, c, constructorId);
+         }
+       };
+@@ -87,6 +86,7 @@ public abstract class UnsafeAllocator {
+         @Override
+         @SuppressWarnings("unchecked")
+         public <T> T newInstance(Class<T> c) throws Exception {
++          checkNotInterfaceOrAbstract(c);
+           return (T) newInstance.invoke(null, c, Object.class);
+         }
+       };
+@@ -107,4 +105,14 @@ public abstract class UnsafeAllocator {
+    * throw an {@link java.lang.UnsupportedOperationException}
+    * @param c instance of the class to be checked
+    */
++  private static void checkNotInterfaceOrAbstract(Class<?> c) {
++    int modifiers = c.getModifiers();
++    if (modifiers != 0) {
++      if ((modifiers & Modifier.INTERFACE) != 0) {
++        throw new UnsupportedOperationException("Interface can't be instantiated! Interface name: " + c.getName());
++      } else if ((modifiers & Modifier.ABSTRACT) != 0) {
++        throw new UnsupportedOperationException("Abstract class can't be instantiated! Class name: " + c.getName());
++      }
++    }
++  }
+ }
+\ No newline at end of file

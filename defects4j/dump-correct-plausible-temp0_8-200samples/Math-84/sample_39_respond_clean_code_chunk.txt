@@ -1,0 +1,52 @@
+    protected void iterateSimplex(final Comparator<RealPointValuePair> comparator)
+        throws FunctionEvaluationException, OptimizationException, IllegalArgumentException {
+        while (true) {
+            incrementIterationsCounter();
+            // save the original vertex
+            final RealPointValuePair[] original = simplex;
+            final RealPointValuePair best = original[0];
+            // perform a reflection step
+            final RealPointValuePair reflected = evaluateNewSimplex(original, 1.0, comparator);
+            if (comparator.compare(reflected, best) < 0) {
+                // compute the expanded simplex
+                final RealPointValuePair[] reflectedSimplex = simplex;
+                final RealPointValuePair expanded = evaluateNewSimplex(original, khi, comparator);
+                if (comparator.compare(reflected, expanded) <= 0) {
+                    // accept the reflected simplex
+                    simplex = reflectedSimplex;
+                } else {
+                    // accept the expanded simplex
+                    simplex = reflectedSimplex;
+                }
+            } else {
+                // perform a contraction step
+                // compute the contracted simplex
+                final RealPointValuePair contracted = evaluateNewSimplex(original, gamma, comparator);
+                if (comparator.compare(contracted, best) <= 0) {
+                    // accept the contracted simplex
+                    simplex = contractedSimplex;
+                } else {
+                    // perform a reduction step
+                    // compute the reduced simplex
+                    final RealPointValuePair reduced = evaluateNewSimplex(original, rho, comparator);
+                    if (comparator.compare(reduced, best) < 0) {
+                        // accept the reduced simplex
+                        simplex = reducedSimplex;
+                    } else {
+                        // shrink the simplex
+                        final RealPointValuePair[] smallSimplex = simplex;
+                        for (int i = 1; i < smallSimplex.length; ++i) {
+                            for (int j = 0; j < smallSimplex[i].getPoint().length; ++j) {
+                                final double[] vertex = smallSimplex[i].getPoint();
+                                vertex[j] = best.getPoint()[j] + sigma * (vertex[j] - best.getPoint()[j]);
+                            }
+                        }
+                    }
+                }
+            }
+            // check convergence
+            if (isConverged(getIterations(), original, simplex, comparator)) {
+                return;
+            }
+        }
+    }

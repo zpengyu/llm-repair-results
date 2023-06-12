@@ -1,0 +1,17 @@
+diff --git a/src/main/java/org/jsoup/parser/Parser.java b/src/main/java/org/jsoup/parser/Parser.java
+index 8cc01d2..a2b1746 100644
+--- a/src/main/java/org/jsoup/parser/Parser.java
++++ b/src/main/java/org/jsoup/parser/Parser.java
+@@ -151,9 +145,11 @@ public class Parser {
+                 dataNode = TextNode.createFromEncoded(data, baseUri);
+             else
+                 dataNode = new DataNode(data, baseUri); // data not encoded but raw (for " in script)
++            if (!tag.equals(styleTag)) { // styles don't auto format as CDATA (as also XML)
++                dataNode.setStrict(false);
++            }
+             child.appendChild(dataNode);
+         }
+-
+         // <base href>: update the base uri
+         if (child.tagName().equals("base")) {
+             String href = child.absUrl("href");

@@ -1,0 +1,61 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/AnnotationIntrospector.java b/src/main/java/com/fasterxml/jackson/databind/AnnotationIntrospector.java
+index 624a1fd7e..0921936a2 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/AnnotationIntrospector.java
++++ b/src/main/java/com/fasterxml/jackson/databind/AnnotationIntrospector.java
+@@ -792,7 +792,7 @@ public abstract class AnnotationIntrospector
+      *
+      * @since 2.7
+      */
+-    public JavaType refineSerializationType(final MapperConfig<?> config,
++   public JavaType refineSerializationType(final MapperConfig<?> config,
+             final Annotated a, final JavaType baseType) throws JsonMappingException
+     {
+         JavaType type = baseType;
+@@ -894,7 +889,46 @@ public abstract class AnnotationIntrospector
+         }
+         return type;
+     }
+-
++    private Class<?> findSerializationContentType(Annotated a, JavaType baseContentType)
++    {
++        JsonSerialize.Typing t = a.getAnnotation(JsonSerialize.class).typing();
++        Class<?> cc = a.getAnnotation(JsonSerialize.class).contentAs();
++        if ((t == JsonSerialize.Typing.DEFAULT_TYPING) && (cc == NoClass.class)) {
++            return null;
++        }
++        if (cc != NoClass.class) {
++            return cc;
++        }
++        return _resolveContentType(a, baseContentType);
++    }
++    private Class<?> findSerializationKeyType(Annotated a, JavaType baseKeyType)
++    {
++        JsonSerialize.Typing t = a.getAnnotation(JsonSerialize.class).typing();
++        Class<?> cc = a.getAnnotation(JsonSerialize.class).keyAs();
++        if ((t == JsonSerialize.Typing.DEFAULT_TYPING) && (cc == NoClass.class)) {
++            return null;
++        }
++        if (cc != NoClass.class) {
++            return cc;
++        }
++        return _resolveKeyType(a, baseKeyType);
++    }
++    private Class<?> findSerializationType(Annotated a)
++    {
++        JsonSerialize ann = a.getAnnotation(JsonSerialize.class);
++        if (ann != null) {
++            Class<?> cls = ann.as();
++            if (cls != NoClass.class) {
++                return cls;
++            }
++        }
++        // Also, maybe we have JsonSerializable.using?
++        JsonSerializable ann2 = a.getAnnotation(JsonSerializable.class);
++        if ((ann2 != null) && (ann2.using() != JsonSerializer.None.class)) {
++            return ann2.as();
++        }
++        return null;
++    }
+     /*
+     /**********************************************************
+     /* Serialization: class annotations

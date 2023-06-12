@@ -1,0 +1,58 @@
+diff --git a/src/java/org/apache/commons/cli/PosixParser.java b/src/java/org/apache/commons/cli/PosixParser.java
+index 8c84520..9e48e6b 100644
+--- a/src/java/org/apache/commons/cli/PosixParser.java
++++ b/src/java/org/apache/commons/cli/PosixParser.java
+@@ -281,31 +281,39 @@ public class PosixParser extends Parser {
+      */
+     protected void burstToken(String token, boolean stopAtNonOption)
+     {
+-        for (int i = 1; i < token.length(); i++)
++        int index = 1;
++        while (index < token.length())
+         {
+-            String ch = String.valueOf(token.charAt(i));
+-
++            String ch = String.valueOf(token.charAt(index));
+             if (options.hasOption(ch))
+             {
+                 tokens.add("-" + ch);
+                 currentOption = options.getOption(ch);
+-
+-                if (currentOption.hasArg() && (token.length() != (i + 1)))
++                if (currentOption.hasArg() && (token.length() != (index + 1)))
+                 {
+-                    tokens.add(token.substring(i + 1));
+-
++                    tokens.add(token.substring(index + 1));
+                     break;
+                 }
+-            }
+-            else if (stopAtNonOption)
+-            {
+-                process(token.substring(i));
++                else
++                {
++                    if (currentOption.hasArg())
++                    {
++                        throw new RuntimeException("Illegal option: " + token);
++                    }
++                }
++                index++;
+             }
+             else
+             {
+-                tokens.add(token);
++                if (stopAtNonOption)
++                {
++                    process(token.substring(index));
++                }
++                else
++                {
++                    tokens.add(token);
++                }
+                 break;
+             }
+         }
+-    }
+-}
++    }}

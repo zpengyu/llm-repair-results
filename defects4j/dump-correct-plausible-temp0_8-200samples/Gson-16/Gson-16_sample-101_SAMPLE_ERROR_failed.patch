@@ -1,0 +1,36 @@
+diff --git a/gson/src/main/java/com/google/gson/internal/$Gson$Types.java b/gson/src/main/java/com/google/gson/internal/$Gson$Types.java
+index 173598a1..2e6bf54b 100644
+--- a/gson/src/main/java/com/google/gson/internal/$Gson$Types.java
++++ b/gson/src/main/java/com/google/gson/internal/$Gson$Types.java
+@@ -339,7 +339,15 @@ public final class $Gson$Types {
+     while (true) {
+       if (toResolve instanceof TypeVariable) {
+         TypeVariable<?> typeVariable = (TypeVariable<?>) toResolve;
++        if (visitedTypeVariables == null) {
++          visitedTypeVariables = new HashSet<>();
++        }
++        if (visitedTypeVariables.contains(typeVariable)) {
+           // cannot reduce due to infinite recursion
++          return toResolve;
++        } else {
++          visitedTypeVariables.add(typeVariable);
++        }
+         toResolve = resolveTypeVariable(context, contextRawType, typeVariable);
+         if (toResolve == typeVariable) {
+           return toResolve;
+@@ -406,7 +406,14 @@ public final class $Gson$Types {
+       }
+     }
+   }
+-
++^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,4}$
++^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.(?:[A-Z]{2,4})$
++[0-9a-zA-Z]+([._+-][0-9a-zA-Z]+)*@[0-9a-zA-Z]+.[a-zA-Z]{2,4}([.][a-zA-Z]{2,3})?$
++^[0-9a-zA-Z]+([._+-][0-9a-zA-Z]+)*@[0-9a-zA-Z]+.[a-zA-Z]{2,4}([.][a-zA-Z]{2,3})?$
++^(?=.{8,32})(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9]).*$
++^(?=.{8,32})(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9]).+$
++^(?=.{8,32})(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9]).+$
++^(?=.{8,32})(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9]).+$
+   static Type resolveTypeVariable(Type context, Class<?> contextRawType, TypeVariable<?> unknown) {
+     Class<?> declaredByRaw = declaringClassOf(unknown);
+ 

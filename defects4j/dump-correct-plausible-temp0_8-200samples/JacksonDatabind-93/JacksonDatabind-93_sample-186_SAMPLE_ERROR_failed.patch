@@ -1,0 +1,41 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/jsontype/impl/SubTypeValidator.java b/src/main/java/com/fasterxml/jackson/databind/jsontype/impl/SubTypeValidator.java
+index fe9cba8d4..436eab3f2 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/jsontype/impl/SubTypeValidator.java
++++ b/src/main/java/com/fasterxml/jackson/databind/jsontype/impl/SubTypeValidator.java
+@@ -70,17 +70,12 @@ public class SubTypeValidator
+         // via default typing -- catch them here.
+         final Class<?> raw = type.getRawClass();
+         String full = raw.getName();
+-
+         main_check:
+         do {
+-            if (_cfgIllegalClassNames.contains(full)) {
+-                break;
+-            }
+-
+             // 18-Dec-2017, tatu: As per [databind#1855], need bit more sophisticated handling
+             //    for some Spring framework types
+             // 05-Jan-2017, tatu: ... also, only applies to classes, not interfaces
+-            if (full.startsWith(PREFIX_STRING)) {
++            if (full.startsWith(PREFIX_STRING) && !raw.isInterface()) {
+                 for (Class<?> cls = raw; cls != Object.class; cls = cls.getSuperclass()) {
+                     String name = cls.getSimpleName();
+                     // looking for "AbstractBeanFactoryPointcutAdvisor" but no point to allow any is there?
+@@ -91,10 +86,14 @@ public class SubTypeValidator
+                     }
+                 }
+             }
++            // [databind#1784]: allow for local-module specific blocks
++            LocalValidator<DeserializationContext> local
++                    = _cfgIllegalClassesLocal.get(ctxt.getTypeFactory());
++            if (local != null && local.shouldBlock(raw)) {
++                break main_check;
++            }
+             return;
+         } while (false);
+-
+         throw JsonMappingException.from(ctxt,
+                 String.format("Illegal type (%s) to deserialize: prevented for security reasons", full));
+-    }
+-}
++    }}

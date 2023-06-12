@@ -1,0 +1,56 @@
+diff --git a/src/com/google/javascript/jscomp/CheckGlobalThis.java b/src/com/google/javascript/jscomp/CheckGlobalThis.java
+index 42c1411a..7316a519 100644
+--- a/src/com/google/javascript/jscomp/CheckGlobalThis.java
++++ b/src/com/google/javascript/jscomp/CheckGlobalThis.java
+@@ -82,26 +77,27 @@ final class CheckGlobalThis implements Callback {
+    * is encountered, there is no reason to traverse non global contexts.
+    */
+   public boolean shouldTraverse(NodeTraversal t, Node n, Node parent) {
+-
+-    if (n.getType() == Token.FUNCTION) {
+-      // Don't traverse functions that are constructors or have the @this
+-      // annotation.
+-      JSDocInfo jsDoc = getFunctionJsDocInfo(n);
+-      if (jsDoc != null && (jsDoc.isConstructor() || jsDoc.hasThisType())) {
+-        return false;
++    Node rhs = NodeUtil.getAssignedValue(n);
++    if (rhs != null) {
++      if (n.getType() == Token.VAR || n.getType() == Token.FUNCTION) {
++        JSDocInfo jsDoc = n.getJSDocInfo();
++        if (jsDoc == null) {
++          jsDoc = rhs.getJSDocInfo();
++        }
++        // Don't traverse functions that are constructors or have the @this
++        // annotation.
++        if (jsDoc != null && (jsDoc.isConstructor() || jsDoc.hasThisType())) {
++          return false;
++        }
+       }
+-
+       // Don't traverse functions unless they would normally
+       // be able to have a @this annotation associated with them. e.g.,
+       // var a = function() { }; // or
+       // function a() {} // or
+       // a.x = function() {};
+     }
+-
+     if (parent != null && parent.getType() == Token.ASSIGN) {
+       Node lhs = parent.getFirstChild();
+-      Node rhs = lhs.getNext();
+-      
+       if (n == lhs) {
+         // Always traverse the left side of the assignment. To handle
+         // nested assignments properly (e.g., (a = this).property = c;),
+@@ -141,11 +134,9 @@ final class CheckGlobalThis implements Callback {
+       // Always report a THIS on the left side of an assign.
+       return true;
+     }
+-
+     // Also report a THIS with a property access.
+-    return false;
++    return parent != null && parent.getType() == Token.GETPROP;
+   }
+-
+   /**
+    * Gets a function's JSDoc information, if it has any. Checks for a few
+    * patterns (ellipses show where JSDoc would be):

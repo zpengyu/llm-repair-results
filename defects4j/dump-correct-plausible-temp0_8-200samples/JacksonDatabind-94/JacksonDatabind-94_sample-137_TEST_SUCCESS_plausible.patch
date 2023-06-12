@@ -1,0 +1,50 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/jsontype/impl/SubTypeValidator.java b/src/main/java/com/fasterxml/jackson/databind/jsontype/impl/SubTypeValidator.java
+index 9fe2d40b0..c06d506bf 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/jsontype/impl/SubTypeValidator.java
++++ b/src/main/java/com/fasterxml/jackson/databind/jsontype/impl/SubTypeValidator.java
+@@ -19,8 +19,7 @@ import com.fasterxml.jackson.databind.JsonMappingException;
+ public class SubTypeValidator
+ {
+     protected final static String PREFIX_SPRING = "org.springframework.";
+-
+-
++    protected final static String PREFIX_MCHANGE = "com.mchange.v2.";
+     /**
+      * Set of well-known "nasty classes", deserialization of which is considered dangerous
+      * and should (and is) prevented by default.
+@@ -47,16 +46,16 @@ public class SubTypeValidator
+         // [databind#1737]; 3rd party
+ //s.add("org.springframework.aop.support.AbstractBeanFactoryPointcutAdvisor"); // deprecated by [databind#1855]
+         s.add("org.springframework.beans.factory.config.PropertyPathFactoryBean");
+-
+-// s.add("com.mchange.v2.c3p0.JndiRefForwardingDataSource"); // deprecated by [databind#1931]
+-// s.add("com.mchange.v2.c3p0.WrapperConnectionPoolDataSource"); // - "" -
++        //s.add("com.mchange.v2.c3p0.JndiRefForwardingDataSource"); // deprecated by [databind#1931]
++        //s.add("com.mchange.v2.c3p0.WrapperConnectionPoolDataSource"); // - "" -
+         // [databind#1855]: more 3rd party
+         s.add("org.apache.tomcat.dbcp.dbcp2.BasicDataSource");
+         s.add("com.sun.org.apache.bcel.internal.util.ClassLoader");
+-
++        // [databind#1931]: more 3rd party
++        s.add("com.mchange.v2.c3p0.ComboPooledDataSource");
++        s.add("com.mchange.v2.c3p0.debug.AfterCloseLoggingComboPooledDataSource");
+         DEFAULT_NO_DESER_CLASS_NAMES = Collections.unmodifiableSet(s);
+     }
+-
+     /**
+      * Set of class names of types that are never to be deserialized.
+      */
+@@ -103,9 +96,12 @@ public class SubTypeValidator
+                 // com.mchange.v2.c3p0.debug.AfterCloseLoggingComboPooledDataSource 
+                 }
+             }
++            // [databind#1931]: more 3rd party
++            else if (full.startsWith(PREFIX_MCHANGE)) {
++                break;
++            }
+             return;
+         } while (false);
+-
+         throw JsonMappingException.from(ctxt,
+                 String.format("Illegal type (%s) to deserialize: prevented for security reasons", full));
+     }

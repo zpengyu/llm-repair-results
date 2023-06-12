@@ -1,0 +1,79 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/AnnotationIntrospector.java b/src/main/java/com/fasterxml/jackson/databind/AnnotationIntrospector.java
+index 624a1fd7e..bba48af9e 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/AnnotationIntrospector.java
++++ b/src/main/java/com/fasterxml/jackson/databind/AnnotationIntrospector.java
+@@ -816,7 +813,11 @@ public abstract class AnnotationIntrospector
+                 try {
+                     // 11-Oct-2015, tatu: For deser, we call `TypeFactory.constructSpecializedType()`,
+                     //   may be needed here too in future?
++                    if (serClass.isAssignableFrom(type.getRawClass())) {
+                         type = tf.constructGeneralizedType(type, serClass);
++                    } else {
++                        type = tf.constructSpecializedType(type, serClass);
++                    }
+                 } catch (IllegalArgumentException iae) {
+                     throw new JsonMappingException(null,
+                             String.format("Failed to widen type %s with annotation (value %s), from '%s': %s",
+@@ -863,34 +862,34 @@ public abstract class AnnotationIntrospector
+         JavaType contentType = type.getContentType();
+         if (contentType != null) { // collection[like], map[like], array, reference
+             // And then value types for all containers:
+-           Class<?> contentClass = findSerializationContentType(a, contentType);
+-           if (contentClass != null) {
+-               if (contentType.hasRawClass(contentClass)) {
+-                   contentType = contentType.withStaticTyping();
+-               } else {
+-                   // 03-Apr-2016, tatu: As per [databind#1178], may need to actually
+-                   //   specialize (narrow) type sometimes, even if more commonly opposite
+-                   //   is needed.
+-                   Class<?> currRaw = contentType.getRawClass();
+-                   try {
+-                       if (contentClass.isAssignableFrom(currRaw)) { // common case
+-                           contentType = tf.constructGeneralizedType(contentType, contentClass);
+-                       } else if (currRaw.isAssignableFrom(contentClass)) { // specialization, ok as well
+-                           contentType = tf.constructSpecializedType(contentType, contentClass);
+-                       } else {
+-                           throw new JsonMappingException(null,
+-                                   String.format("Can not refine serialization content type %s into %s; types not related",
+-                                           contentType, contentClass.getName()));
+-                       }
+-                   } catch (IllegalArgumentException iae) { // shouldn't really happen
+-                       throw new JsonMappingException(null,
+-                               String.format("Internal error: failed to refine value type of %s with concrete-type annotation (value %s), from '%s': %s",
+-                                       type, contentClass.getName(), a.getName(), iae.getMessage()),
+-                                       iae);
+-                   }
+-               }
+-               type = type.withContentType(contentType);
+-           }
++            Class<?> contentClass = findSerializationContentType(a, contentType);
++            if (contentClass != null) {
++                if (contentType.hasRawClass(contentClass)) {
++                    contentType = contentType.withStaticTyping();
++                } else {
++                    // 03-Apr-2016, tatu: As per [databind#1178], may need to actually
++                    //   specialize (narrow) type sometimes, even if more commonly opposite
++                    //   is needed.
++                    Class<?> currRaw = contentType.getRawClass();
++                    try {
++                        if (contentClass.isAssignableFrom(currRaw)) { // common case
++                            contentType = tf.constructGeneralizedType(contentType, contentClass);
++                        } else if (currRaw.isAssignableFrom(contentClass)) { // specialization, ok as well
++                            contentType = tf.constructSpecializedType(contentType, contentClass);
++                        } else {
++                            throw new JsonMappingException(null,
++                                    String.format("Can not refine serialization content type %s into %s; types not related",
++                                            contentType, contentClass.getName()));
++                        }
++                    } catch (IllegalArgumentException iae) { // shouldn't really happen
++                        throw new JsonMappingException(null,
++                                String.format("Internal error: failed to refine value type of %s with concrete-type annotation (value %s), from '%s': %s",
++                                        type, contentClass.getName(), a.getName(), iae.getMessage()),
++                                        iae);
++                    }
++                }
++                type = type.withContentType(contentType);
++            }
+         }
+         return type;
+     }

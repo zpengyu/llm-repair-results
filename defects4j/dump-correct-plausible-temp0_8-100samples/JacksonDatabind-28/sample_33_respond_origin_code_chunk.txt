@@ -1,0 +1,13 @@
+        public ArrayNode deserialize(JsonParser p, DeserializationContext ctxt) throws IOException
+        {
+            JsonToken t = p.currentToken();
+            if (t == JsonToken.VALUE_STRING) {
+                // let's do implicit re-parse
+                JsonParser p2 = p.getCodec().getFactory().createParser(p.getTextCharacters(), p.getTextOffset(), p.getTextLength());
+                return deserializeArray(p2, ctxt, ctxt.getNodeFactory());
+            }
+            if (t == JsonToken.START_ARRAY) {
+                return deserializeArray(p, ctxt, ctxt.getNodeFactory());
+            }
+            throw ctxt.mappingException(ArrayNode.class);
+        }

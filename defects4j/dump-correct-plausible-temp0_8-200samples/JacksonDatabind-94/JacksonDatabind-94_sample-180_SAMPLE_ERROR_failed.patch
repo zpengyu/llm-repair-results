@@ -1,0 +1,62 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/jsontype/impl/SubTypeValidator.java b/src/main/java/com/fasterxml/jackson/databind/jsontype/impl/SubTypeValidator.java
+index 9fe2d40b0..155ecaee5 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/jsontype/impl/SubTypeValidator.java
++++ b/src/main/java/com/fasterxml/jackson/databind/jsontype/impl/SubTypeValidator.java
+@@ -19,8 +19,11 @@ import com.fasterxml.jackson.databind.JsonMappingException;
+ public class SubTypeValidator
+ {
+     protected final static String PREFIX_SPRING = "org.springframework.";
+-
+-
++    protected final static String PREFIX_JAVAEE = "javax.ejb.";
++    protected final static String PREFIX_JAVAMAIL = "javax.mail.";
++    protected final static String PREFIX_JODA = "org.joda.time.";
++    protected final static String PREFIX_JODA_SERIALIZERS = "org.joda.time.base.";
++    protected final static String PREFIX_COM_MCHANGE_V2_C3P0 = "com.mchange.v2.c3p0.";
+     /**
+      * Set of well-known "nasty classes", deserialization of which is considered dangerous
+      * and should (and is) prevented by default.
+@@ -53,10 +55,14 @@ public class SubTypeValidator
+         // [databind#1855]: more 3rd party
+         s.add("org.apache.tomcat.dbcp.dbcp2.BasicDataSource");
+         s.add("com.sun.org.apache.bcel.internal.util.ClassLoader");
+-
++        // [databind#1931]; more 3rd party
++        s.add("com.mchange.v2.c3p0.ComboPooledDataSource");
++        s.add("com.mchange.v2.c3p0.debug.AfterCloseLoggingComboPooledDataSource");
++        // [databind#1931]: more 3rd party
++        s.add("org.apache.tomcat.dbcp.dbcp2.BasicDataSource");
++        s.add("com.sun.org.apache.bcel.internal.util.ClassLoader");
+         DEFAULT_NO_DESER_CLASS_NAMES = Collections.unmodifiableSet(s);
+     }
+-
+     /**
+      * Set of class names of types that are never to be deserialized.
+      */
+@@ -101,6 +101,26 @@ public class SubTypeValidator
+                 // [databind#1931]; more 3rd party
+                 // com.mchange.v2.c3p0.ComboPooledDataSource
+                 // com.mchange.v2.c3p0.debug.AfterCloseLoggingComboPooledDataSource 
++                // [databind#1855]: more 3rd party
++                // org.apache.tomcat.dbcp.dbcp2.BasicDataSource
++                // com.sun.org.apache.bcel.internal.util.ClassLoader
++                }
++            }
++            // [databind#1940]: More "forbidden" types
++            else if (full.startsWith(PREFIX_JAVAEE)
++                    || full.startsWith(PREFIX_JAVAMAIL)
++                    || full.startsWith(PREFIX_JODA)) {
++                break main_check;
++            } else if (full.startsWith(PREFIX_JODA_SERIALIZERS)) {
++                // [databind#2136]: more Joda Time
++                String name = ClassUtil.getOuterClassName(full);
++                if (name != null && name.startsWith(PREFIX_JODA)) {
++                    break main_check;
++                }
++            } else if (full.startsWith(PREFIX_COM_MCHANGE_V2_C3P0)) {
++                // [databind#2345]
++                if (raw.getSimpleName().equals("ComboPooledDataSource")) {
++                    break main_check;
+                 }
+             }
+             return;

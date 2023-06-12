@@ -1,0 +1,34 @@
+diff --git a/src/java/org/apache/commons/jxpath/ri/model/beans/NullPropertyPointer.java b/src/java/org/apache/commons/jxpath/ri/model/beans/NullPropertyPointer.java
+index 2d1a815..73c9222 100644
+--- a/src/java/org/apache/commons/jxpath/ri/model/beans/NullPropertyPointer.java
++++ b/src/java/org/apache/commons/jxpath/ri/model/beans/NullPropertyPointer.java
+@@ -121,7 +107,13 @@ public class NullPropertyPointer extends PropertyPointer {
+             //    non-property pointer expand the collection by itself.
+             if (newParent instanceof PropertyOwnerPointer) {
+                 PropertyOwnerPointer pop = (PropertyOwnerPointer) newParent;
+-                newParent = pop.getPropertyPointer();
++                if (newParent instanceof NullPointer) {
++                    newParent = pop.getPropertyPointer();
++                }
++                else {
++                    newParent = pop.createChild(context, getName(), getIndex());
++                    return newParent;
++                }
+             }
+             return newParent.createChild(context, getName(), getIndex());
+         }
+@@ -137,7 +128,13 @@ public class NullPropertyPointer extends PropertyPointer {
+         else {
+             if (newParent instanceof PropertyOwnerPointer) {
+                 PropertyOwnerPointer pop = (PropertyOwnerPointer) newParent;
+-                newParent = pop.getPropertyPointer();
++                if (newParent instanceof NullPointer) {
++                    newParent = pop.getPropertyPointer();
++                }
++                else {
++                    newParent = pop.createChild(context, getName(), index, value);
++                    return newParent;
++                }
+             }
+             return newParent.createChild(context, getName(), index, value);
+         }

@@ -1,0 +1,54 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/deser/std/FromStringDeserializer.java b/src/main/java/com/fasterxml/jackson/databind/deser/std/FromStringDeserializer.java
+index 01a819a9f..02ead7969 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/deser/std/FromStringDeserializer.java
++++ b/src/main/java/com/fasterxml/jackson/databind/deser/std/FromStringDeserializer.java
+@@ -227,20 +223,21 @@ public abstract class FromStringDeserializer<T> extends StdScalarDeserializer<T>
+                 // will throw IAE (or its subclass) if malformed
+                 return Pattern.compile(value);
+             case STD_LOCALE:
+-                {
+-                    int ix = value.indexOf('_');
+-                    if (ix < 0) { // single argument
+-                        return new Locale(value);
+-                    }
+-                    String first = value.substring(0, ix);
+-                    value = value.substring(ix+1);
+-                    ix = value.indexOf('_');
+-                    if (ix < 0) { // two pieces
+-                        return new Locale(first, value);
+-                    }
+-                    String second = value.substring(0, ix);
+-                    return new Locale(first, second, value.substring(ix+1));
++                if (value.length() == 0) { // [databind#1123]
++                    return Locale.ROOT;
++                }
++                int ix = value.indexOf('_');
++                if (ix < 0) { // single argument
++                    return new Locale(value);
++                }
++                String first = value.substring(0, ix);
++                value = value.substring(ix+1);
++                ix = value.indexOf('_');
++                if (ix < 0) { // two pieces
++                    return new Locale(first, value);
+                 }
++                String second = value.substring(0, ix);
++                return new Locale(first, second, value.substring(ix+1));
+             case STD_CHARSET:
+                 return Charset.forName(value);
+             case STD_TIME_ZONE:
+@@ -281,13 +275,6 @@ public abstract class FromStringDeserializer<T> extends StdScalarDeserializer<T>
+             if (_kind == STD_URI) {
+                 return URI.create("");
+             }
+-            // As per [databind#1123], Locale too
+-            if (_kind == STD_LOCALE) {
+-                return Locale.ROOT;
+-            }
+             return super._deserializeFromEmptyString();
+         }
+-
+-
+-    }
+-}
++    }}

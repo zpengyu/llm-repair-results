@@ -1,0 +1,52 @@
+diff --git a/src/java/org/apache/commons/jxpath/ri/compiler/CoreOperationCompare.java b/src/java/org/apache/commons/jxpath/ri/compiler/CoreOperationCompare.java
+index cc45a8f..f38d430 100644
+--- a/src/java/org/apache/commons/jxpath/ri/compiler/CoreOperationCompare.java
++++ b/src/java/org/apache/commons/jxpath/ri/compiler/CoreOperationCompare.java
+@@ -49,11 +49,6 @@ public abstract class CoreOperationCompare extends CoreOperation {
+     {
+         Object l = left.compute(context);
+         Object r = right.compute(context);
+-
+-//        System.err.println("COMPARING: " +
+-//            (l == null ? "null" : l.getClass().getName()) + " " +
+-//            (r == null ? "null" : r.getClass().getName()));
+-
+         if (l instanceof InitialContext || l instanceof SelfContext) {
+             l = ((EvalContext) l).getSingleNodePointer();
+         }
+@@ -81,7 +72,34 @@ public abstract class CoreOperationCompare extends CoreOperation {
+         }
+         return equal(l, r);
+     }
+-
++private boolean contains(Iterator it, Object value) {
++    while (it.hasNext()) {
++        if (equal(it.next(), value)) {
++            return true;
++        }
++    }
++    return false;
++}
++private boolean findMatch(Iterator left, Iterator right) {
++    while (left.hasNext()) {
++        Object l = left.next();
++        while (right.hasNext()) {
++            if (equal(l, right.next())) {
++                return true;
++            }
++        }
++    }
++    return false;
++}
++private boolean equal(Object left, Object right) {
++    if (left == right) {
++        return true;
++    }
++    if (left == null || right == null) {
++        return false;
++    }
++    return left.equals(right);
++}
+     protected boolean contains(Iterator it, Object value) {
+         while (it.hasNext()) {
+             Object element = it.next();

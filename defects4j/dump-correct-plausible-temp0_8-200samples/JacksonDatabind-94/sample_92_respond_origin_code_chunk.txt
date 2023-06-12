@@ -1,0 +1,29 @@
+public class SubTypeValidator
+{
+    private final static SubTypeValidator instance = new SubTypeValidator();
+
+    protected SubTypeValidator() { }
+
+    public static SubTypeValidator instance() { return instance; }
+
+    public void validateSubType(DeserializationContext ctxt, JavaType type) throws JsonMappingException
+    {
+        // There are certain nasty classes that could cause problems, mostly
+        // via default typing -- catch them here.
+        final Class<?> raw = type.getRawClass();
+        String full = raw.getName();
+
+        // 18-Dec-2017, tatu: As per [databind#1855], need bit more sophisticated handling
+        //    for some Spring framework types
+        // 05-Jan-2017, tatu: ... also, only applies to classes, not interfaces
+        if (raw.isInterface() || full.startsWith(PREFIX_SPRING)) {
+            return;
+        }
+        if (DEFAULT_NO_DESER_CLASS_NAMES.contains(full)) {
+            throw JsonMappingException.from(ctxt,
+                    String.format("Illegal type (%s) to deserialize: prevented for security reasons", full));
+        }
+    }
+}
+
+

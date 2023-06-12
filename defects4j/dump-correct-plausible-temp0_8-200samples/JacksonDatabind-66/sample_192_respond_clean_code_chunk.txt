@@ -1,0 +1,17 @@
+        public final Object deserializeKey(String key, DeserializationContext ctxt)
+            throws IOException
+        {
+            // null is legal key (we may get it if caller did not want to pass key)
+            if (key == null) {
+                return null;
+            }
+            try {
+                Object result = _delegate.deserialize(ctxt.getParser(), ctxt);
+                if (result != null) {
+                    return result;
+                }
+            } catch (Exception re) {
+                return ctxt.handleWeirdKey(_keyClass, key, "not a valid representation: %s", re.getMessage());
+            }
+            return ctxt.handleWeirdKey(_keyClass, key, "not a valid representation");
+        }

@@ -1,0 +1,22 @@
+diff --git a/src/com/google/javascript/jscomp/ProcessClosurePrimitives.java b/src/com/google/javascript/jscomp/ProcessClosurePrimitives.java
+index d1d12a3c..d9d41c12 100644
+--- a/src/com/google/javascript/jscomp/ProcessClosurePrimitives.java
++++ b/src/com/google/javascript/jscomp/ProcessClosurePrimitives.java
+@@ -806,8 +804,16 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback
+         }
+         compiler.reportCodeChange();
+       }
++      // Replace references to the first definition with the new VAR node
++      Node definition = explicitNode != null ? explicitNode : firstNode;
++      Node replacement = explicitNode != null ? replacementNode :
++          NodeUtil.newQName(compiler, namespace);
++      NodeUtil.visitPreOrder(
++          compiler.getRoot(),
++          new NodeUtil.ReplacingCallback(
++              definition, replacement, compiler),
++          NodeUtil.MATCH_NOT_FUNCTION);
+     }
+-
+     /**
+      * Create the declaration node for this name, without inserting it
+      * into the AST.

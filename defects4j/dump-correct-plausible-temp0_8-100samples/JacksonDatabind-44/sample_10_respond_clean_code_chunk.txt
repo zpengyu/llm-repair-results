@@ -1,0 +1,36 @@
+    protected JavaType _narrow(Class<?> subclass)
+    {
+        if (_class == subclass) {
+            return this;
+        }
+        // Should we check that there is a sub-class relationship?
+        if (!_class.isAssignableFrom(subclass)) {
+            throw new IllegalArgumentException("Class "+subclass.getName()+" not sub-type of "
+                    +_class.getName());
+        }
+        // Otherwise, stitch together the hierarchy. First, super-class
+        JavaType superType = _superClass;
+        if (superType != null) {
+            // Note: since this is a SimpleType, must use raw type
+            superType = superType._narrow(subclass.getSuperclass());
+        }
+        // if not found, try a super-interface
+        if (superType == null) {
+            JavaType[] t = _superInterfaces;
+            int len = t.length;
+            for (int i = 0; i < len; ++i) {
+                JavaType intType = t[i];
+                // Note: since this is a SimpleType, must use raw type
+                Class<?> intCls = intType.getRawClass();
+                if (intCls.isAssignableFrom(subclass)) {
+                    superType = intType._narrow(subclass);
+                    break;
+                }
+            }
+        }
+        if (superType == null) {
+            throw new IllegalArgumentException("Internal error: cannot determine super-type of "+subclass.getName());
+        }
+        return new SimpleType(subclass, _bindings, superType, _superInterfaces,
+                _valueHandler, _typeHandler, _asStatic);
+    }

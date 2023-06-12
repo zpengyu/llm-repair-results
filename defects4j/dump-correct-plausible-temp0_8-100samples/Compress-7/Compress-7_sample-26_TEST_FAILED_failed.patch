@@ -1,0 +1,33 @@
+diff --git a/src/main/java/org/apache/commons/compress/archivers/tar/TarUtils.java b/src/main/java/org/apache/commons/compress/archivers/tar/TarUtils.java
+index 25a30cb0..f744ab72 100644
+--- a/src/main/java/org/apache/commons/compress/archivers/tar/TarUtils.java
++++ b/src/main/java/org/apache/commons/compress/archivers/tar/TarUtils.java
+@@ -98,12 +97,25 @@ public class TarUtils {
+             if (buffer[i] == 0) {
+                 break;
+             }
+-            result.append((char) buffer[i]);
++            else if (buffer[i] == '\\' && i < end-1) {
++                if (buffer[i+1] == '\\') {
++                    ++i;
++                    result.append('\\');
++                }
++                else if (buffer[i+1] == '/') {
++                    ++i;
++                    result.append('/');
++                }
++                else {
++                    result.append('\\');
++                }
++            }
++            else {
++                result.append((char) buffer[i]);
++            }
+         }
+-
+         return result.toString();
+     }
+-
+     /**
+      * Copy a name (StringBuffer) into a buffer.
+      * Copies characters from the name into the buffer

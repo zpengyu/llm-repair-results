@@ -1,0 +1,71 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/deser/BeanDeserializer.java b/src/main/java/com/fasterxml/jackson/databind/deser/BeanDeserializer.java
+index 3c89dc109..7248c58fd 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/deser/BeanDeserializer.java
++++ b/src/main/java/com/fasterxml/jackson/databind/deser/BeanDeserializer.java
+@@ -756,24 +753,19 @@ public class BeanDeserializer
+                 // Last creator property to set?
+                 if (buffer.assignParameter(creatorProp,
+                         _deserializeWithErrorWrapping(p, ctxt, creatorProp))) {
+-                    t = p.nextToken(); // to move to following FIELD_NAME/END_OBJECT
+                     Object bean;
+                     try {
+                         bean = creator.build(ctxt, buffer);
+                     } catch (Exception e) {
+-                        bean = wrapInstantiationProblem(e, ctxt);
++                        wrapAndThrow(e, _beanType.getRawClass(), propName, ctxt);
++                        return null;
+                     }
+                     // [databind#631]: Assign current value, to be accessible by custom serializers
+                     p.setCurrentValue(bean);
+-                    // if so, need to copy all remaining tokens into buffer
+-                    while (t == JsonToken.FIELD_NAME) {
+-                        // NOTE: do NOT skip name as it needs to be copied; `copyCurrentStructure` does that
+-                        p.nextToken();
++                    for (; t == JsonToken.FIELD_NAME; t = p.nextToken()) {
++                        p.nextToken(); // to skip name
+                         tokens.copyCurrentStructure(p);
+-                        t = p.nextToken();
+                     }
+-                    // 28-Aug-2018, tatu: Let's add sanity check here, easier to catch off-by-some
+-                    //    problems if we maintain invariants
+                     tokens.writeEndObject();
+                     if (bean.getClass() != _beanType.getRawClass()) {
+                         // !!! 08-Jul-2011, tatu: Could probably support; but for now
+@@ -784,6 +776,9 @@ public class BeanDeserializer
+                     }
+                     return _unwrappedPropertyHandler.processUnwrapped(p, ctxt, bean, tokens);
+                 }
++                // don't yet know the type; copy as is:
++                tokens.writeFieldName(propName);
++                tokens.copyCurrentStructure(p);
+                 continue;
+             }
+             // Object Id property?
+@@ -793,6 +788,7 @@ public class BeanDeserializer
+             // regular property? needs buffering
+             SettableBeanProperty prop = _beanProperties.find(propName);
+             if (prop != null) {
++                // 23-Mar-2018, tatu: **Correction**: must use buffered deserializer!
+                 buffer.bufferProperty(prop, _deserializeWithErrorWrapping(p, ctxt, prop));
+                 continue;
+             }
+@@ -823,18 +819,8 @@ public class BeanDeserializer
+                 continue;
+             }
+         }
+-
+-        // We hit END_OBJECT, so:
+-        Object bean;
+-        try {
+-            bean = creator.build(ctxt, buffer);
+-        } catch (Exception e) {
+-            wrapInstantiationProblem(e, ctxt);
+-            return null; // never gets here
+-        }
+-        return _unwrappedPropertyHandler.processUnwrapped(p, ctxt, bean, tokens);
++        return tokens;
+     }
+-
+     /*
+     /**********************************************************
+     /* Handling for cases where we have property/-ies with

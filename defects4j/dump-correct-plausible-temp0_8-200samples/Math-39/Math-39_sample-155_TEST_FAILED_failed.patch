@@ -1,0 +1,47 @@
+diff --git a/src/main/java/org/apache/commons/math/ode/nonstiff/EmbeddedRungeKuttaIntegrator.java b/src/main/java/org/apache/commons/math/ode/nonstiff/EmbeddedRungeKuttaIntegrator.java
+index 9a6ac9b16..6070b2535 100644
+--- a/src/main/java/org/apache/commons/math/ode/nonstiff/EmbeddedRungeKuttaIntegrator.java
++++ b/src/main/java/org/apache/commons/math/ode/nonstiff/EmbeddedRungeKuttaIntegrator.java
+@@ -188,9 +188,8 @@ public abstract class EmbeddedRungeKuttaIntegrator
+ 
+   /** {@inheritDoc} */
+   @Override
+-  public void integrate(final ExpandableStatefulODE equations, final double t)
++public void integrate(final ExpandableStatefulODE equations, final double t)
+       throws MathIllegalStateException, MathIllegalArgumentException {
+-
+     sanityChecks(equations, t);
+     setEquations(equations);
+     final boolean forward = t > equations.getTime();
+@@ -300,25 +279,18 @@ public abstract class EmbeddedRungeKuttaIntegrator
+               // save the last evaluation for the next step
+               System.arraycopy(yDotTmp, 0, yDotK[0], 0, y0.length);
+           }
+-
+           // stepsize control for next step
+-          final double factor =
++          final double  factor =
+               FastMath.min(maxGrowth, FastMath.max(minReduction, safety * FastMath.pow(error, exp)));
+-          final double  scaledH    = stepSize * factor;
+-          final double  nextT      = stepStart + scaledH;
+-          final boolean nextIsLast = forward ? (nextT >= t) : (nextT <= t);
+-          hNew = filterStep(scaledH, forward, nextIsLast);
+-
+-          final double  filteredNextT      = stepStart + hNew;
+-          final boolean filteredNextIsLast = forward ? (filteredNextT >= t) : (filteredNextT <= t);
+-          if (filteredNextIsLast) {
++          final double  nextStep = stepSize * factor;
++          hNew = filterStep(nextStep, forward, false);
++          final double  filteredNextT = stepStart + hNew;
++          final boolean nextIsLast    = forward ? (filteredNextT >= t) : (filteredNextT <= t);
++          if (nextIsLast) {
+               hNew = t - stepStart;
+           }
+-
+       }
+-
+     } while (!isLastStep);
+-
+     // dispatch results
+     equations.setTime(stepStart);
+     equations.setCompleteState(y);

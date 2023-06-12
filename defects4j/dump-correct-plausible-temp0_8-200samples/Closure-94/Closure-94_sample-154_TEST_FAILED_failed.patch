@@ -1,0 +1,23 @@
+diff --git a/src/com/google/javascript/jscomp/NodeUtil.java b/src/com/google/javascript/jscomp/NodeUtil.java
+index 93f078fa..c3b9590d 100644
+--- a/src/com/google/javascript/jscomp/NodeUtil.java
++++ b/src/com/google/javascript/jscomp/NodeUtil.java
+@@ -335,13 +333,16 @@ public final class NodeUtil {
+       case Token.NOT:
+       case Token.NEG:
+         return isValidDefineValue(val.getFirstChild(), defines);
+-
+       // Names are valid if and only if they are defines themselves.
+       case Token.NAME:
+-      case Token.GETPROP:
+         if (val.isQualifiedName()) {
+           return defines.contains(val.getQualifiedName());
+         }
++      case Token.GETPROP:
++        if (val.getFirstChild().getType() == Token.NAME &&
++            val.getFirstChild().isQualifiedName()) {
++          return defines.contains(val.getFirstChild().getQualifiedName());
++        }
+     }
+     return false;
+   }

@@ -1,0 +1,54 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/deser/std/JdkDeserializers.java b/src/main/java/com/fasterxml/jackson/databind/deser/std/JdkDeserializers.java
+index 2b7efe9c9..384d50de7 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/deser/std/JdkDeserializers.java
++++ b/src/main/java/com/fasterxml/jackson/databind/deser/std/JdkDeserializers.java
+@@ -19,19 +19,30 @@ public class JdkDeserializers
+                 UUID.class,
+                 AtomicBoolean.class,
+                 StackTraceElement.class,
+-                ByteBuffer.class
++                ByteBuffer.class,
++                // and then there are types from from-String deserializer:
++                URL.class,
++                URI.class,
++                Class.class,
++                java.sql.Date.class,
++                java.util.Date.class,
++                Calendar.class,
++                Currency.class,
++                Pattern.class,
++                Locale.class,
++                Charset.class,
++                StringBuilder.class,
++                StringBuffer.class,
++                UUID.class,
++                BitSet.class,
+         };
+-        for (Class<?> cls : types) { _classNames.add(cls.getName()); }
+-        for (Class<?> cls : FromStringDeserializer.types()) { _classNames.add(cls.getName()); }
++        for (Class<?> cls : types) {
++            _classNames.add(cls.getName());
++        }
+     }
+-
+     public static JsonDeserializer<?> find(Class<?> rawType, String clsName)
+     {
+         if (_classNames.contains(clsName)) {
+-            JsonDeserializer<?> d = FromStringDeserializer.findDeserializer(rawType);
+-            if (d != null) {
+-                return d;
+-            }
+             if (rawType == UUID.class) {
+                 return new UUIDDeserializer();
+             }
+@@ -45,6 +56,10 @@ public class JdkDeserializers
+             if (rawType == ByteBuffer.class) {
+                 return new ByteBufferDeserializer();
+             }
++            JsonDeserializer<?> d = FromStringDeserializer.findDeserializer(rawType);
++            if (d != null) {
++                return d;
++            }
+         }
+         return null;
+     }

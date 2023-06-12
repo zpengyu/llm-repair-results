@@ -1,0 +1,21 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/type/SimpleType.java b/src/main/java/com/fasterxml/jackson/databind/type/SimpleType.java
+index 09fc2487a..e50ffd16d 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/type/SimpleType.java
++++ b/src/main/java/com/fasterxml/jackson/databind/type/SimpleType.java
+@@ -138,8 +138,15 @@ public class SimpleType // note: until 2.6 was final
+         // Otherwise, stitch together the hierarchy. First, super-class
+         // if not found, try a super-interface
+         // should not get here but...
++        if (subclass.isInterface() && !_superInterfaces.contains(subclass)) {
++            // just so that we don't get any recursion
++            HashSet<Class<?>> newInterfaces = new HashSet<Class<?>>(_superInterfaces);
++            newInterfaces.add(subclass);
++            return new SimpleType(_class, _bindings, _superClass,
++                    newInterfaces, _valueHandler, _typeHandler, _asStatic);
++        }
++        throw new IllegalArgumentException("Internal error: could not narrow "+this+" to "+subclass);
+     }
+-
+     @Override
+     public JavaType withContentType(JavaType contentType) {
+         throw new IllegalArgumentException("Simple types have no content types; can not call withContentType()");

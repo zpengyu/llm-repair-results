@@ -1,0 +1,145 @@
+private class GatherCollapses extends AbstractPostOrderCallback {
+  /**
+   * Collapses to do in this pass.
+   */
+  private final List<Collapse> collapses = Lists.newArrayList();
+
+  /**
+   * Nodes we've already looked at for collapsing, so that we don't look at them
+   * again (we look ahead when examining what nodes can be collapsed, and the
+   * node traversal may give them to us again)
+   */
+  private final Set<Node> nodesToCollapse = Sets.newHashSet();
+
+  @Override
+  public void visit(NodeTraversal t, Node n, Node parent) {
+    if (n.isVar()) {
+      // If a VAR is declared like
+      // var x;
+      // then we should not create new VAR nodes for it later in the tree.
+      // This is a workaround for a bug in Firefox.
+      for (Node child = n.getFirstChild();
+           child != null; child = child.getNext()) {
+        if (child.getFirstChild() == null) {
+          blacklistStubVars(t, child.getString());
+        }
+      }
+    }
+
+    // Only care about var nodes
+    if (!n.isVar() && !canBeRedeclared(n, t.getScope())) {
+      return;
+    }
+
+    // If we've already looked at this node, skip it
+    if (nodesToCollapse.contains(n)) {
+      return;
+    }
+
+    // Adjacent VAR children of an IF node are the if and else parts and can't
+    // be collapsed
+    if (parent.isIf()) {
+      return;
+    }
+
+    // Find variable declarations that follow this one (if any)
+    Node varNode = n;
+    Node rhsNode = n;
+
+    n = n.getNext();
+
+    boolean hasNodesToCollapse = false;
+
+    while (n != null &&
+        (n.isVar() || canBeRedeclared(n, t.getScope()))) {
+      if (n.isVar()) {
+        // If a VAR is declared like
+        // var x;
+        // then we should not create new VAR nodes for it later in the tree.
+        // This is a workaround for a bug in Firefox.
+        for (Node child = n.getFirstChild();
+             child != null; child = child.getNext()) {
+          if (child.getFirstChild() == null) {
+            blacklistStubVars(t, child.getString());
+          }
+        }
+      }
+
+      nodesToCollapse.add(n);
+      hasNodesToCollapse = true;
+
+      n = n.getNext();
+    }
+
+    if (hasNodesToCollapse && parent.isFunction()) {
+      Node stmtNode = new Node(Token.EXPR_RESULT);
+      stmtNode.copyInformationFrom(varNode);
+      varNode.detachFromParent();
+
+      Node newVarNode = new Node(Token.VAR);
+      newVarNode.copyInformationFrom(varNode);
+      stmtNode.addChildToBack(newVarNode);
+
+      if (rhsNode.isVar()) {
+        while(rhsNode.hasChildren()) {
+          newVarNode.addChildToBack(rhsNode.removeFirstChild());
+        }
+      } else {
+        Node assign = rhsNode.getFirstChild();
+        Node lhs = assign.getFirstChild();
+        Preconditions.checkState(lhs.isName());
+        Node rhs = assign.getLastChild();
+        lhs.addChildToBack(rhs.detachFromParent());
+        newVarNode.addChildToBack(lhs.detachFromParent());
+      }
+
+      for (Node n2 = rhsNode.getNext();
+           n2 != null && n2 != n; n2 = rhsNode.getNext()) {
+        nodesToCollapse.add(n2);
+
+        if (n2.isVar()) {
+          while(n2.hasChildren()) {
+            newVarNode.addChildToBack(n2.removeFirstChild());
+          }
+        } else {
+          Node assign = n2.getFirstChild();
+          Node lhs = assign.getFirstChild();
+          Preconditions.checkState(lhs.isName());
+          Node rhs = assign.getLastChild();
+          lhs.addChildToBack(rhs.detachFromParent());
+          newVarNode.addChildToBack(lhs.detachFromParent());
+        }
+
+        rhsNode.getParent().removeChildAfter(rhsNode);
+      }
+
+      parent.addChildAfter(stmtNode, varNode);
+      compiler.reportCodeChange();
+    }
+  }
+
+  private void blacklistStubVars(NodeTraversal t, String varName) {
+    Var var = t.getScope().getVar(varName);
+    if (var != null) {
+      blacklistedVars.add(var);
+    }
+  }
+
+  private boolean canBeRedeclared(Node n, Scope s) {
+    if (!NodeUtil.isExprAssign(n)) {
+      return false;
+    }
+    Node assign = n.getFirstChild();
+    Node lhs = assign.getFirstChild();
+
+    if (!lhs.isName()) {
+      return false;
+    }
+
+    Var var = s.getVar(lhs.getString());
+    return var != null
+        && var.getScope() == s
+        && !blacklistedVars.contains(var);
+  }
+}
+

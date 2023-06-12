@@ -1,0 +1,37 @@
+diff --git a/src/main/java/org/apache/commons/compress/archivers/tar/TarUtils.java b/src/main/java/org/apache/commons/compress/archivers/tar/TarUtils.java
+index 34ecc5ac..3eb9d610 100644
+--- a/src/main/java/org/apache/commons/compress/archivers/tar/TarUtils.java
++++ b/src/main/java/org/apache/commons/compress/archivers/tar/TarUtils.java
+@@ -103,7 +103,7 @@ public class TarUtils {
+         long    result = 0;
+         int     end = offset + length;
+         int     start = offset;
+-
++        byte    currentByte;
+         if (length < 2){
+             throw new IllegalArgumentException("Length "+length+" must be at least 2");
+         }
+@@ -111,10 +110,10 @@ public class TarUtils {
+         if (buffer[start] == 0) {
+             return 0L;
+         }
+-
+         // Skip leading spaces
+         while (start < end){
+-            if (buffer[start] == ' '){
++            currentByte = buffer[start];
++            if (currentByte == ' '){
+                 start++;
+             } else {
+                 break;
+@@ -135,9 +133,8 @@ public class TarUtils {
+         if (trailer == 0 || trailer == ' '){
+             end--;
+         }
+-
+         for ( ;start < end; start++) {
+-            final byte currentByte = buffer[start];
++            currentByte = buffer[start];
+             // CheckStyle:MagicNumber OFF
+             if (currentByte < '0' || currentByte > '7'){
+                 throw new IllegalArgumentException(

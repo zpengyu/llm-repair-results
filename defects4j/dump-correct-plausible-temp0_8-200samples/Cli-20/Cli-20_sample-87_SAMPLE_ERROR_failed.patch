@@ -1,0 +1,39 @@
+diff --git a/src/java/org/apache/commons/cli/PosixParser.java b/src/java/org/apache/commons/cli/PosixParser.java
+index 2b1bbb1..7d73b9f 100644
+--- a/src/java/org/apache/commons/cli/PosixParser.java
++++ b/src/java/org/apache/commons/cli/PosixParser.java
+@@ -94,7 +94,7 @@ public class PosixParser extends Parser {
+      * when an non option is found.
+      * @return The flattened <code>arguments</code> String array.
+      */
+-    protected String[] flatten(Options options, String[] arguments, boolean stopAtNonOption)
++protected String[] flatten(Options options, String[] arguments, boolean stopAtNonOption)
+     {
+         init();
+         this.options = options;
+@@ -111,9 +108,24 @@ public class PosixParser extends Parser {
+             // handle long option --foo or --foo=bar
+             if (token.startsWith("--"))
+             {
++                String opt = token;
++                String longOpt = null;
+                 if (token.indexOf('=') != -1)
+                 {
+-                    tokens.add(token.substring(0, token.indexOf('=')));
++                    opt = token.substring(0, token.indexOf('='));
++                    longOpt = opt.substring(2, opt.length());
++                }
++                else
++                {
++                    longOpt = opt.substring(2, opt.length());
++                }
++                if (!options.hasOption(longOpt))
++                {
++                    throw new UnrecognizedOptionException("Unrecognized option: " + opt);
++                }
++                if (token.indexOf('=') != -1)
++                {
++                    tokens.add(opt);
+                     tokens.add(token.substring(token.indexOf('=') + 1, token.length()));
+                 }
+                 else

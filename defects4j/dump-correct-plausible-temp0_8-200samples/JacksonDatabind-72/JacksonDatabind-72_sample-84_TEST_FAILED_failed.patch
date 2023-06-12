@@ -1,0 +1,52 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/deser/impl/InnerClassProperty.java b/src/main/java/com/fasterxml/jackson/databind/deser/impl/InnerClassProperty.java
+index 128a8346f..9a32b705e 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/deser/impl/InnerClassProperty.java
++++ b/src/main/java/com/fasterxml/jackson/databind/deser/impl/InnerClassProperty.java
+@@ -37,9 +34,7 @@ public final class InnerClassProperty
+      * Serializable version of single-arg constructor we use for value instantiation.
+      */
+     protected AnnotatedConstructor _annotated;
+-
+-    public InnerClassProperty(SettableBeanProperty delegate,
+-            Constructor<?> ctor)
++    public InnerClassProperty(SettableBeanProperty delegate, Constructor<?> ctor)
+     {
+         super(delegate);
+         _delegate = delegate;
+@@ -97,9 +82,8 @@ public final class InnerClassProperty
+     public <A extends Annotation> A getAnnotation(Class<A> acls) {
+         return _delegate.getAnnotation(acls);
+     }
+-
+-    @Override public AnnotatedMember getMember() {  return _delegate.getMember(); }
+-
++    @Override
++    public AnnotatedMember getMember() {  return _delegate.getMember(); }
+     /*
+     /**********************************************************
+     /* Deserialization methods
+@@ -116,21 +99,20 @@ public final class InnerClassProperty
+             value = _valueDeserializer.getNullValue(ctxt);
+         } else if (_valueTypeDeserializer != null) {
+             value = _valueDeserializer.deserializeWithType(jp, ctxt, _valueTypeDeserializer);
+-        } else  { // the usual case
++        } else { // the usual case
+             try {
+                 value = _creator.newInstance(bean);
+             } catch (Exception e) {
+-                ClassUtil.unwrapAndThrowAsIAE(e, "Failed to instantiate class "+_creator.getDeclaringClass().getName()+", problem: "+e.getMessage());
++                ClassUtil.unwrapAndThrowAsIAE(e, "Failed to instantiate class " + _creator.getDeclaringClass().getName() + ", problem: " + e.getMessage());
+                 value = null;
+             }
+             _valueDeserializer.deserialize(jp, ctxt, value);
+         }
+         set(bean, value);
+     }
+-
+     @Override
+     public Object deserializeSetAndReturn(JsonParser jp,
+-    		DeserializationContext ctxt, Object instance)
++            DeserializationContext ctxt, Object instance)
+         throws IOException
+     {
+         return setAndReturn(instance, deserialize(jp, ctxt));

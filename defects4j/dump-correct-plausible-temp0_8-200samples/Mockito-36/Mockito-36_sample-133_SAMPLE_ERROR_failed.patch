@@ -1,0 +1,21 @@
+diff --git a/src/org/mockito/internal/invocation/Invocation.java b/src/org/mockito/internal/invocation/Invocation.java
+index abfec1178..6c17ccd21 100644
+--- a/src/org/mockito/internal/invocation/Invocation.java
++++ b/src/org/mockito/internal/invocation/Invocation.java
+@@ -198,10 +198,12 @@ public class Invocation implements PrintableInvocation, InvocationOnMock, Printi
+         return this.rawArguments;
+     }
+ 
+-    public Object callRealMethod() throws Throwable {
+-        return realMethod.invoke(mock, rawArguments);
+-    }
+-
++public Object callRealMethod() throws Throwable {
++	if (realMethod == null) {
++		throw new MockitoException("no last method call on a mock available");
++	}
++	return realMethod.invoke(mock, rawArguments);
++}
+     public String toString(PrintSettings printSettings) {
+         return toString(argumentsToMatchers(), printSettings);
+     }

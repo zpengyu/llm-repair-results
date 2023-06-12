@@ -1,0 +1,19 @@
+  private boolean isSafeReplacement(Node node, Node replacement) {
+    // No checks are needed for simple names.
+    if (node.isName()) {
+      return true;
+    }
+    Preconditions.checkArgument(node.isGetProp());
+
+    // In `a.b`, we need to check if `a` or `a.b` is assigned to.
+    Node cur = node;
+    while (cur.isGetProp() || cur.isGetElem()) {
+      if (isNameAssignedTo(cur.getFirstChild().getString(), replacement)) {
+        return false;
+      }
+      cur = cur.getFirstChild();
+    }
+
+    return true;
+  }
+

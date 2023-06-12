@@ -1,0 +1,21 @@
+  private boolean isSafeReplacement(Node node, Node replacement) {
+    // No checks are needed for simple names.
+    if (node.isName()) {
+      return true;
+    }
+    Preconditions.checkArgument(node.isGetProp());
+
+    // This was buggy before, because it was modifying the AST without
+    // going through the compiler
+    // by setting the following variable directly we essentially say,
+    // "I know what I'm doing"
+    // to the compiler.
+    Node n = node.getFirstChild();
+    if (n.isName()
+        && isNameAssignedTo(node.getString(), replacement)) {
+      return false;
+    }
+
+    return true;
+  }
+

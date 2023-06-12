@@ -1,0 +1,35 @@
+diff --git a/src/com/google/javascript/jscomp/ProcessClosurePrimitives.java b/src/com/google/javascript/jscomp/ProcessClosurePrimitives.java
+index d1d12a3c..b04925a2 100644
+--- a/src/com/google/javascript/jscomp/ProcessClosurePrimitives.java
++++ b/src/com/google/javascript/jscomp/ProcessClosurePrimitives.java
+@@ -781,6 +779,7 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback
+       } else {
+         // Handle the case where there's not a duplicate definition.
+         replacementNode = createDeclarationNode();
++        Node parent = null;
+         if (firstModule == minimumModule) {
+           firstNode.getParent().addChildBefore(replacementNode, firstNode);
+         } else {
+@@ -789,18 +788,18 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback
+           int indexOfDot = namespace.indexOf('.');
+           if (indexOfDot == -1) {
+             // Any old place is fine.
+-            compiler.getNodeForCodeInsertion(minimumModule)
+-                .addChildToBack(replacementNode);
++            parent = compiler.getNodeForCodeInsertion(minimumModule);
+           } else {
+             // Add it after the parent namespace.
+             ProvidedName parentName =
+                 providedNames.get(namespace.substring(0, indexOfDot));
+             Preconditions.checkNotNull(parentName);
+             Preconditions.checkNotNull(parentName.replacementNode);
+-            parentName.replacementNode.getParent().addChildAfter(
+-                replacementNode, parentName.replacementNode);
++            parent = parentName.replacementNode.getParent();
+           }
++          parent.addChildToBack(replacementNode);
+         }
++        Preconditions.checkNotNull(parent);
+         if (explicitNode != null) {
+           explicitNode.detachFromParent();
+         }

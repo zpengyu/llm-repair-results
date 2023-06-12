@@ -1,0 +1,33 @@
+diff --git a/src/com/google/javascript/rhino/jstype/PrototypeObjectType.java b/src/com/google/javascript/rhino/jstype/PrototypeObjectType.java
+index 87a287c9..3a76e875 100644
+--- a/src/com/google/javascript/rhino/jstype/PrototypeObjectType.java
++++ b/src/com/google/javascript/rhino/jstype/PrototypeObjectType.java
+@@ -360,8 +359,8 @@ class PrototypeObjectType extends ObjectType {
+       // Use a tree set so that the properties are sorted.
+       Set<String> propertyNames = Sets.newTreeSet();
+       for (ObjectType current = this;
+-           current != null && !current.isNativeObjectType() &&
+-               propertyNames.size() <= MAX_PRETTY_PRINTED_PROPERTIES;
++           current != null && !current.isNativeObjectType()
++           && propertyNames.size() <= MAX_PRETTY_PRINTED_PROPERTIES;
+            current = current.getImplicitPrototype()) {
+         propertyNames.addAll(current.getOwnPropertyNames());
+       }
+@@ -374,11 +371,14 @@ class PrototypeObjectType extends ObjectType {
+         if (i > 0) {
+           sb.append(", ");
+         }
+-
+         sb.append(property);
+         sb.append(": ");
+-        sb.append(getPropertyType(property).toString());
+-
++        JSType type = getPropertyType(property);
++        if (type != null) {
++          sb.append(type.toString());
++        } else {
++          sb.append("?");
++        }
+         ++i;
+         if (i == MAX_PRETTY_PRINTED_PROPERTIES) {
+           sb.append(", ...");

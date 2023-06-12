@@ -1,0 +1,42 @@
+diff --git a/src/main/java/org/apache/commons/compress/utils/IOUtils.java b/src/main/java/org/apache/commons/compress/utils/IOUtils.java
+index f5fd0bd4..f46a2eee 100644
+--- a/src/main/java/org/apache/commons/compress/utils/IOUtils.java
++++ b/src/main/java/org/apache/commons/compress/utils/IOUtils.java
+@@ -92,18 +92,28 @@ public final class IOUtils {
+      * @throws IOException
+      */
+     public static long skip(InputStream input, long numToSkip) throws IOException {
+-        long available = numToSkip;
+-        while (numToSkip > 0) {
+-            long skipped = input.skip(numToSkip);
+-            if (skipped == 0) {
+-                break;
++        if (input != null) {
++            if (numToSkip < 0) {
++                throw new IllegalArgumentException();
++            }
++            if (numToSkip == 0) {
++                return 0;
++            }
++            long available = numToSkip;
++            int toRead = (int) Math.min(numToSkip, MAX_SKIP_BUFFER_SIZE);
++            byte buffer[] = new byte[toRead];
++            while (numToSkip > 0) {
++                int read = input.read(buffer, 0, toRead);
++                if (read == -1) {
++                    break;
++                }
++                numToSkip -= read;
++                toRead = (int) Math.min(numToSkip, MAX_SKIP_BUFFER_SIZE);
+             }
+-            numToSkip -= skipped;
++            return available - numToSkip;
+         }
+-
+-        return available - numToSkip;
++        return 0;
+     }
+-
+     /**
+      * Reads as much from input as possible to fill the given array.
+      *

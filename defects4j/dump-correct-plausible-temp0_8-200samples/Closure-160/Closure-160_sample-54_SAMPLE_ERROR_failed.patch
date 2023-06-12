@@ -1,0 +1,37 @@
+diff --git a/src/com/google/javascript/jscomp/Compiler.java b/src/com/google/javascript/jscomp/Compiler.java
+index 9acb07a5..5c14e8d6 100644
+--- a/src/com/google/javascript/jscomp/Compiler.java
++++ b/src/com/google/javascript/jscomp/Compiler.java
+@@ -277,10 +272,30 @@ public class Compiler extends AbstractCompiler {
+       guards.add(new DiagnosticGroupWarningsGuard(
+           DiagnosticGroups.CHECK_VARIABLES, CheckLevel.OFF));
+     }
+-
++    // for an empty array or an array with nothing but strings
++    if (options.extraAnnotationNames != null &&
++        options.extraAnnotationNames.length > 0) {
++      for (String annotationName : options.extraAnnotationNames) {
++        if (!annotationName.startsWith("@")) {
++          annotationName = "@" + annotationName;
++        }
++        Annotation a = Annotation.newBuilder().setName(annotationName).build();
++        if (Annotation.isReserved(a)) {
++          throw new IllegalArgumentException(
++              "The annotation is already used: " + annotationName);
++        }
++      }
++      String[] additionalAnnotationNames = new String[Annotation.RESERVED.size()
++          + options.extraAnnotationNames.length];
++      additionalAnnotationNames = Annotation.RESERVED.toArray(
++          additionalAnnotationNames);
++      System.arraycopy(options.extraAnnotationNames, 0,
++          additionalAnnotationNames, Annotation.RESERVED.size(),
++          options.extraAnnotationNames.length);
++      options.extraAnnotationNames = additionalAnnotationNames;
++    }
+     this.warningsGuard = new ComposeWarningsGuard(guards);
+   }
+-
+   /**
+    * Initializes the instance state needed for a compile job.
+    */

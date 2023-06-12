@@ -1,0 +1,54 @@
+diff --git a/src/com/google/javascript/jscomp/InlineObjectLiterals.java b/src/com/google/javascript/jscomp/InlineObjectLiterals.java
+index 2f5a8e10..0cd71621 100644
+--- a/src/com/google/javascript/jscomp/InlineObjectLiterals.java
++++ b/src/com/google/javascript/jscomp/InlineObjectLiterals.java
+@@ -155,6 +155,7 @@ class InlineObjectLiterals implements CompilerPass {
+     private boolean isInlinableObject(List<Reference> refs) {
+       boolean ret = false;
+       Set<String> validProperties = Sets.newHashSet();
++      Set<Node> validPropertyMap = Sets.newHashSet();
+       for (Reference ref : refs) {
+         Node name = ref.getNode();
+         Node parent = ref.getParent();
+@@ -186,6 +184,7 @@ class InlineObjectLiterals implements CompilerPass {
+           if (!validProperties.contains(propName)) {
+             if (NodeUtil.isVarOrSimpleAssignLhs(parent, gramps)) {
+               validProperties.add(propName);
++              validPropertyMap.add(parent);
+             } else {
+               return false;
+             }
+@@ -224,9 +219,8 @@ class InlineObjectLiterals implements CompilerPass {
+             // ES5 get/set not supported.
+             return false;
+           }
+-
+           validProperties.add(child.getString());
+-
++          validPropertyMap.add(child);
+           Node childVal = child.getFirstChild();
+           // Check if childVal is the parent of any of the passed in
+           // references, as that is how self-referential assignments
+@@ -249,9 +241,21 @@ class InlineObjectLiterals implements CompilerPass {
+         // we can inline.
+         ret = true;
+       }
++      if (ret == true) {
++        for (Reference t : refs) {
++          Node name = t.getNode();
++          Node parent = t.getParent();
++          if (name.isName() && parent.isGetProp()
++              && validPropertyMap.contains(parent)
++              && validProperties.contains(parent.getLastChild().getString())) {
++            t.setChangeable(true);
++          } else {
++            t.setChangeable(false);
++          }
++        }
++      }
+       return ret;
+     }
+-
+     private boolean isVarOrAssignExprLhs(Node n) {
+       Node parent = n.getParent();
+       return parent.isVar() ||

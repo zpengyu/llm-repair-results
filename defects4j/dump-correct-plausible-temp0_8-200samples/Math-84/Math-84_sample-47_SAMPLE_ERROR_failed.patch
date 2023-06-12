@@ -1,0 +1,59 @@
+diff --git a/src/main/java/org/apache/commons/math/optimization/direct/MultiDirectional.java b/src/main/java/org/apache/commons/math/optimization/direct/MultiDirectional.java
+index 2fa8c34bf..818c5d7d9 100644
+--- a/src/main/java/org/apache/commons/math/optimization/direct/MultiDirectional.java
++++ b/src/main/java/org/apache/commons/math/optimization/direct/MultiDirectional.java
+@@ -58,13 +58,10 @@ public class MultiDirectional extends DirectSearchOptimizer {
+ 
+     /** {@inheritDoc} */
+     @Override
+-    protected void iterateSimplex(final Comparator<RealPointValuePair> comparator)
++     protected void iterateSimplex(final Comparator<RealPointValuePair> comparator)
+         throws FunctionEvaluationException, OptimizationException, IllegalArgumentException {
+-
+         while (true) {
+-
+             incrementIterationsCounter();
+-
+             // save the original vertex
+             final RealPointValuePair[] original = simplex;
+             final RealPointValuePair best = original[0];
+@@ -79,25 +74,32 @@ public class MultiDirectional extends DirectSearchOptimizer {
+                 if (comparator.compare(reflected, expanded) <= 0) {
+                     // accept the reflected simplex
+                     simplex = reflectedSimplex;
++                } else {
++                    simplex = expandedSimplex;
+                 }
+-
+                 return;
+-
+             }
+-
+             // compute the contracted simplex
+             final RealPointValuePair contracted = evaluateNewSimplex(original, gamma, comparator);
+             if (comparator.compare(contracted, best) < 0) {
+                 // accept the contracted simplex
+-
++                simplex = contractedSimplex;
++            } else {
++                // perform a reduction step
++                for (int i = 1; i < simplex.length; ++i) {
++                    for (int j = 0; j < simplex[i].getPoint().length; ++j) {
++                        final double[] contractedPoint = simplex[i].getPointRef();
++                        contractedPoint[j] = best.getPoint()[j] - sigma * (contractedPoint[j] - best.getPoint()[j]);
++                    }
++                    simplex[i] = new RealPointValuePair(contractedPoint, Double.NaN, false);
++                }
++            }
+             // check convergence
++            if (isConverged(comparator)) {
+                 return;
+             }
+-
+         }
+-
+     }
+-
+     /** Compute and evaluate a new simplex.
+      * @param original original simplex (to be preserved)
+      * @param coeff linear coefficient

@@ -1,0 +1,18 @@
+diff --git a/src/org/mockito/internal/stubbing/defaultanswers/ReturnsDeepStubs.java b/src/org/mockito/internal/stubbing/defaultanswers/ReturnsDeepStubs.java
+index 6fa773f53..312cfda45 100644
+--- a/src/org/mockito/internal/stubbing/defaultanswers/ReturnsDeepStubs.java
++++ b/src/org/mockito/internal/stubbing/defaultanswers/ReturnsDeepStubs.java
+@@ -81,7 +68,12 @@ public class ReturnsDeepStubs implements Answer<Object>, Serializable {
+     private Object recordDeepStubMock(InvocationOnMock invocation, InvocationContainerImpl container) {
+         Class<?> clz = invocation.getMethod().getReturnType();
+         final Object mock = org.mockito.Mockito.mock(clz, this);
+-
++        Type[] types = invocation.getMethod().getGenericParameterTypes();
++        Type type = types[0];
++        if(type instanceof TypeVariable) {
++        	TypeVariable var = (TypeVariable) type;
++        	types[0] = var.getBounds()[0];
++        }
+         container.addAnswer(new Answer<Object>() {
+             public Object answer(InvocationOnMock invocation) throws Throwable {
+                 return mock;

@@ -1,0 +1,26 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/ser/std/DateTimeSerializerBase.java b/src/main/java/com/fasterxml/jackson/databind/ser/std/DateTimeSerializerBase.java
+index 7709acdcd..afdfa9621 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/ser/std/DateTimeSerializerBase.java
++++ b/src/main/java/com/fasterxml/jackson/databind/ser/std/DateTimeSerializerBase.java
+@@ -68,11 +66,17 @@ public abstract class DateTimeSerializerBase<T>
+                     final Locale loc = format.hasLocale()
+                                     ? format.getLocale()
+                                     : serializers.getLocale();
+-                    SimpleDateFormat df = new SimpleDateFormat(pattern, loc);
+-                    if (tz == null) {
+-                        tz = serializers.getTimeZone();
++                    DateFormat df = serializers.getConfig().getDateFormat();
++                    if (df instanceof StdDateFormat) {
++                        df = ((StdDateFormat)df).withTimeZone(tz).withLocale(loc);
++                    } else {
++                        if (!loc.equals(df.getCalendar().getLocale())) {
++                            df = (DateFormat) df.clone();
++                            df.setCalendar(df.getCalendar().clone());
++                            df.getCalendar().setTimeZone(tz);
++                            df.getCalendar().setLocale(loc);
++                        }
+                     }
+-                    df.setTimeZone(tz);
+                     return withFormat(Boolean.FALSE, df);
+                 }
+             }

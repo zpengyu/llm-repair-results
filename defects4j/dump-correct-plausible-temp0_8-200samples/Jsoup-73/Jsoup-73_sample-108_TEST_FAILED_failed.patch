@@ -1,0 +1,42 @@
+diff --git a/src/main/java/org/jsoup/helper/W3CDom.java b/src/main/java/org/jsoup/helper/W3CDom.java
+index fb864f5..a057a3b 100644
+--- a/src/main/java/org/jsoup/helper/W3CDom.java
++++ b/src/main/java/org/jsoup/helper/W3CDom.java
+@@ -80,18 +77,28 @@ public class W3CDom {
+         public void head(org.jsoup.nodes.Node source, int depth) {
+             if (source instanceof org.jsoup.nodes.Element) {
+                 org.jsoup.nodes.Element sourceEl = (org.jsoup.nodes.Element) source;
+-
+                 String prefix = updateNamespaces(sourceEl);
+                 String namespace = namespaces.get(prefix);
+-
+-                Element el = doc.createElementNS(namespace, sourceEl.tagName());
+-                copyAttributes(sourceEl, el);
+-                if (dest == null) { // sets up the root
+-                    doc.appendChild(el);
+-                } else {
+-                    dest.appendChild(el);
++                if (namespace == null) {
++                    Element el = doc.createElement(sourceEl.tagName());
++                    copyAttributes(sourceEl, el);
++                    if (dest == null) { // sets up the root
++                        doc.appendChild(el);
++                    } else {
++                        dest.appendChild(el);
++                    }
++                    dest = el; // descend
++                }
++                else {
++                    Element el = doc.createElementNS(namespace, sourceEl.tagName());
++                    copyAttributes(sourceEl, el);
++                    if (dest == null) { // sets up the root
++                        doc.appendChild(el);
++                    } else {
++                        dest.appendChild(el);
++                    }
++                    dest = el; // descend
+                 }
+-                dest = el; // descend
+             } else if (source instanceof org.jsoup.nodes.TextNode) {
+                 org.jsoup.nodes.TextNode sourceText = (org.jsoup.nodes.TextNode) source;
+                 Text text = doc.createTextNode(sourceText.getWholeText());

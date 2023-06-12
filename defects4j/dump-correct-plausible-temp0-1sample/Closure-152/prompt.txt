@@ -1,0 +1,78 @@
+###Provide a fix for the buggy function
+###Buggy Function
+class FibonacciExample {
+    public static void main(String args[]) {
+        int n1 = 0, n2 = 1, n3, i, count = 10;
+
+        System.out.print(n1 + " " + n2);
+
+        for (i = 2; i < count; ++i) {
+            n3 = n1 - n2;
+            System.out.print(" " + n3);
+            n1 = n2;
+            n2 = n3;
+        }
+    }
+}
+
+###Fixed Function
+class FibonacciExample {
+    public static void main(String args[]) {
+        int n1 = 0, n2 = 1, n3, i, count = 10;
+
+        System.out.print(n1 + " " + n2);
+
+        for (i = 2; i < count; ++i) {
+            n3 = n1 + n2;
+            System.out.print(" " + n3);
+            n1 = n2;
+            n2 = n3;
+        }
+    }
+}
+
+###Provide a fix for the buggy function
+###Buggy Function
+private static boolean isReduceableFunctionExpression(Node n) {
+  return NodeUtil.isFunctionExpression(n);
+}
+###Fixed Function
+private static boolean isReduceableFunctionExpression(Node n) {
+  return NodeUtil.isFunctionExpression(n)
+      && !NodeUtil.isGetOrSetKey(n.getParent());
+}
+###Provide a fix for the buggy function
+###Buggy Function
+  JSType resolveInternal(ErrorReporter t, StaticScope<JSType> scope) {
+    setResolvedTypeInternal(this);
+
+    call = (ArrowType) safeResolve(call, t, scope);
+    prototype = (FunctionPrototypeType) safeResolve(prototype, t, scope);
+
+    // Warning about typeOfThis if it doesn't resolve to an ObjectType
+    // is handled further upstream.
+    // TODO(nicksantos): Handle this correctly if we have a UnionType.
+    typeOfThis = (ObjectType) safeResolve(typeOfThis, t, scope);
+
+    boolean changed = false;
+    ImmutableList.Builder<ObjectType> resolvedInterfaces =
+        ImmutableList.builder();
+    for (ObjectType iface : implementedInterfaces) {
+      ObjectType resolvedIface = (ObjectType) iface.resolve(t, scope);
+      resolvedInterfaces.add(resolvedIface);
+      changed |= (resolvedIface != iface);
+    }
+    if (changed) {
+      implementedInterfaces = resolvedInterfaces.build();
+    }
+
+    if (subTypes != null) {
+      for (int i = 0; i < subTypes.size(); i++) {
+        subTypes.set(i, (FunctionType) subTypes.get(i).resolve(t, scope));
+      }
+    }
+
+    return super.resolveInternal(t, scope);
+  }
+
+###Fixed Function

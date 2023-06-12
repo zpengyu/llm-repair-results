@@ -1,0 +1,38 @@
+diff --git a/src/com/google/javascript/jscomp/TypedScopeCreator.java b/src/com/google/javascript/jscomp/TypedScopeCreator.java
+index 13d8808b..535fe5fc 100644
+--- a/src/com/google/javascript/jscomp/TypedScopeCreator.java
++++ b/src/com/google/javascript/jscomp/TypedScopeCreator.java
+@@ -1311,11 +1311,31 @@ final class TypedScopeCreator implements ScopeCreator {
+             }
+           }
+         }
++      } else if (rValue != null) {
++        if (rValue.isFunction()) {
++          return rValue.getJSType();
++        }
++        if (rValue.isObjectLit()) {
++          return rValue.getJSType();
++        }
++        if (rValue.isString()) {
++          return getNativeType(STRING_TYPE);
++        }
++        if (rValue.isNumber()) {
++          return getNativeType(NUMBER_TYPE);
++        }
++        if (rValue.isBoolean()) {
++          return getNativeType(BOOLEAN_TYPE);
++        }
++        if (rValue.isNull()) {
++          return getNativeType(NULL_TYPE);
++        }
++        if (rValue.isUndefined()) {
++          return getNativeType(UNDEFINED_TYPE);
++        }
+       }
+-
+       return getDeclaredTypeInAnnotation(sourceName, lValue, info);
+     }
+-
+     private FunctionType getFunctionType(@Nullable Var v) {
+       JSType t = v == null ? null : v.getType();
+       ObjectType o = t == null ? null : t.dereference();

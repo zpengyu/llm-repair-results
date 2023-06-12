@@ -1,0 +1,38 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/jsontype/impl/AsWrapperTypeDeserializer.java b/src/main/java/com/fasterxml/jackson/databind/jsontype/impl/AsWrapperTypeDeserializer.java
+index e9bf3cdcb..de7da0b06 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/jsontype/impl/AsWrapperTypeDeserializer.java
++++ b/src/main/java/com/fasterxml/jackson/databind/jsontype/impl/AsWrapperTypeDeserializer.java
+@@ -90,18 +90,18 @@ public class AsWrapperTypeDeserializer
+             throw ctxt.wrongTokenException(p, JsonToken.START_OBJECT,
+                     "need JSON Object to contain As.WRAPPER_OBJECT type information for class "+baseTypeName());
+         }
+-            // should always get field name, but just in case...
+-            if (p.nextToken() != JsonToken.FIELD_NAME) {
+-                throw ctxt.wrongTokenException(p, JsonToken.FIELD_NAME,
+-                        "need JSON String that contains type id (for subtype of "+baseTypeName()+")");
+-            }
++        // should always get field name, but just in case...
++        if (p.nextToken() != JsonToken.FIELD_NAME) {
++            throw ctxt.wrongTokenException(p, JsonToken.FIELD_NAME,
++                    "need JSON String that contains type id (for subtype of "+baseTypeName()+")");
++        }
+         final String typeId = p.getText();
+         JsonDeserializer<Object> deser = _findDeserializer(ctxt, typeId);
+         p.nextToken();
+-
+-        // Minor complication: we may need to merge type id in?
++        /* Minor complication: we may need to merge type id in?
++         * But what if there's nowhere to add it in? Error? Or skip? For now, skip.
++         */
+         if (_typeIdVisible && p.getCurrentToken() == JsonToken.START_OBJECT) {
+-            // but what if there's nowhere to add it in? Error? Or skip? For now, skip.
+             TokenBuffer tb = new TokenBuffer(null, false);
+             tb.writeStartObject(); // recreate START_OBJECT
+             tb.writeFieldName(_typePropertyName);
+@@ -117,5 +116,4 @@ public class AsWrapperTypeDeserializer
+                     "expected closing END_OBJECT after type information and deserialized value");
+         }
+         return value;
+-    }
+-}
++    }}

@@ -1,0 +1,26 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/jsontype/impl/ClassNameIdResolver.java b/src/main/java/com/fasterxml/jackson/databind/jsontype/impl/ClassNameIdResolver.java
+index 112c00b5c..3706222dc 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/jsontype/impl/ClassNameIdResolver.java
++++ b/src/main/java/com/fasterxml/jackson/databind/jsontype/impl/ClassNameIdResolver.java
+@@ -54,9 +54,18 @@ public class ClassNameIdResolver
+             // 17-Aug-2017, tatu: As per [databind#1735] need to ensure assignment
+             //    compatibility -- needed later anyway, and not doing so may open
+             //    security issues.
+-            JavaType t = tf.constructFromCanonical(id);
+-                // Probably cleaner to have a method in `TypeFactory` but can't add in patch
+-            return t;
++            try {
++                JavaType t = tf.constructFromCanonical(id);
++                return t;
++            } catch (IllegalArgumentException e) {
++                // 24-May-2016, tatu: Ok, this is pretty ugly, but we should always get
++                //   DeserializationContext, just playing it safe
++                if (ctxt instanceof DeserializationContext) {
++                    DeserializationContext dctxt = (DeserializationContext) ctxt;
++                    // First: we may have problem handlers that can deal with it?
++                    return dctxt.handleUnknownTypeId(_baseType, id, this, "no such class found");
++                }
++            }
+         }
+         Class<?> cls;
+         try {

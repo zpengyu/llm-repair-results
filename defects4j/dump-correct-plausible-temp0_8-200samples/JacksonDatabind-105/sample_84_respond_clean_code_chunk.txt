@@ -1,0 +1,74 @@
+public class JdkDeserializers
+{
+    private final static HashSet<String> _classNames = new HashSet<String>();
+    static {
+        // note: can skip primitive types; other ways to check them:
+        Class<?>[] types = new Class<?>[] {
+                UUID.class,
+                AtomicBoolean.class,
+                StackTraceElement.class,
+                ByteBuffer.class
+        };
+        for (Class<?> cls : types) { _classNames.add(cls.getName()); }
+        for (Class<?> cls : FromStringDeserializer.types()) { _classNames.add(cls.getName()); }
+    }
+    public static JsonDeserializer<?> find(Class<?> rawType, String clsName)
+    {
+        if (_classNames.contains(clsName)) {
+            JsonDeserializer<?> d = FromStringDeserializer.findDeserializer(rawType);
+            if (d != null) {
+                return d;
+            }
+            if (rawType == UUID.class) {
+                return new UUIDDeserializer();
+            }
+            if (rawType == StackTraceElement.class) {
+                return new StackTraceElementDeserializer();
+            }
+            if (rawType == AtomicBoolean.class) {
+                // (note: AtomicInteger/Long work due to single-arg constructor. For now?
+                return new AtomicBooleanDeserializer();
+            }
+            if (rawType == ByteBuffer.class) {
+                return new ByteBufferDeserializer();
+            }
+            if (rawType == Short.class) {
+                return ShortDeserializer.instance;
+            }
+            if (rawType == Short.TYPE) {
+                return ShortDeserializer.primitiveInstance;
+            }
+            if (rawType == Integer.class) {
+                return IntegerDeserializer.instance;
+            }
+            if (rawType == Integer.TYPE) {
+                return IntegerDeserializer.primitiveInstance;
+            }
+            if (rawType == Long.class) {
+                return LongDeserializer.instance;
+            }
+            if (rawType == Long.TYPE) {
+                return LongDeserializer.primitiveInstance;
+            }
+            if (rawType == Double.class) {
+                return DoubleDeserializer.instance;
+            }
+            if (rawType == Double.TYPE) {
+                return DoubleDeserializer.primitiveInstance;
+            }
+            if (rawType == Float.class) {
+                return FloatDeserializer.instance;
+            }
+            if (rawType == Float.TYPE) {
+                return FloatDeserializer.primitiveInstance;
+            }
+            if (rawType == Boolean.class) {
+                return BooleanDeserializer.instance;
+            }
+            if (rawType == Boolean.TYPE) {
+                return BooleanDeserializer.primitiveInstance;
+            }
+        }
+        return null;
+    }
+}

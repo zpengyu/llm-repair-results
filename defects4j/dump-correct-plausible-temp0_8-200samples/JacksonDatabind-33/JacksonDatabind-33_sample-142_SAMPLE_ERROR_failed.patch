@@ -1,0 +1,45 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/introspect/JacksonAnnotationIntrospector.java b/src/main/java/com/fasterxml/jackson/databind/introspect/JacksonAnnotationIntrospector.java
+index f66075ef7..7d4937ac3 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/introspect/JacksonAnnotationIntrospector.java
++++ b/src/main/java/com/fasterxml/jackson/databind/introspect/JacksonAnnotationIntrospector.java
+@@ -743,12 +742,35 @@ public class JacksonAnnotationIntrospector
+                  *   it's actually bit tricky to do it more efficiently (meta-annotations
+                  *   add more lookups; AnnotationMap costs etc)
+                  */
+-            } else if (_hasAnnotation(a, JsonSerialize.class)
+-                    || _hasAnnotation(a, JsonView.class)
+-                    || _hasAnnotation(a, JsonRawValue.class)) {
+-                name = "";
+             } else {
+-                return null;
++                JsonRawValue raw = _findAnnotation(a, JsonRawValue.class);
++                if (raw != null && raw.value()) {
++                    name = "";
++                } else {
++                    JsonSerialize ann = _findAnnotation(a, JsonSerialize.class);
++                    if (ann != null) {
++                        Class<?> serClass = ann.using();
++                        if (serClass != None.class) {
++                            return null;
++                        }
++                        Class<?> inclClass = ann.include();
++                        if (inclClass != JsonSerialize.Inclusion.class) {
++                            /* So far seems like it makes sense to do this here, but...
++                             * not completely sure:
++                             */
++                            JsonInclude.Include incl = _annotationIntrospector.findSerializationInclusion(a, inclClass);
++                            if (incl == JsonInclude.Include.NON_DEFAULT) {
++                                return PropertyName.USE_DEFAULT;
++                            }
++                        }
++                    } else {
++                        JsonView annView = _findAnnotation(a, JsonView.class);
++                        if (annView != null) {
++                            return null;
++                        }
++                        return null;
++                    }
++                }
+             }
+         }
+         return PropertyName.construct(name);

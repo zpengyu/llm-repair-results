@@ -1,0 +1,63 @@
+diff --git a/src/org/mockito/internal/stubbing/defaultanswers/ReturnsDeepStubs.java b/src/org/mockito/internal/stubbing/defaultanswers/ReturnsDeepStubs.java
+index 6fa773f53..87e5d9240 100644
+--- a/src/org/mockito/internal/stubbing/defaultanswers/ReturnsDeepStubs.java
++++ b/src/org/mockito/internal/stubbing/defaultanswers/ReturnsDeepStubs.java
+@@ -49,48 +45,24 @@ public class ReturnsDeepStubs implements Answer<Object>, Serializable {
+         if (!new MockCreationValidator().isTypeMockable(rawType)) {
+             return delegate.returnValueFor(rawType);
+         }
+-
+-        return getMock(invocation);
++        Object mock = getMock(invocation);
++        recordDeepStubMock(invocation, mock);
++        return mock;
+     }
+-
+-    private Object getMock(InvocationOnMock invocation) throws Throwable {
+-    	InternalMockHandler<Object> handler = new MockUtil().getMockHandler(invocation.getMock());
+-    	InvocationContainerImpl container = (InvocationContainerImpl) handler.getInvocationContainer();
+-
+-        // matches invocation for verification
+-        for (StubbedInvocationMatcher stubbedInvocationMatcher : container.getStubbedInvocations()) {
+-    		if(container.getInvocationForStubbing().matches(stubbedInvocationMatcher.getInvocation())) {
+-    			return stubbedInvocationMatcher.answer(invocation);
+-    		}
+-		}
+-
++    private void recordDeepStubMock(InvocationOnMock invocation, Object mock) {
++        InternalMockHandler<Object> handler = new MockUtil().getMockHandler(invocation.getMock());
++        InvocationContainerImpl container = (InvocationContainerImpl) handler.getInvocationContainer();
+         // deep stub
+-        return recordDeepStubMock(invocation, container);
+-    }
+-
+-    /**
+-     * Creates a mock using the Generics Metadata.
+-     *
+-     * @param returnTypeGenericMetadata The metadata to use to create the new mock.
+-     * @return The mock
+-     */
+-
+-
+-
+-
+-    private Object recordDeepStubMock(InvocationOnMock invocation, InvocationContainerImpl container) {
+-        Class<?> clz = invocation.getMethod().getReturnType();
+-        final Object mock = org.mockito.Mockito.mock(clz, this);
+-
+         container.addAnswer(new Answer<Object>() {
+             public Object answer(InvocationOnMock invocation) throws Throwable {
+                 return mock;
+             }
+         }, false);
+-
+-        return mock;
+     }
+-
++    private Object getMock(InvocationOnMock invocation) {
++        Class<?> clz = invocation.getMethod().getReturnType();
++        return org.mockito.Mockito.mock(clz, this);
++    }
+     protected GenericMetadataSupport actualParameterizedType(Object mock) {
+         CreationSettings mockSettings = (CreationSettings) new MockUtil().getMockHandler(mock).getMockSettings();
+         return GenericMetadataSupport.inferFrom(mockSettings.getTypeToMock());

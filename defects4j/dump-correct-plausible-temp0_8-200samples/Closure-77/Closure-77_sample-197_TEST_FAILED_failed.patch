@@ -1,0 +1,21 @@
+diff --git a/src/com/google/javascript/jscomp/CodeGenerator.java b/src/com/google/javascript/jscomp/CodeGenerator.java
+index a9d0a5b0..8bc6d0b7 100644
+--- a/src/com/google/javascript/jscomp/CodeGenerator.java
++++ b/src/com/google/javascript/jscomp/CodeGenerator.java
+@@ -1011,11 +1009,15 @@ class CodeGenerator {
+             // check is measurably faster than using the CharsetEncoder.
+             if (c > 0x1f && c <= 0x7f) {
+               sb.append(c);
+-            } else {
++            } else if (c < 0x10000) {
+               // Other characters can be misinterpreted by some js parsers,
+               // or perhaps mangled by proxies along the way,
+               // so we play it safe and unicode escape them.
+               appendHexJavaScriptRepresentation(sb, c);
++            } else {
++              sb.append("\\u");
++              appendHexJavaScriptRepresentation(sb, (char) ((c >>> 10) + 0xd7c0));
++              appendHexJavaScriptRepresentation(sb, (char) ((c & 0x3ff) | 0xdc00));
+             }
+           }
+       }

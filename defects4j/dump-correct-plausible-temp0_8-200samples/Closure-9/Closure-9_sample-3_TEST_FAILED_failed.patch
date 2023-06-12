@@ -1,0 +1,58 @@
+diff --git a/src/com/google/javascript/jscomp/ProcessCommonJSModules.java b/src/com/google/javascript/jscomp/ProcessCommonJSModules.java
+index 6107328b..6d66cf6b 100644
+--- a/src/com/google/javascript/jscomp/ProcessCommonJSModules.java
++++ b/src/com/google/javascript/jscomp/ProcessCommonJSModules.java
+@@ -35,16 +35,48 @@ import java.util.regex.Pattern;
+  * goog.provide and goog.require are emitted for closure compiler automatic
+  * ordering.
+  */
+-public class ProcessCommonJSModules implements CompilerPass {
+-  // According to the spec, the forward slash should be the delimite on
++/**
++ * Processes ES5 CommonJS modules.
++ *
++ * <p>This pass does three things:<br>
++ * 1) Rewrites calls to require()<br>
++ * 2) Rewrites CommonJS module.exports<br>
++ * 3) Prepends goog.provide and goog.require for each file.
++ *
++ * <pre>
++ * function require(name) {
++ *   return provide({}, name);
++ * }
++ * </pre>
++ *
++ * The require function is added at the top of the file.
++ *
++ * <pre>
++ * module.exports = {};
++ * </pre>
++ *
++ * module.exports is replaced with
++ *
++ * <pre>
++ * moduleName.module$exports = {};
++ * </pre>
++ *
++ * The goog.provide and goog.require statements are added at the top of the
++ * file.<br>
++ *
++ * <pre>
++ * goog.provide('moduleName');
++ * goog.require('moduleName');
++ * </pre>
++ *
++ */
++class ProcessCommonJSModules implements CompilerPass {
++  // According to the spec, the forward slash should be the delimiter on
+   // all platforms.
+   private static final String MODULE_SLASH = "/";
+-
+   public static final String DEFAULT_FILENAME_PREFIX = "." + MODULE_SLASH;
+-
+   private static final String MODULE_NAME_SEPARATOR = "\\$";
+   private static final String MODULE_NAME_PREFIX = "module$";
+-
+   private final AbstractCompiler compiler;
+   private final String filenamePrefix;
+   private final boolean reportDependencies;

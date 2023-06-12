@@ -1,0 +1,31 @@
+diff --git a/src/main/java/org/apache/commons/compress/archivers/tar/TarUtils.java b/src/main/java/org/apache/commons/compress/archivers/tar/TarUtils.java
+index 25a30cb0..12353fde 100644
+--- a/src/main/java/org/apache/commons/compress/archivers/tar/TarUtils.java
++++ b/src/main/java/org/apache/commons/compress/archivers/tar/TarUtils.java
+@@ -91,19 +91,19 @@ public class TarUtils {
+      * @return The entry name.
+      */
+     public static String parseName(byte[] buffer, final int offset, final int length) {
+-        StringBuffer result = new StringBuffer(length);
+-        int          end = offset + length;
+-
++        if (length < 0) {
++            throw new IllegalArgumentException("length must be non-negative");
++        }
++        int end = offset + length;
++        int zeroOffset = offset;
+         for (int i = offset; i < end; ++i) {
+             if (buffer[i] == 0) {
++                zeroOffset = i;
+                 break;
+             }
+-            result.append((char) buffer[i]);
+         }
+-
+-        return result.toString();
++        return new String(buffer, offset, zeroOffset - offset);
+     }
+-
+     /**
+      * Copy a name (StringBuffer) into a buffer.
+      * Copies characters from the name into the buffer

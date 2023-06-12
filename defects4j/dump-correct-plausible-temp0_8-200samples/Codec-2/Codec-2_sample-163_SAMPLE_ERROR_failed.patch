@@ -1,0 +1,60 @@
+diff --git a/src/java/org/apache/commons/codec/binary/Base64.java b/src/java/org/apache/commons/codec/binary/Base64.java
+index 8088d96d..4a245b16 100644
+--- a/src/java/org/apache/commons/codec/binary/Base64.java
++++ b/src/java/org/apache/commons/codec/binary/Base64.java
+@@ -471,7 +470,54 @@ public class Base64 implements BinaryEncoder, BinaryDecoder {
+             }
+         }
+     }
+-
++    //-----------------------------------------------------------------------
++    void decode(byte[] in, int inPos, int inAvail) {
++        if (eof) {
++            return;
++        }
++        if (inAvail < 0) {
++            eof = true;
++        }
++        for (int i = 0; i < inAvail; i++) {
++            if (buf == null || buf.length - pos < decodeSize) {
++                resizeBuf();
++            }
++            byte b = in[inPos++];
++            if (b == PAD) {
++                eof = true;
++                break;
++            } else {
++                if (b >= 0 && b < DECODE_TABLE.length) {
++                    int result = DECODE_TABLE[b];
++                    if (result >= 0) {
++                        modulus = (++modulus) % 4;
++                        x = (x << 6) + result;
++                        if (modulus == 0) {
++                            buf[pos++] = (byte) ((x >> 16) & MASK_8BITS);
++                            buf[pos++] = (byte) ((x >> 8) & MASK_8BITS);
++                            buf[pos++] = (byte) (x & MASK_8BITS);
++                        }
++                    }
++                }
++            }
++        }
++        // Two forms of EOF as far as base64 decoder is concerned: actual
++        // EOF (-1) and first time '=' character is encountered in stream.
++        // This approach makes the '=' padding characters completely optional.
++        if (eof && modulus != 0) {
++            x = x << 6;
++            switch (modulus) {
++                case 2:
++                    x = x << 6;
++                    buf[pos++] = (byte) ((x >> 16) & MASK_8BITS);
++                    break;
++                case 3:
++                    buf[pos++] = (byte) ((x >> 16) & MASK_8BITS);
++                    buf[pos++] = (byte) ((x >> 8) & MASK_8BITS);
++                    break;
++            }
++        }
++    }
+     /**
+      * <p>
+      * Decodes all of the provided data, starting at inPos, for inAvail bytes.

@@ -1,0 +1,35 @@
+        public final Object deserializeKey(String key, DeserializationContext ctxt)
+            throws IOException
+        {
+            if (key == null) { // is this even legal call?
+                return null;
+            }
+            try {
+                if (ctxt.isEnabled(DeserializationFeature.UNWRAP_SINGLE_VALUE_ARRAYS)
+                        && ctxt.hasSomeOfFeatures(UNWRAP_SINGLE_VALUE_ARRAY_CREATOR_FEATURES)) {
+                    JsonParser p = ctxt.getParser();
+                    if (p.nextToken() == JsonToken.START_ARRAY
+                            && p.nextToken() != JsonToken.END_ARRAY) {
+                        Object ob = _delegate.deserialize(p, ctxt);
+                        if (p.nextToken() != JsonToken.END_ARRAY) {
+                            throw ctxt.wrongTokenException(p,
+                                    JsonToken.END_ARRAY,
+                                    "Attempted to unwrap single value array for single '"
+                                            + _keyClass.getName()
+                                            + "' value but there was more than a single value in the array"
+                            );
+                        }
+                        return ob;
+                    }
+                }
+                // Ugh... should not have to give parser which may or may not be correct one...
+                Object result = _delegate.deserialize(ctxt.getParser(), ctxt);
+                if (result != null) {
+                    return result;
+                }
+                return ctxt.handleWeirdKey(_keyClass, key, "not a valid representation");
+            } catch (Exception re) {
+                return ctxt.handleWeirdKey(_keyClass, key, "not a valid representation: %s", re.getMessage());
+            }
+        }
+

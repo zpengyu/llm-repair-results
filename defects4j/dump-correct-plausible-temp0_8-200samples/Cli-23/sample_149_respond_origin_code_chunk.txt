@@ -1,0 +1,27 @@
+    protected StringBuffer renderWrappedText(StringBuffer sb, int width, int nextLineTabStop, String text)
+    {
+        // all following lines must be padded with nextLineTabStop space characters
+        final String padding = createPadding(nextLineTabStop);
+
+        text = text.trim();
+
+        while (text.length() > width)
+        {
+            // find position of nearest whitespace character to target wrap position
+            int pos = findWrapPos(text, width, 0);
+
+            // handle long words that exceed the wrap point
+            if (pos == -1) {
+                sb.append(rtrim(text.substring(0, width))).append(defaultNewLine);
+                text = padding + text.substring(width);
+            } else {
+                // normal case: wrap at a whitespace character
+                sb.append(rtrim(text.substring(0, pos))).append(defaultNewLine);
+                text = padding + text.substring(pos).trim();
+            }
+        }
+
+        sb.append(text);
+
+        return sb;
+    }

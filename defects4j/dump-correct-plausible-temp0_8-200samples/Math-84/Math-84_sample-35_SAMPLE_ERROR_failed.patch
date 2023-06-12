@@ -1,0 +1,55 @@
+diff --git a/src/main/java/org/apache/commons/math/optimization/direct/MultiDirectional.java b/src/main/java/org/apache/commons/math/optimization/direct/MultiDirectional.java
+index 2fa8c34bf..d67136ca0 100644
+--- a/src/main/java/org/apache/commons/math/optimization/direct/MultiDirectional.java
++++ b/src/main/java/org/apache/commons/math/optimization/direct/MultiDirectional.java
+@@ -79,25 +74,41 @@ public class MultiDirectional extends DirectSearchOptimizer {
+                 if (comparator.compare(reflected, expanded) <= 0) {
+                     // accept the reflected simplex
+                     simplex = reflectedSimplex;
++                } else {
++                    // accept the expanded simplex
++                    simplex = expanded;
+                 }
+-
+                 return;
+-
+             }
+-
+-            // compute the contracted simplex
++            // perform a contraction step
+             final RealPointValuePair contracted = evaluateNewSimplex(original, gamma, comparator);
+-            if (comparator.compare(contracted, best) < 0) {
++            if (comparator.compare(contracted, best) <= 0) {
+                 // accept the contracted simplex
+-
++                simplex = contracted;
++            } else {
++                // perform a reduction step
++                final RealPointValuePair[] reducedSimplex = new RealPointValuePair[n];
++                reducedSimplex[0] = best;
++                for (int i = 1; i < n; ++i) {
++                    final double[] yi = original[i].getPoint();
++                    final double[] xi = best.getPoint();
++                    final double[] ri = new double[n];
++                    for (int j = 0; j < n; ++j) {
++                        ri[j] = yi[j] + sigma * (yi[j] - xi[j]);
++                    }
++                    reducedSimplex[i] = new RealPointValuePair(ri, Double.NaN, false);
++                }
++                evaluate(reducedSimplex, comparator);
++                simplex = reducedSimplex;
++            }
+             // check convergence
++            if (isConverged(previous, original, comparator)) {
+                 return;
+             }
+-
++            // save the current simplex
++            previous = original;
+         }
+-
+     }
+-
+     /** Compute and evaluate a new simplex.
+      * @param original original simplex (to be preserved)
+      * @param coeff linear coefficient

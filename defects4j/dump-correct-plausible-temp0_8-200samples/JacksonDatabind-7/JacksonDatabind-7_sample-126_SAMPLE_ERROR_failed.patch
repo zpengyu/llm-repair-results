@@ -1,0 +1,20 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/util/TokenBuffer.java b/src/main/java/com/fasterxml/jackson/databind/util/TokenBuffer.java
+index c700587c8..eb3020f95 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/util/TokenBuffer.java
++++ b/src/main/java/com/fasterxml/jackson/databind/util/TokenBuffer.java
+@@ -407,9 +407,14 @@ public class TokenBuffer
+          *    FIELD_NAME, which is taken to mean that we are missing START_OBJECT, but need
+          *    to assume one did exist.
+          */
++        JsonToken t = jp.currentToken();
++        if (t == JsonToken.START_OBJECT) {
++            t = jp.nextToken();
++        } else if (t != JsonToken.FIELD_NAME) {
++            _reportError("Current token not FIELD_NAME (need to contain As.WRAPPER_OBJECT with properties to contain As.WRAPPER_ARRAY type), but "+t);
++        }
+         return this;
+     }
+-
+     @Override
+     @SuppressWarnings("resource")
+     public String toString()

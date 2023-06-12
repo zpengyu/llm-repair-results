@@ -1,0 +1,55 @@
+diff --git a/src/java/org/apache/commons/cli/HelpFormatter.java b/src/java/org/apache/commons/cli/HelpFormatter.java
+index 972d49a..117e205 100644
+--- a/src/java/org/apache/commons/cli/HelpFormatter.java
++++ b/src/java/org/apache/commons/cli/HelpFormatter.java
+@@ -810,15 +810,17 @@ public class HelpFormatter
+                                              int nextLineTabStop, String text)
+     {
+         int pos = findWrapPos(text, width, 0);
+-
++        String leftText = text;
++        String subText = "";
++        String rightText = "";
+         if (pos == -1)
+         {
+             sb.append(rtrim(text));
+-
+             return sb;
+         }
+-        sb.append(rtrim(text.substring(0, pos))).append(defaultNewLine);
+-
++        subText = leftText.substring(0, pos);
++        rightText = leftText.substring(pos);
++        sb.append(rtrim(subText)).append(defaultNewLine);
+         if (nextLineTabStop >= width)
+         {
+             // stops infinite loop happening
+@@ -829,12 +830,10 @@ public class HelpFormatter
+         // all following lines must be padded with nextLineTabStop space 
+         // characters
+         final String padding = createPadding(nextLineTabStop);
+-
+         while (true)
+         {
+-            text = padding + text.substring(pos).trim();
++            text = padding + rightText.trim();
+             pos = findWrapPos(text, width, 0);
+-
+             if (pos == -1)
+             {
+                 sb.append(text);
+@@ -846,11 +843,11 @@ public class HelpFormatter
+             {
+                 pos = width;
+             }
+-
+-            sb.append(rtrim(text.substring(0, pos))).append(defaultNewLine);
++            leftText = text.substring(0, pos);
++            rightText = text.substring(pos);
++            sb.append(rtrim(leftText)).append(defaultNewLine);
+         }
+     }
+-
+     /**
+      * Finds the next text wrap position after <code>startPos</code> for the
+      * text in <code>text</code> with the column width <code>width</code>.

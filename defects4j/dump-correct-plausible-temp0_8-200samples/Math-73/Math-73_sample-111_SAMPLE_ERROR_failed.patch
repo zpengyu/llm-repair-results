@@ -1,0 +1,54 @@
+diff --git a/src/main/java/org/apache/commons/math/analysis/solvers/BrentSolver.java b/src/main/java/org/apache/commons/math/analysis/solvers/BrentSolver.java
+index 07c667408..6449cb25f 100644
+--- a/src/main/java/org/apache/commons/math/analysis/solvers/BrentSolver.java
++++ b/src/main/java/org/apache/commons/math/analysis/solvers/BrentSolver.java
+@@ -132,13 +126,44 @@ public class BrentSolver extends UnivariateRealSolverImpl {
+         if (yInitial * yMax < 0) {
+             return solve(f, initial, yInitial, max, yMax, initial, yInitial);
+         }
+-
+-
+         // full Brent algorithm starting with provided initial guess
+-        return solve(f, min, yMin, max, yMax, initial, yInitial);
+-
++        double xMin = min;
++        double xMax = max;
++        double oldxMin = Double.POSITIVE_INFINITY;
++        double oldxMax = Double.POSITIVE_INFINITY;
++        int i = 0;
++        while (i < maximalIterationCount) {
++            double x = 0.5 * (xMin + xMax);
++            if ((x > oldxMin) && (x < oldxMax)) {
++                // Tighten the bracketing interval.
++                double y = f.value(x);
++                double yMin = f.value(xMin);
++                double yMax = f.value(xMax);
++                if ((yMin >= yMax) || (yMin <= y) || (y <= yMax)) {
++                    oldxMin = xMin;
++                    oldxMax = xMax;
++                    xMin = x;
++                    xMax = x;
++                } else {
++                    if (yMin * y > 0) {
++                        xMin = xMin;
++                        xMax = x;
++                    } else {
++                        xMin = x;
++                        xMax = xMax;
++                    }
++                    oldxMin = xMin;
++                    oldxMax = xMax;
++                }
++            } else {
++                // We have been unable to tighten the bracketing interval.
++                xMin = x;
++                xMax = x;
++            }
++            i++;
++        }
++        return xMin;
+     }
+-
+     /**
+      * Find a zero in the given interval.
+      * <p>

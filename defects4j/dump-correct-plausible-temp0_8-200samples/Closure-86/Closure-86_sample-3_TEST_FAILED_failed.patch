@@ -1,0 +1,58 @@
+diff --git a/src/com/google/javascript/jscomp/NodeUtil.java b/src/com/google/javascript/jscomp/NodeUtil.java
+index 933d4ffa..d786cc4f 100644
+--- a/src/com/google/javascript/jscomp/NodeUtil.java
++++ b/src/com/google/javascript/jscomp/NodeUtil.java
+@@ -2428,28 +2428,28 @@ public final class NodeUtil {
+         // same as returning a non-local name, but this doesn't matter if the
+         // value is immutable.
+         return NodeUtil.isImmutableValue(value.getLastChild())
+-            || (locals.apply(value)
+-                && evaluatesToLocalValue(value.getLastChild(), locals));
++            || (NodeUtil.evaluatesToLocalValue(value.getLastChild(), locals)
++                && locals.apply(value));
+       case Token.COMMA:
+-        return evaluatesToLocalValue(value.getLastChild(), locals);
++        return NodeUtil.evaluatesToLocalValue(value.getLastChild(), locals);
+       case Token.AND:
+       case Token.OR:
+-        return evaluatesToLocalValue(value.getFirstChild(), locals)
+-           && evaluatesToLocalValue(value.getLastChild(), locals);
++        return NodeUtil.evaluatesToLocalValue(value.getFirstChild(), locals)
++           && NodeUtil.evaluatesToLocalValue(value.getLastChild(), locals);
+       case Token.HOOK:
+-        return evaluatesToLocalValue(value.getFirstChild().getNext(), locals)
+-           && evaluatesToLocalValue(value.getLastChild(), locals);
++        return NodeUtil.evaluatesToLocalValue(value.getFirstChild().getNext(), locals)
++           && NodeUtil.evaluatesToLocalValue(value.getLastChild(), locals);
+       case Token.INC:
+       case Token.DEC:
+         if (value.getBooleanProp(Node.INCRDECR_PROP)) {
+-          return evaluatesToLocalValue(value.getFirstChild(), locals);
++          return NodeUtil.evaluatesToLocalValue(value.getFirstChild(), locals);
+         } else {
+           return true;
+         }
+       case Token.THIS:
+         return locals.apply(value);
+       case Token.NAME:
+-        return isImmutableValue(value) || locals.apply(value);
++        return NodeUtil.isImmutableValue(value) || locals.apply(value);
+       case Token.GETELEM:
+       case Token.GETPROP:
+         // There is no information about the locality of object properties.
+@@ -2476,12 +2476,11 @@ public final class NodeUtil {
+         // Other op force a local value:
+         //  x = '' + g (x is now an local string)
+         //  x -= g (x is now an local number)
+-        if (isAssignmentOp(value)
+-            || isSimpleOperator(value)
+-            || isImmutableValue(value)) {
++        if (NodeUtil.isAssignmentOp(value)
++            || NodeUtil.isSimpleOperator(value)
++            || NodeUtil.isImmutableValue(value)) {
+           return true;
+         }
+-
+         throw new IllegalStateException(
+             "Unexpected expression node" + value +
+             "\n parent:" + value.getParent());

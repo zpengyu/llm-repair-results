@@ -1,0 +1,28 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/deser/std/StdKeyDeserializer.java b/src/main/java/com/fasterxml/jackson/databind/deser/std/StdKeyDeserializer.java
+index d4417f6ad..ba77eb409 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/deser/std/StdKeyDeserializer.java
++++ b/src/main/java/com/fasterxml/jackson/databind/deser/std/StdKeyDeserializer.java
+@@ -312,6 +312,23 @@ public class StdKeyDeserializer extends KeyDeserializer
+                 return null;
+             }
+             try {
++                if (ctxt.isEnabled(DeserializationFeature.UNWRAP_SINGLE_VALUE_ARRAYS)
++                        && ctxt.hasSomeOfFeatures(UNWRAP_SINGLE_VALUE_ARRAY_CREATOR_FEATURES)) {
++                    JsonParser p = ctxt.getParser();
++                    if (p.nextToken() == JsonToken.START_ARRAY
++                            && p.nextToken() != JsonToken.END_ARRAY) {
++                        Object ob = _delegate.deserialize(p, ctxt);
++                        if (p.nextToken() != JsonToken.END_ARRAY) {
++                            throw ctxt.wrongTokenException(p,
++                                    JsonToken.END_ARRAY,
++                                    "Attempted to unwrap single value array for single '"
++                                            + _keyClass.getName()
++                                            + "' value but there was more than a single value in the array"
++                            );
++                        }
++                        return ob;
++                    }
++                }
+                 // Ugh... should not have to give parser which may or may not be correct one...
+                 Object result = _delegate.deserialize(ctxt.getParser(), ctxt);
+                 if (result != null) {

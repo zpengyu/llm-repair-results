@@ -1,0 +1,21 @@
+diff --git a/src/main/java/org/apache/commons/compress/archivers/tar/TarArchiveInputStream.java b/src/main/java/org/apache/commons/compress/archivers/tar/TarArchiveInputStream.java
+index 87ff4aab..fef61bc0 100644
+--- a/src/main/java/org/apache/commons/compress/archivers/tar/TarArchiveInputStream.java
++++ b/src/main/java/org/apache/commons/compress/archivers/tar/TarArchiveInputStream.java
+@@ -498,10 +498,16 @@ public class TarArchiveInputStream extends ArchiveInputStream {
+             } else if ("linkpath".equals(key)){
+                 currEntry.setLinkName(val);
+             } else if ("gid".equals(key)){
++                if (Long.parseLong(val) > Integer.MAX_VALUE) {
++                    throw new IOException("Cannot store gid value " + val + ": value too large");
++                }
+                 currEntry.setGroupId(Integer.parseInt(val));
+             } else if ("gname".equals(key)){
+                 currEntry.setGroupName(val);
+             } else if ("uid".equals(key)){
++                if (Long.parseLong(val) > Integer.MAX_VALUE) {
++                    throw new IOException("Cannot store uid value " + val + ": value too large");
++                }
+                 currEntry.setUserId(Integer.parseInt(val));
+             } else if ("uname".equals(key)){
+                 currEntry.setUserName(val);

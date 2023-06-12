@@ -1,0 +1,48 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/ser/PropertyBuilder.java b/src/main/java/com/fasterxml/jackson/databind/ser/PropertyBuilder.java
+index 9a9d91ebf..2399d2cc0 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/ser/PropertyBuilder.java
++++ b/src/main/java/com/fasterxml/jackson/databind/ser/PropertyBuilder.java
+@@ -169,7 +162,42 @@ public class PropertyBuilder
+         }
+         return bpw;
+     }
+-
++    /**
++     * Method that can be called to access the value that is considered
++     * default value for the type; or if there is no such value, null.
++     * This is currently only needed for "non-default" values.
++     */
++    private Object getDefaultValue(JavaType type)
++    {
++        Class<?> cls = type.getRawClass();
++        if (cls.isPrimitive()) {
++            if (cls == Integer.TYPE) {
++                return Integer.valueOf(0);
++            }
++            if (cls == Long.TYPE) {
++                return Long.valueOf(0L);
++            }
++            if (cls == Boolean.TYPE) {
++                return Boolean.FALSE;
++            }
++            if (cls == Double.TYPE) {
++                return Double.valueOf(0.0);
++            }
++            if (cls == Float.TYPE) {
++                return Float.valueOf(0.0f);
++            }
++            if (cls == Byte.TYPE) {
++                return Byte.valueOf((byte) 0);
++            }
++            if (cls == Short.TYPE) {
++                return Short.valueOf((short) 0);
++            }
++            if (cls == Character.TYPE) {
++                return Character.valueOf((char) 0);
++            }
++        }
++        return null;
++    }
+     /*
+     /**********************************************************
+     /* Helper methods; annotation access

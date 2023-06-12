@@ -1,0 +1,57 @@
+diff --git a/src/com/google/javascript/jscomp/TypeInference.java b/src/com/google/javascript/jscomp/TypeInference.java
+index ab353933..38694ce1 100644
+--- a/src/com/google/javascript/jscomp/TypeInference.java
++++ b/src/com/google/javascript/jscomp/TypeInference.java
+@@ -1110,32 +1110,31 @@ class TypeInference
+    * If we give the anonymous object an inferred property of (number|undefined),
+    * then this code will type-check appropriately.
+    */
+-  private void inferPropertyTypesToMatchConstraint(
+-      JSType type, JSType constraint) {
+-    if (type == null || constraint == null) {
+-      return;
+-    }
+-
+-    ObjectType constraintObj =
+-        ObjectType.cast(constraint.restrictByNotNullOrUndefined());
+-    if (constraintObj != null && constraintObj.isRecordType()) {
+-      ObjectType objType = ObjectType.cast(type.restrictByNotNullOrUndefined());
+-      if (objType != null) {
+-        for (String prop : constraintObj.getOwnPropertyNames()) {
+-          JSType propType = constraintObj.getPropertyType(prop);
+-          if (!objType.isPropertyTypeDeclared(prop)) {
+-            JSType typeToInfer = propType;
+-            if (!objType.hasProperty(prop)) {
+-              typeToInfer =
+-                  getNativeType(VOID_TYPE).getLeastSupertype(propType);
++    private void inferPropertyTypesToMatchConstraint(
++        JSType type, JSType constraint) {
++      if (type == null || constraint == null) {
++        return;
++      }
++      ObjectType constraintObj =
++          ObjectType.cast(constraint.restrictByNotNullOrUndefined());
++      if (constraintObj != null && constraintObj.isRecordType()) {
++        ObjectType objType =
++            ObjectType.cast(type.restrictByNotNullOrUndefined());
++        if (objType != null) {
++          for (String prop : constraintObj.getOwnPropertyNames()) {
++            JSType propType = constraintObj.getPropertyType(prop);
++            if (!objType.isPropertyTypeDeclared(prop)) {
++              JSType typeToInfer = propType;
++              if (!objType.hasProperty(prop)) {
++                typeToInfer =
++                    getNativeType(VOID_TYPE).getLeastSupertype(propType);
++              }
++              objType.defineInferredProperty(prop, typeToInfer, null);
+             }
+-            objType.defineInferredProperty(prop, typeToInfer, null);
+           }
+         }
+       }
+     }
+-  }
+-
+   /**
+    * If we access a property of a symbol, then that symbol is not
+    * null or undefined.

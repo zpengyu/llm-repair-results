@@ -1,0 +1,25 @@
+diff --git a/src/com/google/javascript/jscomp/TypeInference.java b/src/com/google/javascript/jscomp/TypeInference.java
+index dbe40e0f..613f6f33 100644
+--- a/src/com/google/javascript/jscomp/TypeInference.java
++++ b/src/com/google/javascript/jscomp/TypeInference.java
+@@ -1050,8 +1049,18 @@ class TypeInference
+           // interface, precisely because it can validly construct objects.
+           ct = (FunctionType) constructorType;
+         }
+-        if (ct != null && ct.isConstructor()) {
+-          type = ct.getInstanceType();
++        if (ct != null) {
++          if (ct.isConstructor()) {
++            type = ct.getInstanceType();
++          } else if (ct.isInterface()) {
++            ObjectType objType = ObjectType.cast(ct);
++            ObjectType newType =
++                ObjectType.makeObjectType(
++                    objType.getReferenceName(),
++                    objType.getImplicitPrototype(),
++                    objType.getTemplateTypeMap());
++            type = newType;
++          }
+         }
+       }
+     }

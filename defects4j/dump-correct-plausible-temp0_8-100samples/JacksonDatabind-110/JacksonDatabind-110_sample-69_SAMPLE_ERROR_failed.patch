@@ -1,0 +1,25 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/deser/impl/JavaUtilCollectionsDeserializers.java b/src/main/java/com/fasterxml/jackson/databind/deser/impl/JavaUtilCollectionsDeserializers.java
+index ddadb9ea8..124941299 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/deser/impl/JavaUtilCollectionsDeserializers.java
++++ b/src/main/java/com/fasterxml/jackson/databind/deser/impl/JavaUtilCollectionsDeserializers.java
+@@ -55,12 +46,15 @@ public abstract class JavaUtilCollectionsDeserializers
+         CLASS_SINGLETON_LIST = list.getClass();
+         CLASS_UNMODIFIABLE_LIST = Collections.unmodifiableList(list).getClass();
+         // for [databind#2265]
+-
+-        Map<?,?> map = Collections.singletonMap("a", "b");
+-        CLASS_SINGLETON_MAP = map.getClass();
+-        CLASS_UNMODIFIABLE_MAP = Collections.unmodifiableMap(map).getClass();
++        try {
++            // Can't use `getMethod()` as Java <= 8 uses `UnmodifiableRandomAccessList`, Java >= 9 uses `UnmodifiableList`
++            Method m = Collections.unmodifiableList(list).getClass().getMethod("of", Object.class);
++            Class<?> type = m.getReturnType();
++            CLASS_UNMODIFIABLE_MAP = type;
++        } catch (NoSuchMethodException e) {
++            CLASS_UNMODIFIABLE_MAP = Collections.unmodifiableMap(Collections.singletonMap("a", "b")).getClass();
++        }
+     }
+-
+     public static JsonDeserializer<?> findForCollection(DeserializationContext ctxt,
+             JavaType type)
+         throws JsonMappingException

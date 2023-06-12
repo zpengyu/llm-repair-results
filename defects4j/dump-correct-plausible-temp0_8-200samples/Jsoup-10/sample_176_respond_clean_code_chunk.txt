@@ -1,0 +1,31 @@
+public String absUrl(String attributeKey) {
+        Validate.notEmpty(attributeKey);
+        if (!hasAttr(attributeKey)) {
+            return ""; // nothing to make absolute with
+        } else {
+            boolean tryAbs = true;
+            if (baseUri.equals("")) { // just update it, no base to resolve against
+                tryAbs = false;
+            }
+            URL base;
+            try {
+                if (tryAbs) { // why waste the time? only need it if we may not have it.
+                    base = new URL(baseUri);
+                }
+            } catch (MalformedURLException e) {
+                tryAbs = false;
+            }
+            String relUrl = attr(attributeKey).trim();
+            URL abs;
+            try {
+                if (tryAbs) {
+                    abs = new URL(base, relUrl);
+                } else {
+                    abs = new URL(relUrl);
+                }
+            } catch (MalformedURLException e) {
+                return "";
+            }
+            return abs.toExternalForm();
+        }
+    }

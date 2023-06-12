@@ -1,0 +1,21 @@
+diff --git a/src/com/google/javascript/jscomp/ProcessClosurePrimitives.java b/src/com/google/javascript/jscomp/ProcessClosurePrimitives.java
+index d1d12a3c..78497c0e 100644
+--- a/src/com/google/javascript/jscomp/ProcessClosurePrimitives.java
++++ b/src/com/google/javascript/jscomp/ProcessClosurePrimitives.java
+@@ -806,8 +804,15 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback
+         }
+         compiler.reportCodeChange();
+       }
++      // Fixes null pointer error, caused by getJSDocInfo
++      Node assignNode = candidateDefinition.getFirstChild();
++      if (assignNode != null) {
++        Node nameNode = assignNode.getFirstChild();
++        if (nameNode != null) {
++          nameNode.setJSDocInfo(null);
++        }
++      }
+     }
+-
+     /**
+      * Create the declaration node for this name, without inserting it
+      * into the AST.

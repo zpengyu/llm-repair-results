@@ -1,0 +1,123 @@
+###Provide a fix for the buggy function
+###Buggy Function
+class FibonacciExample {
+    public static void main(String args[]) {
+        int n1 = 0, n2 = 1, n3, i, count = 10;
+
+        System.out.print(n1 + " " + n2);
+
+        for (i = 2; i < count; ++i) {
+            n3 = n1 - n2;
+            System.out.print(" " + n3);
+            n1 = n2;
+            n2 = n3;
+        }
+    }
+}
+
+###Fixed Function
+class FibonacciExample {
+    public static void main(String args[]) {
+        int n1 = 0, n2 = 1, n3, i, count = 10;
+
+        System.out.print(n1 + " " + n2);
+
+        for (i = 2; i < count; ++i) {
+            n3 = n1 + n2;
+            System.out.print(" " + n3);
+            n1 = n2;
+            n2 = n3;
+        }
+    }
+}
+
+###Provide a fix for the buggy function
+###Buggy Function
+public TokenBuffer deserialize(JsonParser jp, DeserializationContext ctxt) throws IOException
+{
+    copyCurrentStructure(jp);
+    return this;
+}
+###Fixed Function
+public TokenBuffer deserialize(JsonParser jp, DeserializationContext ctxt) throws IOException
+{
+    if (jp.getCurrentTokenId() != JsonToken.FIELD_NAME.id()) {
+        copyCurrentStructure(jp);
+        return this;
+    }
+    /* 28-Oct-2014, tatu: As per #592, need to support a special case of starting from
+     *    FIELD_NAME, which is taken to mean that we are missing START_OBJECT, but need
+     *    to assume one did exist.
+     */
+    JsonToken t;
+    writeStartObject();
+    do {
+        copyCurrentStructure(jp);
+    } while ((t = jp.nextToken()) == JsonToken.FIELD_NAME);
+    if (t != JsonToken.END_OBJECT) {
+        throw ctxt.mappingException("Expected END_OBJECT after copying contents of a JsonParser into TokenBuffer, got "+t);
+    }
+    writeEndObject();
+    return this;
+}
+###Provide a fix for the buggy function
+###Buggy Function
+    public Object complete(JsonParser p, DeserializationContext ctxt,
+            PropertyValueBuffer buffer, PropertyBasedCreator creator)
+        throws IOException
+    {
+        // first things first: deserialize all data buffered:
+        final int len = _properties.length;
+        Object[] values = new Object[len];
+        for (int i = 0; i < len; ++i) {
+            String typeId = _typeIds[i];
+            final ExtTypedProperty extProp = _properties[i];
+            if (typeId == null) {
+                // let's allow missing both type and property (may already have been set, too)
+                if (_tokens[i] == null) {
+                    continue;
+                }
+                // but not just one
+                // 26-Oct-2012, tatu: As per [databind#94], must allow use of 'defaultImpl'
+                if (!extProp.hasDefaultType()) {
+                    ctxt.reportInputMismatch(_beanType,
+                            "Missing external type id property '%s'",
+                            extProp.getTypePropertyName());
+                } else {
+                    typeId = extProp.getDefaultTypeId();
+                }
+            } else if (_tokens[i] == null) {
+                SettableBeanProperty prop = extProp.getProperty();
+                ctxt.reportInputMismatch(_beanType,
+                        "Missing property '%s' for external type id '%s'",
+                        prop.getName(), _properties[i].getTypePropertyName());
+            }
+            values[i] = _deserialize(p, ctxt, i, typeId);
+
+            final SettableBeanProperty prop = extProp.getProperty();
+            // also: if it's creator prop, fill in
+            if (prop.getCreatorIndex() >= 0) {
+                buffer.assignParameter(prop, values[i]);
+
+                // [databind#999] And maybe there's creator property for type id too?
+                SettableBeanProperty typeProp = extProp.getTypeProperty();
+                // for now, should only be needed for creator properties, too
+                if ((typeProp != null) && (typeProp.getCreatorIndex() >= 0)) {
+                    // 31-May-2018, tatu: [databind#1328] if id is NOT plain `String`, need to
+                    //    apply deserializer... fun fun.
+                    buffer.assignParameter(typeProp, typeId);
+                }
+            }
+        }
+        Object bean = creator.build(ctxt, buffer);
+        // third: assign non-creator properties
+        for (int i = 0; i < len; ++i) {
+            SettableBeanProperty prop = _properties[i].getProperty();
+            if (prop.getCreatorIndex() < 0) {
+                prop.set(bean, values[i]);
+            }
+        }
+        return bean;
+    }
+
+###Fixed Function

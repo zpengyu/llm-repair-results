@@ -1,0 +1,27 @@
+diff --git a/src/main/java/org/joda/time/format/DateTimeParserBucket.java b/src/main/java/org/joda/time/format/DateTimeParserBucket.java
+index 2accc16d..18f86039 100644
+--- a/src/main/java/org/joda/time/format/DateTimeParserBucket.java
++++ b/src/main/java/org/joda/time/format/DateTimeParserBucket.java
+@@ -373,10 +371,20 @@ public class DateTimeParserBucket {
+                 throw new IllegalArgumentException(message);
+             }
+         }
+-        
+         return millis;
+     }
+-    
++    private int compareReverse(DurationField field1, DurationField field2) {
++        long millis1 = field1.getUnitMillis();
++        long millis2 = field2.getUnitMillis();
++        // can't do (millis1 - millis2) as can overflow
++        if (millis1 > millis2) {
++            return -1;
++        } else if (millis1 < millis2) {
++            return 1;
++        } else {
++            return 0;
++        }
++    }    
+     /**
+      * Sorts elements [0,high). Calling java.util.Arrays isn't always the right
+      * choice since it always creates an internal copy of the array, even if it

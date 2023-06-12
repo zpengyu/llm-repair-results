@@ -1,0 +1,42 @@
+diff --git a/src/java/org/apache/commons/jxpath/ri/model/dom/DOMNodePointer.java b/src/java/org/apache/commons/jxpath/ri/model/dom/DOMNodePointer.java
+index a5bb202..19c37dc 100644
+--- a/src/java/org/apache/commons/jxpath/ri/model/dom/DOMNodePointer.java
++++ b/src/java/org/apache/commons/jxpath/ri/model/dom/DOMNodePointer.java
+@@ -89,23 +89,25 @@ public class DOMNodePointer extends NodePointer {
+             return true;
+         }
+         if (test instanceof NodeNameTest) {
+-            if (node.getNodeType() != Node.ELEMENT_NODE) {
+-                return false;
+-            }
+-
+             NodeNameTest nodeNameTest = (NodeNameTest) test;
+             QName testName = nodeNameTest.getNodeName();
+-            String namespaceURI = nodeNameTest.getNamespaceURI();
+-            boolean wildcard = nodeNameTest.isWildcard();
++            String testNameStr = testName.getName();
++            String testNamespaceURI = nodeNameTest.getNamespaceURI();
+             String testPrefix = testName.getPrefix();
+-            if (wildcard && testPrefix == null) {
+-                return true;
++            if (nodeNameTest.isWildcard()) {
++                if (node.getNodeType() == Node.ELEMENT_NODE) {
++                    String nodeNS = DOMNodePointer.getNamespaceURI(node);
++                    return equalStrings(testNamespaceURI, nodeNS);
++                }
++                return false;
++            }
++            if (testPrefix != null) {
++                testNameStr = testPrefix + ":" + testNameStr;
+             }
+-            if (wildcard
+-                || testName.getName()
+-                        .equals(DOMNodePointer.getLocalName(node))) {
++            if (node.getNodeType() == Node.ELEMENT_NODE
++                    && testNameStr.equals(DOMNodePointer.getQName(node))) {
+                 String nodeNS = DOMNodePointer.getNamespaceURI(node);
+-                return equalStrings(namespaceURI, nodeNS);
++                return equalStrings(testNamespaceURI, nodeNS);
+             }
+             return false;
+         }

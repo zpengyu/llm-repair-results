@@ -1,0 +1,99 @@
+diff --git a/src/java/org/apache/commons/jxpath/ri/compiler/Expression.java b/src/java/org/apache/commons/jxpath/ri/compiler/Expression.java
+index 927f617..22b8186 100644
+--- a/src/java/org/apache/commons/jxpath/ri/compiler/Expression.java
++++ b/src/java/org/apache/commons/jxpath/ri/compiler/Expression.java
+@@ -36,47 +36,6 @@ import java.util.Locale;
+  * @author Dmitri Plotnikov
+  * @version $Revision$ $Date$
+  */
+-public abstract class Expression {
+-
+-    protected static final Double ZERO = new Double(0);
+-    protected static final Double ONE = new Double(1);
+-    protected static final Double NOT_A_NUMBER = new Double(Double.NaN);
+-
+-    private boolean contextDependencyKnown = false;
+-    private boolean contextDependent;
+-
+-    /**
+-     * Returns true if this expression should be re-evaluated
+-     * each time the current position in the context changes.
+-     */
+-    public boolean isContextDependent() {
+-        if (!contextDependencyKnown) {
+-            contextDependent = computeContextDependent();
+-            contextDependencyKnown = true;
+-        }
+-        return contextDependent;
+-    }
+-
+-    /**
+-     * Implemented by subclasses and result is cached by isContextDependent()
+-     */
+-    public abstract boolean computeContextDependent();
+-
+-    /**
+-     * Evaluates the expression. If the result is a node set, returns
+-     * the first element of the node set.
+-     */
+-    public abstract Object computeValue(EvalContext context);
+-    public abstract Object compute(EvalContext context);
+-
+-    public Iterator iterate(EvalContext context) {
+-        Object result = compute(context);
+-        if (result instanceof EvalContext) {
+-            return new ValueIterator((EvalContext) result);
+-        }
+-        return ValueUtils.iterate(result);
+-    }
+-
+     public Iterator iteratePointers(EvalContext context) {
+         Object result = compute(context);
+         if (result == null) {
+@@ -94,11 +52,6 @@ public abstract class Expression {
+         private Iterator iterator;
+         private QName qname;
+         private Locale locale;
+-
+-        //to what method does the following comment refer?
+-        /**
+-         * @deprecated Use the method that takes a NamespaceManager
+-         */
+         public PointerIterator(Iterator it, QName qname, Locale locale) {
+             this.iterator = it;
+             this.qname = qname;
+@@ -113,33 +64,7 @@ public abstract class Expression {
+             Object o = iterator.next();
+             return o instanceof Pointer ? o : NodePointer.newNodePointer(qname, o, locale);
+         }
+-
+-        public void remove() {
+-            throw new UnsupportedOperationException();
+-        }
+-    }
+-
+-    public static class ValueIterator implements Iterator {
+-        private Iterator iterator;
+-
+-        public ValueIterator(Iterator it) {
+-            this.iterator = it;
+-        }
+-
+-        public boolean hasNext() {
+-            return iterator.hasNext();
+-        }
+-
+-        public Object next() {
+-            Object o = iterator.next();
+-            if (o instanceof Pointer) {
+-                return ((Pointer) o).getValue();
+-            }
+-            return o;
+-        }
+-
+         public void remove() {
+             throw new UnsupportedOperationException();
+         }
+     }
+\ No newline at end of file
+-}

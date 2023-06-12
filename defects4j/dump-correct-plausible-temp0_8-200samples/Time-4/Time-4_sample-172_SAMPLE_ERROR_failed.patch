@@ -1,0 +1,34 @@
+diff --git a/src/main/java/org/joda/time/Partial.java b/src/main/java/org/joda/time/Partial.java
+index f4775e18..f37fe205 100644
+--- a/src/main/java/org/joda/time/Partial.java
++++ b/src/main/java/org/joda/time/Partial.java
+@@ -431,26 +431,11 @@ public final class Partial
+         if (index == -1) {
+             DateTimeFieldType[] newTypes = new DateTimeFieldType[iTypes.length + 1];
+             int[] newValues = new int[newTypes.length];
+-            
+             // find correct insertion point to keep largest-smallest order
+             int i = 0;
+-            DurationField unitField = fieldType.getDurationType().getField(iChronology);
+-            if (unitField.isSupported()) {
+-                for (; i < iTypes.length; i++) {
+-                    DateTimeFieldType loopType = iTypes[i];
+-                    DurationField loopUnitField = loopType.getDurationType().getField(iChronology);
+-                    if (loopUnitField.isSupported()) {
+-                        int compare = unitField.compareTo(loopUnitField);
+-                        if (compare > 0) {
+-                            break;
+-                        } else if (compare == 0) {
+-                            DurationField rangeField = fieldType.getRangeDurationType().getField(iChronology);
+-                            DurationField loopRangeField = loopType.getRangeDurationType().getField(iChronology);
+-                            if (rangeField.compareTo(loopRangeField) > 0) {
+-                                break;
+-                            }
+-                        }
+-                    }
++            for (; i < iTypes.length; i++) {
++                if (compareReverse(fieldType, iTypes[i]) < 0) {
++                    break;
+                 }
+             }
+             System.arraycopy(iTypes, 0, newTypes, 0, i);

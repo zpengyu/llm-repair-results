@@ -1,0 +1,30 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/deser/impl/BeanPropertyMap.java b/src/main/java/com/fasterxml/jackson/databind/deser/impl/BeanPropertyMap.java
+index aeaa0dc42..87bd263bf 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/deser/impl/BeanPropertyMap.java
++++ b/src/main/java/com/fasterxml/jackson/databind/deser/impl/BeanPropertyMap.java
+@@ -427,8 +427,8 @@ System.err.println("And new propr #"+slot+" '"+key+"'");
+     {
+         ArrayList<SettableBeanProperty> props = new ArrayList<SettableBeanProperty>(_size);
+         String key = getPropertyName(propToRm);
++        int index = 0;
+         boolean found = false;
+-
+         for (int i = 1, end = _hashArea.length; i < end; i += 2) {
+             SettableBeanProperty prop = (SettableBeanProperty) _hashArea[i];
+             if (prop == null) {
+@@ -440,11 +440,14 @@ System.err.println("And new propr #"+slot+" '"+key+"'");
+                 found = key.equals(prop.getName());
+                 if (found) {
+                     // need to leave a hole here
+-                    _propsInOrder[_findFromOrdered(prop)] = null;
++                    _propsInOrder[index] = null;
++                    index++;
+                     continue;
+                 }
+             }
+             props.add(prop);
++            _propsInOrder[index] = prop;
++            index++;
+         }
+         if (!found) {
+             throw new NoSuchElementException("No entry '"+propToRm.getName()+"' found, can't remove");

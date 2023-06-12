@@ -1,0 +1,23 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/deser/BuilderBasedDeserializer.java b/src/main/java/com/fasterxml/jackson/databind/deser/BuilderBasedDeserializer.java
+index 316efa3a9..f87af1fec 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/deser/BuilderBasedDeserializer.java
++++ b/src/main/java/com/fasterxml/jackson/databind/deser/BuilderBasedDeserializer.java
+@@ -580,7 +578,8 @@ public class BuilderBasedDeserializer
+             // creator property?
+             SettableBeanProperty creatorProp = creator.findCreatorProperty(propName);
+             if (creatorProp != null) {
+-                if (buffer.assignParameter(creatorProp, creatorProp.deserialize(p, ctxt))) {
++                if (buffer.assignParameter(creatorProp, _deserializeWithErrorWrapping(p, ctxt, creatorProp))) {
++                    // the property is not set on the instance, may need to be buffered for later
+                     t = p.nextToken();
+                     Object bean;
+                     try {
+@@ -610,7 +609,7 @@ public class BuilderBasedDeserializer
+             // regular property? needs buffering
+             SettableBeanProperty prop = _beanProperties.find(propName);
+             if (prop != null) {
+-                buffer.bufferProperty(prop, prop.deserialize(p, ctxt));
++                buffer.bufferProperty(prop, _deserializeWithErrorWrapping(p, ctxt, prop));
+                 continue;
+             }
+             if (_ignorableProps != null && _ignorableProps.contains(propName)) {

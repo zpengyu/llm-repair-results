@@ -1,0 +1,33 @@
+    public Partial with(DateTimeFieldType fieldType, int value) {
+        if (fieldType == null) {
+            throw new IllegalArgumentException("The field type must not be null");
+        }
+        int index = indexOf(fieldType);
+        if (index == -1) {
+            DateTimeFieldType[] newTypes = new DateTimeFieldType[iTypes.length + 1];
+            int[] newValues = new int[newTypes.length];
+            for (int i = 0; i < iTypes.length; i++) {
+                DateTimeFieldType loopType = iTypes[i];
+                if (loopType.equals(fieldType)) {
+                    index = i;
+                }
+            }
+            System.arraycopy(iTypes, 0, newTypes, 0, index);
+            System.arraycopy(iValues, 0, newValues, 0, index);
+            newTypes[index] = fieldType;
+            newValues[index] = value;
+            System.arraycopy(iTypes, index, newTypes, index + 1, newTypes.length - index - 1);
+            System.arraycopy(iValues, index, newValues, index + 1, newValues.length - index - 1);
+            // use public constructor to ensure full validation
+            // this isn't overly efficient, but is safe
+            Partial newPartial = new Partial(iChronology, newTypes, newValues);
+            iChronology.validate(newPartial, newValues);
+            return newPartial;
+        }
+        if (value == getValue(index)) {
+            return this;
+        }
+        int[] newValues = getValues();
+        newValues = getField(index).set(this, index, newValues, value);
+        return new Partial(this, newValues);
+    }

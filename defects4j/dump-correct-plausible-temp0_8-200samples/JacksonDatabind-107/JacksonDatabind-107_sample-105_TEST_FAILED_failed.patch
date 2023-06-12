@@ -1,0 +1,30 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/jsontype/impl/TypeDeserializerBase.java b/src/main/java/com/fasterxml/jackson/databind/jsontype/impl/TypeDeserializerBase.java
+index e8942ba4b..d1ab1c8ab 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/jsontype/impl/TypeDeserializerBase.java
++++ b/src/main/java/com/fasterxml/jackson/databind/jsontype/impl/TypeDeserializerBase.java
+@@ -154,18 +154,17 @@ public abstract class TypeDeserializerBase
+              * to the interface, assuming deprecation at base class helps.
+              */
+             JavaType type = _idResolver.typeFromId(ctxt, typeId);
++            if (type == null) {
++                /* 10-May-2016, tatu: We may get some help...
++                 * 17-Jan-2019, tatu: As per [databind#2221], better NOT return `null` but...
++                 */
++                type = _handleUnknownTypeId(ctxt, typeId);
++            }
+             if (type == null) {
+                 // use the default impl if no type id available:
+                 deser = _findDefaultImplDeserializer(ctxt);
+                 if (deser == null) {
+-                    // 10-May-2016, tatu: We may get some help...
+-                    JavaType actual = _handleUnknownTypeId(ctxt, typeId);
+-                    if (actual == null) { // what should this be taken to mean?
+-                        // 17-Jan-2019, tatu: As per [databind#2221], better NOT return `null` but...
+-                        return null;
+-                    }
+-                    // ... would this actually work?
+-                    deser = ctxt.findContextualValueDeserializer(actual, _property);
++                    return null;
+                 }
+             } else {
+                 /* 16-Dec-2010, tatu: Since nominal type we get here has no (generic) type parameters,

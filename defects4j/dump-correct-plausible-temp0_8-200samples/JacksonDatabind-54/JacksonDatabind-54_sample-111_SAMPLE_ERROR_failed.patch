@@ -1,0 +1,28 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/ser/PropertyBuilder.java b/src/main/java/com/fasterxml/jackson/databind/ser/PropertyBuilder.java
+index 9a9d91ebf..51958db98 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/ser/PropertyBuilder.java
++++ b/src/main/java/com/fasterxml/jackson/databind/ser/PropertyBuilder.java
+@@ -92,11 +91,21 @@ public class PropertyBuilder
+             }
+             serializationType = serializationType.withContentTypeHandler(contentTypeSer);
+             ct = serializationType.getContentType();
++            // also: as per [databind#637], need to consider staticity of content type.
++            //    This is not fully correct, since it does not yet handle cases of polymorphic
++            //    type handling; but should cover common cases, and can be revisited later on
++            if (contentTypeSer.getTypeInclusion() == JsonTypeInfo.As.EXTERNAL_PROPERTY) {
++                serializationType = serializationType.withStaticTyping();
++            }
++        } else {
++            if (_factoryConfig.hasSerializerModifiers()) {
++                for (BeanSerializerModifier mod : _factoryConfig.serializerModifiers()) {
++                    serializationType = mod.modifyType(config, am, serializationType);
++                }
++            }
+         }
+-        
+         Object valueToSuppress = null;
+         boolean suppressNulls = false;
+-
+         JsonInclude.Value inclV = _defaultInclusion.withOverrides(propDef.findInclusion());
+         JsonInclude.Include inclusion = inclV.getValueInclusion();
+         if (inclusion == JsonInclude.Include.USE_DEFAULTS) { // should not occur but...

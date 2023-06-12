@@ -1,0 +1,121 @@
+/**
+ * This is used to handle "unwrapping" cases where Jackson property
+ * data format differs from data format of JSON property it is bound to.
+ * It is usually done by specifying a property annotation that indicates
+ * type of unwrapping to use; and if so, a converter (de)serializer is
+ * constructed to handle conversion between JSON and Jackson property
+ * data formats.
+ */
+public final class UnwrappingSettableBeanProperty
+    extends SettableBeanProperty
+{
+    private static final long serialVersionUID = 1L;
+
+    protected final SettableBeanProperty _delegate;
+
+    /**
+     * @since 2.1
+     */
+    protected final NameTransformer _unwrapper;
+    
+    /*
+    /**********************************************************
+    /* Life-cycle: creation, configuration
+    /**********************************************************
+     */
+
+    public UnwrappingSettableBeanProperty(SettableBeanProperty delegate, NameTransformer unwrapper)
+    {
+        super(delegate);
+        _delegate = delegate;
+        _unwrapper = unwrapper;
+    }
+
+    protected UnwrappingSettableBeanProperty(UnwrappingSettableBeanProperty src, JsonDeserializer<?> deser)
+    {
+        super(src, deser);
+        _delegate = src._delegate.withValueDeserializer(deser);
+        _unwrapper = src._unwrapper;
+    }
+
+    protected UnwrappingSettableBeanProperty(UnwrappingSettableBeanProperty src, PropertyName newName) {
+        super(src, newName);
+        _delegate = src._delegate.withName(newName);
+        _unwrapper = src._unwrapper;
+    }
+    
+    @Override
+    public UnwrappingSettableBeanProperty withName(PropertyName newName)
+    {
+        return new UnwrappingSettableBeanProperty(this, newName);
+    }
+
+    @Override
+    public UnwrappingSettableBeanProperty withValueDeserializer(JsonDeserializer<?> deser) {
+        return new UnwrappingSettableBeanProperty(this, deser);
+    }
+
+    @Override
+    public void fixAccess(DeserializationConfig config) {
+        _delegate.fixAccess(config);
+    }
+    
+    /*
+    /**********************************************************
+    /* BeanProperty impl
+    /**********************************************************
+     */
+
+    @Override
+    public <A extends Annotation> A getAnnotation(Class<A> acls) {
+        return _delegate.getAnnotation(acls);
+    }
+
+    @Override
+    public AnnotatedMember getMember() {  return _delegate.getMember(); }
+
+    /*
+    /**********************************************************
+    /* Overridden methods
+    /**********************************************************
+     */
+    
+    @Override
+    public void deserializeAndSet(JsonParser jp, DeserializationContext ctxt, Object bean)
+        throws IOException
+    {
+        /* This may look like a no-op, but it is not, since it ensures
+         * 
+         */
+        jp = _unwrapper.processUnwrapped(jp, ctxt, bean);
+        _delegate.deserializeAndSet(jp, ctxt, bean);
+    }
+
+    @Override
+    public Object deserializeSetAndReturn(JsonParser jp,
+    		DeserializationContext ctxt, Object instance)
+        throws IOException
+    {
+        // also note: no wrapping/unwrapping here:
+        return _delegate.deserializeSetAndReturn(jp, ctxt, instance);
+    }
+    
+    @Override
+    public final void set(Object instance, Object value) throws IOException {
+        _delegate.set(instance, value);
+    }
+
+    @Override
+    public Object setAndReturn(Object instance, Object value) throws IOException {
+        return _delegate.setAndReturn(instance, value);
+    }
+    
+    /*
+    /**********************************************************
+    /* Extended API
+    /**********************************************************
+     */
+
+    public SettableBeanProperty getDelegate() { return _delegate; }
+    public NameTransformer getNameTransformer() { return _unwrapper; }
+}

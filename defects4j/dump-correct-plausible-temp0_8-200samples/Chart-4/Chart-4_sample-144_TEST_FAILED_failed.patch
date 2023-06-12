@@ -1,0 +1,43 @@
+diff --git a/source/org/jfree/chart/plot/XYPlot.java b/source/org/jfree/chart/plot/XYPlot.java
+index ec26162..56e7e6b 100644
+--- a/source/org/jfree/chart/plot/XYPlot.java
++++ b/source/org/jfree/chart/plot/XYPlot.java
+@@ -4495,29 +4490,21 @@ public class XYPlot extends Plot implements ValueAxisPlot, Pannable,
+                     while (i.hasNext()) {
+                         XYAnnotation a = (XYAnnotation) i.next();
+                         if (a instanceof XYAnnotationBoundsInfo) {
+-                            includedAnnotations.add(a);
++                            XYAnnotationBoundsInfo xyabi = (XYAnnotationBoundsInfo) a;
++                            if (xyabi.getIncludeInDataBounds()) {
++                                if (isDomainAxis) {
++                                    result = Range.combine(result, xyabi.getXRange());
++                                }
++                                else {
++                                    result = Range.combine(result, xyabi.getYRange());
++                                }
++                            }
+                         }
+                     }
+             }
+         }
+-
+-        Iterator it = includedAnnotations.iterator();
+-        while (it.hasNext()) {
+-            XYAnnotationBoundsInfo xyabi = (XYAnnotationBoundsInfo) it.next();
+-            if (xyabi.getIncludeInDataBounds()) {
+-                if (isDomainAxis) {
+-                    result = Range.combine(result, xyabi.getXRange());
+-                }
+-                else {
+-                    result = Range.combine(result, xyabi.getYRange());
+-                }
+-            }
+-        }
+-
+         return result;
+-
+     }
+-
+     /**
+      * Receives notification of a change to the plot's dataset.
+      * <P>

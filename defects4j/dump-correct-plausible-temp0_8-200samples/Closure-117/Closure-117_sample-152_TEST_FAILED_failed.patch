@@ -1,0 +1,21 @@
+diff --git a/src/com/google/javascript/jscomp/TypeValidator.java b/src/com/google/javascript/jscomp/TypeValidator.java
+index c6d25483..082ec1ca 100644
+--- a/src/com/google/javascript/jscomp/TypeValidator.java
++++ b/src/com/google/javascript/jscomp/TypeValidator.java
+@@ -751,8 +748,15 @@ class TypeValidator {
+           return objectType.toString() + "." + propName;
+         }
+       }
++    } else if (n.isName()) {
++      ObjectType objectType = getJSType(n).dereference();
++      if (objectType != null) {
++        if (objectType.getConstructor() != null ||
++            objectType.isFunctionPrototypeType()) {
++          return objectType.toString();
++        }
++      }
+     }
+-
+     JSType type = getJSType(n);
+     if (dereference) {
+       ObjectType dereferenced = type.dereference();

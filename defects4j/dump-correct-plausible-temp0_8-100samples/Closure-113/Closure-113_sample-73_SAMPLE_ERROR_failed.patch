@@ -1,0 +1,33 @@
+diff --git a/src/com/google/javascript/jscomp/ProcessClosurePrimitives.java b/src/com/google/javascript/jscomp/ProcessClosurePrimitives.java
+index 385e8b07..414db842 100644
+--- a/src/com/google/javascript/jscomp/ProcessClosurePrimitives.java
++++ b/src/com/google/javascript/jscomp/ProcessClosurePrimitives.java
+@@ -298,15 +298,13 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback
+     if (verifyLastArgumentIsString(t, left, arg)) {
+       String ns = arg.getString();
+       ProvidedName provided = providedNames.get(ns);
+-      if (provided == null || !provided.isExplicitlyProvided()) {
++      if (provided == null) {
+         unrecognizedRequires.add(
+             new UnrecognizedRequire(n, ns, t.getSourceName()));
+       } else {
+-        JSModule providedModule = provided.explicitModule;
+-
++        JSModule providedModule = provided.getModule();
+         // This must be non-null, because there was an explicit provide.
+         Preconditions.checkNotNull(providedModule);
+-
+         JSModule module = t.getModule();
+         if (moduleGraph != null &&
+             module != providedModule &&
+@@ -332,7 +328,9 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback
+       }
+     }
+   }
+-
++  public ProvidedName getProvidedNameForNs(String ns) {
++    return providedNames.get(ns);
++  }
+   /**
+    * Handles a goog.provide call.
+    */

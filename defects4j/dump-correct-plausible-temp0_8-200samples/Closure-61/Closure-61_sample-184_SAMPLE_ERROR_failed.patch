@@ -1,0 +1,38 @@
+diff --git a/src/com/google/javascript/jscomp/NodeUtil.java b/src/com/google/javascript/jscomp/NodeUtil.java
+index 53389622..633633ec 100644
+--- a/src/com/google/javascript/jscomp/NodeUtil.java
++++ b/src/com/google/javascript/jscomp/NodeUtil.java
+@@ -953,9 +949,11 @@ public final class NodeUtil {
+           && evaluatesToLocalValue(nameNode.getFirstChild())) {
+         return false;
+       }
+-
+       // Functions in the "Math" namespace have no side effects.
+-
++      if (nameNode.isGetProp()
++          && isMathOrJSONObject(nameNode.getFirstChild())) {
++        return false;
++      }
+       if (compiler != null && !compiler.hasRegExpGlobalReferences()) {
+         if (nameNode.getFirstChild().getType() == Token.REGEXP
+             && REGEXP_METHODS.contains(nameNode.getLastChild().getString())) {
+@@ -971,10 +969,17 @@ public final class NodeUtil {
+         }
+       }
+     }
+-
+     return true;
+   }
+-
++  private static boolean isMathOrJSONObject(Node n) {
++    if (n.isGetProp()) {
++      return isMathOrJSONObject(n.getFirstChild());
++    } else if (n.isName()) {
++      String name = n.getString();
++      return "Math".equals(name) || "JSON".equals(name);
++    }
++    return false;
++  }
+   /**
+    * @return Whether the call has a local result.
+    */

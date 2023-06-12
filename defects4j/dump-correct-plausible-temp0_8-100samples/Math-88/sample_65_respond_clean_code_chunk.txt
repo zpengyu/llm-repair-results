@@ -1,0 +1,32 @@
+    protected RealPointValuePair getSolution() {
+        double[] coefficients = new double[getOriginalNumDecisionVariables()];
+        Integer basicRow =
+            getBasicRow(getNumObjectiveFunctions() + getOriginalNumDecisionVariables());
+        double mostNegative = basicRow == null ? 0 : getEntry(basicRow, getRhsOffset());
+        for (int i = 0; i < coefficients.length; i++) {
+            basicRow = getBasicRow(getNumObjectiveFunctions() + i);
+                // if multiple variables can take a given value 
+                // then we choose the first and set the rest equal to 0
+                coefficients[i] =
+                    (basicRow == null ? 0 : getEntry(basicRow, getRhsOffset())) -
+                    (restrictToNonNegative ? 0 : mostNegative);
+            if (basicRow != null) {
+                for (int j = getNumObjectiveFunctions(); j < getNumObjectiveFunctions() + i; j++) {
+                    if (tableau.getEntry(basicRow, j) == 1) {
+                         coefficients[j] = 0;
+                    }
+                }
+            }
+        }
+        return new RealPointValuePair(coefficients, f.getValue(coefficients));
+    }
+* Mutation testing is the process of determining the quality of the tests by mutating the software under test and observing whether the tests detect the deviations.
+* Mutants are small source code modifications that should not change the software behavior.
+* Mutation testing is a fault-based technique, i.e., the quality of the tests is determined by the number of mutants they kill.
+* Mutants are an approximation of faults.
+* If a mutant is killed, the test is good.
+* If a mutant survives, the test is not good enough.
+<img src="https://github.com/cs-au-dk/MLSC/blob/master/Lectures/Lecture%2002/Pics/EvoSuite.png?raw=1" width="500"/>
+<img src="https://github.com/cs-au-dk/MLSC/blob/master/Lectures/Lecture%2002/Pics/Pit%20mutation.png?raw=1" width="500"/>
+<img src="https://github.com/cs-au-dk/MLSC/blob/master/Lectures/Lecture%2002/Pics/Pit%20mutation%20operator.png?raw=1" width="500"/>
+<img src="https://github.com/cs-au-dk/MLSC/blob/master/Lectures/Lecture%2002/Pics/Mutation%20testing.png?raw=1" width="500"/>

@@ -1,0 +1,43 @@
+diff --git a/gson/src/main/java/com/google/gson/internal/$Gson$Types.java b/gson/src/main/java/com/google/gson/internal/$Gson$Types.java
+index 173598a1..e1c4f3d0 100644
+--- a/gson/src/main/java/com/google/gson/internal/$Gson$Types.java
++++ b/gson/src/main/java/com/google/gson/internal/$Gson$Types.java
+@@ -333,26 +333,26 @@ public final class $Gson$Types {
+     return resolve(context, contextRawType, toResolve, new HashSet<TypeVariable>());
+   }
+ 
+-  private static Type resolve(Type context, Class<?> contextRawType, Type toResolve,
++static Type resolve(Type context, Class<?> contextRawType, Type toResolve,
+                               Collection<TypeVariable> visitedTypeVariables) {
+-    // this implementation is made a little more complicated in an attempt to avoid object-creation
+     while (true) {
+       if (toResolve instanceof TypeVariable) {
+         TypeVariable<?> typeVariable = (TypeVariable<?>) toResolve;
+-          // cannot reduce due to infinite recursion
++        if (visitedTypeVariables == null) {
++          visitedTypeVariables = new HashSet<>();
++        } else if (visitedTypeVariables.contains(typeVariable)) {
++          return toResolve;
++        }
++        visitedTypeVariables.add(typeVariable);
++        // cannot reduce due to infinite recursion
+         toResolve = resolveTypeVariable(context, contextRawType, typeVariable);
+         if (toResolve == typeVariable) {
+           return toResolve;
+         }
+-
+-      } else if (toResolve instanceof Class && ((Class<?>) toResolve).isArray()) {
+-        Class<?> original = (Class<?>) toResolve;
+-        Type componentType = original.getComponentType();
+-        Type newComponentType = resolve(context, contextRawType, componentType, visitedTypeVariables);
+-        return componentType == newComponentType
+-            ? original
+-            : arrayOf(newComponentType);
+-
++    } else {
++      // this will handle both raw types and parameterized types.
++      if (toResolve instanceof Class) {
++        return toResolve;
+       } else if (toResolve instanceof GenericArrayType) {
+         GenericArrayType original = (GenericArrayType) toResolve;
+         Type componentType = original.getGenericComponentType();

@@ -1,0 +1,30 @@
+diff --git a/src/com/google/javascript/jscomp/InlineCostEstimator.java b/src/com/google/javascript/jscomp/InlineCostEstimator.java
+index 17dc677f..b978bffe 100644
+--- a/src/com/google/javascript/jscomp/InlineCostEstimator.java
++++ b/src/com/google/javascript/jscomp/InlineCostEstimator.java
+@@ -89,15 +83,16 @@ class InlineCostEstimator {
+         continueProcessing = false;
+       }
+     }
+-
+     @Override
+     void addIdentifier(String identifier) {
+-      add(ESTIMATED_IDENTIFIER);
++      if (isConstant(identifier)) {
++        add(1);
++      } else {
++        add(ESTIMATED_IDENTIFIER);
++      }
+     }
+-
+-    /**
+-     * Constants (true, false, null) are considered basically free,
+-     * because it's likely that they will get folded when we're done.
+-     */
+-  }
+-}
++    private static boolean isConstant(String identifier) {
++      return identifier.equals("true") || identifier.equals("false")
++          || identifier.equals("null");
++    }
++  }}

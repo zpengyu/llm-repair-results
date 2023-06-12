@@ -1,0 +1,59 @@
+diff --git a/src/main/java/org/apache/commons/codec/binary/BaseNCodecInputStream.java b/src/main/java/org/apache/commons/codec/binary/BaseNCodecInputStream.java
+index 78f4d67e..76e8bda7 100644
+--- a/src/main/java/org/apache/commons/codec/binary/BaseNCodecInputStream.java
++++ b/src/main/java/org/apache/commons/codec/binary/BaseNCodecInputStream.java
+@@ -139,20 +131,41 @@ public class BaseNCodecInputStream extends FilterInputStream {
+      *
+      * @throws IllegalArgumentException if the provided skip length is negative
+      */
+-
+-        // skip in chunks of 512 bytes
+-
+-
++    @Override
++    public long skip(long skipLen) throws IOException {
++        if (skipLen >= 0) {
++            final long skip = skipLen;
++            int n = (int) Math.min(MAX_BUFFER_SIZE, skip);
++            final byte[] skipBuffer = new byte[n];
++            long skippedBytes = 0L;
++            while (skippedBytes != skip) {
++                int len = read(skipBuffer, 0, n);
++                if (len == EOF) {
++                    break;
++                }
++                skippedBytes += len;
++                if (skip - skippedBytes < n) {
++                    n = (int) (skip - skippedBytes);
++                }
++            }
++            return skippedBytes;
++        } else {
++            throw new IllegalArgumentException("Number of bytes to skip must not be negative: " + skipLen);
++        }
++    }
+     /**
+      * {@inheritDoc}
+-     *
+-     * @return <code>0</code> if the {@link InputStream} has reached <code>EOF</code>,
+-     * <code>1</code> otherwise
+      */
+-        // Note: the logic is similar to the InflaterInputStream:
+-        //       as long as we have not reached EOF, indicate that there is more
+-        //       data available. As we do not know for sure how much data is left,
+-        //       just return 1 as a safe guess.
+-
++    @Override
++    public int available() throws IOException {
+         // use the EOF flag of the underlying codec instance
++        return baseNCodec.hasData() ? 1 : 0;
++    }
++    /**
++     * {@inheritDoc}
++     */
++    @Override
++    public void close() throws IOException {
++        in.close();
++    }
+ }
+\ No newline at end of file

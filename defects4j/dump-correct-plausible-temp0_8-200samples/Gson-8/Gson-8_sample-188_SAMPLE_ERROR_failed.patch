@@ -1,0 +1,26 @@
+diff --git a/gson/src/main/java/com/google/gson/internal/UnsafeAllocator.java b/gson/src/main/java/com/google/gson/internal/UnsafeAllocator.java
+index a72d3d10..c9e9f24f 100644
+--- a/gson/src/main/java/com/google/gson/internal/UnsafeAllocator.java
++++ b/gson/src/main/java/com/google/gson/internal/UnsafeAllocator.java
+@@ -107,4 +102,20 @@ public abstract class UnsafeAllocator {
+    * throw an {@link java.lang.UnsupportedOperationException}
+    * @param c instance of the class to be checked
+    */
++  private static void checkCanBeInstantiated(Class<?> c) {
++    if (!Modifier.isPublic(c.getModifiers())) {
++      throw new UnsupportedOperationException("Class " + c.getName() + " is not public");
++    }
++    if (Modifier.isInterface(c.getModifiers())) {
++      throw new UnsupportedOperationException("Interface " + c.getName() + " can't be instantiated");
++    }
++    if (Modifier.isAbstract(c.getModifiers())) {
++      throw new UnsupportedOperationException("Abstract " + c.getName() + " can't be instantiated");
++    }
++  }
++  private static Field getField(Class<?> c, String name) throws NoSuchFieldException {
++    Field field = c.getDeclaredField(name);
++    field.setAccessible(true);
++    return field;
++  }
+ }
+\ No newline at end of file

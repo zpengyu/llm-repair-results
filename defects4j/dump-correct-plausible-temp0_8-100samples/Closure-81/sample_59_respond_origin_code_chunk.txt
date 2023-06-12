@@ -1,0 +1,30 @@
+    Node processFunctionNode(FunctionNode functionNode) {
+      Name name = functionNode.getFunctionName();
+      if (name == null) {
+        name = new Name();
+        name.setIdentifier("");
+      }
+      Node node = newNode(Token.FUNCTION);
+      // Left paren's complicated because it's not represented by an AstNode, so
+      // there's nothing that has the actual line number that it appeared on.
+      // We know the paren has to appear on the same line as the function name
+      // (or else a semicolon will be inserted.)  If there's no function name,
+      // assume the paren was on the same line as the function.
+      int lpLineno = name.getLineno();
+      if (lpLineno == -1) {
+        lpLineno = functionNode.getLineno();
+      }
+      int lpCharno = name.getCharno();
+      if (lpCharno == -1) {
+        lpCharno = functionNode.getCharno();
+      }
+
+      node.addChildToBack(transform(name));
+      node.addChildToBack(createParen(lpLineno, lpCharno,
+                                      functionNode.getParams()));
+      Node bodyNode = transform(functionNode.getBody());
+      parseDirectives(bodyNode);
+      node.addChildToBack(bodyNode);
+      return node;
+    }
+

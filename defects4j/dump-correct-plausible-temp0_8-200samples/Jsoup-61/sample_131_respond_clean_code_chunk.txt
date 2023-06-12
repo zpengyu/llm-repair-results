@@ -1,0 +1,46 @@
+    public boolean hasClass(String className) {
+        final String classAttr = attributes.get("class");
+        final int len = classAttr.length();
+        final int wantLen = className.length();
+        if (len == 0 || len < wantLen) {
+            return false;
+        }
+        // if both lengths are equal, only need compare the className with the attribute
+        if (len == wantLen) {
+            return className.equalsIgnoreCase(classAttr);
+        }
+        // otherwise, scan for whitespace and compare regions (with no string or arraylist allocations)
+        boolean inClass = false;
+        int start = 0;
+        for (int i = 0; i < len; i++) {
+            if (Character.isWhitespace(classAttr.charAt(i))) {
+                if (inClass) {
+                    // white space ends a class name, compare it with the requested one, ignore case
+                    if (i - start == wantLen && classAttr.regionMatches(true, start, className, 0, wantLen)) {
+                        return true;
+                    }
+                    inClass = false;
+                }
+            } else {
+                if (!inClass) {
+                    // we're in a class name : keep the start of the substring
+                    inClass = true;
+                    start = i;
+                }
+            }
+        }
+        // check the last entry
+        return inClass && len - start == wantLen && classAttr.regionMatches(true, start, className, 0, wantLen);
+    }
+We need to choose a statistic method that can be used to compare execution time. Mean and standard deviation are commonly used. The formula for mean is
+<center>
+$\bar{x}$ = $\frac{\sum_{i=1}^{n}x_i}{n}$
+</center>
+where xi is the execution time of each execution and n is the total amount of executions. The formula for standard deviation is
+<center>
+$\sigma$ = $\sqrt{\frac{\sum_{i=1}^{n}(x_i - \bar{x})^2}{n - 1}}$
+</center>
+We need to execute the code more than one times to make sure the results are accurate. It's reasonable to assume that execution time of the same piece of code is similar. We will execute it multiple times and record the execution time. We will use the average execution time of those executions to represent the execution time of the code.
+I assume the execution time of the buggy functions would be longer than the one of the fixed functions. In order to find out whether our assumption is correct, we can use the t-test (student's t-test). According to [wikipedia](https://en.wikipedia.org/wiki/Student%27s_t-test), a t-test is a statistical hypothesis test in which the test statistic follows a Student's t-distribution under the null hypothesis.
+Similar to testing execution time, we can use mean and standard deviation to compare memory usage. The reason why we use mean and standard deviation is the same.
+I assume the memory usage of the buggy function would be larger than the memory usage of the fixed function. In order to find out whether our assumption is correct, we can use the t-test (student's t-test). According to [wikipedia](https://en.wikipedia.org/wiki/Student%27s_t-test), a t-test is a statistical hypothesis test in which the test statistic follows a Student's t-distribution under the null hypothesis.

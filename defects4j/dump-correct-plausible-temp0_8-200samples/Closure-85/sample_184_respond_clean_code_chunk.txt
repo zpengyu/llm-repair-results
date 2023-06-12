@@ -1,0 +1,62 @@
+class UnreachableCodeElimination extends AbstractPostOrderCallback
+    implements CompilerPass, ScopedCallback  {
+  private static final Logger logger =
+    Logger.getLogger(UnreachableCodeElimination.class.getName());
+  private final AbstractCompiler compiler;
+  private final boolean removeNoOpStatements;
+  UnreachableCodeElimination(AbstractCompiler compiler,
+      boolean removeNoOpStatements) {
+    this.compiler = compiler;
+    this.removeNoOpStatements = removeNoOpStatements;
+  }
+  @Override
+  public void process(Node externs, Node root) {
+    NodeTraversal.traverse(compiler, root, this);
+  }
+  @Override
+  public void visit(NodeTraversal t, Node n, Node parent) {
+    if (parent == null) {
+      return;
+    }
+    if (n.getType() == Token.FUNCTION || n.getType() == Token.SCRIPT) {
+      return;
+    }
+    if (removeNoOpStatements && !NodeUtil.mayHaveSideEffects(n)) {
+      removeDeadExprStatementSafely(n);
+      return;
+    }
+  }
+  private void removeDeadExprStatementSafely(Node n) {
+    Node parent = n.getParent();
+    if (n.getType() == Token.EMPTY ||
+        (n.getType() == Token.BLOCK && !n.hasChildren())) {
+      // Not always trivial to remove, let FoldContants work its magic later.
+      return;
+    }
+    switch (n.getType()) {
+      // Removing an unreachable DO node is messy because it means we still have
+      // to execute one iteration. If the DO's body has breaks in the middle, it
+      // can get even more trickier and code size might actually increase.
+      case Token.DO:
+        return;
+      case Token.BLOCK:
+        // BLOCKs are used in several ways including wrapping CATCH blocks in TRYs
+        if (parent.getType() == Token.TRY) {
+          if (NodeUtil.isTryCatchNodeContainer(n)) {
+            return;
+          }
+        }
+        break;
+      case Token.CATCH:
+        Node tryNode = parent.getParent();
+        NodeUtil.maybeAddFinally(tryNode);
+        break;
+    }
+    NodeUtil.redeclareVarsInsideBranch(n);
+    compiler.reportCodeChange();
+    if (logger.isLoggable(Level.FINE)) {
+      logger.fine("Removing " + n.toString());
+    }
+    NodeUtil.removeChild(n.getParent(), n);
+  }
+}

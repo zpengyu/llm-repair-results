@@ -1,0 +1,60 @@
+    protected Object _deserializeTypedUsingDefaultImpl(JsonParser p, DeserializationContext ctxt,
+            TokenBuffer tb) throws IOException
+    {
+        // As per [JACKSON-614], may have default implementation to use
+        JsonDeserializer<Object> deser = _findDefaultImplDeserializer(ctxt);
+        if (deser != null) {
+            if (tb != null) {
+                tb.writeEndObject();
+                p = tb.asParser(p);
+                // must move to point to the first token:
+                p.nextToken();
+            }
+            return deser.deserialize(p, ctxt);
+        }
+        if (ctxt.isEnabled(DeserializationFeature.FAIL_ON_INVALID_SUBTYPE)) {
+            ctxt.reportBadTypeDefinition(baseType,
+                    "No (native) type id found when one was expected for polymorphic type handling");
+        }
+        // or, perhaps we just bumped into a "natural" value (boolean/int/double/String)?
+        Object result = TypeDeserializer.deserializeIfNatural(p, ctxt, _baseType);
+        if (result != null) {
+            return result;
+        }
+        // or, something for which "as-property" won't work, changed into "wrapper-array" type:
+        if (p.getCurrentToken() == JsonToken.START_ARRAY) {
+            return super.deserializeTypedFromAny(p, ctxt);
+        }
+        if (ctxt.isEnabled(DeserializationFeature.FAIL_ON_INVALID_SUBTYPE)) {
+            ctxt.reportWrongTokenException(p, JsonToken.FIELD_NAME,
+                    "missing property '"+_typePropertyName+"' that is to contain type id  (for class "+baseTypeName()+")");
+        }
+        return null;
+    }
+
+
+# Evaluating the classifier on a new dataset 
+
+Here we will use the test dataset to see how the classifier performs on data it was not trained on.
+
+## Exercise 7: Apply model to test dataset 
+
+Apply the model (built in step 3) to the test set.
+
+The following are the steps to run the model on the test dataset.
+- Use the following function to load the test dataset
+- Apply the model to the test dataset.
+- Print the confusion matrix.
+- Print the classification report.
+- Print the AUC score.
+
+
+
+```python
+def load_dataset(filename):
+    df = pd.read_csv(filename)
+
+    X = df.drop(columns=['bug']).values
+    y = df.bug.values
+    return X, y
+

@@ -1,0 +1,28 @@
+diff --git a/src/com/google/javascript/jscomp/ControlFlowAnalysis.java b/src/com/google/javascript/jscomp/ControlFlowAnalysis.java
+index 0f5c5421..a92a19eb 100644
+--- a/src/com/google/javascript/jscomp/ControlFlowAnalysis.java
++++ b/src/com/google/javascript/jscomp/ControlFlowAnalysis.java
+@@ -787,7 +783,22 @@ final class ControlFlowAnalysis implements Callback, CompilerPass {
+       return computeFollowNode(fromNode, parent, cfa);
+     }
+   }
+-
++  private static Node computeFallThrough(Node n) {
++    if (n.isFunction()) {
++      return null;
++    }
++    // Otherwise, the fallthrough node is the first statement after the
++    // initializers.
++    n = n.getFirstChild();
++    while (!NodeUtil.isControlStructureCodeBlock(n)) {
++      n = n.getNext();
++    }
++    n = n.getFirstChild();
++    if (n == null || n.isFunction()) {
++      return null;
++    }
++    return n;
++  }
+   /**
+    * Computes the destination node of n when we want to fallthrough into the
+    * subtree of n. We don't always create a CFG edge into n itself because of

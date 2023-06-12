@@ -1,0 +1,24 @@
+diff --git a/src/java/org/apache/commons/jxpath/ri/compiler/Expression.java b/src/java/org/apache/commons/jxpath/ri/compiler/Expression.java
+index 927f617..f305334 100644
+--- a/src/java/org/apache/commons/jxpath/ri/compiler/Expression.java
++++ b/src/java/org/apache/commons/jxpath/ri/compiler/Expression.java
+@@ -85,11 +78,15 @@ public abstract class Expression {
+         if (result instanceof EvalContext) {
+             return (EvalContext) result;
+         }
+-        return new PointerIterator(ValueUtils.iterate(result),
+-                new QName(null, "value"),
+-                context.getRootContext().getCurrentNodePointer().getLocale());
++        if (result instanceof Iterator) {
++            return new PointerIterator((Iterator) result,
++                    new QName(null, "value"),
++                    context.getRootContext().getCurrentNodePointer().getLocale());
++        }
++        return Collections.singletonList(
++                NodePointer.newNodePointer(new QName(null, "value"), result,
++                        context.getRootContext().getCurrentNodePointer().getLocale())).iterator();
+     }
+-
+     public static class PointerIterator implements Iterator {
+         private Iterator iterator;
+         private QName qname;

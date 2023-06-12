@@ -1,0 +1,30 @@
+diff --git a/src/com/google/javascript/rhino/jstype/UnionType.java b/src/com/google/javascript/rhino/jstype/UnionType.java
+index f543a6d8..042580a8 100644
+--- a/src/com/google/javascript/rhino/jstype/UnionType.java
++++ b/src/com/google/javascript/rhino/jstype/UnionType.java
+@@ -271,22 +271,15 @@ public class UnionType extends JSType {
+   }
+ 
+   JSType meet(JSType that) {
++    if (that instanceof UnionType) {
++      return that.meet(this);
++    }
+     UnionTypeBuilder builder = new UnionTypeBuilder(registry);
+     for (JSType alternate : alternates) {
+       if (alternate.isSubtype(that)) {
+         builder.addAlternate(alternate);
+       }
+     }
+-
+-    if (that instanceof UnionType) {
+-      for (JSType otherAlternate : ((UnionType) that).alternates) {
+-        if (otherAlternate.isSubtype(this)) {
+-          builder.addAlternate(otherAlternate);
+-        }
+-      }
+-    } else if (that.isSubtype(this)) {
+-      builder.addAlternate(that);
+-    }
+     JSType result = builder.build();
+     if (result != null) {
+       return result;

@@ -1,0 +1,38 @@
+diff --git a/src/main/java/org/apache/commons/compress/archivers/tar/TarUtils.java b/src/main/java/org/apache/commons/compress/archivers/tar/TarUtils.java
+index 34ecc5ac..d886331e 100644
+--- a/src/main/java/org/apache/commons/compress/archivers/tar/TarUtils.java
++++ b/src/main/java/org/apache/commons/compress/archivers/tar/TarUtils.java
+@@ -99,6 +99,33 @@ public class TarUtils {
+      * @return The long value of the octal string.
+      * @throws IllegalArgumentException if the trailing space/NUL is missing or if a invalid byte is detected.
+      */
++private static String exceptionMessage(
++        final byte[] buffer, final int offset, final int length,
++        final int currentByte, final byte invalidByte) {
++        final StringBuilder sb = new StringBuilder();
++        // CheckStyle:MagicNumber OFF
++        sb.append("Invalid Octal value at buffer[");
++        sb.append(currentByte);
++        sb.append("] (=hex ");
++        sb.append(Integer.toHexString(invalidByte));
++        sb.append("): ");
++        for (int i = 0; i < length; i++) {
++            final byte b = buffer[offset+i];
++            if (b >= 32 && b < 127){
++                sb.append((char) b);
++            } else {
++                sb.append("\\");
++                sb.append(Integer.toOctalString(b));
++            }
++        }
++        sb.append(" (offset=");
++        sb.append(offset);
++        sb.append(", length=");
++        sb.append(length);
++        sb.append(")");
++        // CheckStyle:MagicNumber ON
++        return sb.toString();
++    }
+     public static long parseOctal(final byte[] buffer, final int offset, final int length) {
+         long    result = 0;
+         int     end = offset + length;

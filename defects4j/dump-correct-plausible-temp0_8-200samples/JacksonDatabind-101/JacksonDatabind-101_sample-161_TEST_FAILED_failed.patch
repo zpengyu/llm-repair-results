@@ -1,0 +1,32 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/deser/BeanDeserializer.java b/src/main/java/com/fasterxml/jackson/databind/deser/BeanDeserializer.java
+index 3c89dc109..6701bcde7 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/deser/BeanDeserializer.java
++++ b/src/main/java/com/fasterxml/jackson/databind/deser/BeanDeserializer.java
+@@ -801,15 +798,8 @@ public class BeanDeserializer
+                 handleIgnoredProperty(p, ctxt, handledType(), propName);
+                 continue;
+             }
+-            // 29-Nov-2016, tatu: probably should try to avoid sending content
+-            //    both to any setter AND buffer... but, for now, the only thing
+-            //    we can do.
+             // how about any setter? We'll get copies but...
+-            if (_anySetter == null) {
+-                // but... others should be passed to unwrapped property deserializers
+-                tokens.writeFieldName(propName);
+-                tokens.copyCurrentStructure(p);
+-            } else {
++            if (_anySetter != null) {
+                 // Need to copy to a separate buffer first
+                 TokenBuffer b2 = TokenBuffer.asCopyOfValue(p);
+                 tokens.writeFieldName(propName);
+@@ -822,8 +812,9 @@ public class BeanDeserializer
+                 }
+                 continue;
+             }
++            tokens.writeFieldName(propName);
++            tokens.copyCurrentStructure(p);
+         }
+-
+         // We hit END_OBJECT, so:
+         Object bean;
+         try {

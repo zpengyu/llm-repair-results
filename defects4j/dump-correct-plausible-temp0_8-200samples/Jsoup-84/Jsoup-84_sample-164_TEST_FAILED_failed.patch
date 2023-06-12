@@ -1,0 +1,28 @@
+diff --git a/src/main/java/org/jsoup/helper/W3CDom.java b/src/main/java/org/jsoup/helper/W3CDom.java
+index f866f43..9525bab 100644
+--- a/src/main/java/org/jsoup/helper/W3CDom.java
++++ b/src/main/java/org/jsoup/helper/W3CDom.java
+@@ -79,7 +79,7 @@ public class W3CDom {
+             this.namespacesStack.push(new HashMap<String, String>());
+         }
+ 
+-        public void head(org.jsoup.nodes.Node source, int depth) {
++public void head(org.jsoup.nodes.Node source, int depth) {
+             namespacesStack.push(new HashMap<>(namespacesStack.peek())); // inherit from above on the stack
+             if (source instanceof org.jsoup.nodes.Element) {
+                 org.jsoup.nodes.Element sourceEl = (org.jsoup.nodes.Element) source;
+@@ -87,9 +86,11 @@ public class W3CDom {
+                 String prefix = updateNamespaces(sourceEl);
+                 String namespace = namespacesStack.peek().get(prefix);
+                 String tagName = sourceEl.tagName();
+-
+-                Element el =
+-                    doc.createElementNS(namespace, tagName);
++                // Fix: added prefix to tagName if not empty
++                if (tagName != null && !tagName.isEmpty() && prefix != null && !prefix.isEmpty()) {
++                    tagName = prefix + ":" + tagName;
++                }
++                Element el = doc.createElementNS(namespace, tagName);
+                 copyAttributes(sourceEl, el);
+                 if (dest == null) { // sets up the root
+                     doc.appendChild(el);

@@ -1,0 +1,18 @@
+diff --git a/src/com/google/javascript/jscomp/TypeInference.java b/src/com/google/javascript/jscomp/TypeInference.java
+index dbe40e0f..17f18504 100644
+--- a/src/com/google/javascript/jscomp/TypeInference.java
++++ b/src/com/google/javascript/jscomp/TypeInference.java
+@@ -1056,6 +1055,13 @@ class TypeInference
+       }
+     }
+     n.setJSType(type);
++    if (constructorType != null && constructorType.isConstructor()) {
++      JSType thisType = constructorType.toMaybeFunctionType().getTypeOfThis();
++      if (thisType != null && thisType.isConstructor()) {
++        thisType = thisType.toMaybeFunctionType().getPrototype();
++      }
++      scope = scope.createChildFlowScope(thisType, n);
++    }
+     for (Node arg = constructor.getNext(); arg != null; arg = arg.getNext()) {
+       scope = traverse(arg, scope);
+     }

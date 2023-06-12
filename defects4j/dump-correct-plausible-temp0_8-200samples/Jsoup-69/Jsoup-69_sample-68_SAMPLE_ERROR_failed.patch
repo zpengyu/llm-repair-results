@@ -1,0 +1,38 @@
+diff --git a/src/main/java/org/jsoup/nodes/FormElement.java b/src/main/java/org/jsoup/nodes/FormElement.java
+index baffcf1..bc4bb21 100644
+--- a/src/main/java/org/jsoup/nodes/FormElement.java
++++ b/src/main/java/org/jsoup/nodes/FormElement.java
+@@ -16,7 +16,7 @@ import java.util.List;
+  */
+ public class FormElement extends Element {
+     private final Elements elements = new Elements();
+-
++    private final Map<String, String> defaults = new LinkedHashMap<>();
+     /**
+      * Create a new, standalone form element.
+      *
+@@ -96,13 +88,21 @@ public class FormElement extends Element {
+             } else if ("checkbox".equalsIgnoreCase(type) || "radio".equalsIgnoreCase(type)) {
+                 // only add checkbox or radio if they have the checked attribute
+                 if (el.hasAttr("checked")) {
+-                    final String val = el.val().length() >  0 ? el.val() : "on";
+-                    data.add(HttpConnection.KeyVal.create(name, val));
++                    data.add(HttpConnection.KeyVal.create(name, el.val().length() > 0 ? el.val() : "on"));
++                }
++            } else if (type.equals("submit")) {
++                // only add submit buttons that have a name (like <input type="submit">, but not <input type="image">)
++                if (el.hasAttr("name")) {
++                    data.add(HttpConnection.KeyVal.create(name, el.val().length() > 0 ? el.val() : "Submit"));
+                 }
+             } else {
++                // all other form elements
+                 data.add(HttpConnection.KeyVal.create(name, el.val()));
+             }
+         }
++        for (Map.Entry<String, String> entry: defaults.entrySet()) {
++            data.add(HttpConnection.KeyVal.create(entry.getKey(), entry.getValue()));
++        }
+         return data;
+     }
+ }
+\ No newline at end of file

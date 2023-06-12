@@ -1,0 +1,31 @@
+diff --git a/src/main/java/org/jsoup/nodes/Node.java b/src/main/java/org/jsoup/nodes/Node.java
+index 0d0f9d4..de3821f 100644
+--- a/src/main/java/org/jsoup/nodes/Node.java
++++ b/src/main/java/org/jsoup/nodes/Node.java
+@@ -155,11 +155,9 @@ public abstract class Node implements Cloneable {
+      */
+     public String absUrl(String attributeKey) {
+         Validate.notEmpty(attributeKey);
+-
+-        String relUrl = attr(attributeKey);
+-        if (!hasAttr(attributeKey)) {
+-            return ""; // nothing to make absolute with
+-        } else {
++        if (hasAttr(attributeKey)) {
++            String relUrl = attr(attributeKey);
++            if (relUrl.startsWith("?")) relUrl = baseUri + relUrl;
+             URL base;
+             try {
+                 try {
+@@ -175,9 +173,10 @@ public abstract class Node implements Cloneable {
+             } catch (MalformedURLException e) {
+                 return "";
+             }
++        } else {
++            return "";
+         }
+     }
+-
+     /**
+      Get a child node by index
+      @param index index of child node

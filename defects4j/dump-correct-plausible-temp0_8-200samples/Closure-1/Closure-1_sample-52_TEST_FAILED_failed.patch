@@ -1,0 +1,21 @@
+diff --git a/src/com/google/javascript/jscomp/RemoveUnusedVars.java b/src/com/google/javascript/jscomp/RemoveUnusedVars.java
+index 41175cf3..feb59e92 100644
+--- a/src/com/google/javascript/jscomp/RemoveUnusedVars.java
++++ b/src/com/google/javascript/jscomp/RemoveUnusedVars.java
+@@ -403,9 +400,15 @@ class RemoveUnusedVars
+     } else {
+       callSiteOptimizer.optimize(fnScope, referenced);
+     }
++    // The parameters object literal can be removed.
++    Node parent = function.getParent();
++    if (parent.isObjectLit()
++        && parent.getParent().isGetProp()) {
++      parent.getParent().getParent().removeChild(parent.getParent());
++      compiler.reportCodeChange();
++    }
+   }
+ 
+-
+   /**
+    * @return the LP node containing the function parameters.
+    */

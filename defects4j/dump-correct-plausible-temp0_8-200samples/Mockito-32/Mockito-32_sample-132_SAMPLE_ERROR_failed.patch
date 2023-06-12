@@ -1,0 +1,27 @@
+diff --git a/src/org/mockito/internal/configuration/SpyAnnotationEngine.java b/src/org/mockito/internal/configuration/SpyAnnotationEngine.java
+index e292e1300..9e9d2dd35 100644
+--- a/src/org/mockito/internal/configuration/SpyAnnotationEngine.java
++++ b/src/org/mockito/internal/configuration/SpyAnnotationEngine.java
+@@ -29,7 +29,6 @@ public class SpyAnnotationEngine implements AnnotationEngine {
+         Field[] fields = context.getDeclaredFields();
+         for (Field field : fields) {
+             if (field.isAnnotationPresent(Spy.class)) {
+-                assertNoAnnotations(Spy.class, field, Mock.class, org.mockito.MockitoAnnotations.Mock.class, Captor.class);
+                 boolean wasAccessible = field.isAccessible();
+                 field.setAccessible(true);
+                 try {
+@@ -53,6 +51,14 @@ public class SpyAnnotationEngine implements AnnotationEngine {
+                 } finally {
+                     field.setAccessible(wasAccessible);
+                 }
++            } else if (field.isAnnotationPresent(Mock.class)) {
++                assertNoAnnotations(Spy.class, field, Mock.class, org.mockito.MockitoAnnotations.Mock.class, Captor.class);
++                processMockField(field, testClass);
++            } else if (field.isAnnotationPresent(org.mockito.MockitoAnnotations.Mock.class)) {
++                assertNoAnnotations(Spy.class, field, Mock.class, org.mockito.MockitoAnnotations.Mock.class, Captor.class);
++                processMockField(field, testClass);
++            } else if (field.isAnnotationPresent(Captor.class)) {
++                processCaptorField(field, testClass);
+             }
+         }
+     }    

@@ -1,0 +1,19 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/JsonMappingException.java b/src/main/java/com/fasterxml/jackson/databind/JsonMappingException.java
+index 693c1132e..d10ef6818 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/JsonMappingException.java
++++ b/src/main/java/com/fasterxml/jackson/databind/JsonMappingException.java
+@@ -133,7 +132,13 @@ public class JsonMappingException
+                         sb.append(pkgName);
+                         sb.append('.');
+                     }
+-                    sb.append(cls.getSimpleName());
++                    // Bit tricky to find base class, see [databind#1403]
++                    Class<?> base = ClassUtil.getOuterClass(cls);
++                    if (base != null) {
++                        sb.append(base.getSimpleName());
++                        sb.append('.');
++                    }
++                    sb.append(ClassUtil.getClassDescription(cls));
+                 }
+                 sb.append('[');
+                 if (_fieldName != null) {

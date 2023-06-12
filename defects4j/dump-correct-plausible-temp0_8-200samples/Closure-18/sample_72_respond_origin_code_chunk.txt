@@ -1,0 +1,44 @@
+private static final class CssParserRunner implements Callable<Object> {
+  private final CssTree.StyleSheet.Codec cssCodec;
+  private final ErrorManager errorManager;
+  private final Map<String, CssTree.StyleSheet> styleSheetMap;
+  private final List<String> styleSheetSourcePaths;
+  private final SourceFile sourceFile;
+  private final MutableSupplier<String> sourceSupplier;
+
+  CssParserRunner(
+      CssTree.StyleSheet.Codec cssCodec,
+      ErrorManager errorManager,
+      Map<String, CssTree.StyleSheet> styleSheetMap,
+      List<String> styleSheetSourcePaths,
+      SourceFile sourceFile,
+      MutableSupplier<String> sourceSupplier) {
+    this.cssCodec = cssCodec;
+    this.errorManager = errorManager;
+    this.styleSheetMap = styleSheetMap;
+    this.styleSheetSourcePaths = styleSheetSourcePaths;
+    this.sourceFile = sourceFile;
+    this.sourceSupplier = sourceSupplier;
+  }
+
+  @Override
+  public Object call() throws Exception {
+    String sourcePath = sourceFile.getOriginalPath();
+    String contents = sourceSupplier.get();
+    try {
+      styleSheetMap.put(sourcePath, cssCodec.parse(contents));
+      styleSheetSourcePaths.add(sourcePath);
+    } catch (CssParserRunnerException e) {
+      errorManager.report(CheckLevel.ERROR, e.getMessage());
+    } catch (Throwable t) {
+      errorManager.report(CheckLevel.ERROR, t.getMessage());
+    }
+    return null;
+  }
+
+  static class CssParserRunnerException extends Exception {
+    CssParserRunnerException(String message) {
+      super(message);
+    }
+  }
+}

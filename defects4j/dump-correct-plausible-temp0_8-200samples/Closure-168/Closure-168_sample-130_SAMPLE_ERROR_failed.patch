@@ -1,0 +1,34 @@
+diff --git a/src/com/google/javascript/jscomp/TypedScopeCreator.java b/src/com/google/javascript/jscomp/TypedScopeCreator.java
+index 5e7bfa3f..ddd2fda4 100644
+--- a/src/com/google/javascript/jscomp/TypedScopeCreator.java
++++ b/src/com/google/javascript/jscomp/TypedScopeCreator.java
+@@ -2036,7 +2032,28 @@ final class TypedScopeCreator implements ScopeCreator {
+         }
+       }
+     }
+-  }
++    @Override
++    public void visit(NodeTraversal t, Node n, Node parent) {
++      JSType type = n.getJSType();
++      if (!type.isUnknownType()) {
++        return;
++      }
++      if (n.isGetProp()) {
++        String prop = n.getLastChild().getString();
++        if (n.getFirstChild().isName()) {
++          String name = n.getFirstChild().getString();
++          Scope scope = t.getScope();
++          if (scope.isDeclared(name, false)) {
++            Var var = scope.getVar(name);
++            JSType nameType = var.getType();
++            if (!nameType.isUnknownType() && nameType.isConstructor()) {
++              setJSType(n, getPropTypeFromCtor(nameType, prop));
++              return;
++            }
++          }
++        }
++      }
++    }  }
+ 
+   private AstFunctionContents getFunctionAnalysisResults(@Nullable Node n) {
+     if (n == null) {

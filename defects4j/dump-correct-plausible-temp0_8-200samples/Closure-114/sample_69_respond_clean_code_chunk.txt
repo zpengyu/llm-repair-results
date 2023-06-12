@@ -1,0 +1,13 @@
+    private void recordAssignment(NodeTraversal t, Node n, Node recordNode) {
+      Node nameNode = n.getFirstChild();
+      NameInformation ns = createNameInformation(t, nameNode);
+      if (ns != null) {
+        // For "for" loops only record the first assignment, otherwise
+        // a variable may be recorded in multiple parent scopes and
+        // you'll get multiple edges from the variable to its
+        // parents.
+        if (!(n.getParent().isFor() && !NodeUtil.isForIn(n.getParent()))) {
+          recordDepScope(recordNode, ns);
+        }
+      }
+    }

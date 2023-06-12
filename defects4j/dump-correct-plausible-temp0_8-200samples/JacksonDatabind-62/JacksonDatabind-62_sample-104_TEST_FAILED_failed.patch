@@ -1,0 +1,19 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/deser/std/CollectionDeserializer.java b/src/main/java/com/fasterxml/jackson/databind/deser/std/CollectionDeserializer.java
+index af4270610..1231d6737 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/deser/std/CollectionDeserializer.java
++++ b/src/main/java/com/fasterxml/jackson/databind/deser/std/CollectionDeserializer.java
+@@ -204,9 +203,12 @@ public class CollectionDeserializer
+         if (valueTypeDeser != null) {
+             valueTypeDeser = valueTypeDeser.forProperty(property);
+         }
+-        return withResolved(delegateDeser, valueDeser, valueTypeDeser, unwrapSingle);
++        if (delegateDeser != null || valueDeser != null || valueTypeDeser != null || unwrapSingle != null) {
++            return withResolved(delegateDeser, valueDeser, valueTypeDeser, unwrapSingle);
++        }
++        // nothing changed? Might as well just return this
++        return this;
+     }
+-
+     /*
+     /**********************************************************
+     /* ContainerDeserializerBase API

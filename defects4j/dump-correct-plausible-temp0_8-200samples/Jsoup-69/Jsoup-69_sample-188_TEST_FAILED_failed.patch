@@ -1,0 +1,30 @@
+diff --git a/src/main/java/org/jsoup/nodes/FormElement.java b/src/main/java/org/jsoup/nodes/FormElement.java
+index baffcf1..62b68b1 100644
+--- a/src/main/java/org/jsoup/nodes/FormElement.java
++++ b/src/main/java/org/jsoup/nodes/FormElement.java
+@@ -85,13 +76,22 @@ public class FormElement extends Element {
+                 Elements options = el.select("option[selected]");
+                 boolean set = false;
+                 for (Element option: options) {
+-                    data.add(HttpConnection.KeyVal.create(name, option.val()));
++                    if (option.hasAttr("value")) {
++                        data.add(HttpConnection.KeyVal.create(name, option.val()));
++                    } else {
++                        data.add(HttpConnection.KeyVal.create(name, option.text()));
++                    }
+                     set = true;
+                 }
+                 if (!set) {
+                     Element option = el.select("option").first();
+-                    if (option != null)
+-                        data.add(HttpConnection.KeyVal.create(name, option.val()));
++                    if (option != null) {
++                        if (option.hasAttr("value")) {
++                            data.add(HttpConnection.KeyVal.create(name, option.val()));
++                        } else {
++                            data.add(HttpConnection.KeyVal.create(name, option.text()));
++                        }
++                    }
+                 }
+             } else if ("checkbox".equalsIgnoreCase(type) || "radio".equalsIgnoreCase(type)) {
+                 // only add checkbox or radio if they have the checked attribute

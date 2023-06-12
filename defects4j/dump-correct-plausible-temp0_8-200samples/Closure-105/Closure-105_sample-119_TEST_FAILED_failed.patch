@@ -1,0 +1,85 @@
+diff --git a/src/com/google/javascript/jscomp/FoldConstants.java b/src/com/google/javascript/jscomp/FoldConstants.java
+index 003743b3..09d34b34 100644
+--- a/src/com/google/javascript/jscomp/FoldConstants.java
++++ b/src/com/google/javascript/jscomp/FoldConstants.java
+@@ -1459,7 +1459,7 @@ class FoldConstants extends AbstractPostOrderCallback
+    * Try to fold an array join: ['a', 'b', 'c'].join('') -> 'abc';
+    */
+   void tryFoldStringJoin(NodeTraversal t, Node n, Node left, Node right,
+-                         Node parent) {
++      Node parent) {
+     if (!NodeUtil.isGetProp(left) || !NodeUtil.isImmutableValue(right)) {
+       return;
+     }
+@@ -1471,52 +1469,36 @@ class FoldConstants extends AbstractPostOrderCallback
+         !functionName.getString().equals("join")) {
+       return;
+     }
+-
+     String joinString = NodeUtil.getStringValue(right);
+     List<Node> arrayFoldedChildren = Lists.newLinkedList();
+-    StringBuilder sb = new StringBuilder();
+-    int foldedSize = 0;
+     Node elem = arrayNode.getFirstChild();
+     // Merges adjacent String nodes.
+     while (elem != null) {
+       if (NodeUtil.isImmutableValue(elem)) {
++        String concatenatedString = "";
++        StringBuilder sb = new StringBuilder();
+         if (sb.length() > 0) {
+           sb.append(joinString);
+         }
+         sb.append(NodeUtil.getStringValue(elem));
+-      } else {
+-        if (sb.length() > 0) {
++        concatenatedString = sb.toString();
++        if (concatenatedString.length() > 0) {
+           // + 2 for the quotes.
+-          foldedSize += sb.length() + 2;
+-          arrayFoldedChildren.add(Node.newString(sb.toString()));
+-          sb = new StringBuilder();
++          arrayFoldedChildren.add(Node.newString(concatenatedString));
+         }
+-        foldedSize += InlineCostEstimator.getCost(elem);
++      } else {
+         arrayFoldedChildren.add(elem);
+       }
+       elem = elem.getNext();
+     }
+-
+-    if (sb.length() > 0) {
+-      // + 2 for the quotes.
+-      foldedSize += sb.length() + 2;
+-      arrayFoldedChildren.add(Node.newString(sb.toString()));
+-    }
+-    // one for each comma.
+-    foldedSize += arrayFoldedChildren.size() - 1;
+-
+     int originalSize = InlineCostEstimator.getCost(n);
+     switch (arrayFoldedChildren.size()) {
+       case 0:
+         Node emptyStringNode = Node.newString("");
+         parent.replaceChild(n, emptyStringNode);
+         break;
+-
+       case 1:
+         Node foldedStringNode = arrayFoldedChildren.remove(0);
+-        if (foldedSize > originalSize) {
+-          return;
+-        }
+         arrayNode.detachChildren();
+         if (foldedStringNode.getType() != Token.STRING) {
+           // If the Node is not a string literal, ensure that
+@@ -1533,12 +1514,6 @@ class FoldConstants extends AbstractPostOrderCallback
+         if (arrayFoldedChildren.size() == arrayNode.getChildCount()) {
+           return;
+         }
+-        int kJoinOverhead = "[].join()".length();
+-        foldedSize += kJoinOverhead;
+-        foldedSize += InlineCostEstimator.getCost(right);
+-        if (foldedSize > originalSize) {
+-          return;
+-        }
+         arrayNode.detachChildren();
+         for (Node node : arrayFoldedChildren) {
+           arrayNode.addChildToBack(node);

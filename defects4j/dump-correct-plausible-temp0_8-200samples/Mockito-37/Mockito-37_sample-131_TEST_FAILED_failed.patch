@@ -1,0 +1,51 @@
+diff --git a/src/org/mockito/internal/stubbing/answers/AnswersValidator.java b/src/org/mockito/internal/stubbing/answers/AnswersValidator.java
+index 5d8057846..2913b4a3c 100644
+--- a/src/org/mockito/internal/stubbing/answers/AnswersValidator.java
++++ b/src/org/mockito/internal/stubbing/answers/AnswersValidator.java
+@@ -24,10 +20,22 @@ public class AnswersValidator {
+         if (answer instanceof DoesNothing) {
+             validateDoNothing((DoesNothing) answer, invocation);
+         }
+-        
++        if (answer instanceof ThrowsException) {
++            validateException((ThrowsException) answer, invocation);
++        }
++    }
++    private void validateException(ThrowsException answer, Invocation invocation) {
++        Throwable throwable = answer.getThrowable();
++        if (throwable == null) {
++            reporter.cannotStubWithNullThrowable();
++        }
++        if (throwable instanceof RuntimeException || throwable instanceof Error) {
++            return;
++        }
++        if (!invocation.isValidException(throwable)) {
++            reporter.checkedExceptionInvalid(throwable);
++        }
+     }
+-
+-
+     private void validateDoNothing(DoesNothing answer, Invocation invocation) {
+         if (!invocation.isVoid()) {
+             reporter.onlyVoidMethodsCanBeSetToDoNothing();
+@@ -47,19 +52,4 @@ public class AnswersValidator {
+             reporter.wrongTypeOfReturnValue(invocation.printMethodReturnType(), answer.printReturnType(), invocation.getMethodName());
+         }
+     }
+-
+-    private void validateException(ThrowsException answer, Invocation invocation) {
+-        Throwable throwable = answer.getThrowable();
+-        if (throwable == null) {
+-            reporter.cannotStubWithNullThrowable();
+-        }
+-        
+-        if (throwable instanceof RuntimeException || throwable instanceof Error) {
+-            return;
+-        }
+-        
+-        if (!invocation.isValidException(throwable)) {
+-            reporter.checkedExceptionInvalid(throwable);
+-        }
+-    }
+ }
+\ No newline at end of file

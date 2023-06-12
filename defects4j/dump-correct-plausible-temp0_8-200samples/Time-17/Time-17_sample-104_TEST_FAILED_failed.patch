@@ -1,0 +1,43 @@
+diff --git a/src/main/java/org/joda/time/DateTimeZone.java b/src/main/java/org/joda/time/DateTimeZone.java
+index 5c7a348c..1c8f7899 100644
+--- a/src/main/java/org/joda/time/DateTimeZone.java
++++ b/src/main/java/org/joda/time/DateTimeZone.java
+@@ -1169,16 +1168,31 @@ public abstract class DateTimeZone implements Serializable {
+         if (instantBefore == instantAfter) {
+             return instant;  // not an overlap (less than is a gap, equal is normal case)
+         }
+-
+         // work out range of instants that have duplicate local times
+         long local = convertUTCToLocal(instant);
+-        return convertLocalToUTC(local, false, earlierOrLater ? instantAfter : instantBefore);
+-
++        long localBefore = convertUTCToLocal(instantBefore);
++        long localAfter = convertUTCToLocal(instantAfter);
+         // calculate result
+-          // currently in later offset
+-          // currently in earlier offset
+-    }
+-//    System.out.println(new DateTime(transitionStart, DateTimeZone.UTC) + " " + new DateTime(transitionStart, this));
++        if (earlierOrLater) {
++            // currently in later offset
++            if (local == localAfter) {
++                return instant;
++            }
++            if (localAfter < localBefore) {
++                return instantAfter - 1;
++            }
++            return instantAfter;
++        } else {
++            // currently in earlier offset
++            if (local == localBefore) {
++                return instant;
++            }
++            if (localAfter < localBefore) {
++                return instantBefore;
++            }
++            return instantBefore + 1;
++        }
++    }//    System.out.println(new DateTime(transitionStart, DateTimeZone.UTC) + " " + new DateTime(transitionStart, this));
+ 
+     //-----------------------------------------------------------------------
+     /**

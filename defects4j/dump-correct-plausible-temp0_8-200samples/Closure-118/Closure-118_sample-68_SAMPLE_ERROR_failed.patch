@@ -1,0 +1,26 @@
+diff --git a/src/com/google/javascript/jscomp/DisambiguateProperties.java b/src/com/google/javascript/jscomp/DisambiguateProperties.java
+index 96c66201..ca4f7cfb 100644
+--- a/src/com/google/javascript/jscomp/DisambiguateProperties.java
++++ b/src/com/google/javascript/jscomp/DisambiguateProperties.java
+@@ -509,9 +507,20 @@ class DisambiguateProperties<T> implements CompilerPass {
+                 (type == null ? "null" : type.toString()), n.toString(), ""));
+           }
+         }
++      // Addendum to the above: if we have a child of this object literal
++      // that is a getter or setter, rename it if it is a valid assignment
++      // target.
++      if (child.isGetProp() && !child.isQuotedString()) {
++        // A getter or setter.
++        name = child.getLastChild().getString();
++        prop = getProperty(name);
++        if (prop.renameable) {
++          // A getter or setter, so schedule the name for renaming.
++          prop.scheduleRenaming(child.getLastChild(), true);
++        }
+       }
+     }
+-
++    }
+     private void printErrorLocations(List<String> errors, JSType t) {
+       if (!t.isObject() || t.isAllType()) {
+         return;

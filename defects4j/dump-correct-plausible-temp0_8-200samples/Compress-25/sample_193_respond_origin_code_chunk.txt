@@ -1,0 +1,17 @@
+    public ZipArchiveInputStream(InputStream inputStream,
+                                 String encoding,
+                                 boolean useUnicodeExtraFields,
+                                 boolean allowStoredEntriesWithDataDescriptor) throws IOException {
+        zipEncoding = ZipEncodingHelper.getZipEncoding(encoding);
+        this.useUnicodeExtraFields = useUnicodeExtraFields;
+        in = new PushbackInputStream(inputStream, buf.capacity());
+        this.allowStoredEntriesWithDataDescriptor =
+            allowStoredEntriesWithDataDescriptor;
+
+        // check header
+        int header = readFully(buf.buffer, 0, WORD);
+        if (header != LFH_SIG && header != VFH_SIG) {
+            throw new ZipException("not a valid zip archive");
+        }
+    }
+ 

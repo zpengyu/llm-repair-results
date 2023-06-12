@@ -1,0 +1,27 @@
+diff --git a/src/java/org/apache/commons/lang/time/DurationFormatUtils.java b/src/java/org/apache/commons/lang/time/DurationFormatUtils.java
+index 8ced282e..a537d907 100644
+--- a/src/java/org/apache/commons/lang/time/DurationFormatUtils.java
++++ b/src/java/org/apache/commons/lang/time/DurationFormatUtils.java
+@@ -337,7 +331,21 @@ public class DurationFormatUtils {
+             }
+         }
+         if (!Token.containsTokenWithValue(tokens, M)) {
+-            days += end.get(Calendar.DAY_OF_YEAR) - start.get(Calendar.DAY_OF_YEAR);
++            int target = end.get(Calendar.MONTH);
++            if (months > 0) {
++                // TODO: What if negative months?
++                if (end.get(Calendar.MONTH) > start.get(Calendar.MONTH) && days < 0) {
++                    target--;
++                }
++            } else if (months < 0) {
++                if (end.get(Calendar.MONTH) < start.get(Calendar.MONTH) && days > 0) {
++                    target++;
++                }
++            }
++            while (start.get(Calendar.MONTH) != target) {
++                days += start.getActualMaximum(Calendar.DAY_OF_MONTH);
++                start.add(Calendar.MONTH, 1);
++            }
+             months = 0;
+         }
+         if (!Token.containsTokenWithValue(tokens, d)) {

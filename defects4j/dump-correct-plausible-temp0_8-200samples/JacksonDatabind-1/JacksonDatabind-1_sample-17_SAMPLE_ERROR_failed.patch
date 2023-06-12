@@ -1,0 +1,41 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/ser/BeanPropertyWriter.java b/src/main/java/com/fasterxml/jackson/databind/ser/BeanPropertyWriter.java
+index 781cacf84..c9cfb5c4a 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/ser/BeanPropertyWriter.java
++++ b/src/main/java/com/fasterxml/jackson/databind/ser/BeanPropertyWriter.java
+@@ -590,18 +590,7 @@ public class BeanPropertyWriter
+                 jgen.writeNull();
+             }
+         }
+-        // otherwise find serializer to use
+-        JsonSerializer<Object> ser = _serializer;
+-        if (ser == null) {
+-            Class<?> cls = value.getClass();
+-            PropertySerializerMap map = _dynamicSerializers;
+-            ser = map.serializerFor(cls);
+-            if (ser == null) {
+-                ser = _findAndAddDynamic(map, cls, prov);
+-            }
+-        }
+-        // and then see if we must suppress certain values (default, empty)
+-        if (_suppressableValue != null) {
++        else if (_suppressableValue != null) {
+             if (MARKER_FOR_EMPTY == _suppressableValue) {
+                 if (ser.isEmpty(value)) { // can NOT suppress entries in tabular output
+                     serializeAsPlaceholder(bean, jgen, prov);
+@@ -612,6 +601,16 @@ public class BeanPropertyWriter
+                 return;
+             }
+         }
++        // otherwise find serializer to use
++        JsonSerializer<Object> ser = _serializer;
++        if (ser == null) {
++            Class<?> cls = value.getClass();
++            PropertySerializerMap map = _dynamicSerializers;
++            ser = map.serializerFor(cls);
++            if (ser == null) {
++                ser = _findAndAddDynamic(map, cls, prov);
++            }
++        }
+         // For non-nulls: simple check for direct cycles
+         if (value == bean) {
+             _handleSelfReference(bean, ser);

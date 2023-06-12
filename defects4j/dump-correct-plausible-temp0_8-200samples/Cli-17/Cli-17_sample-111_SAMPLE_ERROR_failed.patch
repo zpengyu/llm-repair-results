@@ -1,0 +1,82 @@
+diff --git a/src/java/org/apache/commons/cli/PosixParser.java b/src/java/org/apache/commons/cli/PosixParser.java
+index 8c84520..0caad12 100644
+--- a/src/java/org/apache/commons/cli/PosixParser.java
++++ b/src/java/org/apache/commons/cli/PosixParser.java
+@@ -281,31 +281,61 @@ public class PosixParser extends Parser {
+      */
+     protected void burstToken(String token, boolean stopAtNonOption)
+     {
+-        for (int i = 1; i < token.length(); i++)
++        if(token == null)
++            throw new ParseException("null");
++        if(token.startsWith("--"))
+         {
+-            String ch = String.valueOf(token.charAt(i));
+-
+-            if (options.hasOption(ch))
++            if(token.length() > 2)
+             {
+-                tokens.add("-" + ch);
+-                currentOption = options.getOption(ch);
+-
+-                if (currentOption.hasArg() && (token.length() != (i + 1)))
++                String arg = token.substring(2);
++                if(options.hasOption(arg))
+                 {
+-                    tokens.add(token.substring(i + 1));
+-
+-                    break;
++                    tokens.add(token);
++                }
++                else if(stopAtNonOption)
++                {
++                    process(arg);
++                }
++                else
++                {
++                    tokens.add(arg);
+                 }
+             }
+-            else if (stopAtNonOption)
++            else
+             {
+-                process(token.substring(i));
++                tokens.add(token);
++            }
++            return;
++        }
++        if(token.startsWith("-") && !"-".equals(token))
++        {
++            if(token.length() > 1)
++            {
++                if(options.hasOption(token.charAt(1)))
++                {
++                    currentOption = options.getOption(token.charAt(1));
++                    if(currentOption.hasArg())
++                        if(currentOption.isArgRequired() || token.length() > 2)
++                            tokens.add(token.substring(2));
++                        else
++                            tokens.add("");
++                    else
++                    if(stopAtNonOption)
++                        process(token.substring(2));
++                    else
++                        tokens.add(token);
++                }
++                else
++                    for(int i = 1; i < token.length(); i++)
++                        tokens.add((new StringBuilder("-")).append(token.charAt(i)).toString());
+             }
+             else
+             {
+                 tokens.add(token);
+-                break;
+             }
+         }
+-    }
+-}
++        else
++        {
++            tokens.add(token);
++        }
++    }}

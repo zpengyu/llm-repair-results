@@ -1,0 +1,21 @@
+diff --git a/src/main/java/org/jsoup/helper/DataUtil.java b/src/main/java/org/jsoup/helper/DataUtil.java
+index 6de0c40..c20d32a 100644
+--- a/src/main/java/org/jsoup/helper/DataUtil.java
++++ b/src/main/java/org/jsoup/helper/DataUtil.java
+@@ -88,9 +88,14 @@ public final class DataUtil {
+     static Document parseByteData(ByteBuffer byteData, String charsetName, String baseUri, Parser parser) {
+         String docData;
+         Document doc = null;
+-
+         // look for BOM - overrides any other header or input
+-
++        if (byteData.hasArray()) {
++            int bomLen = ByteOrderMark.lengthOf(byteData.array(), byteData.arrayOffset(), byteData.limit());
++            if (bomLen > 0) {
++                charsetName = ByteOrderMark.byLength(bomLen).getCharsetName();
++                byteData.position(bomLen);
++            }
++        }
+         if (charsetName == null) { // determine from meta. safe parse as UTF-8
+             // look for <meta http-equiv="Content-Type" content="text/html;charset=gb2312"> or HTML5 <meta charset="gb2312">
+             docData = Charset.forName(defaultCharset).decode(byteData).toString();

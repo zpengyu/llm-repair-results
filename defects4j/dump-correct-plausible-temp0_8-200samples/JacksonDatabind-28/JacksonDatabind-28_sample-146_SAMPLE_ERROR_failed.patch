@@ -1,0 +1,19 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/deser/std/JsonNodeDeserializer.java b/src/main/java/com/fasterxml/jackson/databind/deser/std/JsonNodeDeserializer.java
+index 6cb784606..dcaedfcfc 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/deser/std/JsonNodeDeserializer.java
++++ b/src/main/java/com/fasterxml/jackson/databind/deser/std/JsonNodeDeserializer.java
+@@ -124,9 +124,12 @@ public class JsonNodeDeserializer
+             if (p.isExpectedStartArrayToken()) {
+                 return deserializeArray(p, ctxt, ctxt.getNodeFactory());
+             }
++            // 02-Aug-2016, tatu: As per [databind#1155] should allow ObjectNode, too
++            if (p.hasToken(JsonToken.FIELD_NAME)) {
++                return (ArrayNode) deserializeObject(p, ctxt, ctxt.getNodeFactory());
++            }
+             throw ctxt.mappingException(ArrayNode.class);
+-        }
+-    }
++        }    }
+ }
+ 
+ /**

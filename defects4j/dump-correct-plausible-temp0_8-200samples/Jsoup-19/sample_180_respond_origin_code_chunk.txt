@@ -1,0 +1,30 @@
+private boolean testValidProtocol(Element el, Attribute attr, Set<Protocol> protocols) {
+    String value = el.absUrl(attr.getKey());
+    if (!preserveRelativeLinks)
+        attr.setValue(value);
+    
+    String[] splitAnchor = splitAnchor(value);
+    String anchor = splitAnchor[1];
+    if (anchor != null && !anchor.isEmpty()) {
+        value = splitAnchor[0];
+    }
+    
+    for (Protocol protocol : protocols) {
+        String prot = protocol.toString() + ":";
+        if (value.toLowerCase().startsWith(prot)) {
+            return true;
+        }
+    }
+    return false;
+}
+
+static String[] splitAnchor(String url) {
+    int hashIndex = url.indexOf('#');
+    if (hashIndex >= 0) {
+        String after = url.substring(hashIndex + 1);
+        url = url.substring(0, hashIndex);
+        return new String[] { url, after };
+    } else {
+        return new String[] { url, "" };
+    }
+}

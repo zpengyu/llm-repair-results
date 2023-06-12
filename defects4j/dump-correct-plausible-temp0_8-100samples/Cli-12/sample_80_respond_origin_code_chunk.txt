@@ -1,0 +1,49 @@
+protected String[] flatten(Options options, String[] arguments, boolean stopAtNonOption) {
+        List<String> tokens = new ArrayList<String>();
+
+        boolean eatTheRest = false;
+
+        for (int i = 0; i < arguments.length; i++) {
+            String arg = arguments[i];
+
+            if ("--".equals(arg)) {
+                eatTheRest = true;
+                tokens.add("--");
+            } else if ("-".equals(arg)) {
+                tokens.add("-");
+            } else if (arg.startsWith("-")) {
+                String opt = Util.stripLeadingHyphens(arg);
+
+                if (opt.indexOf('=') == -1) {
+                    // the format is -Dkey=value
+                    // the format is a special properties option (-Dproperty=value)
+                    if (opt.startsWith("D")) {
+                        tokens.add(arg.substring(0, 2)); // -D
+                        tokens.add(arg.substring(2)); // property=value
+                    } else {
+                        if (options.hasOption(opt)) {
+                            tokens.add(arg);
+                        } else {
+                            eatTheRest = stopAtNonOption;
+                            tokens.add(arg);
+                        }
+                    }
+                } else {
+                    // the format is -Dkey=value or -key=value
+                    tokens.add(arg.substring(0, 2)); // -D or -k
+                    tokens.add(arg.substring(2)); // key=value
+                }
+            } else {
+                tokens.add(arg);
+            }
+
+            if (eatTheRest) {
+                for (i++; i < arguments.length; i++) {
+                    tokens.add(arguments[i]);
+                }
+            }
+        }
+
+        return tokens.toArray(new String[tokens.size()]);
+    }
+

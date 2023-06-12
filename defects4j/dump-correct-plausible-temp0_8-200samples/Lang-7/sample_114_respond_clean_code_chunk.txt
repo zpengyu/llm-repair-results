@@ -1,0 +1,19 @@
+public static BigDecimal createBigDecimal(String str) {
+        if (str == null) {
+            return null;
+        }
+        // handle JDK1.3.1 bug where "" throws IndexOutOfBoundsException
+        if (StringUtils.isBlank(str)) {
+            throw new NumberFormatException("A blank string is not a valid number");
+        }
+        // this is protection for poorness in java.lang.BigDecimal.
+        // see comment in NumberUtils.createBigInteger(java.lang.String)
+        // TODO: do we need this protection for BigDecimal???
+        if (str.charAt(0) == '-') {
+            str = str.substring(1);
+        }
+        if (str.startsWith("0x") || str.startsWith("-0x")) {
+            return new BigDecimal(new BigInteger(str));
+        }
+        return new BigDecimal(str);
+    }

@@ -1,0 +1,22 @@
+diff --git a/src/java/org/apache/commons/lang/time/DurationFormatUtils.java b/src/java/org/apache/commons/lang/time/DurationFormatUtils.java
+index 8ced282e..801759c2 100644
+--- a/src/java/org/apache/commons/lang/time/DurationFormatUtils.java
++++ b/src/java/org/apache/commons/lang/time/DurationFormatUtils.java
+@@ -337,7 +331,17 @@ public class DurationFormatUtils {
+             }
+         }
+         if (!Token.containsTokenWithValue(tokens, M)) {
++            // HEN: this bit was wrong. The original code was:
++            // days += end.get(Calendar.DAY_OF_YEAR) - start.get(Calendar.DAY_OF_YEAR);
++            //
++            // They are the same for months with 31 days but different for Feb.
++            // For example, the difference between
++            // start: Jan 1st 00:00 and end: Jan 31st 00:00 is 31 days
++            // But the difference between
++            // start: Jan 1st 00:00 and end: Feb 1st 00:00 is 32 days.
++            //
+             days += end.get(Calendar.DAY_OF_YEAR) - start.get(Calendar.DAY_OF_YEAR);
++            //days += end.get(Calendar.DAY_OF_MONTH) - start.get(Calendar.DAY_OF_MONTH);
+             months = 0;
+         }
+         if (!Token.containsTokenWithValue(tokens, d)) {

@@ -1,0 +1,41 @@
+diff --git a/src/main/java/org/jsoup/parser/TreeBuilder.java b/src/main/java/org/jsoup/parser/TreeBuilder.java
+index f4faad4..30e2a4e 100644
+--- a/src/main/java/org/jsoup/parser/TreeBuilder.java
++++ b/src/main/java/org/jsoup/parser/TreeBuilder.java
+@@ -54,24 +47,25 @@ abstract class TreeBuilder {
+                 break;
+         }
+     }
+-
+     protected abstract boolean process(Token token);
+-
+     protected boolean processStartTag(String name) {
+-        return process(start.reset().name(name));
++        if (currentToken == tokeniser.last()) // don't recycle an in-use token
++            return process(new Token.StartTag().name(name));
++        else
++            return process(tokeniser.last().reset().name(name));
+     }
+-
+     public boolean processStartTag(String name, Attributes attrs) {
+-        start.reset();
+-        start.nameAttr(name, attrs);
+-        return process(start);
++        if (currentToken == tokeniser.last()) // don't recycle an in-use token
++            return process(new Token.StartTag().nameAttr(name, attrs));
++        else
++            return process(tokeniser.last().reset().nameAttr(name, attrs));
+     }
+-
+     protected boolean processEndTag(String name) {
+-        return process(end.reset().name(name));
++        if (currentToken == tokeniser.last()) // don't recycle an in-use token
++            return process(new Token.EndTag().name(name));
++        else
++            return process(tokeniser.last().reset().name(name));
+     }
+-
+-
+     protected Element currentElement() {
+         int size = stack.size();
+         return size > 0 ? stack.get(size-1) : null;

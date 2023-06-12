@@ -1,0 +1,85 @@
+diff --git a/src/com/google/javascript/jscomp/FoldConstants.java b/src/com/google/javascript/jscomp/FoldConstants.java
+index 003743b3..b5d98e4a 100644
+--- a/src/com/google/javascript/jscomp/FoldConstants.java
++++ b/src/com/google/javascript/jscomp/FoldConstants.java
+@@ -1504,46 +1500,41 @@ class FoldConstants extends AbstractPostOrderCallback
+     }
+     // one for each comma.
+     foldedSize += arrayFoldedChildren.size() - 1;
+-
+     int originalSize = InlineCostEstimator.getCost(n);
+-    switch (arrayFoldedChildren.size()) {
+-      case 0:
+-        Node emptyStringNode = Node.newString("");
+-        parent.replaceChild(n, emptyStringNode);
+-        break;
+-
+-      case 1:
+-        Node foldedStringNode = arrayFoldedChildren.remove(0);
+-        if (foldedSize > originalSize) {
+-          return;
+-        }
+-        arrayNode.detachChildren();
+-        if (foldedStringNode.getType() != Token.STRING) {
+-          // If the Node is not a string literal, ensure that
+-          // it is coerced to a string.
+-          Node replacement = new Node(Token.ADD,
+-              Node.newString(""), foldedStringNode);
+-          foldedStringNode = replacement;
+-        }
+-        parent.replaceChild(n, foldedStringNode);
+-        break;
+-
+-      default:
+-        // No folding could actually be performed.
+-        if (arrayFoldedChildren.size() == arrayNode.getChildCount()) {
+-          return;
+-        }
+-        int kJoinOverhead = "[].join()".length();
+-        foldedSize += kJoinOverhead;
+-        foldedSize += InlineCostEstimator.getCost(right);
+-        if (foldedSize > originalSize) {
+-          return;
+-        }
+-        arrayNode.detachChildren();
+-        for (Node node : arrayFoldedChildren) {
+-          arrayNode.addChildToBack(node);
+-        }
+-        break;
++    if (arrayFoldedChildren.size() == 0) {
++      Node emptyStringNode = Node.newString("");
++      parent.replaceChild(n, emptyStringNode);
++    }
++    else if (arrayFoldedChildren.size() == 1) {
++      Node foldedStringNode = arrayFoldedChildren.remove(0);
++      if (foldedSize > originalSize) {
++        return;
++      }
++      arrayNode.detachChildren();
++      if (foldedStringNode.getType() != Token.STRING) {
++        // If the Node is not a string literal, ensure that
++        // it is coerced to a string.
++        Node replacement = new Node(Token.ADD,
++            Node.newString(""), foldedStringNode);
++        foldedStringNode = replacement;
++      }
++      parent.replaceChild(n, foldedStringNode);
++    }
++    else {
++      // No folding could actually be performed.
++      if (arrayFoldedChildren.size() == arrayNode.getChildCount()) {
++        return;
++      }
++      int kJoinOverhead = "[].join()".length();
++      foldedSize += kJoinOverhead;
++      foldedSize += InlineCostEstimator.getCost(right);
++      if (foldedSize > originalSize) {
++        return;
++      }
++      arrayNode.detachChildren();
++      for (Node node : arrayFoldedChildren) {
++        arrayNode.addChildToBack(node);
++      }
+     }
+     t.getCompiler().reportCodeChange();
+   }

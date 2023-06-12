@@ -1,0 +1,27 @@
+    public PropertyName findNameForSerialization(Annotated a)
+    {
+        PropertyName name = findNameForSerialization(a, true);
+        if (name == null) {
+            name = findNameForSerialization(a, false);
+        }
+        return name;
+    }
+
+    private PropertyName findNameForSerialization(Annotated a, boolean b) {
+        String str = null;
+        if (b) {
+            JsonGetter jsonGetter = (JsonGetter) _findAnnotation(a, JsonGetter.class);
+            if (jsonGetter != null) {
+                str = jsonGetter.value();
+            } else {
+                JsonProperty jsonProperty = (JsonProperty) _findAnnotation(a, JsonProperty.class);
+                if (jsonProperty != null) {
+                    str = jsonProperty.value();
+                }
+            }
+        } else if (_hasAnnotation(a, JsonSerialize.class) || _hasAnnotation(a, JsonView.class) || _hasAnnotation(a, JsonRawValue.class)) {
+            str = "";
+        }
+        return str != null ? PropertyName.construct(str) : null;
+    }
+

@@ -1,0 +1,41 @@
+diff --git a/src/com/google/javascript/jscomp/CheckAccessControls.java b/src/com/google/javascript/jscomp/CheckAccessControls.java
+index c4ecc477..f3469acc 100644
+--- a/src/com/google/javascript/jscomp/CheckAccessControls.java
++++ b/src/com/google/javascript/jscomp/CheckAccessControls.java
+@@ -463,24 +458,20 @@ class CheckAccessControls implements ScopedCallback, HotSwapCompilerPass {
+                   overridingVisibility.name()));
+         }
+       } else {
+-        if (sameInput) {
+-          // private access is always allowed in the same file.
++        if (visibility == Visibility.PUBLIC) {
+           return;
+-        } else if (visibility == Visibility.PRIVATE &&
+-            (currentClass == null || ownerType.differsFrom(currentClass))) {
+-          if (docInfo.isConstructor() &&
+-              isValidPrivateConstructorAccess(parent)) {
+-            return;
++        } else if (visibility == Visibility.PRIVATE) {
++          // private access is allowed in the same file.
++          if (!sameInput) {
++            // private access is not allowed outside the file from a different
++            // enclosing class.
++            compiler.report(
++                t.makeError(getprop,
++                    BAD_PRIVATE_PROPERTY_ACCESS,
++                    propertyName,
++                    validator.getReadableJSTypeName(
++                        getprop.getFirstChild(), true)));
+           }
+-
+-          // private access is not allowed outside the file from a different
+-          // enclosing class.
+-          compiler.report(
+-              t.makeError(getprop,
+-                  BAD_PRIVATE_PROPERTY_ACCESS,
+-                  propertyName,
+-                  validator.getReadableJSTypeName(
+-                      getprop.getFirstChild(), true)));
+         } else if (visibility == Visibility.PROTECTED) {
+           // There are 3 types of legal accesses of a protected property:
+           // 1) Accesses in the same file

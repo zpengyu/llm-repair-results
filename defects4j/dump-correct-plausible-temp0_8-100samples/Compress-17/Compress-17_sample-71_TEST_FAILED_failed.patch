@@ -1,0 +1,33 @@
+diff --git a/src/main/java/org/apache/commons/compress/archivers/tar/TarUtils.java b/src/main/java/org/apache/commons/compress/archivers/tar/TarUtils.java
+index 34ecc5ac..a123c1e5 100644
+--- a/src/main/java/org/apache/commons/compress/archivers/tar/TarUtils.java
++++ b/src/main/java/org/apache/commons/compress/archivers/tar/TarUtils.java
+@@ -103,7 +103,7 @@ public class TarUtils {
+         long    result = 0;
+         int     end = offset + length;
+         int     start = offset;
+-
++        boolean hasTrailingSeparator = false;
+         if (length < 2){
+             throw new IllegalArgumentException("Length "+length+" must be at least 2");
+         }
+@@ -125,6 +122,7 @@ public class TarUtils {
+         byte trailer;
+         trailer = buffer[end-1];
+         if (trailer == 0 || trailer == ' '){
++            hasTrailingSeparator = true;
+             end--;
+         } else {
+             throw new IllegalArgumentException(
+@@ -146,10 +143,8 @@ public class TarUtils {
+             result = (result << 3) + (currentByte - '0'); // convert from ASCII
+             // CheckStyle:MagicNumber ON
+         }
+-
+-        return result;
++        return hasTrailingSeparator ? result : -result;
+     }
+-
+     /** 
+      * Compute the value contained in a byte buffer.  If the most
+      * significant bit of the first byte in the buffer is set, this

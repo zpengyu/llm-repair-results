@@ -1,0 +1,26 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/introspect/AnnotatedClass.java b/src/main/java/com/fasterxml/jackson/databind/introspect/AnnotatedClass.java
+index 929076729..dec01c069 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/introspect/AnnotatedClass.java
++++ b/src/main/java/com/fasterxml/jackson/databind/introspect/AnnotatedClass.java
+@@ -648,6 +648,9 @@ public final class AnnotatedClass
+                  * without masking (no such annotation)
+                  */
+                 if (am != null) {
++                    if (!_mixInResolve.isVisible(am.getAnnotated())) {
++                        continue;
++                    }
+                     _addMixUnders(m, am);
+                     /* Otherwise will have precedence, but must wait
+                      * until we find the real method (mixIn methods are
+@@ -655,7 +658,10 @@ public final class AnnotatedClass
+                      */
+                 } else {
+                     // Well, or, as per [Issue#515], multi-level merge within mixins...
+-                        mixIns.add(_constructMethod(m));
++                    AnnotatedMethod newAm = _constructMethod(m);
++                    if (newAm != null) {
++                        mixIns.add(newAm);
++                    }
+                 }
+             }
+         }

@@ -1,0 +1,33 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/deser/std/StringArrayDeserializer.java b/src/main/java/com/fasterxml/jackson/databind/deser/std/StringArrayDeserializer.java
+index f8cb03e1c..86c745124 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/deser/std/StringArrayDeserializer.java
++++ b/src/main/java/com/fasterxml/jackson/databind/deser/std/StringArrayDeserializer.java
+@@ -50,20 +45,24 @@ public final class StringArrayDeserializer
+         if (_elementDeserializer != null) {
+             return _deserializeCustom(jp, ctxt);
+         }
+-
++        // #125: May have a content converter
++        final DeserializationContext.Impl ctxt2 = ctxt.createImpl();
++        ctxt2.setConsumers(new StdValueInstantiator(ctxt, BeanUtil.MISSING_BEAN_INFO));
++        JsonDeserializer<?> deser = ctxt2.findContextualValueDeserializer(ctxt.constructType(String.class), null);
++        if (deser != null) {
++            return _deserializeCustom(jp, ctxt2);
++        }
+         final ObjectBuffer buffer = ctxt.leaseObjectBuffer();
+         Object[] chunk = buffer.resetAndStart();
+-        
+         int ix = 0;
+         JsonToken t;
+-        
+         while ((t = jp.nextToken()) != JsonToken.END_ARRAY) {
+             // Ok: no need to convert Strings, but must recognize nulls
+             String value;
+             if (t == JsonToken.VALUE_STRING) {
+                 value = jp.getText();
+             } else if (t == JsonToken.VALUE_NULL) {
+-                value = _elementDeserializer.getNullValue();
++                value = deser.getNullValue();
+             } else {
+                 value = _parseString(jp, ctxt);
+             }

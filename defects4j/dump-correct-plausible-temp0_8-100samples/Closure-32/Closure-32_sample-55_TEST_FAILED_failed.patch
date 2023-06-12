@@ -1,0 +1,27 @@
+diff --git a/src/com/google/javascript/jscomp/parsing/JsDocInfoParser.java b/src/com/google/javascript/jscomp/parsing/JsDocInfoParser.java
+index ad292c02..82db559f 100644
+--- a/src/com/google/javascript/jscomp/parsing/JsDocInfoParser.java
++++ b/src/com/google/javascript/jscomp/parsing/JsDocInfoParser.java
+@@ -1425,10 +1402,20 @@ public final class JsDocInfoParser {
+           builder.append(line);
+           token = next();
+       }
+-    } while (true);
++    } while (token != JsDocToken.STAR && token != JsDocToken.ANNOTATION);
++    String multilineText = builder.toString();
++    if (option != WhitespaceOption.PRESERVE) {
++      multilineText = multilineText.trim();
++    }
++    int endLineno = stream.getLineno();
++    int endCharno = stream.getCharno();
++    if (multilineText.length() > 0) {
++      jsdocBuilder.markText(multilineText, startLineno, startCharno,
++          endLineno, endCharno);
++    }
++    return new ExtractionInfo(multilineText, token);
+   }
+ 
+-
+   /**
+    * Extracts the top-level block comment from the JsDoc comment, if any.
+    * This method differs from the extractMultilineTextualBlock in that it

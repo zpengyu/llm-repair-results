@@ -1,0 +1,22 @@
+diff --git a/src/com/google/javascript/jscomp/UnreachableCodeElimination.java b/src/com/google/javascript/jscomp/UnreachableCodeElimination.java
+index 60bfd244..86f4f78e 100644
+--- a/src/com/google/javascript/jscomp/UnreachableCodeElimination.java
++++ b/src/com/google/javascript/jscomp/UnreachableCodeElimination.java
+@@ -102,13 +91,13 @@ class UnreachableCodeElimination extends AbstractPostOrderCallback
+     }
+     if (gNode.getAnnotation() != GraphReachability.REACHABLE ||
+         (removeNoOpStatements && !NodeUtil.mayHaveSideEffects(n))) {
+-      removeDeadExprStatementSafely(n);
+-      return;
++      if (n.getNext() == null || NodeUtil.isControlStructure(n.getParent())) {
++        removeDeadExprStatementSafely(n);
++        return;
++      }
+     }
+-
+     tryRemoveUnconditionalBranching(n);
+   }
+-
+   /**
+    * Tries to remove n if an unconditional branch node (break, continue or
+    * return) if the target of n is the same as the the follow of n. That is, if

@@ -1,0 +1,33 @@
+diff --git a/src/com/google/javascript/jscomp/parsing/IRFactory.java b/src/com/google/javascript/jscomp/parsing/IRFactory.java
+index 32a15610..c4a0eb33 100644
+--- a/src/com/google/javascript/jscomp/parsing/IRFactory.java
++++ b/src/com/google/javascript/jscomp/parsing/IRFactory.java
+@@ -524,14 +524,13 @@ public class IRFactory {
+         // Old Rhino tagged the empty name node with the line number of the
+         // declaration.
+         newName.setLineno(functionNode.getLineno());
+-        // TODO(bowdidge) Mark line number of paren correctly.
+-        // Same problem as below - the left paren might not be on the
+-        // same line as the function keyword.
+-        int lpColumn = functionNode.getAbsolutePosition() +
+-            functionNode.getLp();
+-        newName.setCharno(position2charno(lpColumn));
++        // The left paren's complicated because it's not represented by an
++        // AstNode, so there's nothing that has the actual line number that it
++        // appeared on.  We know the paren has to appear on the same line as the
++        // function name (or else a semicolon will be inserted.)  If there's no
++        // function name, assume the paren was on the same line as the function.
++        newName.setCharno(position2charno(functionNode.getLp()));
+       }
+-
+       node.addChildToBack(newName);
+       Node lp = newNode(Token.LP);
+       // The left paren's complicated because it's not represented by an
+@@ -539,7 +538,6 @@ public class IRFactory {
+       // appeared on.  We know the paren has to appear on the same line as the
+       // function name (or else a semicolon will be inserted.)  If there's no
+       // function name, assume the paren was on the same line as the function.
+-      // TODO(bowdidge): Mark line number of paren correctly.
+       Name fnName = functionNode.getFunctionName();
+       if (fnName != null) {
+         lp.setLineno(fnName.getLineno());

@@ -1,0 +1,107 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/deser/BeanDeserializer.java b/src/main/java/com/fasterxml/jackson/databind/deser/BeanDeserializer.java
+index cd54e7788..df88d548c 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/deser/BeanDeserializer.java
++++ b/src/main/java/com/fasterxml/jackson/databind/deser/BeanDeserializer.java
+@@ -777,10 +777,8 @@ public class BeanDeserializer
+         final ExternalTypeHandler ext = _externalTypeIdHandler.start();
+         final PropertyBasedCreator creator = _propertyBasedCreator;
+         PropertyValueBuffer buffer = creator.startBuilding(p, ctxt, _objectIdReader);
+-
+-        TokenBuffer tokens = new TokenBuffer(p);
++        TokenBuffer tokens = new TokenBuffer(p.getCodec());
+         tokens.writeStartObject();
+-
+         JsonToken t = p.getCurrentToken();
+         for (; t == JsonToken.FIELD_NAME; t = p.nextToken()) {
+             String propName = p.getCurrentName();
+@@ -788,35 +786,29 @@ public class BeanDeserializer
+             // creator property?
+             SettableBeanProperty creatorProp = creator.findCreatorProperty(propName);
+             if (creatorProp != null) {
+-                // first: let's check to see if this might be part of value with external type id:
+-                // 11-Sep-2015, tatu: Important; do NOT pass buffer as last arg, but null,
+-                //   since it is not the bean
+-                if (ext.handlePropertyValue(p, ctxt, propName, buffer)) {
+-                    ;
+-                } else {
+-                    // Last creator property to set?
+-                    if (buffer.assignParameter(creatorProp, _deserializeWithErrorWrapping(p, ctxt, creatorProp))) {
+-                        t = p.nextToken(); // to move to following FIELD_NAME/END_OBJECT
+-                        Object bean;
+-                        try {
+-                            bean = creator.build(ctxt, buffer);
+-                        } catch (Exception e) {
+-                            wrapAndThrow(e, _beanType.getRawClass(), propName, ctxt);
+-                            continue; // never gets here
+-                        }
+-                        // if so, need to copy all remaining tokens into buffer
+-                        while (t == JsonToken.FIELD_NAME) {
+-                            p.nextToken(); // to skip name
+-                            tokens.copyCurrentStructure(p);
+-                            t = p.nextToken();
+-                        }
+-                        if (bean.getClass() != _beanType.getRawClass()) {
+-                            // !!! 08-Jul-2011, tatu: Could theoretically support; but for now
+-                            //   it's too complicated, so bail out
+-                            throw ctxt.mappingException("Can not create polymorphic instances with unwrapped values");
+-                        }
+-                        return ext.complete(p, ctxt, bean);
++                // Last creator property to set?
++                Object value = _deserializeWithErrorWrapping(p, ctxt, creatorProp);
++                if (buffer.assignParameter(creatorProp, value)) {
++                    t = p.nextToken(); // to move to following FIELD_NAME/END_OBJECT
++                    Object bean;
++                    try {
++                        bean = creator.build(ctxt, buffer);
++                    } catch (Exception e) {
++                        wrapAndThrow(e, _beanType.getRawClass(), propName, ctxt);
++                        continue; // never gets here
+                     }
++                    // if so, need to copy all remaining tokens into buffer
++                    while (t == JsonToken.FIELD_NAME) {
++                        p.nextToken(); // to skip name
++                        tokens.copyCurrentStructure(p);
++                        t = p.nextToken();
++                    }
++                    if (bean.getClass() != _beanType.getRawClass()) {
++                        // !!! 08-Jul-2011, tatu: Could theoretically support; but for now
++                        //   it's too complicated, so bail out
++                        throw ctxt.mappingException("Can not create polymorphic instances with unwrapped values");
++                    }
++                    return ext.complete(p, ctxt, bean);
+                 }
+                 continue;
+             }
+@@ -827,11 +819,11 @@ public class BeanDeserializer
+             // regular property? needs buffering
+             SettableBeanProperty prop = _beanProperties.find(propName);
+             if (prop != null) {
+-                buffer.bufferProperty(prop, prop.deserialize(p, ctxt));
++                buffer.bufferProperty(prop, _deserializeWithErrorWrapping(p, ctxt, prop));
+                 continue;
+             }
+             // external type id (or property that depends on it)?
+-            if (ext.handlePropertyValue(p, ctxt, propName, null)) {
++            if (ext.handlePropertyValue(p, ctxt, propName, buffer)) {
+                 continue;
+             }
+             /* As per [JACKSON-313], things marked as ignorable should not be
+@@ -843,10 +835,9 @@ public class BeanDeserializer
+             }
+             // "any property"?
+             if (_anySetter != null) {
+-                buffer.bufferAnyProperty(_anySetter, propName, _anySetter.deserialize(p, ctxt));
++                buffer.bufferAnyProperty(_anySetter, propName, _deserializeWithErrorWrapping(p, ctxt, _anySetter));
+             }
+         }
+-
+         // We hit END_OBJECT; resolve the pieces:
+         try {
+             return ext.complete(p, ctxt, buffer, creator);
+@@ -854,5 +845,4 @@ public class BeanDeserializer
+             wrapInstantiationProblem(e, ctxt);
+             return null; // never gets here
+         }
+-    }
+-}
++    }}

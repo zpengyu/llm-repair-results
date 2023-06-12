@@ -1,0 +1,18 @@
+    public <T> MappingIterator<T> readValues(byte[] src, int offset, int length)
+        throws IOException, JsonProcessingException
+    {
+        return readValues(src, offset, length, null);
+    }
+    /**
+     * Method that binds content read using given parser, and returns an
+     * iterator that allows to iterate through all bound values.
+     */
+    public <T> MappingIterator<T> readValues(byte[] src, int offset, int length, JsonNodeFactory nodeFactory)
+        throws IOException, JsonProcessingException
+    {
+        if (_dataFormatReaders != null) {
+            return _detectBindAndReadValues(_dataFormatReaders.findFormat(src, offset, length), false);
+        }
+        return _bindAndReadValues(_considerFilter(_parserFactory.createParser(src, nodeFactory),
+                true));
+    }

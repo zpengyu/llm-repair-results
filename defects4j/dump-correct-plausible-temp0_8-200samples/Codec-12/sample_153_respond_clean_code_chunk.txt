@@ -1,0 +1,27 @@
+/**
+ * {@inheritDoc}
+ *
+ * @return <code>0</code> if the {@link InputStream} has reached <code>EOF</code>,
+ * <code>1</code> otherwise
+ */
+public long skip(long n) throws IOException {
+    // use the EOF flag of the underlying codec instance
+    if (n < 0) {
+        throw new IllegalArgumentException("Negative skip length: " + n);
+    }
+    // Note: the logic is similar to the InflaterInputStream:
+    //       as long as we have not reached EOF, indicate that there is more
+    //       data available. As we do not know for sure how much data is left,
+    //       just return 1 as a safe guess.
+    final int chunk = doEncode ? baseNCodec.getMaxLineLength() / 8 : baseNCodec.getMaxLineLength() / 4 * 3;
+    final long numSkips = n < chunk ? n : chunk;
+    for (int skipped = 0; skipped < numSkips; skipped++) {
+        read();
+    }
+    return n < chunk ? n : 1;
+}
+/**
+ * {@inheritDoc}
+ *
+ * @throws IllegalArgumentException if the provided skip length is negative
+ */

@@ -1,0 +1,54 @@
+diff --git a/src/main/java/org/apache/commons/lang3/SerializationUtils.java b/src/main/java/org/apache/commons/lang3/SerializationUtils.java
+index 5d4b161b..d64f98d2 100644
+--- a/src/main/java/org/apache/commons/lang3/SerializationUtils.java
++++ b/src/main/java/org/apache/commons/lang3/SerializationUtils.java
+@@ -235,9 +235,8 @@ public class SerializationUtils {
+      * <p>For more in-depth information about the problem for which this
+      * class here is a workaround, see the JIRA issue LANG-626. </p>
+      */
+-     static class ClassLoaderAwareObjectInputStream extends ObjectInputStream {
++    static class ClassLoaderAwareObjectInputStream extends ObjectInputStream {
+         private ClassLoader classLoader;
+-
+         /**
+          * Constructor.
+          * @param in The <code>InputStream</code>.
+@@ -265,10 +262,35 @@ public class SerializationUtils {
+             try {
+                 return Class.forName(name, false, classLoader);
+             } catch (ClassNotFoundException ex) {
+-                    return Class.forName(name, false, Thread.currentThread().getContextClassLoader());
++                return Class.forName(name, false, Thread.currentThread().getContextClassLoader());
++            }
++        }
++        @Override
++        protected Class<?> resolveProxyClass(String[] interfaces) throws IOException, ClassNotFoundException {
++            ClassLoader latestLoader = classLoader;
++            ClassLoader nonPublicLoader = null;
++            boolean hasNonPublicInterface = false;
++            Class[] classObjs = new Class[interfaces.length];
++            for (int i = 0; i < interfaces.length; i++) {
++                Class cl = Class.forName(interfaces[i], false, latestLoader);
++                if ((cl.getModifiers() & Modifier.PUBLIC) == 0) {
++                    if (hasNonPublicInterface) {
++                        if (nonPublicLoader != cl.getClassLoader()) {
++                            throw new IllegalAccessError(
++                                    "conflicting non-public interface class loaders");
++                        }
++                    } else {
++                        hasNonPublicInterface = true;
++                        nonPublicLoader = cl.getClassLoader();
++                    }
++                }
++                classObjs[i] = cl;
++            }
++            try {
++                return Proxy.getProxyClass(hasNonPublicInterface ? nonPublicLoader : latestLoader, classObjs);
++            } catch (IllegalArgumentException e) {
++                throw new ClassNotFoundException(null, e);
+             }
+         }
+-
+     }
+-
+ }

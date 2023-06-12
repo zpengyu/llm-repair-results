@@ -1,0 +1,34 @@
+diff --git a/src/org/mockito/internal/util/reflection/GenericMetadataSupport.java b/src/org/mockito/internal/util/reflection/GenericMetadataSupport.java
+index 152e9424e..1795ddcbd 100644
+--- a/src/org/mockito/internal/util/reflection/GenericMetadataSupport.java
++++ b/src/org/mockito/internal/util/reflection/GenericMetadataSupport.java
+@@ -73,16 +73,23 @@ public abstract class GenericMetadataSupport {
+         for (int i = 0; i < actualTypeArguments.length; i++) {
+             TypeVariable typeParameter = typeParameters[i];
+             Type actualTypeArgument = actualTypeArguments[i];
+-
+             if (actualTypeArgument instanceof WildcardType) {
+-                contextualActualTypeParameters.put(typeParameter, boundsOf((WildcardType) actualTypeArgument));
+-            } else {
+-                contextualActualTypeParameters.put(typeParameter, actualTypeArgument);
++                Type[] bounds = ((WildcardType) actualTypeArgument).getUpperBounds();
++                if (bounds.length == 1) {
++                    actualTypeArgument = bounds[0];
++                } else if (bounds.length == 0) {
++                    actualTypeArgument = Object.class;
++                }
+             }
+-            // logger.log("For '" + parameterizedType + "' found type variable : { '" + typeParameter + "(" + System.identityHashCode(typeParameter) + ")" + "' : '" + actualTypeArgument + "(" + System.identityHashCode(typeParameter) + ")" + "' }");
++            if (actualTypeArgument instanceof TypeVariable) {
++                Type resolvedType = contextualActualTypeParameters.get(actualTypeArgument);
++                if (resolvedType != null) {
++                    actualTypeArgument = resolvedType;
++                }
++            }
++            contextualActualTypeParameters.put(typeParameter, actualTypeArgument);
+         }
+     }
+-
+     protected void registerTypeParametersOn(TypeVariable[] typeParameters) {
+         for (TypeVariable typeVariable : typeParameters) {
+             registerTypeVariableIfNotPresent(typeVariable);

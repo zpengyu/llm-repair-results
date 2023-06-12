@@ -1,0 +1,26 @@
+     Map<String, String> parsePaxHeaders(final InputStream i) throws IOException {
+        final Map<String, String> headers = new HashMap<String, String>();
+        while(true) {
+            // get length
+            final int len = StreamUtils.readOctalNumber(i, 12);
+            if(len == 0) {
+                break;
+            }
+            // get keyword
+            final String keyword = StreamUtils.readString(i);
+            // get rest of entry
+            final int restLen = len - keyword.length() - 2;
+            final byte[] rest = new byte[restLen];
+            if(StreamUtils.readFully(i, rest) != restLen) {
+                throw new IOException("Failed to read Pax header. Expected "
+                              + restLen
+                              + " bytes, read "
+                              + rest.length);
+            }
+            // Drop trailing NL
+            final String value = new String(rest, 0,
+                                            restLen - 1, CharsetNames.UTF_8);
+            headers.put(keyword, value);
+        }
+        return headers;
+    }

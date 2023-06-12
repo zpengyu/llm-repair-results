@@ -1,0 +1,15 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/jsontype/impl/TypeDeserializerBase.java b/src/main/java/com/fasterxml/jackson/databind/jsontype/impl/TypeDeserializerBase.java
+index e8942ba4b..a21cc37c7 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/jsontype/impl/TypeDeserializerBase.java
++++ b/src/main/java/com/fasterxml/jackson/databind/jsontype/impl/TypeDeserializerBase.java
+@@ -158,6 +158,10 @@ public abstract class TypeDeserializerBase
+                 // use the default impl if no type id available:
+                 deser = _findDefaultImplDeserializer(ctxt);
+                 if (deser == null) {
++                    if (!_isDefaultMapper) {
++                        // 17-Jan-2019, tatu: Should not return `null` but rather an error, if possible
++                        throw ctxt.unknownTypeException(_baseType, typeId);
++                    }
+                     // 10-May-2016, tatu: We may get some help...
+                     JavaType actual = _handleUnknownTypeId(ctxt, typeId);
+                     if (actual == null) { // what should this be taken to mean?

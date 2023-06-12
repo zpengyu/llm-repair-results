@@ -1,0 +1,28 @@
+diff --git a/src/com/google/javascript/jscomp/parsing/IRFactory.java b/src/com/google/javascript/jscomp/parsing/IRFactory.java
+index 32a15610..9326bea1 100644
+--- a/src/com/google/javascript/jscomp/parsing/IRFactory.java
++++ b/src/com/google/javascript/jscomp/parsing/IRFactory.java
+@@ -554,13 +552,19 @@ public class IRFactory {
+         lp.addChildToBack(transform(param));
+       }
+       node.addChildToBack(lp);
+-
+       Node bodyNode = transform(functionNode.getBody());
+       parseDirectives(bodyNode);
+-      node.addChildToBack(bodyNode);
+-     return node;
++      if (bodyNode.getType() == Token.BLOCK) {
++        // The function body is already a block.  Just add a new statement
++        // to the end.
++        bodyNode.addChildToBack(node);
++        return bodyNode;
++      }
++      Node result = newNode(Token.BLOCK);
++      result.addChildToBack(bodyNode);
++      result.addChildToBack(node);
++      return result;
+     }
+-
+     @Override
+     Node processIfStatement(IfStatement statementNode) {
+       Node node = newNode(Token.IF);

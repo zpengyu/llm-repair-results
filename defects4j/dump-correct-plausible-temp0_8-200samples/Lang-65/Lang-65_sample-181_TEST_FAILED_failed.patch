@@ -1,0 +1,49 @@
+diff --git a/src/java/org/apache/commons/lang/time/DateUtils.java b/src/java/org/apache/commons/lang/time/DateUtils.java
+index 324dd037..db7c21cb 100644
+--- a/src/java/org/apache/commons/lang/time/DateUtils.java
++++ b/src/java/org/apache/commons/lang/time/DateUtils.java
+@@ -627,17 +625,38 @@ public class DateUtils {
+         //
+         // Manually truncate milliseconds, seconds and minutes, rather than using
+         // Calendar methods.
+-
+-
++        Date date = val.getTime();
++        long time = date.getTime();
++        boolean done = false;
+         // truncate milliseconds
+-
++        int millisecs = val.get(Calendar.MILLISECOND);
++        done = false;
++        while (!done) {
++            time = time - millisecs;
++            val.setTime(new Date(time));
++            done = val.get(Calendar.MILLISECOND) == 0;
++            millisecs = val.get(Calendar.MILLISECOND);
++        }
+         // truncate seconds
+-
++        int seconds = val.get(Calendar.SECOND);
++        done = false;
++        while (!done) {
++            time = time - (seconds * 1000);
++            val.setTime(new Date(time));
++            done = val.get(Calendar.SECOND) == 0;
++            seconds = val.get(Calendar.SECOND);
++        }
+         // truncate minutes
+-
++        int minutes = val.get(Calendar.MINUTE);
++        done = false;
++        while (!done) {
++            time = time - (minutes * 60000);
++            val.setTime(new Date(time));
++            done = val.get(Calendar.MINUTE) == 0;
++            minutes = val.get(Calendar.MINUTE);
++        }
+         // reset time
+         // ----------------- Fix for LANG-59 ----------------------- END ----------------
+-
+         boolean roundUp = false;
+         for (int i = 0; i < fields.length; i++) {
+             for (int j = 0; j < fields[i].length; j++) {

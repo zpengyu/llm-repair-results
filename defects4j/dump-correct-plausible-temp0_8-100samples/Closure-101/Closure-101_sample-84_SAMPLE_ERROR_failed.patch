@@ -1,0 +1,22 @@
+diff --git a/src/com/google/javascript/jscomp/CommandLineRunner.java b/src/com/google/javascript/jscomp/CommandLineRunner.java
+index 00e3e1ba..e8ad5b56 100644
+--- a/src/com/google/javascript/jscomp/CommandLineRunner.java
++++ b/src/com/google/javascript/jscomp/CommandLineRunner.java
+@@ -433,7 +432,16 @@ public class CommandLineRunner extends
+     if (flags.process_closure_primitives) {
+       options.closurePass = true;
+     }
+-
++    if (flags.externs != null) {
++      for (File externFile : flags.externs) {
++        try {
++          options.externs.add(
++              SourceFile.fromFile(externFile, Charset.defaultCharset()));
++        } catch (IOException e) {
++          throw new RuntimeException("Could not read " + externFile);
++        }
++      }
++    }
+     initOptionsFromFlags(options);
+     return options;
+   }

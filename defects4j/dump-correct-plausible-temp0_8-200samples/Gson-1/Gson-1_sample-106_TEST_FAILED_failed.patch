@@ -1,0 +1,63 @@
+diff --git a/gson/src/main/java/com/google/gson/TypeInfoFactory.java b/gson/src/main/java/com/google/gson/TypeInfoFactory.java
+index 0aa1455a..e30b1f47 100644
+--- a/gson/src/main/java/com/google/gson/TypeInfoFactory.java
++++ b/gson/src/main/java/com/google/gson/TypeInfoFactory.java
+@@ -90,10 +86,16 @@ final class TypeInfoFactory {
+         int indexOfActualTypeArgument = getIndex(classTypeVariables, fieldTypeVariable);
+         Type[] actualTypeArguments = objParameterizedType.getActualTypeArguments();
+         return actualTypeArguments[indexOfActualTypeArgument];
+-
+-
++      } else if (parentType instanceof GenericArrayType) {
++        // GenericArrayType.getGenericComponentType returns the type of the array's elements.
++        // For example, if we have String[] someTypeVariable; then for someTypeVariable the type
++        // returned by getGenericComponentType() is String.
++        // Hence the type of the field 'someTypeVariable' can be evaluated from the class' type
++        // variable type by using getGenericComponentType().
++        GenericArrayType castedType = (GenericArrayType) parentType;
++        Type componentType = castedType.getGenericComponentType();
++        return getActualType(componentType, parentType, rawParentClass);
+       }
+-
+       throw new UnsupportedOperationException("Expecting parameterized type, got " + parentType
+           + ".\n Are you missing the use of TypeToken idiom?\n See "
+           + "http://sites.google.com/site/gson/gson-user-guide#TOC-Serializing-and-Deserializing-Gener");
+@@ -105,23 +107,6 @@ final class TypeInfoFactory {
+           + "ParameterizedType, GenericArrayType or TypeVariable. Can't extract type.");
+     }
+   }
+-
+-
+-      // Evaluate type on this type
+-
+-
+-
+-  private static Type[] extractRealTypes(
+-      Type[] actualTypeArguments, Type parentType, Class<?> rawParentClass) {
+-    Preconditions.checkNotNull(actualTypeArguments);
+-
+-    Type[] retTypes = new Type[actualTypeArguments.length];
+-    for (int i = 0; i < actualTypeArguments.length; ++i) {
+-      retTypes[i] = getActualType(actualTypeArguments[i], parentType, rawParentClass);
+-    }
+-    return retTypes;
+-  }
+-
+   private static int getIndex(TypeVariable<?>[] types, TypeVariable<?> type) {
+     for (int i = 0; i < types.length; ++i) {
+       if (type.equals(types[i])) {
+@@ -131,4 +116,13 @@ final class TypeInfoFactory {
+     throw new IllegalStateException(
+         "How can the type variable not be present in the class declaration!");
+   }
++  private static Type[] extractRealTypes(
++      Type[] actualTypeArguments, Type parentType, Class<?> rawParentClass) {
++    Preconditions.checkNotNull(actualTypeArguments);
++    Type[] retTypes = new Type[actualTypeArguments.length];
++    for (int i = 0; i < actualTypeArguments.length; ++i) {
++      retTypes[i] = getActualType(actualTypeArguments[i], parentType, rawParentClass);
++    }
++    return retTypes;
++  }
+ }
+\ No newline at end of file

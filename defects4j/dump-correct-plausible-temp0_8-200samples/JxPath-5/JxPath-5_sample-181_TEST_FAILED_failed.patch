@@ -1,0 +1,47 @@
+diff --git a/src/java/org/apache/commons/jxpath/ri/model/NodePointer.java b/src/java/org/apache/commons/jxpath/ri/model/NodePointer.java
+index 5559e33..4a3ec75 100644
+--- a/src/java/org/apache/commons/jxpath/ri/model/NodePointer.java
++++ b/src/java/org/apache/commons/jxpath/ri/model/NodePointer.java
+@@ -639,7 +639,7 @@ public abstract class NodePointer implements Pointer {
+         return compareNodePointers(this, depth1, pointer, depth2);
+     }
+ 
+-    private int compareNodePointers(
++private int compareNodePointers(
+         NodePointer p1,
+         int depth1,
+         NodePointer p2,
+@@ -653,27 +653,19 @@ public abstract class NodePointer implements Pointer {
+             int r = compareNodePointers(p1.parent, depth1 - 1, p2, depth2);
+             return r == 0 ? 1 : r;
+         }
+-        if (p1 == null && p2 == null) {
++        if (p1 != null && p2 != null && p1.equals(p2)) {
+             return 0;
+         }
+-
+-        if (p1 != null && p1.equals(p2)) {
++        else if (p1 == null && p2 == null) {
+             return 0;
+         }
+-
+-        if (depth1 == 1) {
+-            throw new JXPathException(
+-                    "Cannot compare pointers that do not belong to the same tree: '"
+-                            + p1 + "' and '" + p2 + "'");
++        else if (p1 != null) {
++            return 1;
+         }
+-        int r = compareNodePointers(p1.parent, depth1 - 1, p2.parent, depth2 - 1);
+-        if (r != 0) {
+-            return r;
++        else {
++            return -1;
+         }
+-
+-        return p1.parent.compareChildNodePointers(p1, p2);
+     }
+-
+     /**
+      * Print internal structure of a pointer for debugging
+      */

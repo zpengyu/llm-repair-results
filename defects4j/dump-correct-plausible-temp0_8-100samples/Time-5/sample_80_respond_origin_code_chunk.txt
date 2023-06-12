@@ -1,0 +1,25 @@
+    public Period normalizedStandard(PeriodType type) {
+        type = DateTimeUtils.getPeriodType(type);
+        int index = type.size();
+        long millis = 0;
+        while (--index >= 0) {
+            if (iValues[index] != 0) {
+                millis = safeMultiply(iValues[index], type.getFieldType(index).getUnitMillis());
+                break;
+            }
+        }
+        Period result = new Period(millis, type, ISOChronology.getInstanceUTC());
+        int years = getYears();
+        int months = getMonths();
+        if (years != 0 || months != 0) {
+            years = FieldUtils.safeAdd(years, months / 12);
+            months = months % 12;
+            if (years != 0) {
+                result = result.withYears(years);
+            }
+            if (months != 0) {
+                result = result.withMonths(months);
+            }
+        }
+        return result;
+    }

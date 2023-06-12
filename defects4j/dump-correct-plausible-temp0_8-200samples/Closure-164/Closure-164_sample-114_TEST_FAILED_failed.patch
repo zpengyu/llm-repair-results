@@ -1,0 +1,35 @@
+diff --git a/src/com/google/javascript/rhino/jstype/ArrowType.java b/src/com/google/javascript/rhino/jstype/ArrowType.java
+index 0c0ef637..cc8983b2 100644
+--- a/src/com/google/javascript/rhino/jstype/ArrowType.java
++++ b/src/com/google/javascript/rhino/jstype/ArrowType.java
+@@ -122,11 +118,12 @@ final class ArrowType extends JSType {
+           return false;
+         }
+       }
+-
+       boolean thisIsVarArgs = thisParam.isVarArgs();
+       boolean thatIsVarArgs = thatParam.isVarArgs();
+-
+       // "that" can't be a supertype, because it's missing a required argument.
++      if (thisIsVarArgs && !thatIsVarArgs) {
++        return false;
++      }
+         // NOTE(nicksantos): In our type system, we use {function(...?)} and
+         // {function(...NoType)} to to indicate that arity should not be
+         // checked. Strictly speaking, this is not a correct formulation,
+@@ -147,12 +142,12 @@ final class ArrowType extends JSType {
+         thatParam = null;
+       }
+     }
+-
+     // "that" can't be a supertype, because it's missing a required arguement.
+-
++    if (thatParam != null) {
++      return false;
++    }
+     return true;
+   }
+-
+   /**
+    * @return True if our parameter spec is equal to {@code that}'s parameter
+    *     spec.

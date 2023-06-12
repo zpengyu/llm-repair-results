@@ -1,0 +1,35 @@
+diff --git a/src/com/google/javascript/jscomp/Compiler.java b/src/com/google/javascript/jscomp/Compiler.java
+index f96ec5db..e9ebd085 100644
+--- a/src/com/google/javascript/jscomp/Compiler.java
++++ b/src/com/google/javascript/jscomp/Compiler.java
+@@ -283,10 +277,28 @@ public class Compiler extends AbstractCompiler {
+       composedGuards.addGuard(new DiagnosticGroupWarningsGuard(
+           DiagnosticGroups.CHECK_VARIABLES, CheckLevel.OFF));
+     }
+-
+     this.warningsGuard = composedGuards;
+   }
+-
++  protected boolean validateOptions() {
++    // When running in IDE mode, don't check types, as we want to allow IDE
++    // users to choose their own type checking level.
++    // This can be overridden with --check_types
++    if (options.ideMode && !options.checkTypes) {
++      return false;
++    }
++    if (options.trustedStrings == TrustedStrings.DONT_TRUST_STRINGS) {
++      if (options.outputCharset == null) {
++        errorManager.report(JSError.make(INPUT_SAME_AS_OUTPUT_ENCODING));
++        return false;
++      } else {
++        if (!Charset.isSupported(options.outputCharset)) {
++          errorManager.report(JSError.make(OUTPUT_ENCODING_NOT_SUPPORTED));
++          return false;
++        }
++      }
++    }
++    return true;
++  }
+   /**
+    * Initializes the instance state needed for a compile job.
+    */

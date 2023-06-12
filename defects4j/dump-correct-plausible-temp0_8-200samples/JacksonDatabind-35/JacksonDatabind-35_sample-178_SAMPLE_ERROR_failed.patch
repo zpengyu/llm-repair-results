@@ -1,0 +1,35 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/jsontype/impl/AsWrapperTypeDeserializer.java b/src/main/java/com/fasterxml/jackson/databind/jsontype/impl/AsWrapperTypeDeserializer.java
+index e9bf3cdcb..413489fa8 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/jsontype/impl/AsWrapperTypeDeserializer.java
++++ b/src/main/java/com/fasterxml/jackson/databind/jsontype/impl/AsWrapperTypeDeserializer.java
+@@ -86,19 +86,11 @@ public class AsWrapperTypeDeserializer
+             }
+         }
+         // first, sanity checks
+-        if (p.getCurrentToken() != JsonToken.START_OBJECT) {
+-            throw ctxt.wrongTokenException(p, JsonToken.START_OBJECT,
+-                    "need JSON Object to contain As.WRAPPER_OBJECT type information for class "+baseTypeName());
++        if (p.getCurrentToken() == JsonToken.VALUE_STRING) {
++            String typeId = p.getText();
++            JsonDeserializer<Object> deser = _findDeserializer(ctxt, typeId);
++            return deser.deserialize(p, ctxt);
+         }
+-            // should always get field name, but just in case...
+-            if (p.nextToken() != JsonToken.FIELD_NAME) {
+-                throw ctxt.wrongTokenException(p, JsonToken.FIELD_NAME,
+-                        "need JSON String that contains type id (for subtype of "+baseTypeName()+")");
+-            }
+-        final String typeId = p.getText();
+-        JsonDeserializer<Object> deser = _findDeserializer(ctxt, typeId);
+-        p.nextToken();
+-
+         // Minor complication: we may need to merge type id in?
+         if (_typeIdVisible && p.getCurrentToken() == JsonToken.START_OBJECT) {
+             // but what if there's nowhere to add it in? Error? Or skip? For now, skip.
+@@ -117,5 +108,4 @@ public class AsWrapperTypeDeserializer
+                     "expected closing END_OBJECT after type information and deserialized value");
+         }
+         return value;
+-    }
+-}
++    }}

@@ -1,0 +1,30 @@
+diff --git a/src/main/java/org/jsoup/helper/DataUtil.java b/src/main/java/org/jsoup/helper/DataUtil.java
+index e4fa18c..cd7c1df 100644
+--- a/src/main/java/org/jsoup/helper/DataUtil.java
++++ b/src/main/java/org/jsoup/helper/DataUtil.java
+@@ -92,7 +92,7 @@ public final class DataUtil {
+         }
+     }
+ 
+-    static Document parseInputStream(InputStream input, String charsetName, String baseUri, Parser parser) throws IOException  {
++    static Document parseInputStream(InputStream input, String charsetName, String baseUri, Parser parser) throws IOException {
+         if (input == null) // empty body
+             return new Document(baseUri);
+         input = ConstrainableInputStream.wrap(input, bufferSize, 0);
+@@ -168,7 +162,15 @@ public final class DataUtil {
+             }
+             Charset charset = Charset.forName(charsetName);
+             doc.outputSettings().charset(charset);
+-                // some charsets can read but not encode; switch to an encodable charset and update the meta el
++            // some charsets can read but not encode; switch to an encodable charset and update the meta el
++            if (!charset.canEncode() && doc.hasMetaCharsetElement()) {
++                doc.select("meta[charset]").remove();
++                doc.select("meta[http-equiv=content-type]").remove();
++                for (Element node : doc.getAllElements())
++                    node.appendChild(new DataNode("", doc.baseUri(), null)); // there will be at least one text node
++                String encodableCharset = getEncodableCharset(charset.displayName());
++                doc.charset(encodableCharset);
++            }
+         }
+         input.close();
+         return doc;

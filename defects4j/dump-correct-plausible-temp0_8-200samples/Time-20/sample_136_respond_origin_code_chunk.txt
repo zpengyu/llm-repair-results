@@ -1,0 +1,35 @@
+public int parseInto(DateTimeParserBucket bucket, String text, int position) {
+    DateTimeParser[] parsers = iParsers;
+    int length = parsers.length;
+
+    int bestValidPos = position;
+    Object bestValidState = null;
+    for (int i=0; i<length; i++) {
+        DateTimeParser parser = parsers[i];
+        int parsePos = parser.parseInto(bucket, text, position);
+        if (parsePos >= position) {
+            if (parsePos > bestValidPos) {
+                bestValidPos = parsePos;
+                bestValidState = bucket.saveState();
+            }
+            bucket.restoreState(originalState);
+        } else {
+            bucket.restoreState(originalState);
+            if (parsePos < 0) {
+                parsePos = ~parsePos;
+                if (parsePos > bestInvalidPos) {
+                    bestInvalidPos = parsePos;
+                }
+            }
+        }
+    }
+
+    if (bestValidPos > position) {
+        if (bestValidState != null) {
+            bucket.restoreState(bestValidState);
+        }
+        return bestValidPos;
+    }
+
+    return ~bestInvalidPos;
+}

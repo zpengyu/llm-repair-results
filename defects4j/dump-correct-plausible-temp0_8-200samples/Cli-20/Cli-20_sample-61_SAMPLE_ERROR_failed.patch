@@ -1,0 +1,41 @@
+diff --git a/src/java/org/apache/commons/cli/PosixParser.java b/src/java/org/apache/commons/cli/PosixParser.java
+index 2b1bbb1..e9aeb4e 100644
+--- a/src/java/org/apache/commons/cli/PosixParser.java
++++ b/src/java/org/apache/commons/cli/PosixParser.java
+@@ -140,7 +136,7 @@ public class PosixParser extends Parser {
+                 // requires bursting
+                 else
+                 {
+-                    burstToken(token, stopAtNonOption);
++                    burstToken(token, stopAtNonOption, iter);
+                 }
+             }
+             else if (stopAtNonOption)
+@@ -151,13 +147,24 @@ public class PosixParser extends Parser {
+             {
+                 tokens.add(token);
+             }
+-
+             gobble(iter);
+         }
+-
+         return (String[]) tokens.toArray(new String[tokens.size()]);
+     }
+-
++    private void burstToken(String token, boolean stopAtNonOption, Iterator iter)
++    {
++        try
++        {
++            for (int i = 1; i < token.length(); i++)
++            {
++                processOptionToken(String.valueOf(token.charAt(i)), stopAtNonOption);
++            }
++        }
++        catch (final ParseException exp)
++        {
++            tokens.add(token);
++        }
++    }
+     /**
+      * Adds the remaining tokens to the processed tokens list.
+      *

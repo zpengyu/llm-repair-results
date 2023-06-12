@@ -1,0 +1,23 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/deser/std/JsonNodeDeserializer.java b/src/main/java/com/fasterxml/jackson/databind/deser/std/JsonNodeDeserializer.java
+index 6cb784606..392aa1c04 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/deser/std/JsonNodeDeserializer.java
++++ b/src/main/java/com/fasterxml/jackson/databind/deser/std/JsonNodeDeserializer.java
+@@ -124,9 +124,16 @@ public class JsonNodeDeserializer
+             if (p.isExpectedStartArrayToken()) {
+                 return deserializeArray(p, ctxt, ctxt.getNodeFactory());
+             }
++            // 05-Aug-2016, tatu: [databind#1312] Allow START_OBJECT as well -- should allow
++            //    underlying POJOs to act just fine, and obviously can coerce to ArrayNode
++            if (p.isExpectedStartObjectToken()) {
++                JsonNode n = ctxt.readTree(p);
++                if (n.isArray()) {
++                    return (ArrayNode) n;
++                }
++            }
+             throw ctxt.mappingException(ArrayNode.class);
+-        }
+-    }
++        }    }
+ }
+ 
+ /**

@@ -1,0 +1,37 @@
+    public ArchiveInputStream createArchiveInputStream(final InputStream in)
+        throws ArchiveException {
+        if (in == null) {
+            throw new IllegalArgumentException("Stream must not be null.");
+        }
+
+        if (!in.markSupported()) {
+            throw new IllegalArgumentException("Mark is not supported.");
+        }
+
+        byte[] signature = new byte[12];
+        //The 12 bytes buffer is no longer enough to recognize all archive types,
+        //so we enlarge this buffer to 32 bytes.
+        //This 32 bytes buffer is enough to recognize all types of archive supported
+        //by Apache Commons Compress.
+        //int signatureLength = in.read(signature, 0, 12);
+
+        int signatureLength = in.read(signature, 0, 32);
+        //We have to reset the stream, otherwise the ZipInputStream will not work.
+        in.reset();
+
+        if (ZipArchiveInputStream.matches(signature, signatureLength)) {
+            return new ZipArchiveInputStream(in);
+        } else if (JarArchiveInputStream.matches(signature, signatureLength)) {
+            return new JarArchiveInputStream(in);
+        } else if (ArArchiveInputStream.matches(signature, signatureLength)) {
+            return new ArArchiveInputStream(in);
+        } else if (CpioArchiveInputStream.matches(signature, signatureLength)) {
+            return new CpioArchiveInputStream(in);
+        } else if (DumpArchiveInputStream.matches(signature, signatureLength)) {
+            return new DumpArchiveInputStream(in);
+        } else if (TarArchiveInputStream.matches(signature, signatureLength)) {
+            return new TarArchiveInputStream(in);
+        }
+
+        throw new ArchiveException("No Archiver found for the stream signature");
+    }

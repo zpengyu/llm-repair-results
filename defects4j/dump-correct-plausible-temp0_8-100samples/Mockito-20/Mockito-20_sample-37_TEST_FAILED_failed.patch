@@ -1,0 +1,43 @@
+diff --git a/src/org/mockito/internal/creation/bytebuddy/ByteBuddyMockMaker.java b/src/org/mockito/internal/creation/bytebuddy/ByteBuddyMockMaker.java
+index ddaada2f1..0daf70624 100644
+--- a/src/org/mockito/internal/creation/bytebuddy/ByteBuddyMockMaker.java
++++ b/src/org/mockito/internal/creation/bytebuddy/ByteBuddyMockMaker.java
+@@ -34,9 +34,28 @@ public class ByteBuddyMockMaker implements MockMaker {
+             mockInstance = classInstantiator.instantiate(mockedProxyType);
+             MockMethodInterceptor.MockAccess mockAccess = (MockMethodInterceptor.MockAccess) mockInstance;
+             mockAccess.setMockitoInterceptor(new MockMethodInterceptor(asInternalMockHandler(handler), settings));
+-
+             return ensureMockIsAssignableToMockedType(settings, mockInstance);
+         } catch (ClassCastException cce) {
++            //Try to resolve the classcast exception
++            if (cce.getMessage().contains("cannot be cast to")) {
++                String[] exceptionMessage = cce.getMessage().split("cannot be cast to");
++                if (exceptionMessage.length == 2) {
++                    String src = exceptionMessage[0].trim();
++                    String dest = exceptionMessage[1].trim();
++                    if (src.equals(dest)) {
++                        throw new MockitoException(join(
++                                "ClassCastException occurred while creating the mockito mock :",
++                                "  class to mock : " + describeClass(mockedProxyType),
++                                "  created class : " + describeClass(settings.getTypeToMock()),
++                                "  proxy instance class : " + describeClass(mockInstance),
++                                "  instance creation by : " + classInstantiator.getClass().getSimpleName(),
++                                "",
++                                "You might experience classloading issues, please ask the mockito mailing-list.",
++                                ""
++                        ), cce);
++                    }
++                }
++            }
+             throw new MockitoException(join(
+                     "ClassCastException occurred while creating the mockito mock :",
+                     "  class to mock : " + describeClass(mockedProxyType),
+@@ -46,7 +65,7 @@ public class ByteBuddyMockMaker implements MockMaker {
+                     "",
+                     "You might experience classloading issues, please ask the mockito mailing-list.",
+                     ""
+-            ),cce);
++            ), cce);
+         } catch (org.mockito.internal.creation.instance.InstantiationException e) {
+             throw new MockitoException("Unable to create mock instance of type '" + mockedProxyType.getSuperclass().getSimpleName() + "'", e);
+         }

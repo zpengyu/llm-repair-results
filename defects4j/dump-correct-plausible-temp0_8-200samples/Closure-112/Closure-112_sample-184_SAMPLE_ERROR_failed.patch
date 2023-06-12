@@ -1,0 +1,56 @@
+diff --git a/src/com/google/javascript/jscomp/TypeInference.java b/src/com/google/javascript/jscomp/TypeInference.java
+index 6c9c7846..ff00e673 100644
+--- a/src/com/google/javascript/jscomp/TypeInference.java
++++ b/src/com/google/javascript/jscomp/TypeInference.java
+@@ -1180,7 +1180,7 @@ class TypeInference
+    * inference will set the type of this on a function literal argument to the
+    * the actual type of T.
+    */
+-  private boolean inferTemplatedTypesForCall(
++private static boolean inferTemplatedTypesForCall(
+       Node n, FunctionType fnType) {
+     final ImmutableList<TemplateType> keys = fnType.getTemplateTypeMap()
+         .getTemplateKeys();
+@@ -1191,24 +1190,30 @@ class TypeInference
+     // Try to infer the template types
+     Map<TemplateType, JSType> inferred =
+         inferTemplateTypesFromParameters(fnType, n);
+-
+-
++    boolean madeChanges = false;
+     // Replace all template types. If we couldn't find a replacement, we
+     // replace it with UNKNOWN.
+     TemplateTypeReplacer replacer = new TemplateTypeReplacer(
+         registry, inferred);
+     Node callTarget = n.getFirstChild();
+-
+-    FunctionType replacementFnType = fnType.visit(replacer)
+-        .toMaybeFunctionType();
+-    Preconditions.checkNotNull(replacementFnType);
+-
+-    callTarget.setJSType(replacementFnType);
+-    n.setJSType(replacementFnType.getReturnType());
+-
+-    return replacer.madeChanges;
++    JSType callTargetType = callTarget.getJSType();
++    if (callTargetType != null) {
++      FunctionType replacementFnType = callTargetType.visit(replacer)
++          .toMaybeFunctionType();
++      Preconditions.checkNotNull(replacementFnType);
++      if (!replacementFnType.isUnknownType()) {
++        callTarget.setJSType(replacementFnType);
++        madeChanges = true;
++      }
++    }
++    JSType returnType = fnType.getReturnType();
++    JSType replacementReturnType = returnType.visit(replacer);
++    if (!replacementReturnType.isUnknownType()) {
++      n.setJSType(replacementReturnType);
++      madeChanges = true;
++    }
++    return madeChanges;
+   }
+-
+   private FlowScope traverseNew(Node n, FlowScope scope) {
+     scope = traverseChildren(n, scope);
+ 

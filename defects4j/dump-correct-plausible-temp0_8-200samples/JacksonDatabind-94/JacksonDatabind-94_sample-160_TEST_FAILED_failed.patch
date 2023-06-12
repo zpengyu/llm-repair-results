@@ -1,0 +1,25 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/jsontype/impl/SubTypeValidator.java b/src/main/java/com/fasterxml/jackson/databind/jsontype/impl/SubTypeValidator.java
+index 9fe2d40b0..31e4ef927 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/jsontype/impl/SubTypeValidator.java
++++ b/src/main/java/com/fasterxml/jackson/databind/jsontype/impl/SubTypeValidator.java
+@@ -103,9 +92,19 @@ public class SubTypeValidator
+                 // com.mchange.v2.c3p0.debug.AfterCloseLoggingComboPooledDataSource 
+                 }
+             }
++            else{
++                // [databind#1737]; more 3rd party
++                if (full.startsWith("com.mchange.v2")){
++                    if (full.startsWith("com.mchange.v2.c3p0.JndiRefForwardingDataSource")
++                        || full.startsWith("com.mchange.v2.c3p0.WrapperConnectionPoolDataSource")
++                        || full.startsWith("com.mchange.v2.c3p0.ComboPooledDataSource")
++                        || full.startsWith("com.mchange.v2.c3p0.debug.AfterCloseLoggingComboPooledDataSource")){
++                        break main_check;
++                    }
++                }
++            }
+             return;
+         } while (false);
+-
+         throw JsonMappingException.from(ctxt,
+                 String.format("Illegal type (%s) to deserialize: prevented for security reasons", full));
+     }

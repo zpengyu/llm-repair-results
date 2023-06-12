@@ -1,0 +1,21 @@
+diff --git a/src/com/google/javascript/jscomp/ExploitAssigns.java b/src/com/google/javascript/jscomp/ExploitAssigns.java
+index 196b710d..65d187a9 100644
+--- a/src/com/google/javascript/jscomp/ExploitAssigns.java
++++ b/src/com/google/javascript/jscomp/ExploitAssigns.java
+@@ -209,9 +209,13 @@ class ExploitAssigns extends AbstractPeepholeOptimization {
+       return true;
+     }
+     Preconditions.checkArgument(node.isGetProp());
+-
+-      node = node.getFirstChild();
+-    if (node.isName()
++    // This was buggy before, because it was modifying the AST without
++    // going through the compiler
++    // by setting the following variable directly we essentially say,
++    // "I know what I'm doing"
++    // to the compiler.
++    Node n = node.getFirstChild();
++    if (n.isName()
+         && isNameAssignedTo(node.getString(), replacement)) {
+       return false;
+     }

@@ -1,0 +1,48 @@
+diff --git a/src/main/java/org/apache/commons/math3/analysis/differentiation/DSCompiler.java b/src/main/java/org/apache/commons/math3/analysis/differentiation/DSCompiler.java
+index fc9944c36..db7f5e9d1 100644
+--- a/src/main/java/org/apache/commons/math3/analysis/differentiation/DSCompiler.java
++++ b/src/main/java/org/apache/commons/math3/analysis/differentiation/DSCompiler.java
+@@ -1412,13 +1407,39 @@ public class DSCompiler {
+             for (int i = 1; i < tmp2.length; ++i) {
+                 result[resultOffset + i] = -2 * tmp2[i]; // +/-pi - 2 * atan(y / (r - x))
+             }
+-
+         }
+-
+         // fix value to take special cases (+0/+0, +0/-0, -0/+0, -0/-0, +/-infinity) correctly
+-
++        final double x0 = x[xOffset];
++        final double y0 = y[yOffset];
++        if (y0 > 0) {
++            if (Double.isInfinite(x0)) {
++                if (Double.isPositiveInfinity(x0)) {
++                    result[resultOffset] = FastMath.copySign(0.5 * FastMath.PI, y0);
++                } else {
++                    result[resultOffset] = FastMath.copySign(1.5 * FastMath.PI, y0);
++                }
++                for (int i = 1; i < getSize(); ++i) {
++                    result[resultOffset + i] = result[resultOffset];
++                }
++            }
++        } else if (y0 < 0) {
++            if (Double.isInfinite(x0)) {
++                if (Double.isPositiveInfinity(x0)) {
++                    result[resultOffset] = FastMath.copySign(1.5 * FastMath.PI, y0);
++                } else {
++                    result[resultOffset] = FastMath.copySign(0.5 * FastMath.PI, y0);
++                }
++                for (int i = 1; i < getSize(); ++i) {
++                    result[resultOffset + i] = result[resultOffset];
++                }
++            }
++        } else {
++            result[resultOffset] = FastMath.copySign(FastMath.PI, x0);
++            for (int i = 1; i < getSize(); ++i) {
++                result[resultOffset + i] = FastMath.copySign(0.0, x0);
++            }
++        }
+     }
+-
+     /** Compute hyperbolic cosine of a derivative structure.
+      * @param operand array holding the operand
+      * @param operandOffset offset of the operand in its array

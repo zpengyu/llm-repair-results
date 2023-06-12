@@ -1,0 +1,29 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/deser/impl/CreatorCollector.java b/src/main/java/com/fasterxml/jackson/databind/deser/impl/CreatorCollector.java
+index fd590d628..216bf1707 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/deser/impl/CreatorCollector.java
++++ b/src/main/java/com/fasterxml/jackson/databind/deser/impl/CreatorCollector.java
+@@ -293,11 +291,20 @@ public class CreatorCollector
+             // one more thing: ok to override in sub-class
+             if (oldOne.getClass() == newOne.getClass()) {
+                 // [databind#667]: avoid one particular class of bogus problems
+-
+-                    throw new IllegalArgumentException("Conflicting "+TYPE_DESCS[typeIndex]
+-                            +" creators: already had explicitly marked "+oldOne+", encountered "+newOne);
++                if ((oldOne instanceof AnnotatedMember) && (newOne instanceof AnnotatedMember)) {
++                    // 08-Jun-2019, tatu: [databind#2525] Need to allow redefinition
++                    //   if we are trying to remove definition.
++                    boolean oldOneHasParam = ((AnnotatedMember) oldOne).hasParamTypes();
++                    boolean newOneHasParam = ((AnnotatedMember) newOne).hasParamTypes();
++                    if (oldOneHasParam != newOneHasParam) {
++                        _creators[typeIndex] = _fixAccess(newOne);
++                        return;
++                    }
++                }
++                throw new IllegalArgumentException("Conflicting "+TYPE_DESCS[typeIndex]
++                        +" creators: already had explicitly marked "+oldOne+", encountered "+newOne);
+                 // otherwise, which one to choose?
+-                    // new type more generic, use old
++                // new type more generic, use old
+                 // new type more specific, use it
+             }
+         }

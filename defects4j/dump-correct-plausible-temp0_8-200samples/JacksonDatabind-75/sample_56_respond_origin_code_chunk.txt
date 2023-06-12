@@ -1,0 +1,177 @@
+import java.io.IOException;
+import java.lang.reflect.Type;
+import java.util.LinkedHashSet;
+import java.util.Set;
+
+import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.annotation.JsonFormat.Shape;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.core.JsonGenerator;
+import com.fasterxml.jackson.core.JsonParser;
+import com.fasterxml.jackson.core.SerializableString;
+import com.fasterxml.jackson.core.io.SerializedString;
+import com.fasterxml.jackson.core.json.JsonWriteContext;
+import com.fasterxml.jackson.core.util.JsonGeneratorDelegate;
+import com.fasterxml.jackson.databind.*;
+import com.fasterxml.jackson.databind.introspect.AnnotatedMember;
+import com.fasterxml.jackson.databind.jsonFormatVisitors.JsonFormatVisitorWrapper;
+import com.fasterxml.jackson.databind.jsonFormatVisitors.JsonStringFormatVisitor;
+import com.fasterxml.jackson.databind.jsonFormatVisitors.JsonValueFormat;
+import com.fasterxml.jackson.databind.ser.std.StdScalarSerializer;
+import com.fasterxml.jackson.databind.type.TypeFactory;
+import com.fasterxml.jackson.databind.util.EnumValues;
+import com.fasterxml.jackson.databind.util.NameTransformer;
+
+/**
+ * Base class used by standard serializers for serializing
+ * Java Enums according to standard convention: using
+ * String name or ordinal index.
+ * Uses {@link com.fasterxml.jackson.databind.annotation.JsonFormat}
+ * for configuration
+ *
+ * @since 2.3
+ */
+@SuppressWarnings("serial")
+public class EnumSerializer
+    extends StdScalarSerializer<Enum<?>>
+    implements ContextualSerializer
+{
+    /**
+     * This map contains pre-resolved values (since there are ways
+     * to customize actual String constants to use) to use as
+     * serializations.
+     */
+    protected final EnumValues _values;
+
+    /*
+    /**********************************************************
+    /* Construction, initialization
+    /**********************************************************
+     */
+    
+    protected EnumSerializer(EnumValues v) {
+        super(Enum.class, false);
+        _values = v;
+    }
+
+    @SuppressWarnings("unchecked")
+    public static EnumSerializer construct(Class<?> enumClass, SerializationConfig config,
+            BeanDescription beanDesc, JsonFormat.Value format)
+    {
+        // 08-Apr-2015, tatu: As per [databind#749], we can not statically determine
+        //   between name() and toString(), need to construct `EnumValues` with names,
+        //   handle toString() case dynamically (for example)
+        EnumValues v = EnumValues.constructFromName(config, (Class<Enum<?>>) enumClass);
+        return new EnumSerializer(v);
+    }
+
+    /**
+     * Factory method used by {@link com.fasterxml.jackson.databind.ser.BasicSerializerFactory}
+     * for constructing serializer instance of Enum types.
+     *
+     * @since 2.1
+     * @deprecated Since 2.8
+     */
+    @Deprecated // since 2.8
+    public static EnumSerializer construct(Class<?> enumClass, SerializationConfig config,
+            BeanDescription beanDesc)
+    {
+        return construct(enumClass, config, beanDesc, null);
+    }
+
+    /*
+    /**********************************************************
+    /* Extended API for Jackson databind core
+    /**********************************************************
+     */
+
+    public EnumValues getEnumValues() { return _values; }
+
+    /*
+    /**********************************************************
+    /* Actual serialization
+    /**********************************************************
+     */
+
+    @Override
+    public void serialize(Enum<?> en, JsonGenerator g, SerializerProvider provider)
+        throws IOException
+    {
+        g.writeString(_values.serializedValueFor(en));
+    }
+
+    /*
+    /**********************************************************
+    /* Schema support
+    /**********************************************************
+     */
+
+    @Override
+    public JsonNode getSchema(SerializerProvider provider, Type typeHint)
+    {
+        ObjectNode objectNode = createSchemaNode("string", true);
+        if (typeHint != null) {
+            JavaType type = provider.constructType(typeHint);
+            if (type.isEnumType()) {
+                ArrayNode enumNode = objectNode.putArray("enum");
+                for (SerializableString value : _values.values()) {
+                    enumNode.add(value.getValue());
+                }
+            }
+        }
+        return objectNode;
+    }
+
+    @Override
+    public void acceptJsonFormatVisitor(JsonFormatVisitorWrapper visitor, JavaType typeHint)
+        throws JsonMappingException
+    {
+        JsonStringFormatVisitor stringVisitor = visitor.expectStringFormat(typeHint);
+        if (stringVisitor != null) {
+            Set<String> enums = new LinkedHashSet<String>();
+
+            // Use toString()?
+            if ((visitor.getProvider() != null) &&
+                    visitor.getProvider().isEnabled(SerializationFeature.WRITE_ENUMS_USING_TO_STRING)) {
+                for (Enum<?> e : _values.enums()) {
+                    enums.add(e.toString());
+                }
+            } else {
+                // No, serialize using name() or explicit overrides
+                for (SerializableString value : _values.values()) {
+                    enums.add(value.getValue());
+                }
+            }
+            stringVisitor.enumTypes(enums);
+        }
+    }
+
+    /*
+    /**********************************************************
+    /* Contextualization
+    /**********************************************************
+     */
+
+    @Override
+    public JsonSerializer<?> createContextual(SerializerProvider provider,
+            BeanProperty property) throws JsonMappingException
+    {
+        JsonFormat.Value format = findFormatOverrides(provider, property, handledType());
+        if (format != null) {
+            if (format.hasShape()) {
+                Shape shape = format.getShape();
+                // 01-Oct-2014, tatu: For convenience, consider "as-array" to also mean 'yes, use index')
+                if (shape.isNumeric() || (shape == Shape.ARRAY)) {
+                    return this;
+                }
+                if ((shape == Shape.OBJECT) || (shape == Shape.STRING) || shape == Shape.NATURAL) {
+                    return this;
+                }
+                throw new IllegalArgumentException(String.format(
+                        "Unsupported serialization shape (%s) for Enum %s, not supported as %s annotation",
+                        shape, handledType().getName(), "property"));
+            }
+        }
+        return this;
+    }
+}

@@ -1,0 +1,162 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/ser/std/NumberSerializers.java b/src/main/java/com/fasterxml/jackson/databind/ser/std/NumberSerializers.java
+index 6d0db8734..f944ab82f 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/ser/std/NumberSerializers.java
++++ b/src/main/java/com/fasterxml/jackson/databind/ser/std/NumberSerializers.java
+@@ -19,6 +19,18 @@ import com.fasterxml.jackson.databind.ser.ContextualSerializer;
+  * Container class for serializers used for handling standard JDK-provided types.
+  */
+ @SuppressWarnings("serial")
++import com.fasterxml.jackson.core.JsonGenerator;
++import com.fasterxml.jackson.databind.*;
++import com.fasterxml.jackson.databind.jsonFormatVisitors.JsonFormatVisitorWrapper;
++import com.fasterxml.jackson.databind.jsonFormatVisitors.JsonIntegerFormatVisitor;
++import com.fasterxml.jackson.databind.jsonFormatVisitors.JsonNumberFormatVisitor;
++import com.fasterxml.jackson.databind.ser.ContextualSerializer;
++import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
++import com.fasterxml.jackson.databind.type.TypeFactory;
++import java.io.IOException;
++import java.lang.reflect.Type;
++import java.util.HashMap;
++import java.util.Map;
+ public class NumberSerializers
+ {
+     protected NumberSerializers() { }
+@@ -41,73 +51,6 @@ public class NumberSerializers
+         allDeserializers.put(Double.class.getName(), DoubleSerializer.instance);
+         allDeserializers.put(Double.TYPE.getName(), DoubleSerializer.instance);
+     }
+-
+-    /*
+-    /**********************************************************
+-    /* Shared base class
+-    /**********************************************************
+-     */
+-
+-    protected abstract static class Base<T> extends StdScalarSerializer<T>
+-        implements ContextualSerializer
+-    {
+-
+-        protected final JsonParser.NumberType _numberType;
+-        protected final String _schemaType;
+-        protected final boolean _isInt;
+-
+-        protected Base(Class<?> cls, JsonParser.NumberType numberType, String schemaType) {
+-            super(cls, false);
+-            _numberType = numberType;
+-            _schemaType = schemaType;
+-            _isInt = (numberType == JsonParser.NumberType.INT)
+-                    || (numberType == JsonParser.NumberType.LONG)
+-                    || (numberType == JsonParser.NumberType.BIG_INTEGER)
+-                    ;
+-        }
+-
+-        @Override
+-        public JsonNode getSchema(SerializerProvider provider, Type typeHint) {
+-            return createSchemaNode(_schemaType, true);
+-        }
+-
+-        @Override
+-        public void acceptJsonFormatVisitor(JsonFormatVisitorWrapper visitor, JavaType typeHint) throws JsonMappingException
+-        {
+-            if (_isInt) {
+-                JsonIntegerFormatVisitor v2 = visitor.expectIntegerFormat(typeHint);
+-                if (v2 != null) {
+-                    v2.numberType(_numberType);
+-                }
+-            } else {
+-                JsonNumberFormatVisitor v2 = visitor.expectNumberFormat(typeHint);
+-                if (v2 != null) {
+-                    v2.numberType(_numberType);
+-                }
+-            }
+-        }
+-
+-        @Override
+-        public JsonSerializer<?> createContextual(SerializerProvider prov,
+-                BeanProperty property) throws JsonMappingException
+-        {
+-            if (property != null) {
+-                AnnotatedMember m = property.getMember();
+-                if (m != null) {
+-                    JsonFormat.Value format = prov.getAnnotationIntrospector().findFormat(m);
+-                    if (format != null) {
+-                        switch (format.getShape()) {
+-                        case STRING:
+-                            return ToStringSerializer.instance;
+-                        default:
+-                        }
+-                    }
+-                }
+-            }
+-            return this;
+-        }
+-    }
+-    
+     /*
+     /**********************************************************
+     /* Concrete serializers, numerics
+@@ -238,4 +153,63 @@ public class NumberSerializers
+             serialize(value, gen, provider);            
+         }
+     }
++    /*
++    /**********************************************************
++    /* Shared base class
++    /**********************************************************
++     */
++    protected abstract static class Base<T> extends StdScalarSerializer<T>
++        implements ContextualSerializer
++    {
++        protected final JsonParser.NumberType _numberType;
++        protected final String _schemaType;
++        protected final boolean _isInt;
++        protected Base(Class<?> cls, JsonParser.NumberType numberType, String schemaType) {
++            super(cls, false);
++            _numberType = numberType;
++            _schemaType = schemaType;
++            _isInt = (numberType == JsonParser.NumberType.INT)
++                    || (numberType == JsonParser.NumberType.LONG)
++                    || (numberType == JsonParser.NumberType.BIG_INTEGER)
++                    ;
++        }
++        @Override
++        public JsonNode getSchema(SerializerProvider provider, Type typeHint) {
++            return createSchemaNode(_schemaType, true);
++        }
++        @Override
++        public void acceptJsonFormatVisitor(JsonFormatVisitorWrapper visitor, JavaType typeHint) throws JsonMappingException
++        {
++            if (_isInt) {
++                JsonIntegerFormatVisitor v2 = visitor.expectIntegerFormat(typeHint);
++                if (v2 != null) {
++                    v2.numberType(_numberType);
++                }
++            } else {
++                JsonNumberFormatVisitor v2 = visitor.expectNumberFormat(typeHint);
++                if (v2 != null) {
++                    v2.numberType(_numberType);
++                }
++            }
++        }
++        @Override
++        public JsonSerializer<?> createContextual(SerializerProvider prov,
++                BeanProperty property) throws JsonMappingException
++        {
++            if (property != null) {
++                AnnotatedMember m = property.getMember();
++                if (m != null) {
++                    JsonFormat.Value format = prov.getAnnotationIntrospector().findFormat(m);
++                    if (format != null) {
++                        switch (format.getShape()) {
++                        case STRING:
++                            return ToStringSerializer.instance;
++                        default:
++                        }
++                    }
++                }
++            }
++            return this;
++        }
++    }
+ }
+\ No newline at end of file

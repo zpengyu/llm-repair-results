@@ -1,0 +1,22 @@
+diff --git a/src/com/google/javascript/jscomp/UnreachableCodeElimination.java b/src/com/google/javascript/jscomp/UnreachableCodeElimination.java
+index 60bfd244..5352ea7d 100644
+--- a/src/com/google/javascript/jscomp/UnreachableCodeElimination.java
++++ b/src/com/google/javascript/jscomp/UnreachableCodeElimination.java
+@@ -219,9 +196,16 @@ class UnreachableCodeElimination extends AbstractPostOrderCallback
+           }
+         }
+         break;
+-
+       case Token.CATCH:
+         Node tryNode = parent.getParent();
++        if (tryNode.getChildCount() < 3) {
++          // If a CATCH block is unreachable, it means the only exception
++          // this catch statement can catch is already caught by the previous
++          // catch block. So it is safe to remove it.
++          NodeUtil.removeChild(parent, n);
++          compiler.reportCodeChange();
++          return;
++        }
+         NodeUtil.maybeAddFinally(tryNode);
+         break;
+     }

@@ -1,0 +1,84 @@
+###Provide a fix for the buggy function
+###Buggy Function
+class FibonacciExample {
+    public static void main(String args[]) {
+        int n1 = 0, n2 = 1, n3, i, count = 10;
+
+        System.out.print(n1 + " " + n2);
+
+        for (i = 2; i < count; ++i) {
+            n3 = n1 - n2;
+            System.out.print(" " + n3);
+            n1 = n2;
+            n2 = n3;
+        }
+    }
+}
+
+###Fixed Function
+class FibonacciExample {
+    public static void main(String args[]) {
+        int n1 = 0, n2 = 1, n3, i, count = 10;
+
+        System.out.print(n1 + " " + n2);
+
+        for (i = 2; i < count; ++i) {
+            n3 = n1 + n2;
+            System.out.print(" " + n3);
+            n1 = n2;
+            n2 = n3;
+        }
+    }
+}
+
+###Provide a fix for the buggy function
+###Buggy Function
+private static boolean isReduceableFunctionExpression(Node n) {
+  return NodeUtil.isFunctionExpression(n);
+}
+###Fixed Function
+private static boolean isReduceableFunctionExpression(Node n) {
+  return NodeUtil.isFunctionExpression(n)
+      && !NodeUtil.isGetOrSetKey(n.getParent());
+}
+###Provide a fix for the buggy function
+###Buggy Function
+  private void inlineAliases(GlobalNamespace namespace) {
+    // Invariant: All the names in the worklist meet condition (a).
+    Deque<Name> workList = new ArrayDeque<Name>(namespace.getNameForest());
+    while (!workList.isEmpty()) {
+      Name name = workList.pop();
+
+      // Don't attempt to inline a getter or setter property as a variable.
+      if (name.type == Name.Type.GET || name.type == Name.Type.SET) {
+        continue;
+      }
+
+      if (name.globalSets == 1 && name.localSets == 0 &&
+          name.aliasingGets > 0) {
+        // {@code name} meets condition (b). Find all of its local aliases
+        // and try to inline them.
+        List<Ref> refs = Lists.newArrayList(name.getRefs());
+        for (Ref ref : refs) {
+          if (ref.type == Type.ALIASING_GET && ref.scope.isLocal()) {
+            // {@code name} meets condition (c). Try to inline it.
+            if (inlineAliasIfPossible(ref, namespace)) {
+              name.removeRef(ref);
+            }
+          }
+        }
+      }
+
+      // Check if {@code name} has any aliases left after the
+      // local-alias-inlining above.
+      if ((name.type == Name.Type.OBJECTLIT ||
+           name.type == Name.Type.FUNCTION) &&
+          name.aliasingGets == 0 && name.props != null) {
+        // All of {@code name}'s children meet condition (a), so they can be
+        // added to the worklist.
+        workList.addAll(name.props);
+      }
+    }
+  }
+
+###Fixed Function

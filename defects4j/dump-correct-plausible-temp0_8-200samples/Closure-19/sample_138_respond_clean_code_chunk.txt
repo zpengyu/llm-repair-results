@@ -1,0 +1,33 @@
+  protected void declareNameInScope(FlowScope scope, Node node, JSType type) {
+    switch (node.getType()) {
+      case Token.NAME:
+        scope.inferSlotType(node.getString(), type);
+        break;
+      case Token.GETPROP:
+        Node parent = node.getParent();
+        if (parent == null) {
+          scope.inferSlotType(node.getString(), type);
+          break;
+        }
+        switch (parent.getType()) {
+          case Token.ASSIGN:
+            Node lValue = parent.getFirstChild();
+            if (lValue.isGetProp() && lValue.getQualifiedName().equals(node.getQualifiedName())) {
+              scope.inferQualifiedSlot(node, node.getQualifiedName(),
+                  node.getJSType(), type);
+              break;
+            }
+            scope.inferSlotType(node.getString(), type);
+            break;
+          default:
+            scope.inferQualifiedSlot(node, node.getQualifiedName(),
+                node.getJSType(), type);
+            break;
+        }
+        break;
+        // "this" references aren't currently modeled in the CFG.
+      default:
+        throw new IllegalArgumentException("Node cannot be refined. \n" +
+            node.toStringTree());
+    }
+  }

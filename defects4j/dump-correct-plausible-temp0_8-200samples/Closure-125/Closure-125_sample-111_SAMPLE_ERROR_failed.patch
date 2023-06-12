@@ -1,0 +1,30 @@
+diff --git a/src/com/google/javascript/jscomp/TypeCheck.java b/src/com/google/javascript/jscomp/TypeCheck.java
+index 75a54ad5..cc2e6fe3 100644
+--- a/src/com/google/javascript/jscomp/TypeCheck.java
++++ b/src/com/google/javascript/jscomp/TypeCheck.java
+@@ -1659,8 +1659,12 @@ public class TypeCheck implements NodeTraversal.Callback, CompilerPass {
+     if (type.isConstructor() || type.isEmptyType() || type.isUnknownType()) {
+       FunctionType fnType = type.toMaybeFunctionType();
+       if (fnType != null) {
+-        visitParameterList(t, n, fnType);
+-        ensureTyped(t, n, fnType.getInstanceType());
++        if (!fnType.isGeneric()) {
++          visitParameterList(t, n, fnType);
++          ensureTyped(t, n, fnType.getInstanceType());
++        } else {
++          ensureTyped(t, n);
++        }
+       } else {
+         ensureTyped(t, n);
+       }
+@@ -1669,7 +1673,9 @@ public class TypeCheck implements NodeTraversal.Callback, CompilerPass {
+       ensureTyped(t, n);
+     }
+   }
+-
++In the main function of the HelloWorld example, there is a bug 
++since the system cannot print the variable i because it cannot 
++be resolved to a variable.
+   /**
+    * Check whether there's any property conflict for for a particular super
+    * interface

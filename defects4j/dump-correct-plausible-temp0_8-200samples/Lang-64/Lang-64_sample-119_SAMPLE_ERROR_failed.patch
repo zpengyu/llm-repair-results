@@ -1,0 +1,55 @@
+diff --git a/src/java/org/apache/commons/lang/enums/ValuedEnum.java b/src/java/org/apache/commons/lang/enums/ValuedEnum.java
+index 0823e77d..ed71b689 100644
+--- a/src/java/org/apache/commons/lang/enums/ValuedEnum.java
++++ b/src/java/org/apache/commons/lang/enums/ValuedEnum.java
+@@ -103,14 +103,7 @@ import org.apache.commons.lang.ClassUtils;
+  * @version $Id$
+  */
+ public abstract class ValuedEnum extends Enum {
+-    
+-    /**
+-     * Required for serialization support.
+-     * 
+-     * @see java.io.Serializable
+-     */
+     private static final long serialVersionUID = -7129650521543789085L;
+-    
+     /**
+      * The value contained in enum.
+      */
+@@ -189,10 +177,31 @@ public abstract class ValuedEnum extends Enum {
+      * @param other  the object to determine the value for
+      * @return the value
+      */
+-            // ignore - should never happen
+-            // ignore - should never happen
+-            // ignore - should never happen
+-
++    private static int getValue(Class enumClass, String name) {
++        try {
++            return ((ValuedEnum) Enum.getEnum(enumClass, name)).getValue();
++        } catch (Exception ex) {
++            return -1;
++        }
++    }
++    private static Map cValues = new HashMap();
++    private static int getValue(Class enumClass, Enum other) {
++        if (enumClass.isInstance(other) == false) {
++            return -1;
++        }
++        Map values = (Map) cValues.get(enumClass);
++        if (values == null) {
++            values = new HashMap();
++            List list = Enum.getEnumList(enumClass);
++            for (Iterator it = list.iterator(); it.hasNext();) {
++                ValuedEnum enumeration = (ValuedEnum) it.next();
++                values.put(enumeration.getName(), new Integer(enumeration.getValue()));
++            }
++            cValues.put(enumClass, values);
++        }
++        Integer value = (Integer) values.get(other.getName());
++        return (value == null ? -1 : value.intValue());
++    }
+     /**
+      * <p>Human readable description of this <code>Enum</code> item.</p>
+      *

@@ -1,0 +1,23 @@
+diff --git a/gson/src/main/java/com/google/gson/internal/UnsafeAllocator.java b/gson/src/main/java/com/google/gson/internal/UnsafeAllocator.java
+index a72d3d10..ec44e96c 100644
+--- a/gson/src/main/java/com/google/gson/internal/UnsafeAllocator.java
++++ b/gson/src/main/java/com/google/gson/internal/UnsafeAllocator.java
+@@ -92,7 +89,17 @@ public abstract class UnsafeAllocator {
+       };
+     } catch (Exception ignored) {
+     }
+-
++    // try common reflection
++    //
++    try {
++      return new UnsafeAllocator() {
++        @Override
++        public <T> T newInstance(Class<T> c) throws Exception {
++          return c.newInstance();
++        }
++      };
++    } catch (Exception ignored) {
++    }
+     // give up
+     return new UnsafeAllocator() {
+       @Override

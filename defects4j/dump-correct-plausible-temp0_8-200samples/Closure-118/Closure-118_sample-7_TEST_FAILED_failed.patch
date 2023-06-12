@@ -1,0 +1,27 @@
+diff --git a/src/com/google/javascript/jscomp/DisambiguateProperties.java b/src/com/google/javascript/jscomp/DisambiguateProperties.java
+index 96c66201..33eeca39 100644
+--- a/src/com/google/javascript/jscomp/DisambiguateProperties.java
++++ b/src/com/google/javascript/jscomp/DisambiguateProperties.java
+@@ -508,6 +506,22 @@ class DisambiguateProperties<T> implements CompilerPass {
+                 Warnings.INVALIDATION, name,
+                 (type == null ? "null" : type.toString()), n.toString(), ""));
+           }
++        } else {
++          Node getPropParent = child.getParent();
++          Node getPropKey = child;
++          Node objNode = n;
++          if (child.isGetterDef()) {
++            getPropParent = n;
++            getPropKey = child.getFirstChild();
++          } else if (child.isSetterDef()) {
++            getPropParent = n;
++            getPropKey = child.getFirstChild();
++          }
++          if (getPropParent.isStringKey() &&
++              getPropKey.isStringKey() &&
++              !objNode.isObjectLit()) {
++            getPropParent.getParent().replaceChild(getPropParent, getPropKey);
++          }
+         }
+       }
+     }

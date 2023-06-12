@@ -1,0 +1,31 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/deser/impl/ExternalTypeHandler.java b/src/main/java/com/fasterxml/jackson/databind/deser/impl/ExternalTypeHandler.java
+index b0797059f..6e9eadd71 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/deser/impl/ExternalTypeHandler.java
++++ b/src/main/java/com/fasterxml/jackson/databind/deser/impl/ExternalTypeHandler.java
+@@ -262,21 +262,15 @@ public class ExternalTypeHandler
+         for (int i = 0; i < len; ++i) {
+             String typeId = _typeIds[i];
+             final ExtTypedProperty extProp = _properties[i];
+-            if (typeId == null) {
+-                // let's allow missing both type and property (may already have been set, too)
+-                if (_tokens[i] == null) {
+-                    continue;
+-                }
+-                // but not just one
+-                // 26-Oct-2012, tatu: As per [databind#94], must allow use of 'defaultImpl'
+-                if (!extProp.hasDefaultType()) {
++            // [databind#999] this is actually sort of overkill, since we never
++            //   allow type id to be assigned using "default" value, but...
++            if (_tokens[i] != null) {
++                if ((typeId == null) && !extProp.hasDefaultType()) {
+                     ctxt.reportInputMismatch(_beanType,
+                             "Missing external type id property '%s'",
+                             extProp.getTypePropertyName());
+-                } else {
+-                    typeId = extProp.getDefaultTypeId();
+                 }
+-            } else if (_tokens[i] == null) {
++            } else if (typeId != null) {
+                 SettableBeanProperty prop = extProp.getProperty();
+                 ctxt.reportInputMismatch(_beanType,
+                         "Missing property '%s' for external type id '%s'",

@@ -1,0 +1,32 @@
+diff --git a/src/com/google/javascript/jscomp/Compiler.java b/src/com/google/javascript/jscomp/Compiler.java
+index e0dc0d38..862f434c 100644
+--- a/src/com/google/javascript/jscomp/Compiler.java
++++ b/src/com/google/javascript/jscomp/Compiler.java
+@@ -1293,11 +1283,7 @@ public class Compiler extends AbstractCompiler {
+             getTypeRegistry().forwardDeclareType(provide);
+           }
+         }
+-
+         try {
+-          inputs =
+-              (moduleGraph == null ? new JSModuleGraph(modules) : moduleGraph)
+-              .manageDependencies(options.dependencyOptions, inputs);
+           staleInputs = true;
+         } catch (CircularDependencyException e) {
+           report(JSError.make(
+@@ -1348,10 +1326,13 @@ public class Compiler extends AbstractCompiler {
+                   input.getName(), options.devMode != DevMode.OFF);
+           NodeTraversal.traverse(this, n, sia);
+         }
+-
++        if (options.inferTypes) {
++          TypeInferencePass typeInferencePass =
++              new TypeInferencePass(this, options.closurePass);
++          typeInferencePass.process(externsRoot, jsRoot);
++        }
+         jsRoot.addChildToBack(n);
+       }
+-
+       if (hasErrors()) {
+         return null;
+       }

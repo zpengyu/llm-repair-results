@@ -1,0 +1,26 @@
+diff --git a/gson/src/main/java/com/google/gson/internal/bind/TypeAdapters.java b/gson/src/main/java/com/google/gson/internal/bind/TypeAdapters.java
+index 2364c717..de15a107 100644
+--- a/gson/src/main/java/com/google/gson/internal/bind/TypeAdapters.java
++++ b/gson/src/main/java/com/google/gson/internal/bind/TypeAdapters.java
+@@ -907,14 +907,14 @@ public final class TypeAdapters {
+           }
+ 
+           @Override public T1 read(JsonReader in) throws IOException {
+-            T1 result = typeAdapter.read(in);
+-            if (result != null && !requestedType.isInstance(result)) {
+-              throw new JsonSyntaxException("Expected a " + requestedType.getName()
+-                  + " but was " + result.getClass().getName());
++            TypeAdapter<JsonElement> elementTypeAdapter = gson.getAdapter(JsonElement.class);
++            JsonElement jsonElement = elementTypeAdapter.read(in);
++            if (jsonElement.isJsonNull()) {
++              return null;
++            } else {
++              return gson.fromJson(jsonElement, type);
+             }
+-            return result;
+-          }
+-        };
++          }        };
+       }
+       @Override public String toString() {
+         return "Factory[typeHierarchy=" + clazz.getName() + ",adapter=" + typeAdapter + "]";

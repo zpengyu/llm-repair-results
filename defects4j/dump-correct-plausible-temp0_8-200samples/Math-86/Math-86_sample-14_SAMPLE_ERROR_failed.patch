@@ -1,0 +1,41 @@
+diff --git a/src/java/org/apache/commons/math/linear/CholeskyDecompositionImpl.java b/src/java/org/apache/commons/math/linear/CholeskyDecompositionImpl.java
+index 8229df2b9..817894a48 100644
+--- a/src/java/org/apache/commons/math/linear/CholeskyDecompositionImpl.java
++++ b/src/java/org/apache/commons/math/linear/CholeskyDecompositionImpl.java
+@@ -94,8 +94,7 @@ public class CholeskyDecompositionImpl implements CholeskyDecomposition {
+                                      final double relativeSymmetryThreshold,
+                                      final double absolutePositivityThreshold)
+         throws NonSquareMatrixException,
+-               NotSymmetricMatrixException, NotPositiveDefiniteMatrixException {
+-
++               NonSymmetricMatrixException, NotPositiveDefiniteMatrixException {
+         if (!matrix.isSquare()) {
+             throw new NonSquareMatrixException(matrix.getRowDimension(),
+                                                matrix.getColumnDimension());
+@@ -122,22 +117,20 @@ public class CholeskyDecompositionImpl implements CholeskyDecomposition {
+                 final double maxDelta =
+                     relativeSymmetryThreshold * Math.max(Math.abs(lIJ), Math.abs(lJI));
+                 if (Math.abs(lIJ - lJI) > maxDelta) {
+-                    throw new NotSymmetricMatrixException();
++                    throw new NonSymmetricMatrixException(i, j, maxDelta);
+                 }
+                 lJ[i] = 0;
+            }
+         }
+-
+         // transform the matrix
+         for (int i = 0; i < order; ++i) {
+-
+             final double[] ltI = lTData[i];
+-
+             // check diagonal element
+-
++            if (ltI[i] < absolutePositivityThreshold) {
++                throw new NotPositiveDefiniteMatrixException();
++            }
+             ltI[i] = Math.sqrt(ltI[i]);
+             final double inverse = 1.0 / ltI[i];
+-
+             for (int q = order - 1; q > i; --q) {
+                 ltI[q] *= inverse;
+                 final double[] ltQ = lTData[q];

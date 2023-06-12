@@ -1,0 +1,49 @@
+public static Locale toLocale(final String str) {
+        if (str == null) {
+            return null;
+        }
+        if (str.isEmpty()) {  // Since JDK 7
+            throw new IllegalArgumentException("Invalid locale format: " + str);
+        }
+        final char ch0 = str.charAt(0);
+        if (ch0 == '_') {
+            if (str.length() < 2) {
+                throw new IllegalArgumentException("Invalid locale format: " + str);
+            }
+            final char ch1 = str.charAt(1);
+            if (!Character.isUpperCase(ch1)) {
+                throw new IllegalArgumentException("Invalid locale format: " + str);
+            }
+            if (str.length() == 2) {
+                return new Locale("", str.substring(1));
+            }
+            if (str.charAt(2) != '_') {
+                throw new IllegalArgumentException("Invalid locale format: " + str);
+            }
+            return new Locale("", str.substring(1, 3), str.substring(3));
+        }
+        final String[] segments = str.split("_", -1);
+        final int len = segments.length;
+        if (len > 3) {
+            throw new IllegalArgumentException("Invalid locale format: " + str);
+        }
+        final String language = segments[0];
+        if (language.length() == 2) {
+            final String country = len >= 2 ? segments[1] : "";
+            if (country.length() == 2) {
+                final String variant = len >= 3 ? segments[2] : "";
+                if (variant.length() > 0) {
+                    return new Locale(language, country, variant);
+                }
+                return new Locale(language, country);
+            }
+            if (country.length() > 0) {
+                return new Locale(language, "", country);
+            }
+            return new Locale(language);
+        }
+        if (language.length() > 0) {
+            return new Locale("", language);
+        }
+        throw new IllegalArgumentException("Invalid locale format: " + str);
+    }

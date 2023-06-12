@@ -1,0 +1,28 @@
+diff --git a/src/com/google/javascript/rhino/jstype/PrototypeObjectType.java b/src/com/google/javascript/rhino/jstype/PrototypeObjectType.java
+index 77c5441e..7ff21abc 100644
+--- a/src/com/google/javascript/rhino/jstype/PrototypeObjectType.java
++++ b/src/com/google/javascript/rhino/jstype/PrototypeObjectType.java
+@@ -576,6 +575,21 @@ class PrototypeObjectType extends ObjectType {
+           defineInferredProperty(prop, typeToInfer, null);
+         }
+       }
++    } else if (constraintObj.isFunctionType()) {
++      // Handle the case where the constraint object is a function type.
++      //
++      // /** @constructor */
++      // function Foo() {}
++      // /** @type {Foo} */
++      // var f = new Foo();
++      //
++      // We want to modify the object literal to match the constraint, by
++      // assigning all the properties on the constraint to the object
++      // literal.
++      FunctionType constraintFn = constraintObj.toMaybeFunctionType();
++      for (String prop : constraintFn.getOwnPropertyNames()) {
++        JSType propType = constraintFn.getPropertyType(prop);
++        defineDeclaredProperty(prop, propType, null);
++      }
+     }
+-  }
+-}
++  }}

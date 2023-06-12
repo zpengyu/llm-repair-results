@@ -1,0 +1,47 @@
+private static class RemoveUnnecessaryConversionPass extends AbstractPostOrderCallback {
+    private final AbstractCompiler compiler;
+    private final boolean late;
+    private final boolean assumeGettersArePure;
+    RemoveUnnecessaryConversionPass(AbstractCompiler compiler, boolean late, boolean assumeGettersArePure) {
+        this.compiler = compiler;
+        this.late = late;
+        this.assumeGettersArePure = assumeGettersArePure;
+    }
+    @Override
+    public void visit(NodeTraversal t, Node n, Node parent) {
+        if (n.getType() != Token.CAST) {
+            return;
+        }
+        JSType fromType = n.getJSType();
+        JSType toType = parent.getJSType();
+        if (toType == null || fromType == null) {
+            return;
+        }
+        Node child = n.getFirstChild();
+        if (!child.isQualifiedName()) {
+            // TODO(johnlenz): support qualified names here too.
+            return;
+        }
+        if (!(child.getParent() == n && child.getNext() == null)) {
+            // TODO(johnlenz): support expressions here too.
+            return;
+        }
+        // Special case, if the cast is a function, the return type can be ignored.
+        if (fromType.isFunctionType()) {
+            fromType = fromType.toMaybeFunctionType().getReturnType();
+        }
+        if (toType.isEquivalentTo(fromType)) {
+            // Remove the cast.
+            // TODO(johnlenz): update the source info comments, if any.
+            compiler.reportCodeChange();
+            // If the cast is a direct child of an IF statement, the IF
+            // statement's type becomes unknown.
+            if (parent.isIf() && n.getParent() == n.getGrandparent().getFirstChild()) {
+                parent.getJSType().setTypeToUnknown();
+            }
+            parent.replaceChild(n, n.removeFirstChild());
+            // TODO(johnlenz): Remove the TYPE_BEFORE_CAST property from the
+            // removed node.
+        }
+    }
+}

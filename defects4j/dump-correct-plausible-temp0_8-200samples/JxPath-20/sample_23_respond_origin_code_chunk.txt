@@ -1,0 +1,116 @@
+public abstract class CoreOperationRelationalExpression extends CoreOperation {
+
+    /**
+     * Create a new CoreOperationRelationalExpression.
+     * @param args arguments
+     */
+    protected CoreOperationRelationalExpression(Expression[] args) {
+        super(args);
+    }
+
+    public final Object computeValue(EvalContext context) {
+        Object left = args[0].compute(context);
+        Object right = args[1].compute(context);
+
+        if (left instanceof InitialContext) {
+            left = ((InitialContext) left).getSingleNodePointer();
+        }
+        if (right instanceof InitialContext) {
+            right = ((InitialContext) right).getSingleNodePointer();
+        }
+
+        if (left instanceof Collection) {
+            left = ((Collection) left).iterator();
+        }
+        if (right instanceof Collection) {
+            right = ((Collection) right).iterator();
+        }
+
+        if (left instanceof Iterator && right instanceof Iterator) {
+            HashSet leftSet = new HashSet();
+            while (((Iterator) left).hasNext()) {
+                leftSet.add(((Iterator) left).next());
+            }
+            while (((Iterator) right).hasNext()) {
+                if (containsMatch(leftSet.iterator(), ((Iterator) right).next())) {
+                    return Boolean.TRUE;
+                }
+            }
+            return Boolean.FALSE;
+        }
+
+        if (left instanceof Iterator) {
+            return containsMatch((Iterator) left, right)
+                ? Boolean.TRUE : Boolean.FALSE;
+        }
+        if (right instanceof Iterator) {
+            return containsMatch((Iterator) right, left)
+                ? Boolean.TRUE : Boolean.FALSE;
+        }
+
+        double ld = InfoSetUtil.doubleValue(left);
+        if (Double.isNaN(ld)) {
+            return Boolean.FALSE;
+        }
+        double rd = InfoSetUtil.doubleValue(right);
+        if (Double.isNaN(rd)) {
+            return Boolean.FALSE;
+        }
+        return evaluateCompare(ld == rd ? 0 : ld < rd ? -1 : 1)
+            ? Boolean.TRUE : Boolean.FALSE;
+    }
+
+    protected final int getPrecedence() {
+        return RELATIONAL_EXPR_PRECEDENCE;
+    }
+
+    protected final boolean isSymmetric() {
+        return false;
+    }
+
+    /**
+     * Template method for subclasses to evaluate the result of a comparison.
+     * @param compare result of comparison to evaluate
+     * @return ultimate operation success/failure
+     */
+    protected abstract boolean evaluateCompare(int compare);
+
+    /**
+     * Compare left to right.
+     * @param left left operand
+     * @param right right operand
+     * @return operation success/failure
+     */
+    private boolean containsMatch(Iterator it, Object value) {
+        while (it.hasNext()) {
+            Object element = it.next();
+
+            if (element instanceof InitialContext) {
+                element = ((InitialContext) element).getSingleNodePointer();
+            }
+
+            if (element instanceof Collection) {
+                element = ((Collection) element).iterator();
+            }
+
+            if (element instanceof Iterator) {
+                return containsMatch((Iterator) element, value);
+            }
+
+            double ed = InfoSetUtil.doubleValue(element);
+            if (Double.isNaN(ed)) {
+                continue;
+            }
+            double vd = InfoSetUtil.doubleValue(value);
+            if (Double.isNaN(vd)) {
+                continue;
+            }
+            if (evaluateCompare(ed == vd ? 0 : ed < vd ? -1 : 1)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+}
+

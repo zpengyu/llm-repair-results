@@ -1,0 +1,14 @@
+      default:
+        if (NodeUtil.isAssignmentOp(n) && NodeUtil.isName(n.getFirstChild())) {
+          Node lhs = n.getFirstChild();
+          if (!NodeUtil.isAssign(n)) {
+            // assignments such as a += 1 reads a.
+            addToSetIfLocal(lhs, gen);
+          }
+          computeGenKill(lhs.getNext(), gen, kill, conditional);
+        } else {
+          for (Node c = n.getFirstChild(); c != null; c = c.getNext()) {
+            computeGenKill(c, gen, kill, conditional);
+          }
+        }
+        return;

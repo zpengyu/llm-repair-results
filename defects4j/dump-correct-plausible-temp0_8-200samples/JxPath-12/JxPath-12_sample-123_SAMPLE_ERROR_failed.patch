@@ -1,0 +1,45 @@
+diff --git a/src/java/org/apache/commons/jxpath/ri/model/dom/DOMNodePointer.java b/src/java/org/apache/commons/jxpath/ri/model/dom/DOMNodePointer.java
+index a5bb202..a354670 100644
+--- a/src/java/org/apache/commons/jxpath/ri/model/dom/DOMNodePointer.java
++++ b/src/java/org/apache/commons/jxpath/ri/model/dom/DOMNodePointer.java
+@@ -92,20 +92,20 @@ public class DOMNodePointer extends NodePointer {
+             if (node.getNodeType() != Node.ELEMENT_NODE) {
+                 return false;
+             }
+-
++            QName nodeName = getNodeName(node);
++            String namespaceURI = nodeName.getNamespaceURI();
++            String nodePrefix = nodeName.getPrefix();
+             NodeNameTest nodeNameTest = (NodeNameTest) test;
+             QName testName = nodeNameTest.getNodeName();
+-            String namespaceURI = nodeNameTest.getNamespaceURI();
+             boolean wildcard = nodeNameTest.isWildcard();
+             String testPrefix = testName.getPrefix();
+             if (wildcard && testPrefix == null) {
+                 return true;
+             }
+             if (wildcard
+-                || testName.getName()
+-                        .equals(DOMNodePointer.getLocalName(node))) {
+-                String nodeNS = DOMNodePointer.getNamespaceURI(node);
+-                return equalStrings(namespaceURI, nodeNS);
++                || testName.getName().equals(nodeName.getName())) {
++                String testNS = nodeNameTest.getNamespaceURI();
++                return equalStrings(testNS, namespaceURI);
+             }
+             return false;
+         }
+@@ -134,7 +134,12 @@ public class DOMNodePointer extends NodePointer {
+         }
+         return false;
+     }
+-
++    public static QName getNodeName(Node node) {
++        String localName = node.getLocalName();
++        String namespaceURI = node.getNamespaceURI();
++        String prefix = node.getPrefix();
++        return new QName(namespaceURI, localName, prefix);
++    }
+     private static boolean equalStrings(String s1, String s2) {
+         if (s1 == s2) {
+             return true;

@@ -1,0 +1,29 @@
+diff --git a/src/main/java/org/jsoup/parser/Parser.java b/src/main/java/org/jsoup/parser/Parser.java
+index 8cc01d2..b930276 100644
+--- a/src/main/java/org/jsoup/parser/Parser.java
++++ b/src/main/java/org/jsoup/parser/Parser.java
+@@ -162,8 +155,23 @@ public class Parser {
+                 doc.setBaseUri(href); // set on the doc so doc.createElement(Tag) will get updated base
+             }
+         }
++        String absUrl = child.absUrl("abs:src");
++        if (absUrl.length() > 0 && child.tagName().equals("frame")) {
++            try {
++                URL url = new URL(doc.baseUri());
++                URL[] urlArray = new URL[1];
++                urlArray[0] = url;
++                URLClassLoader loader = new URLClassLoader(urlArray);
++                Class<?> c = loader.loadClass("java.net.URL");
++                Object[] param = new Object[1];
++                param[0] = absUrl;
++                Method m = c.getDeclaredMethod("openStream", null);
++                m.invoke(c, param);
++            } catch (Exception e) {
++                // TODO: handle exception
++            }
++        }
+     }
+-
+     private Attribute parseAttribute() {
+         tq.consumeWhitespace();
+         String key = tq.consumeAttributeKey();

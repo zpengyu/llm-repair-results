@@ -1,0 +1,25 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/deser/std/JsonNodeDeserializer.java b/src/main/java/com/fasterxml/jackson/databind/deser/std/JsonNodeDeserializer.java
+index 6cb784606..73560f8f4 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/deser/std/JsonNodeDeserializer.java
++++ b/src/main/java/com/fasterxml/jackson/databind/deser/std/JsonNodeDeserializer.java
+@@ -121,12 +121,17 @@ public class JsonNodeDeserializer
+         @Override
+         public ArrayNode deserialize(JsonParser p, DeserializationContext ctxt) throws IOException
+         {
+-            if (p.isExpectedStartArrayToken()) {
++            JsonToken t = p.getCurrentToken();
++            if (t == JsonToken.START_ARRAY) {
+                 return deserializeArray(p, ctxt, ctxt.getNodeFactory());
+             }
++            if (t == JsonToken.VALUE_STRING && ctxt.isEnabled(DeserializationFeature.ACCEPT_EMPTY_ARRAY_AS_NULL_OBJECT)) {
++                if (p.getText().length() == 0) {
++                    return null;
++                }
++            }
+             throw ctxt.mappingException(ArrayNode.class);
+-        }
+-    }
++        }    }
+ }
+ 
+ /**

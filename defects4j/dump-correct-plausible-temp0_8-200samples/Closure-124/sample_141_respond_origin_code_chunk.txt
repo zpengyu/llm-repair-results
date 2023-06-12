@@ -1,0 +1,17 @@
+  private boolean isSafeReplacement(Node node, Node replacement) {
+    // No checks are needed for simple names.
+    if (node.isName()) {
+      return true;
+    }
+    Preconditions.checkArgument(node.isGetProp());
+    node = node.getFirstChild();
+    // If the name is assigned to, but the replacement name is not
+    // (i.e. it's an unqualified name), then the replacement is not safe.
+    if (node.isName()
+        && isNameAssignedTo(node.getString(), replacement)) {
+      return false;
+    }
+
+    // Replacement is safe if the object part is safe.
+    return isSafeReplacement(node, replacement);
+  }

@@ -1,0 +1,30 @@
+diff --git a/src/com/google/javascript/jscomp/ProcessClosurePrimitives.java b/src/com/google/javascript/jscomp/ProcessClosurePrimitives.java
+index d1d12a3c..d97f7604 100644
+--- a/src/com/google/javascript/jscomp/ProcessClosurePrimitives.java
++++ b/src/com/google/javascript/jscomp/ProcessClosurePrimitives.java
+@@ -806,8 +804,24 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback
+         }
+         compiler.reportCodeChange();
+       }
++      if (candidateDefinition != null &&
++          NodeUtil.isExpressionNode(candidateDefinition)) {
++        // TODO(nicksantos): This is a hack for a bug that I don't quite
++        // understand. The candidateDefinition for "goog.getCssName"
++        // has the wrong source info. This should be fixed in the
++        // source normalization pass.
++        //
++        // Also, this hack doesn't work on Safari, because it can't
++        // create new source info in the middle of the file.
++        // It's probably better to just move this node to be a
++        // sibling of the first node.
++        Node assignNode = candidateDefinition.getFirstChild();
++        assignNode.putProp(Node.ORIGINALNAME_PROP,
++                           assignNode.getFirstChild().getString());
++        Node nameNode = assignNode.getFirstChild();
++        nameNode.copyInformationFrom(candidateDefinition);
++      }
+     }
+-
+     /**
+      * Create the declaration node for this name, without inserting it
+      * into the AST.

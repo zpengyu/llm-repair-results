@@ -1,0 +1,45 @@
+diff --git a/src/main/java/org/joda/time/DateTimeZone.java b/src/main/java/org/joda/time/DateTimeZone.java
+index 5c7a348c..2d997b54 100644
+--- a/src/main/java/org/joda/time/DateTimeZone.java
++++ b/src/main/java/org/joda/time/DateTimeZone.java
+@@ -1161,24 +1161,23 @@ public abstract class DateTimeZone implements Serializable {
+      * @return the adjusted instant millis
+      */
+     public long adjustOffset(long instant, boolean earlierOrLater) {
+-        // a bit messy, but will work in all non-pathological cases
+-
+-        // evaluate 3 hours before and after to work out if anything is happening
+-        long instantBefore = convertUTCToLocal(instant - 3 * DateTimeConstants.MILLIS_PER_HOUR);
+-        long instantAfter = convertUTCToLocal(instant + 3 * DateTimeConstants.MILLIS_PER_HOUR);
+-        if (instantBefore == instantAfter) {
+-            return instant;  // not an overlap (less than is a gap, equal is normal case)
++        long offset = getOffset(instant);  // get the offset BEFORE the gap
++        instant = convertUTCToLocal(instant);  // and then recalculate instant
++        if (earlierOrLater) {
++            // TODO: this block is untested as no rules exist in real life to test it
++            long next = nextTransition(instant);
++            if (next == (instant - offset)) {
++                // next transition is in the current daylight saving period, so use it
++                return convertLocalToUTC(next, true, offset);
++            } else {
++                // next transition is in the gap or standard period
++                return instant - offset;
++            }
++        } else {
++            long prev = previousTransition(instant);
++            return convertLocalToUTC(prev, true, offset);
+         }
+-
+-        // work out range of instants that have duplicate local times
+-        long local = convertUTCToLocal(instant);
+-        return convertLocalToUTC(local, false, earlierOrLater ? instantAfter : instantBefore);
+-
+-        // calculate result
+-          // currently in later offset
+-          // currently in earlier offset
+-    }
+-//    System.out.println(new DateTime(transitionStart, DateTimeZone.UTC) + " " + new DateTime(transitionStart, this));
++    }//    System.out.println(new DateTime(transitionStart, DateTimeZone.UTC) + " " + new DateTime(transitionStart, this));
+ 
+     //-----------------------------------------------------------------------
+     /**

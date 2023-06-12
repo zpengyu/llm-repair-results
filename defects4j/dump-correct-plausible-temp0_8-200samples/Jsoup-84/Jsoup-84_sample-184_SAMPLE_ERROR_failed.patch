@@ -1,0 +1,25 @@
+diff --git a/src/main/java/org/jsoup/helper/W3CDom.java b/src/main/java/org/jsoup/helper/W3CDom.java
+index f866f43..9eb2edc 100644
+--- a/src/main/java/org/jsoup/helper/W3CDom.java
++++ b/src/main/java/org/jsoup/helper/W3CDom.java
+@@ -83,13 +83,16 @@ public class W3CDom {
+             namespacesStack.push(new HashMap<>(namespacesStack.peek())); // inherit from above on the stack
+             if (source instanceof org.jsoup.nodes.Element) {
+                 org.jsoup.nodes.Element sourceEl = (org.jsoup.nodes.Element) source;
+-
++                Element el;
+                 String prefix = updateNamespaces(sourceEl);
+                 String namespace = namespacesStack.peek().get(prefix);
+                 String tagName = sourceEl.tagName();
+-
+-                Element el =
+-                    doc.createElementNS(namespace, tagName);
++                if (sourceEl.isHTMLElement()) {
++                    el = doc.createElementNS(HTML_NAMESPACE, tagName);
++                    el.setPrefix(HTML_NAMESPACE_PREFIX);
++                } else {
++                    el = doc.createElementNS(namespace, tagName);
++                }
+                 copyAttributes(sourceEl, el);
+                 if (dest == null) { // sets up the root
+                     doc.appendChild(el);

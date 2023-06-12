@@ -1,0 +1,22 @@
+diff --git a/src/main/java/org/jsoup/helper/DataUtil.java b/src/main/java/org/jsoup/helper/DataUtil.java
+index bbbd8fb..29b843f 100644
+--- a/src/main/java/org/jsoup/helper/DataUtil.java
++++ b/src/main/java/org/jsoup/helper/DataUtil.java
+@@ -148,8 +142,16 @@ public final class DataUtil {
+             if (charsetName == null)
+                 charsetName = defaultCharset;
+             BufferedReader reader = new BufferedReader(new InputStreamReader(input, charsetName), bufferSize);
++            if (fullyRead)
+                 doc = parser.parseInput(reader, baseUri);
+-                // io exception when parsing (not seen before because reading the stream as we go)
++            else { // not fully read, need to read the rest and parse again
++                StringBuilder sb = new StringBuilder(firstBytes.remaining());
++                sb.append(reader.readLine()); // add first line to string builder (may be truncated or not)
++                String line;
++                while ((line = reader.readLine()) != null)
++                    sb.append(line);
++                doc = parser.parseInput(sb.toString(), baseUri);
++            }
+             doc.outputSettings().charset(charsetName);
+         }
+         input.close();

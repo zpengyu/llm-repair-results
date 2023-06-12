@@ -1,0 +1,20 @@
+diff --git a/src/com/google/javascript/jscomp/NodeUtil.java b/src/com/google/javascript/jscomp/NodeUtil.java
+index f352b269..4852938c 100644
+--- a/src/com/google/javascript/jscomp/NodeUtil.java
++++ b/src/com/google/javascript/jscomp/NodeUtil.java
+@@ -1416,10 +1416,13 @@ public final class NodeUtil {
+     if (recurse) {
+       return allResultsMatch(n, MAY_BE_STRING_PREDICATE);
+     } else {
+-      return mayBeStringHelper(n);
++      if (mayBeStringHelper(n)) {
++        return true;
++      } else {
++        return null != n.getParent() && n.getParent().getParent().isSwitch();
++      }
+     }
+   }
+-
+   static boolean mayBeStringHelper(Node n) {
+     return !isNumericResult(n) && !isBooleanResult(n)
+         && !isUndefined(n) && !n.isNull();

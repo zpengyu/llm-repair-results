@@ -1,0 +1,36 @@
+diff --git a/src/com/google/javascript/jscomp/UnreachableCodeElimination.java b/src/com/google/javascript/jscomp/UnreachableCodeElimination.java
+index 60bfd244..b9324d03 100644
+--- a/src/com/google/javascript/jscomp/UnreachableCodeElimination.java
++++ b/src/com/google/javascript/jscomp/UnreachableCodeElimination.java
+@@ -138,14 +125,11 @@ class UnreachableCodeElimination extends AbstractPostOrderCallback
+      * if-else conversion but it handles more complicated switch statements
+      * much nicer.
+      */
+-
+     // If n is null the target is the end of the function, nothing to do.
+     if (n == null) {
+-       return n;
++      return n;
+     }
+-
+     DiGraphNode<Node, Branch> gNode = curCfg.getDirectedGraphNode(n);
+-
+     if (gNode == null) {
+       return n;
+     }
+@@ -190,12 +171,13 @@ class UnreachableCodeElimination extends AbstractPostOrderCallback
+     }
+     return n;
+   }
+-
+   private Node computeFollowing(Node n) {
+     Node next = ControlFlowAnalysis.computeFollowNode(n);
++    if (next != null && next.isVar()) {
++      next = next.getNext();
++    }
+     return next;
+   }
+-
+   private void removeDeadExprStatementSafely(Node n) {
+     Node parent = n.getParent();
+     if (n.getType() == Token.EMPTY ||

@@ -1,0 +1,66 @@
+diff --git a/src/org/mockito/internal/invocation/InvocationMatcher.java b/src/org/mockito/internal/invocation/InvocationMatcher.java
+index a3a7c08df..042cb26b3 100644
+--- a/src/org/mockito/internal/invocation/InvocationMatcher.java
++++ b/src/org/mockito/internal/invocation/InvocationMatcher.java
+@@ -24,9 +23,10 @@ public class InvocationMatcher implements DescribedInvocation, CapturesArgumensF
+     private static final long serialVersionUID = -3047126096857467610L;
+     private final Invocation invocation;
+     private final List<Matcher> matchers;
+-
++    private final Object[] rawArguments;
+     public InvocationMatcher(Invocation invocation, List<Matcher> matchers) {
+         this.invocation = invocation;
++        this.rawArguments = invocation.getRawArguments();
+         if (matchers.isEmpty()) {
+             this.matchers = ArgumentsProcessor.argumentsToMatchers(invocation.getArguments());
+         } else {
+@@ -95,18 +82,17 @@ public class InvocationMatcher implements DescribedInvocation, CapturesArgumensF
+         //sometimes java generates forwarding methods when generics are in play see JavaGenericsForwardingMethodsTest
+         Method m1 = invocation.getMethod();
+         Method m2 = candidate.getMethod();
+-        
+         if (m1.getName() != null && m1.getName().equals(m2.getName())) {
+-        	/* Avoid unnecessary cloning */
+-        	Class[] params1 = m1.getParameterTypes();
+-        	Class[] params2 = m2.getParameterTypes();
+-        	if (params1.length == params2.length) {
+-        	    for (int i = 0; i < params1.length; i++) {
+-        		if (params1[i] != params2[i])
+-        		    return false;
+-        	    }
+-        	    return true;
+-        	}
++            /* Avoid unnecessary cloning */
++            Class[] params1 = m1.getParameterTypes();
++            Class[] params2 = m2.getParameterTypes();
++            if (params1.length == params2.length) {
++                for (int i = 0; i < params1.length; i++) {
++                    if (params1[i] != params2[i])
++                        return false;
++                }
++                return true;
++            }
+         }
+         return false;
+     }
+@@ -114,10 +99,9 @@ public class InvocationMatcher implements DescribedInvocation, CapturesArgumensF
+     public Location getLocation() {
+         return invocation.getLocation();
+     }
+-
+     public void captureArgumentsFrom(Invocation invocation) {
+         if (invocation.getMethod().isVarArgs()) {
+-            int indexOfVararg = invocation.getRawArguments().length - 1;
++            int indexOfVararg = rawArguments.length - 1;
+             for (int position = 0; position < indexOfVararg; position++) {
+                 Matcher m = matchers.get(position);
+                 if (m instanceof CapturesArguments) {
+@@ -127,7 +111,7 @@ public class InvocationMatcher implements DescribedInvocation, CapturesArgumensF
+             for (int position = indexOfVararg; position < matchers.size(); position++) {
+                 Matcher m = matchers.get(position);
+                 if (m instanceof CapturesArguments) {
+-                    ((CapturesArguments) m).captureFrom(invocation.getRawArguments()[position - indexOfVararg]);
++                    ((CapturesArguments) m).captureFrom(rawArguments[position - indexOfVararg]);
+                 }
+             }
+         } else {

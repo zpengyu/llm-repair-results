@@ -1,0 +1,22 @@
+diff --git a/src/main/java/com/fasterxml/jackson/dataformat/xml/ser/XmlSerializerProvider.java b/src/main/java/com/fasterxml/jackson/dataformat/xml/ser/XmlSerializerProvider.java
+index db8d1f3..6a0a993 100644
+--- a/src/main/java/com/fasterxml/jackson/dataformat/xml/ser/XmlSerializerProvider.java
++++ b/src/main/java/com/fasterxml/jackson/dataformat/xml/ser/XmlSerializerProvider.java
+@@ -202,11 +202,14 @@ public class XmlSerializerProvider extends DefaultSerializerProvider
+         // 14-Nov-2016, tatu: As per [dataformat-xml#213], we may have explicitly
+         //    configured root name...
+         if (jgen instanceof ToXmlGenerator) {
+-            _initWithRootName((ToXmlGenerator) jgen, ROOT_NAME_FOR_NULL);
++            ToXmlGenerator toXmlGenerator = (ToXmlGenerator) jgen;
++            _initWithRootName(toXmlGenerator, ROOT_NAME_FOR_NULL);
++            toXmlGenerator.writeStartElement(ROOT_NAME_FOR_NULL);
++            toXmlGenerator.writeEndElement();
++        } else {
++            super.serializeValue(jgen, null);
+         }
+-        super.serializeValue(jgen, null);
+     }    
+-    
+     protected void _startRootArray(ToXmlGenerator xgen, QName rootName) throws IOException
+     {
+         xgen.writeStartObject();

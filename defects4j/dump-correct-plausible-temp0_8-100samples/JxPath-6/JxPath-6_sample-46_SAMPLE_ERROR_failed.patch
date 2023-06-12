@@ -1,0 +1,38 @@
+diff --git a/src/java/org/apache/commons/jxpath/ri/compiler/CoreOperationCompare.java b/src/java/org/apache/commons/jxpath/ri/compiler/CoreOperationCompare.java
+index cc45a8f..0915ff8 100644
+--- a/src/java/org/apache/commons/jxpath/ri/compiler/CoreOperationCompare.java
++++ b/src/java/org/apache/commons/jxpath/ri/compiler/CoreOperationCompare.java
+@@ -49,27 +49,18 @@ public abstract class CoreOperationCompare extends CoreOperation {
+     {
+         Object l = left.compute(context);
+         Object r = right.compute(context);
+-
+-//        System.err.println("COMPARING: " +
+-//            (l == null ? "null" : l.getClass().getName()) + " " +
+-//            (r == null ? "null" : r.getClass().getName()));
+-
+-        if (l instanceof InitialContext || l instanceof SelfContext) {
++        if (l instanceof InitialContext) {
+             l = ((EvalContext) l).getSingleNodePointer();
+         }
+-
+-        if (r instanceof InitialContext || r instanceof SelfContext) {
++        if (r instanceof InitialContext) {
+             r = ((EvalContext) r).getSingleNodePointer();
+         }
+-
+-        if (l instanceof Collection) {
+-            l = ((Collection) l).iterator();
++        if ((l instanceof Collection) || (l instanceof Iterator)) {
++            l = new ArrayList(new CollectionWrapper((l instanceof Collection) ? (Collection) l : (Iterator) l));
+         }
+-
+-        if (r instanceof Collection) {
+-            r = ((Collection) r).iterator();
++        if ((r instanceof Collection) || (r instanceof Iterator)) {
++            r = new ArrayList(new CollectionWrapper((r instanceof Collection) ? (Collection) r : (Iterator) r));
+         }
+-
+         if ((l instanceof Iterator) && !(r instanceof Iterator)) {
+             return contains((Iterator) l, r);
+         }

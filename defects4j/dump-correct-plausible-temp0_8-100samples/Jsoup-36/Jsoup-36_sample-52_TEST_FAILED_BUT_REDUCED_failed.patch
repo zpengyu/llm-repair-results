@@ -1,0 +1,29 @@
+diff --git a/src/main/java/org/jsoup/helper/DataUtil.java b/src/main/java/org/jsoup/helper/DataUtil.java
+index 3626928..55ee408 100644
+--- a/src/main/java/org/jsoup/helper/DataUtil.java
++++ b/src/main/java/org/jsoup/helper/DataUtil.java
+@@ -80,7 +75,7 @@ public class DataUtil {
+             doc = parser.parseInput(docData, baseUri);
+             Element meta = doc.select("meta[http-equiv=content-type], meta[charset]").first();
+             if (meta != null) { // if not found, will keep utf-8 as best attempt
+-
++                // no try/catch -- if charset not found, will keep utf-8 as best attempt
+                 String foundCharset;
+                 if (meta.hasAttr("http-equiv")) {
+                     foundCharset = getCharsetFromContentType(meta.attr("content"));
+@@ -158,10 +147,11 @@ public class DataUtil {
+         Matcher m = charsetPattern.matcher(contentType);
+         if (m.find()) {
+             String charset = m.group(1).trim();
+-                if (Charset.isSupported(charset)) return charset;
+-                charset = charset.toUpperCase(Locale.ENGLISH);
+-                if (Charset.isSupported(charset)) return charset;
+-                // if our advanced charset matching fails.... we just take the default
++            charset = charset.replace("charset=", "");
++            if (Charset.isSupported(charset)) return charset;
++            charset = charset.toUpperCase(Locale.ENGLISH);
++            if (Charset.isSupported(charset)) return charset;
++            // if our advanced charset matching fails.... we just take the default
+         }
+         return null;
+     }

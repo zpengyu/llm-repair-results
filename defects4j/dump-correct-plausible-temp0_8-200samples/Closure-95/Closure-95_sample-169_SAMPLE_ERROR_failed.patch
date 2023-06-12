@@ -1,0 +1,31 @@
+diff --git a/src/com/google/javascript/jscomp/TypedScopeCreator.java b/src/com/google/javascript/jscomp/TypedScopeCreator.java
+index a5b356fb..6899b990 100644
+--- a/src/com/google/javascript/jscomp/TypedScopeCreator.java
++++ b/src/com/google/javascript/jscomp/TypedScopeCreator.java
+@@ -896,10 +894,24 @@ final class TypedScopeCreator implements ScopeCreator {
+       // scope where the root object appears. This helps out people
+       // who declare "global" names in an anonymous namespace.
+       Scope scopeToDeclareIn = scope;
+-
++      // If n is a GETPROP or a qualified name, then find the root
++      // object of the qualified name.
++      if (n.getType() == Token.GETPROP) {
++        Node root = n;
++        while (root.getFirstChild().getType() == Token.GETPROP) {
++          root = root.getFirstChild();
++        }
++        scopeToDeclareIn = scopeCreator.getScope(root);
++      } else if (!variableName.contains(".")) {
+         // don't try to declare in the global scope if there's
+         // already a symbol there with this name.
+-
++        if (scope.isGlobal() && scope.isDeclared(variableName, false)) {
++          Var oldVar = scope.getVar(variableName);
++          validator.expectUndeclaredVariable(
++              sourceName, n, parent, oldVar, variableName, type);
++          return;
++        }
++      }
+       // declared in closest scope?
+       if (scopeToDeclareIn.isDeclared(variableName, false)) {
+         Var oldVar = scopeToDeclareIn.getVar(variableName);

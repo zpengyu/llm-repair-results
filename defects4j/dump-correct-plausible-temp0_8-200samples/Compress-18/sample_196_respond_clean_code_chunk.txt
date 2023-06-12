@@ -1,0 +1,45 @@
+   void writePaxHeaders(String entryName,
+                     Map<String, String> headers) throws IOException {
+        // We need to explicitly handle the UTF-8 encoding of the header data
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+        Charset charSet = Charset.forName(CharsetNames.UTF_8);
+        CharsetEncoder enc = charSet.newEncoder();
+        for (Map.Entry<String, String> h : headers.entrySet()) {
+            String key = h.getKey();
+            String value = h.getValue();
+            int len = key.length() + value.length()
+                + 3 /* blank, equals and newline */
+                + 2 /* guess 9 < actual length < 100 */;
+            String line = len + " " + key + "=" + value + "\n";
+            int actualLength = line.getBytes(CharsetNames.UTF_8).length;
+            while (len != actualLength) {
+                // Adjust for cases where length < 10 or > 100
+                // or where UTF-8 encoding isn't a single octet
+                // per character.
+                // Must be in loop as size may go from 99 to 100 in
+                // first pass so we'd need a second.
+                len = actualLength;
+                line = len + " " + key + "=" + value + "\n";
+                actualLength = line.getBytes(CharsetNames.UTF_8).length;
+            }
+            CharBuffer charBuffer = CharBuffer.wrap(line);
+            ByteBuffer byteBuffer = ByteBuffer.allocate(actualLength);
+            enc.encode(charBuffer, byteBuffer, true);
+            byte[] encodedLine = byteBuffer.array();
+            out.write(encodedLine);
+        }
+        byte[] data = out.toByteArray();
+        // The ././@PaxHeaders.X/ directory prefix ensure that this header
+        // is only extracted when using a PAX compatible program
+        String name = "././@PaxHeaders.X/" + stripTo7Bits(entryName);
+        if (name.length() >= TarConstants.NAMELEN) {
+            name = name.substring(0, TarConstants.NAMELEN - 1);
+        }
+        // Need to use lonyLinkFile as the entry name is too long
+        // on platforms with a shorter name length limit
+        TarArchiveEntry pex = new TarArchiveEntry(name, TarConstants.LF_PAX_EXTENDED_HEADER_LC);
+        pex.setSize(data.length);
+        putArchiveEntry(pex);
+        write(data);
+        closeArchiveEntry();
+    }

@@ -1,0 +1,32 @@
+diff --git a/src/com/google/javascript/jscomp/ScopedAliases.java b/src/com/google/javascript/jscomp/ScopedAliases.java
+index 0470cda2..67ffd158 100644
+--- a/src/com/google/javascript/jscomp/ScopedAliases.java
++++ b/src/com/google/javascript/jscomp/ScopedAliases.java
+@@ -280,7 +280,17 @@ class ScopedAliases implements HotSwapCompilerPass {
+           String name = n.getString();
+           Var aliasVar = scope.getVar(name);
+           aliases.put(name, aliasVar);
+-
++          String qualifiedName =
++              aliasVar.getInitialValue().getQualifiedName();
++          transformation.addAlias(name, qualifiedName);
++          // Bleeding functions already get a BAD_PARAMETERS error, so just
++          // do nothing.
++          // Parameters of the scope function also get a BAD_PARAMETERS
++          // error.
++        } else if (n.hasChildren() && n.getFirstChild().isFunction()){
++          String name = n.getString();
++          Var aliasVar = scope.getVar(name);
++          aliases.put(name, aliasVar);
+           String qualifiedName =
+               aliasVar.getInitialValue().getQualifiedName();
+           transformation.addAlias(name, qualifiedName);
+@@ -295,7 +305,7 @@ class ScopedAliases implements HotSwapCompilerPass {
+         }
+       }
+     }
+-
++  }
+     private void validateScopeCall(NodeTraversal t, Node n, Node parent) {
+       if (preprocessorSymbolTable != null) {
+         preprocessorSymbolTable.addReference(n.getFirstChild());

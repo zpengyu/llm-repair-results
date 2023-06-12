@@ -1,0 +1,23 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/jsontype/impl/TypeDeserializerBase.java b/src/main/java/com/fasterxml/jackson/databind/jsontype/impl/TypeDeserializerBase.java
+index 339362e1e..ff0fe7a6a 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/jsontype/impl/TypeDeserializerBase.java
++++ b/src/main/java/com/fasterxml/jackson/databind/jsontype/impl/TypeDeserializerBase.java
+@@ -155,8 +155,16 @@ public abstract class TypeDeserializerBase
+                     // 10-May-2016, tatu: We may get some help...
+                     JavaType actual = _handleUnknownTypeId(ctxt, typeId, _idResolver, _baseType);
+                     if (actual == null) { // what should this be taken to mean?
+-                        // TODO: try to figure out something better
+-                        return null;
++                        if (_defaultImpl == null) {
++                            // 13-Jun-2016, tatu: We may have a mix-in for unknown types, so try that
++                            actual = _findRemappedType(ctxt, typeId);
++                            if (actual != null) {
++                                deser = ctxt.findContextualValueDeserializer(actual, _property);
++                            }
++                        }
++                        if (deser == null) {
++                            return _throwUnknownTypeIdException(ctxt, typeId, _baseType);
++                        }
+                     }
+                     // ... would this actually work?
+                     deser = ctxt.findContextualValueDeserializer(actual, _property);

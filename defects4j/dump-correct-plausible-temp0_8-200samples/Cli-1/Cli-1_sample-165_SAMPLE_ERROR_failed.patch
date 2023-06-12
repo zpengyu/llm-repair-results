@@ -1,0 +1,28 @@
+diff --git a/src/java/org/apache/commons/cli/CommandLine.java b/src/java/org/apache/commons/cli/CommandLine.java
+index de23601..096ad0f 100644
+--- a/src/java/org/apache/commons/cli/CommandLine.java
++++ b/src/java/org/apache/commons/cli/CommandLine.java
+@@ -285,9 +251,21 @@ public class CommandLine {
+         {
+             names.put(opt.getLongOpt(), key);
+         }
+-        options.put(key, opt);
++        if (options.containsKey(key))
++        {
++            Option old = (Option) options.get(key);
++            String oldKey = old.getKey();
++            if (oldKey != null)
++            {
++                names.remove(old.getLongOpt());
++            }
++            old.addValueForProcessing(opt.getValue());
++        }
++        else
++        {
++            options.put(key, opt);
++        }
+     }
+-
+     /**
+      * Returns an iterator over the Option members of CommandLine.
+      *

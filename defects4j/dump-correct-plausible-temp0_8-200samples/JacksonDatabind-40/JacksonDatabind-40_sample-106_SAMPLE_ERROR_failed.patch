@@ -1,0 +1,34 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/deser/std/NumberDeserializers.java b/src/main/java/com/fasterxml/jackson/databind/deser/std/NumberDeserializers.java
+index a76403c86..aa3672100 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/deser/std/NumberDeserializers.java
++++ b/src/main/java/com/fasterxml/jackson/databind/deser/std/NumberDeserializers.java
+@@ -144,11 +140,27 @@ public class NumberDeserializers
+         public final T getNullValue() {
+             return _nullValue;
+         }
+-
+             // [databind#1095]: Should not allow coercion from into null from Empty String
+             // either, if `null` not allowed
++        @Override
++        public T deserialize(JsonParser jp, DeserializationContext ctxt) throws IOException {
++            JsonToken t = jp.getCurrentToken();
++            if (t == JsonToken.VALUE_STRING) {
++                // [databind#836]: empty String should not give null if null not allowed
++                String str = jp.getText().trim();
++                if (str.length() == 0) {
++                    if (_primitive || !ctxt.isEnabled(DeserializationFeature.ACCEPT_EMPTY_STRING_AS_NULL_OBJECT)) {
++                        return (T) _valueClass.cast(_nullValue);
++                    }
++                }
++            } else if (t == JsonToken.VALUE_NULL) {
++                // Also: ignore float/double values (for now?)
++                return (T) _valueClass.cast(_nullValue);
++            }
++            return deserialize(_valueClass, jp, ctxt);
++        }
++        protected abstract T deserialize(Class<?> vc, JsonParser jp, DeserializationContext ctxt) throws IOException;
+     }
+-
+     /*
+     /**********************************************************
+     /* Then primitive/wrapper types

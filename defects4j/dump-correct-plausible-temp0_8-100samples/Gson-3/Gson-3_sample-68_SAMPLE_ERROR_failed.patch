@@ -1,0 +1,65 @@
+diff --git a/gson/src/main/java/com/google/gson/internal/ConstructorConstructor.java b/gson/src/main/java/com/google/gson/internal/ConstructorConstructor.java
+index cd5c2f6c..f4be57fe 100644
+--- a/gson/src/main/java/com/google/gson/internal/ConstructorConstructor.java
++++ b/gson/src/main/java/com/google/gson/internal/ConstructorConstructor.java
+@@ -125,54 +125,20 @@ public final class ConstructorConstructor {
+    * subtypes.
+    */
+   @SuppressWarnings("unchecked") // use runtime checks to guarantee that 'T' is what it is
+-  private <T> ObjectConstructor<T> newDefaultImplementationConstructor(
+-      final Type type, Class<? super T> rawType) {
+-    if (Collection.class.isAssignableFrom(rawType)) {
+-      if (SortedSet.class.isAssignableFrom(rawType)) {
+-        return new ObjectConstructor<T>() {
+-          @Override public T construct() {
+-            return (T) new TreeSet<Object>();
+-          }
+-        };
+-      } else if (EnumSet.class.isAssignableFrom(rawType)) {
+-        return new ObjectConstructor<T>() {
+-          @SuppressWarnings("rawtypes")
+-          @Override public T construct() {
+-            if (type instanceof ParameterizedType) {
+-              Type elementType = ((ParameterizedType) type).getActualTypeArguments()[0];
+-              if (elementType instanceof Class) {
+-                return (T) EnumSet.noneOf((Class)elementType);
+-              } else {
+-                throw new JsonIOException("Invalid EnumSet type: " + type.toString());
+-              }
+-            } else {
+-              throw new JsonIOException("Invalid EnumSet type: " + type.toString());
+-            }
+-          }
+-        };
+-      } else if (Set.class.isAssignableFrom(rawType)) {
+-        return new ObjectConstructor<T>() {
+-          @Override public T construct() {
+-            return (T) new LinkedHashSet<Object>();
+-          }
+-        };
+-      } else if (Queue.class.isAssignableFrom(rawType)) {
++    if (Map.class.isAssignableFrom(rawType)) {
++      if (ConcurrentNavigableMap.class.isAssignableFrom(rawType)) {
+         return new ObjectConstructor<T>() {
+           @Override public T construct() {
+-            return (T) new LinkedList<Object>();
++            return (T) new ConcurrentSkipListMap<Object, Object>();
+           }
+         };
+-      } else {
++      } else if (ConcurrentMap.class.isAssignableFrom(rawType)) {
+         return new ObjectConstructor<T>() {
+           @Override public T construct() {
+-            return (T) new ArrayList<Object>();
++            return (T) new ConcurrentHashMap<Object, Object>();
+           }
+         };
+-      }
+-    }
+-
+-    if (Map.class.isAssignableFrom(rawType)) {
+-      if (SortedMap.class.isAssignableFrom(rawType)) {
++      } else if (SortedMap.class.isAssignableFrom(rawType)) {
+         return new ObjectConstructor<T>() {
+           @Override public T construct() {
+             return (T) new TreeMap<Object, Object>();

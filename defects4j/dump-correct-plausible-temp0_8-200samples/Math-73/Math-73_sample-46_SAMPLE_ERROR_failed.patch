@@ -1,0 +1,47 @@
+diff --git a/src/main/java/org/apache/commons/math/analysis/solvers/BrentSolver.java b/src/main/java/org/apache/commons/math/analysis/solvers/BrentSolver.java
+index 07c667408..d4329d9b2 100644
+--- a/src/main/java/org/apache/commons/math/analysis/solvers/BrentSolver.java
++++ b/src/main/java/org/apache/commons/math/analysis/solvers/BrentSolver.java
+@@ -115,30 +112,28 @@ public class BrentSolver extends UnivariateRealSolverImpl {
+             setResult(yMin, 0);
+             return result;
+         }
+-
+-        // reduce interval if min and initial bracket the root
+-        if (yInitial * yMin < 0) {
+-            return solve(f, min, yMin, initial, yInitial, min, yMin);
+-        }
+-
+         // return the second endpoint if it is good enough
+         double yMax = f.value(max);
+         if (Math.abs(yMax) <= functionValueAccuracy) {
+             setResult(yMax, 0);
+             return result;
+         }
+-
++        // verify bracketing of initial guess
++        if (yInitial * yMin >= 0) {
++            // reduce interval if min and initial bracket the root
++            if (yInitial * yMax < 0) {
++                return solve(f, initial, yInitial, max, yMax, initial, yInitial);
++            } else {
++                throw new FunctionEvaluationException(initial, "Unable to bracket root with {0, 1} (f({0})={1}, f({2})={3})", min, yMin, max, yMax);
++            }
++        }
+         // reduce interval if initial and max bracket the root
+         if (yInitial * yMax < 0) {
+-            return solve(f, initial, yInitial, max, yMax, initial, yInitial);
++            return solve(f, min, yMin, initial, yInitial, initial, yInitial);
++        } else {
++            throw new FunctionEvaluationException(initial, "Unable to bracket root with {0, 2} (f({0})={1}, f({2})={3})", min, yMin, max, yMax);
+         }
+-
+-
+-        // full Brent algorithm starting with provided initial guess
+-        return solve(f, min, yMin, max, yMax, initial, yInitial);
+-
+     }
+-
+     /**
+      * Find a zero in the given interval.
+      * <p>

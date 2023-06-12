@@ -1,0 +1,20 @@
+diff --git a/src/main/java/org/jsoup/safety/Whitelist.java b/src/main/java/org/jsoup/safety/Whitelist.java
+index 23a215d..e7b8cec 100644
+--- a/src/main/java/org/jsoup/safety/Whitelist.java
++++ b/src/main/java/org/jsoup/safety/Whitelist.java
+@@ -338,10 +338,13 @@ public class Whitelist {
+     private boolean testValidProtocol(Element el, Attribute attr, Set<Protocol> protocols) {
+         // try to resolve relative urls to abs, and optionally update the attribute so output html has abs.
+         // rels without a baseuri get removed
+-        String value = el.absUrl(attr.getKey());
++        String value = attr.getValue();
++        // try to make URL abs, and if it fails, keep the attribute as-is
++        String absUrl = el.absUrl(attr.getKey());
++        if (absUrl.length() != 0)
++            value = absUrl;
+         if (!preserveRelativeLinks)
+             attr.setValue(value);
+-
+         for (Protocol protocol : protocols) {
+             String prot = protocol.toString() + ":";
+             if (value.toLowerCase().startsWith(prot)) {

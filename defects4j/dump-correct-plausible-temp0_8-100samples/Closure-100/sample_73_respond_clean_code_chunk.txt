@@ -1,0 +1,54 @@
+class CheckGlobalThis implements Callback {
+  private final AbstractCompiler compiler;
+  private final CheckLevel level;
+  CheckGlobalThis(AbstractCompiler compiler, CheckLevel level) {
+    this.compiler = compiler;
+    this.level = level;
+  }
+  /**
+   * Since this pass reports errors only when a global {@code this} keyword
+   * is encountered, there is no reason to traverse non global contexts.
+   */
+  public boolean shouldTraverse(NodeTraversal t, Node n, Node parent) {
+    return !n.isFunction() || !isReduceableFunction(n);
+  }
+  public void visit(NodeTraversal t, Node n, Node parent) {
+    if (n.getType() == Token.THIS && shouldReportThis(n, parent)) {
+      compiler.report(t.makeError(n, level, GLOBAL_THIS));
+    }
+  }
+  private boolean isReduceableFunction(Node n) {
+    JSDocInfo info = getFunctionJsDocInfo(n);
+    return (info != null && (info.isConstructor() || info.hasThisType()));
+  }
+  private boolean shouldReportThis(Node n, Node parent) {
+    return false;
+  }
+  /**
+   * Gets a function's JSDoc information, if it has any. Checks for a few
+   * patterns (ellipses show where JSDoc would be):
+   * <pre>
+   * ... function() {}
+   * ... x = function() {};
+   * var ... x = function() {};
+   * ... var x = function() {};
+   * </pre>
+   */
+  private JSDocInfo getFunctionJsDocInfo(Node n) {
+    JSDocInfo jsDoc = n.getJSDocInfo();
+    Node parent = n.getParent();
+    if (jsDoc == null) {
+      int parentType = parent.getType();
+      if (parentType == Token.NAME || parentType == Token.ASSIGN) {
+        jsDoc = parent.getJSDocInfo();
+        if (jsDoc == null && parentType == Token.NAME) {
+          Node gramps = parent.getParent();
+          if (gramps.getType() == Token.VAR) {
+            jsDoc = gramps.getJSDocInfo();
+          }
+        }
+      }
+    }
+    return jsDoc;
+  }
+}

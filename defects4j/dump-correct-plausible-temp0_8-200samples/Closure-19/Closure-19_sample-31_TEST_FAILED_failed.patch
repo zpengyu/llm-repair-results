@@ -1,0 +1,37 @@
+diff --git a/src/com/google/javascript/jscomp/type/ChainableReverseAbstractInterpreter.java b/src/com/google/javascript/jscomp/type/ChainableReverseAbstractInterpreter.java
+index abff329b..e7dcb4a7 100644
+--- a/src/com/google/javascript/jscomp/type/ChainableReverseAbstractInterpreter.java
++++ b/src/com/google/javascript/jscomp/type/ChainableReverseAbstractInterpreter.java
+@@ -155,28 +155,23 @@ public abstract class ChainableReverseAbstractInterpreter
+    * the given scope, as determined by {@link #getTypeIfRefinable}.
+    */
+   protected void declareNameInScope(FlowScope scope, Node node, JSType type) {
++    String varName = null;
+     switch (node.getType()) {
+       case Token.NAME:
+-        scope.inferSlotType(node.getString(), type);
++        varName = node.getString();
+         break;
+-
+       case Token.GETPROP:
+         String qualifiedName = node.getQualifiedName();
+         Preconditions.checkNotNull(qualifiedName);
+-
+-        JSType origType = node.getJSType();
+-        origType = origType == null ? getNativeType(UNKNOWN_TYPE) : origType;
+-        scope.inferQualifiedSlot(node, qualifiedName, origType, type);
++        varName = qualifiedName;
+         break;
+-
+         // "this" references aren't currently modeled in the CFG.
+-
+       default:
+         throw new IllegalArgumentException("Node cannot be refined. \n" +
+             node.toStringTree());
+     }
++    scope.inferSlotType(varName, type);
+   }
+-
+   /**
+    * @see #getRestrictedWithoutUndefined(JSType)
+    */

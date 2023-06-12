@@ -1,0 +1,36 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/deser/std/StringCollectionDeserializer.java b/src/main/java/com/fasterxml/jackson/databind/deser/std/StringCollectionDeserializer.java
+index 42c6f0491..5717a09ee 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/deser/std/StringCollectionDeserializer.java
++++ b/src/main/java/com/fasterxml/jackson/databind/deser/std/StringCollectionDeserializer.java
+@@ -107,6 +107,20 @@ public final class StringCollectionDeserializer
+             AnnotatedWithParams delegateCreator = _valueInstantiator.getDelegateCreator();
+             if (delegateCreator != null) {
+                 JavaType delegateType = _valueInstantiator.getDelegateType(ctxt.getConfig());
++                if (delegateType == null) {
++                    JavaType type = _containerType;
++                    if (!type.isContainerType()) {
++                        type = _containerType.getKeyType();
++                    }
++                    if (type == null) {
++                        type = TypeFactory.unknownType();
++                    }
++                    throw new IllegalArgumentException("Invalid delegate-creator definition for "
++                            + _containerType
++                            + ": value instantiator ("
++                            + _valueInstantiator.getClass().getName()
++                            + ") returned true for 'canCreateUsingDelegate()', but null for 'getDelegateType()'");
++                }
+                 delegate = findDeserializer(ctxt, delegateType, property);
+             }
+         }
+@@ -127,8 +141,8 @@ public final class StringCollectionDeserializer
+         Boolean unwrapSingle = findFormatFeature(ctxt, property, Collection.class,
+                 JsonFormat.Feature.ACCEPT_SINGLE_VALUE_AS_ARRAY);
+         NullValueProvider nuller = findContentNullProvider(ctxt, property, valueDeser);
+-        if (isDefaultDeserializer(valueDeser)) {
+-            valueDeser = null;
++        if (delegate == null) {
++            return withResolved(valueDeser, nuller, unwrapSingle);
+         }
+         return withResolved(delegate, valueDeser, nuller, unwrapSingle);
+     }    

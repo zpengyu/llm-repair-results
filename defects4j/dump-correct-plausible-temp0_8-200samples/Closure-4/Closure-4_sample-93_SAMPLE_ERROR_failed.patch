@@ -1,0 +1,45 @@
+diff --git a/src/com/google/javascript/rhino/jstype/NamedType.java b/src/com/google/javascript/rhino/jstype/NamedType.java
+index cddc8a88..d8e88ad2 100644
+--- a/src/com/google/javascript/rhino/jstype/NamedType.java
++++ b/src/com/google/javascript/rhino/jstype/NamedType.java
+@@ -181,36 +181,10 @@ class NamedType extends ProxyObjectType {
+    * Resolve the referenced type within the enclosing scope.
+    */
+   @Override
+-  JSType resolveInternal(ErrorReporter t, StaticScope<JSType> enclosing) {
+-    // TODO(user): Investigate whether it is really necessary to keep two
+-    // different mechanisms for resolving named types, and if so, which order
+-    // makes more sense. Now, resolution via registry is first in order to
+-    // avoid triggering the warnings built into the resolution via properties.
+-    boolean resolved = resolveViaRegistry(t, enclosing);
+-    if (detectImplicitPrototypeCycle()) {
+-      handleTypeCycle(t);
+-    }
+-
+-    if (resolved) {
+-      super.resolveInternal(t, enclosing);
+-      finishPropertyContinuations();
+-      return registry.isLastGeneration() ?
+-          getReferencedType() : this;
+-    }
+-
+-    resolveViaProperties(t, enclosing);
+-    if (detectImplicitPrototypeCycle()) {
+-      handleTypeCycle(t);
+-    }
+-
+-    super.resolveInternal(t, enclosing);
+-    if (isResolved()) {
+-      finishPropertyContinuations();
+-    }
+-    return registry.isLastGeneration() ?
+-        getReferencedType() : this;
+-  }
+-
++private static boolean isReduceableFunctionExpression(Node n) {
++  return NodeUtil.isFunctionExpression(n)
++      && !NodeUtil.isGetOrSetKey(n.getParent());
++}
+   /**
+    * Resolves a named type by looking it up in the registry.
+    * @return True if we resolved successfully.

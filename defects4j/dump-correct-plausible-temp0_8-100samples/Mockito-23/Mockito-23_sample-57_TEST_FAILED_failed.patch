@@ -1,0 +1,48 @@
+diff --git a/src/org/mockito/internal/stubbing/defaultanswers/ReturnsDeepStubs.java b/src/org/mockito/internal/stubbing/defaultanswers/ReturnsDeepStubs.java
+index c4384f7fc..f85dec4cc 100644
+--- a/src/org/mockito/internal/stubbing/defaultanswers/ReturnsDeepStubs.java
++++ b/src/org/mockito/internal/stubbing/defaultanswers/ReturnsDeepStubs.java
+@@ -52,37 +48,20 @@ public class ReturnsDeepStubs implements Answer<Object>, Serializable {
+         if (!mockitoCore.isTypeMockable(rawType)) {
+             return delegate.returnValueFor(rawType);
+         }
+-
+         return getMock(invocation, returnTypeGenericMetadata);
+     }
+-
+-
+-
+     private Object getMock(InvocationOnMock invocation, GenericMetadataSupport returnTypeGenericMetadata) throws Throwable {
+-    	InternalMockHandler<Object> handler = new MockUtil().getMockHandler(invocation.getMock());
+-    	InvocationContainerImpl container = (InvocationContainerImpl) handler.getInvocationContainer();
+-
++        InternalMockHandler<Object> handler = new MockUtil().getMockHandler(invocation.getMock());
++        InvocationContainerImpl container = (InvocationContainerImpl) handler.getInvocationContainer();
+         // matches invocation for verification
+         for (StubbedInvocationMatcher stubbedInvocationMatcher : container.getStubbedInvocations()) {
+-    		if(container.getInvocationForStubbing().matches(stubbedInvocationMatcher.getInvocation())) {
+-    			return stubbedInvocationMatcher.answer(invocation);
+-    		}
+-		}
+-
++            if(container.getInvocationForStubbing().matches(stubbedInvocationMatcher.getInvocation())) {
++                return stubbedInvocationMatcher.answer(invocation);
++            }
++        }
+         // deep stub
+         return recordDeepStubMock(createNewDeepStubMock(returnTypeGenericMetadata), container);
+     }
+-
+-    /**
+-     * Creates a mock using the Generics Metadata.
+-     *
+-     * <li>Finally as we want to mock the actual type, but we want to pass along the contextual generics meta-data
+-     * that was resolved for the current return type, for this to happen we associate to the mock an new instance of
+-     * {@link ReturnsDeepStubs} answer in which we will store the returned type generic metadata.
+-     *
+-     * @param returnTypeGenericMetadata The metadata to use to create the new mock.
+-     * @return The mock
+-     */
+     private Object createNewDeepStubMock(GenericMetadataSupport returnTypeGenericMetadata) {
+         return mockitoCore.mock(
+                 returnTypeGenericMetadata.rawType(),

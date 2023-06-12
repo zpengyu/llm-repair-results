@@ -1,0 +1,46 @@
+diff --git a/src/main/java/org/apache/commons/math3/analysis/differentiation/DSCompiler.java b/src/main/java/org/apache/commons/math3/analysis/differentiation/DSCompiler.java
+index fc9944c36..75842f46f 100644
+--- a/src/main/java/org/apache/commons/math3/analysis/differentiation/DSCompiler.java
++++ b/src/main/java/org/apache/commons/math3/analysis/differentiation/DSCompiler.java
+@@ -1390,35 +1389,14 @@ public class DSCompiler {
+         multiply(y, yOffset, y, yOffset, tmp2, 0);      // y^2
+         add(tmp1, 0, tmp2, 0, tmp2, 0);                 // x^2 + y^2
+         rootN(tmp2, 0, 2, tmp1, 0);                     // r = sqrt(x^2 + y^2)
+-
+-        if (x[xOffset] >= 0) {
+-
+-            // compute atan2(y, x) = 2 atan(y / (r + x))
+-            add(tmp1, 0, x, xOffset, tmp2, 0);          // r + x
+-            divide(y, yOffset, tmp2, 0, tmp1, 0);       // y /(r + x)
+-            atan(tmp1, 0, tmp2, 0);                     // atan(y / (r + x))
+-            for (int i = 0; i < tmp2.length; ++i) {
+-                result[resultOffset + i] = 2 * tmp2[i]; // 2 * atan(y / (r + x))
+-            }
+-
+-        } else {
+-
+-            // compute atan2(y, x) = +/- pi - 2 atan(y / (r - x))
+-            subtract(tmp1, 0, x, xOffset, tmp2, 0);     // r - x
+-            divide(y, yOffset, tmp2, 0, tmp1, 0);       // y /(r - x)
+-            atan(tmp1, 0, tmp2, 0);                     // atan(y / (r - x))
+-            result[resultOffset] =
+-                    ((tmp2[0] <= 0) ? -FastMath.PI : FastMath.PI) - 2 * tmp2[0]; // +/-pi - 2 * atan(y / (r - x))
+-            for (int i = 1; i < tmp2.length; ++i) {
+-                result[resultOffset + i] = -2 * tmp2[i]; // +/-pi - 2 * atan(y / (r - x))
+-            }
+-
++        // compute atan2(y, x) = 2 atan(y / (r + x))
++        add(tmp1, 0, x, xOffset, tmp2, 0);          // r + x
++        divide(y, yOffset, tmp2, 0, tmp1, 0);       // y /(r + x)
++        atan(tmp1, 0, tmp2, 0);                     // atan(y / (r + x))
++        for (int i = 0; i < tmp2.length; ++i) {
++            result[resultOffset + i] = 2 * tmp2[i]; // 2 * atan(y / (r + x))
+         }
+-
+-        // fix value to take special cases (+0/+0, +0/-0, -0/+0, -0/-0, +/-infinity) correctly
+-
+     }
+-
+     /** Compute hyperbolic cosine of a derivative structure.
+      * @param operand array holding the operand
+      * @param operandOffset offset of the operand in its array

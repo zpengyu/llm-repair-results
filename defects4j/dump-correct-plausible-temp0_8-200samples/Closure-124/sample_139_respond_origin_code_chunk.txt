@@ -1,0 +1,21 @@
+  private boolean isSafeReplacement(Node node, Node replacement) {
+    // No checks are needed for simple names.
+    if (node.isName()) {
+      return true;
+    }
+    Preconditions.checkArgument(node.isGetProp());
+
+    // If the expression is a property access for an object literal, and
+    // the replacement is a qualified name, then the property access might
+    // still be a reference to a property of the object literal.
+    if (node.isGetProp()) {
+      node = node.getFirstChild();
+      if (node.isName()
+          && isNameAssignedTo(node.getString(), replacement)) {
+        return false;
+      }
+    }
+
+    return true;
+  }
+

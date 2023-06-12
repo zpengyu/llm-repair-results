@@ -1,0 +1,31 @@
+    static Document parseByteData(ByteBuffer byteData, String charsetName, String baseUri, Parser parser) {
+        String docData;
+        Document doc = null;
+        // look for BOM - overrides any other header or input
+        Charset charset = null;
+        if (charsetName == null) { // determine from meta. safe parse as UTF-8
+            charset = Charset.forName(defaultCharset);
+            charsetName = defaultCharset;
+        }
+        else if (!charsetName.equalsIgnoreCase(defaultCharset)) {
+            charset = Charset.forName(charsetName);
+        }
+        if (charset != null) {
+            docData = charset.decode(byteData).toString();
+        }
+        else {
+            docData = Charset.forName(defaultCharset).decode(byteData).toString();
+        }
+        if (docData.length() > 0 && docData.charAt(0) == UNICODE_BOM) {
+            byteData.rewind();
+            docData = Charset.forName(defaultCharset).decode(byteData).toString();
+            docData = docData.substring(1);
+            charsetName = defaultCharset;
+            doc = null;
+        }
+        if (doc == null) {
+            doc = parser.parseInput(docData, baseUri);
+            doc.outputSettings().charset(charsetName);
+        }
+        return doc;
+    }

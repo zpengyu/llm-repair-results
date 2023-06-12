@@ -1,0 +1,42 @@
+diff --git a/src/main/java/org/apache/commons/compress/archivers/zip/ZipFile.java b/src/main/java/org/apache/commons/compress/archivers/zip/ZipFile.java
+index fd5d1894..917eb5a7 100644
+--- a/src/main/java/org/apache/commons/compress/archivers/zip/ZipFile.java
++++ b/src/main/java/org/apache/commons/compress/archivers/zip/ZipFile.java
+@@ -805,6 +805,8 @@ public class ZipFile {
+         // the hashcode - see COMPRESS-164
+         // Map needs to be reconstructed in order to keep central
+         // directory order
++        Map<ZipArchiveEntry, OffsetEntry> offsetMap = new LinkedHashMap<ZipArchiveEntry,
++                OffsetEntry>(entries.size());
+         for (ZipArchiveEntry ze : entries.keySet()) {
+             OffsetEntry offsetEntry = entries.get(ze);
+             long offset = offsetEntry.headerOffset;
+@@ -828,20 +830,22 @@ public class ZipFile {
+             ze.setExtra(localExtraData);
+             offsetEntry.dataOffset = offset + LFH_OFFSET_FOR_FILENAME_LENGTH
+                 + SHORT + SHORT + fileNameLen + extraFieldLen;
+-
++            String name = ze.getName();
+             if (entriesWithoutUTF8Flag.containsKey(ze)) {
+-                String orig = ze.getName();
+                 NameAndComment nc = entriesWithoutUTF8Flag.get(ze);
+                 ZipUtil.setNameAndCommentFromExtraFields(ze, nc.name,
+                                                          nc.comment);
+-                if (!orig.equals(ze.getName())) {
+-                    nameMap.remove(orig);
+-                    nameMap.put(ze.getName(), ze);
++                if (!name.equals(ze.getName())) {
++                    nameMap.remove(name);
++                    name = ze.getName();
+                 }
+             }
++            offsetMap.put(ze, offsetEntry);
++            nameMap.put(name, ze);
+         }
++        entries.clear();
++        entries.putAll(offsetMap);
+     }
+-
+     /**
+      * Checks whether the archive starts with a LFH.  If it doesn't,
+      * it may be an empty archive.

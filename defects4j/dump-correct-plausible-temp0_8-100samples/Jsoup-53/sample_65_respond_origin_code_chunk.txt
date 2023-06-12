@@ -1,0 +1,32 @@
+    public String chompBalanced(char open, char close) {
+        int start = -1;
+        int end = -1;
+        int depth = 0;
+        char last = 0;
+        
+        //Store the initial position.
+        int initialPosition = pos;
+        
+        do {
+            if (isEmpty()) break;
+            Character c = consume();
+            if (last == 0 || last != ESC) {
+                if (c.equals(open)) {
+                    depth++;
+                    if (start == -1)
+                        start = pos - 1; //Ignore the open parenthesis before being counted.
+                }
+                else if (c.equals(close))
+                    depth--;
+            }
+
+            if (depth > 0 && last != 0)
+                end = pos; // don't include the outer match pair in the return
+            last = c;
+        } while (depth > 0);
+        //If start == -1, it means that the function does not find a closing parenthesis.
+        //Therefore, if that's the case, we restore the initial position.
+        if (start == -1) pos = initialPosition;
+        
+        return (end >= 0) ? queue.substring(start, end) : "";
+    }

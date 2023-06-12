@@ -1,0 +1,31 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/deser/impl/ExternalTypeHandler.java b/src/main/java/com/fasterxml/jackson/databind/deser/impl/ExternalTypeHandler.java
+index b0797059f..06402bac6 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/deser/impl/ExternalTypeHandler.java
++++ b/src/main/java/com/fasterxml/jackson/databind/deser/impl/ExternalTypeHandler.java
+@@ -260,8 +260,9 @@ public class ExternalTypeHandler
+         final int len = _properties.length;
+         Object[] values = new Object[len];
+         for (int i = 0; i < len; ++i) {
+-            String typeId = _typeIds[i];
+             final ExtTypedProperty extProp = _properties[i];
++            SettableBeanProperty prop = extProp.getProperty();
++            String typeId = _typeIds[i];
+             if (typeId == null) {
+                 // let's allow missing both type and property (may already have been set, too)
+                 if (_tokens[i] == null) {
+@@ -277,14 +278,11 @@ public class ExternalTypeHandler
+                     typeId = extProp.getDefaultTypeId();
+                 }
+             } else if (_tokens[i] == null) {
+-                SettableBeanProperty prop = extProp.getProperty();
+                 ctxt.reportInputMismatch(_beanType,
+                         "Missing property '%s' for external type id '%s'",
+-                        prop.getName(), _properties[i].getTypePropertyName());
++                        prop.getName(), extProp.getTypePropertyName());
+             }
+             values[i] = _deserialize(p, ctxt, i, typeId);
+-
+-            final SettableBeanProperty prop = extProp.getProperty();
+             // also: if it's creator prop, fill in
+             if (prop.getCreatorIndex() >= 0) {
+                 buffer.assignParameter(prop, values[i]);

@@ -1,0 +1,28 @@
+diff --git a/gson/src/main/java/com/google/gson/internal/UnsafeAllocator.java b/gson/src/main/java/com/google/gson/internal/UnsafeAllocator.java
+index a72d3d10..7285a25f 100644
+--- a/gson/src/main/java/com/google/gson/internal/UnsafeAllocator.java
++++ b/gson/src/main/java/com/google/gson/internal/UnsafeAllocator.java
+@@ -107,4 +102,22 @@ public abstract class UnsafeAllocator {
+    * throw an {@link java.lang.UnsupportedOperationException}
+    * @param c instance of the class to be checked
+    */
++  private static void checkInstantiable(Class<?> c) {
++    if (!Modifier.isPublic(c.getModifiers()))
++      throw new UnsupportedOperationException("Class " + c.getName() + " must be public");
++    if (!Modifier.isPublic(c.getConstructor().getModifiers()))
++      throw new UnsupportedOperationException("Constructor " + c.getName() + " must be public");
++    if (c.isInterface()) throw new UnsupportedOperationException("Cannot instantiate interfaces");
++    if (Modifier.isAbstract(c.getModifiers()))
++      throw new UnsupportedOperationException("Cannot instantiate abstract classes");
++  }
++  public static UnsafeAllocator create() {
++    return new UnsafeAllocator() {
++      @Override
++      public <T> T newInstance(Class<T> c) throws Exception {
++        checkInstantiable(c);
++        return newInstance(c);
++      }
++    };
++  }
+ }
+\ No newline at end of file

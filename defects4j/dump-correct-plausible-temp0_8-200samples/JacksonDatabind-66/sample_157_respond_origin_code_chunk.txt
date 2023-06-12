@@ -1,0 +1,22 @@
+        public final Object deserializeKey(String key, DeserializationContext ctxt)
+            throws IOException
+        {
+            if (key == null) { // is this even legal call?
+                return null;
+            }
+            // 28-Nov-2015, tatu: As per [databind#1238], allow empty String too
+            if (key.length() == 0) {
+                return _keyDeserializer.getEmptyValue(ctxt);
+            }
+            try {
+                // Ugh... should not have to give parser which may or may not be correct one...
+                Object result = _keyDeserializer.deserializeKey(key, ctxt);
+                if (result != null) {
+                    return result;
+                }
+                return ctxt.handleWeirdKey(_keyClass, key, "not a valid representation");
+            } catch (Exception re) {
+                return ctxt.handleWeirdKey(_keyClass, key, "not a valid representation: %s", re.getMessage());
+            }
+        }
+

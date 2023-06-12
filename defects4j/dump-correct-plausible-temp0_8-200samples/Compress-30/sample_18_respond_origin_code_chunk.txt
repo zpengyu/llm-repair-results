@@ -1,0 +1,19 @@
+public int read(final byte[] dest, final int offs, final int len)
+    throws IOException {
+    if (offs < 0 || len < 0 || offs + len > dest.length) {
+        throw new IndexOutOfBoundsException();
+    }
+    if (this.in == null) {
+        throw new IOException("stream closed");
+    }
+
+    int destOffs = offs;
+    int b;
+    while (destOffs < offs + len && ((b = read0()) >= 0)) {
+        dest[destOffs++] = (byte) b;
+        count(1);
+    }
+
+    int c = (destOffs == offs) ? -1 : (destOffs - offs);
+    return c;
+}

@@ -1,0 +1,28 @@
+diff --git a/src/com/google/javascript/jscomp/CodeGenerator.java b/src/com/google/javascript/jscomp/CodeGenerator.java
+index a9d0a5b0..10ff035b 100644
+--- a/src/com/google/javascript/jscomp/CodeGenerator.java
++++ b/src/com/google/javascript/jscomp/CodeGenerator.java
+@@ -1023,7 +1021,22 @@ class CodeGenerator {
+     sb.append(quote);
+     return sb.toString();
+   }
+-
++  private static void appendHexJavaScriptRepresentation(StringBuilder sb,
++                                                        int codepoint) {
++    if (codepoint < Character.MIN_SUPPLEMENTARY_CODE_POINT) {
++      sb.append("\\u");
++      String hexString = Integer.toHexString(codepoint);
++      for (int j = hexString.length(); j < 4; j++) {
++        sb.append('0');
++      }
++      sb.append(hexString);
++    } else {
++      // Split the codepoint into two chars and print each char.
++      char[] surrogates = Character.toChars(codepoint);
++      appendHexJavaScriptRepresentation(sb, surrogates[0]);
++      appendHexJavaScriptRepresentation(sb, surrogates[1]);
++    }
++  }
+   static String identifierEscape(String s) {
+     // First check if escaping is needed at all -- in most cases it isn't.
+     if (NodeUtil.isLatin(s)) {

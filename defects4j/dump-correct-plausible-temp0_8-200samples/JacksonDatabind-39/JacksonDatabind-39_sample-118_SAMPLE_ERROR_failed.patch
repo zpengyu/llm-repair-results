@@ -1,0 +1,28 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/deser/std/NullifyingDeserializer.java b/src/main/java/com/fasterxml/jackson/databind/deser/std/NullifyingDeserializer.java
+index c70088e43..3111b7f58 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/deser/std/NullifyingDeserializer.java
++++ b/src/main/java/com/fasterxml/jackson/databind/deser/std/NullifyingDeserializer.java
+@@ -28,14 +28,17 @@ public class NullifyingDeserializer
+      */
+     
+     @Override
+-    public Object deserialize(JsonParser p, DeserializationContext ctxt) throws IOException
+-    {
+-        // 29-Jan-2016, tatu: Simple skipping for all other tokens, but FIELD_NAME bit
+-        //    special unfortunately
+-            p.skipChildren();
++public Object deserialize(JsonParser p, DeserializationContext ctxt) throws IOException
++{
++    JsonToken t = p.getCurrentToken();
++    if (t == JsonToken.VALUE_NULL) {
+         return null;
+     }
+-
++    if (t == JsonToken.START_ARRAY) {
++        return handleNonArray(p, ctxt);
++    }
++    return handleNonArray(p, ctxt);
++}
+     @Override
+     public Object deserializeWithType(JsonParser p, DeserializationContext ctxt,
+             TypeDeserializer typeDeserializer) throws IOException

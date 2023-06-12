@@ -1,0 +1,30 @@
+public class UnionContext extends NodeSetContext {
+    private EvalContext contexts[];
+    private int lastDocumentOrder;
+    public UnionContext(EvalContext parentContext, EvalContext contexts[]) {
+        super(parentContext, new BasicNodeSet());
+        this.contexts = contexts;
+    }
+    public boolean nextSet() {
+        while (nextNode()) {
+            return true;
+        }
+        return false;
+    }
+    public boolean nextNode() {
+        if (contexts.length == 1) {
+            return contexts[0].nextNode();
+        }
+        while (lastDocumentOrder < contexts.length) {
+            if (contexts[lastDocumentOrder].nextNode()) {
+                setCurrentNodePointer(contexts[lastDocumentOrder].getCurrentNodePointer());
+                return true;
+            }
+            lastDocumentOrder++;
+        }
+        return false;
+    }
+    public int getDocumentOrder() {
+        return contexts.length > 1 ? 1 : super.getDocumentOrder();
+    }
+}

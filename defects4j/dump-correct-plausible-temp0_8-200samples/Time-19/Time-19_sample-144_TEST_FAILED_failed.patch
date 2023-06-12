@@ -1,0 +1,30 @@
+diff --git a/src/main/java/org/joda/time/DateTimeZone.java b/src/main/java/org/joda/time/DateTimeZone.java
+index 17672725..3118dd85 100644
+--- a/src/main/java/org/joda/time/DateTimeZone.java
++++ b/src/main/java/org/joda/time/DateTimeZone.java
+@@ -894,6 +894,16 @@ public abstract class DateTimeZone implements Serializable {
+                 long nextLocal = nextTransition(instantAdjusted);
+                 long nextAdjusted = nextTransition(instantLocal - offsetAdjusted);
+                 if (nextLocal != nextAdjusted) {
++                    // Even though this adjustment is earlier, it is the
++                    // correct adjustment to make.  Imagine a transition
++                    // from 01:00 to 01:00.  Suppose the transition occurs
++                    // at Jan 1 00:00.  The local time at that point is
++                    // ambiguous, so an arbitrary choice is made, such as
++                    // 01:00.  A later time is requested, perhaps Jan 1 00:10.
++                    // Time zone data is used to determine the offset is
++                    // still 01:00.  However, if 01:00 is adjusted to 02:00,
++                    // then when the offset is applied the time will be
++                    // 02:10 instead of 01:10, which is wrong.
+                     return offsetLocal;
+                 }
+             }
+@@ -901,7 +911,7 @@ public abstract class DateTimeZone implements Serializable {
+             long prev = previousTransition(instantAdjusted);
+             if (prev < instantAdjusted) {
+                 int offsetPrev = getOffset(prev);
+-                int diff = offsetPrev - offsetLocal;
++                int diff = offsetLocal - offsetPrev;
+                 if (instantAdjusted - prev <= diff) {
+                     return offsetPrev;
+                 }

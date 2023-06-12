@@ -1,0 +1,49 @@
+diff --git a/src/java/org/apache/commons/lang/enums/ValuedEnum.java b/src/java/org/apache/commons/lang/enums/ValuedEnum.java
+index 0823e77d..5885c390 100644
+--- a/src/java/org/apache/commons/lang/enums/ValuedEnum.java
++++ b/src/java/org/apache/commons/lang/enums/ValuedEnum.java
+@@ -180,19 +174,38 @@ public abstract class ValuedEnum extends Enum {
+      * @throws NullPointerException if other is <code>null</code>
+      */
+     public int compareTo(Object other) {
+-        return iValue - ((ValuedEnum) other).iValue;
++        if (other == this) {
++            return 0;
++        }
++        if (other.getClass() == this.getClass()) {
++            return iValue - ((ValuedEnum) other).iValue;
++        }
++        if (other.getClass().getName().equals(this.getClass().getName())) {
++            return iValue - getValueInOtherClassLoader(other);
++        }
++        throw new ClassCastException("Different enum class '" + ClassUtils.getShortClassName(other.getClass())
++            + "'");
+     }
+-
+     /**
+      * <p>Use reflection to return an objects value.</p>
+      *
+      * @param other  the object to determine the value for
+      * @return the value
+      */
+-            // ignore - should never happen
+-            // ignore - should never happen
+-            // ignore - should never happen
+-
++    private int getValueInOtherClassLoader(Object other) {
++        try {
++            Method mth = other.getClass().getMethod(
++                "getValue", new Class[0]);
++            Integer value = (Integer) mth.invoke(other, new Object[0]);
++            return value.intValue();
++        } catch (NoSuchMethodException e) {
++            return 0;
++        } catch (IllegalAccessException e) {
++            return 0;
++        } catch (InvocationTargetException e) {
++            return 0;
++        }
++    }
+     /**
+      * <p>Human readable description of this <code>Enum</code> item.</p>
+      *

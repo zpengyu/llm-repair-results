@@ -1,0 +1,36 @@
+diff --git a/src/java/org/apache/commons/lang/enums/ValuedEnum.java b/src/java/org/apache/commons/lang/enums/ValuedEnum.java
+index 0823e77d..2655b9d9 100644
+--- a/src/java/org/apache/commons/lang/enums/ValuedEnum.java
++++ b/src/java/org/apache/commons/lang/enums/ValuedEnum.java
+@@ -189,10 +182,27 @@ public abstract class ValuedEnum extends Enum {
+      * @param other  the object to determine the value for
+      * @return the value
+      */
+-            // ignore - should never happen
+-            // ignore - should never happen
+-            // ignore - should never happen
+-
++    private int getValue(Object other) {
++        Class cls = other.getClass();
++        if (cls.getName().equals(getEnumClass().getName()) == false) {
++            throw new ClassCastException(
++                "Different enum class '" + cls.getName() + "'");
++        }
++        try {
++            Field field = cls.getField("iValue");
++            int value = field.getInt(other);
++            return value;
++        } catch (NoSuchFieldException e) {
++            throw new IllegalArgumentException(
++                "The field 'iValue' is not defined for the class '" + cls.getName() + "'");
++        } catch (IllegalAccessException e) {
++            throw new IllegalArgumentException(
++                "The field 'iValue' is not accessible for the class '" + cls.getName() + "'");
++        } catch (ClassCastException e) {
++            throw new IllegalArgumentException(
++                "The field 'iValue' is not of type int for the class '" + cls.getName() + "'");
++        }
++    }
+     /**
+      * <p>Human readable description of this <code>Enum</code> item.</p>
+      *

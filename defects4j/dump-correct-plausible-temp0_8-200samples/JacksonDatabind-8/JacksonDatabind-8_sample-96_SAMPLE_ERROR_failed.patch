@@ -1,0 +1,19 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/deser/impl/CreatorCollector.java b/src/main/java/com/fasterxml/jackson/databind/deser/impl/CreatorCollector.java
+index fd590d628..9349527db 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/deser/impl/CreatorCollector.java
++++ b/src/main/java/com/fasterxml/jackson/databind/deser/impl/CreatorCollector.java
+@@ -280,7 +280,13 @@ public class CreatorCollector
+         AnnotatedWithParams oldOne = _creators[typeIndex];
+         // already had an explicitly marked one?
+         if (oldOne != null) {
+-
++            // 27-Nov-2015, tatu: As per [databind#1222], this may be legal, so:
++            if (oldOne instanceof AnnotatedMember && newOne instanceof AnnotatedMember) {
++                // in which case, check for override...
++                if (isOverridden((AnnotatedMember) oldOne, (AnnotatedMember) newOne)) {
++                    return;
++                }
++            }
+             if ((_explicitCreators & mask) != 0) { // already had explicitly annotated, leave as-is
+                 // but skip, if new one not annotated
+                 if (!explicit) {

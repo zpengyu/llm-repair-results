@@ -1,0 +1,41 @@
+diff --git a/src/main/java/org/jsoup/parser/CharacterReader.java b/src/main/java/org/jsoup/parser/CharacterReader.java
+index bcda218..d62946b 100644
+--- a/src/main/java/org/jsoup/parser/CharacterReader.java
++++ b/src/main/java/org/jsoup/parser/CharacterReader.java
+@@ -80,18 +80,24 @@ class CharacterReader {
+      * @return offset between current position and next instance of target. -1 if not found.
+      */
+     int nextIndexOf(CharSequence seq) {
+-        // doesn't handle scanning for surrogates
+-        char startChar = seq.charAt(0);
+-        for (int offset = pos; offset < length; offset++) {
+-            // scan to first instance of startchar:
+-            if (startChar != input[offset])
+-                while(++offset < length && startChar != input[offset]);
+-            int i = offset + 1;
+-            int last = i + seq.length()-1;
+-            if (offset < length) {
+-                for (int j = 1; i < last && seq.charAt(j) == input[i]; i++, j++);
+-                if (i == last) // found full sequence
+-                    return offset - pos;
++        int start = pos;
++        int remaining = length - start;
++        int seqlen = seq.length();
++        if (seqlen == 0) // empty string
++            return -1;
++        if (seqlen > remaining)
++            return -1;
++        if (seqlen == 1)
++            return nextIndexOf(seq.charAt(0), start);
++        char c0 = seq.charAt(0);
++        int end = start + remaining - seqlen + 1;
++        for (int i = start; i < end; i++) {
++            if (input[i] == c0) {
++                int o1 = i;
++                int o2 = 0;
++                while (++o2 < seqlen && input[++o1] == seq.charAt(o2));
++                if (o2 == seqlen)
++                    return i - start; // found
+             }
+         }
+         return -1;

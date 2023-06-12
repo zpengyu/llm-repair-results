@@ -1,0 +1,19 @@
+diff --git a/src/main/java/org/apache/commons/compress/archivers/zip/ZipArchiveInputStream.java b/src/main/java/org/apache/commons/compress/archivers/zip/ZipArchiveInputStream.java
+index fc7b80d5..2ed644cf 100644
+--- a/src/main/java/org/apache/commons/compress/archivers/zip/ZipArchiveInputStream.java
++++ b/src/main/java/org/apache/commons/compress/archivers/zip/ZipArchiveInputStream.java
+@@ -236,8 +235,12 @@ public class ZipArchiveInputStream extends ArchiveInputStream {
+             } catch (DataFormatException e) {
+                 throw new ZipException(e.getMessage());
+             }
+-            if (read == 0 && inf.finished()) {
+-                return -1;
++            if (read == 0 && length != 0 && !inf.finished()) {
++                if (inf.needsDictionary()) {
++                    throw new ZipException("Needs Dictionary");
++                } else if (inf.needsInput()) {
++                    throw new ZipException("Inflater needs input");
++                }
+             }
+             crc.update(buffer, start, read);
+             return read;

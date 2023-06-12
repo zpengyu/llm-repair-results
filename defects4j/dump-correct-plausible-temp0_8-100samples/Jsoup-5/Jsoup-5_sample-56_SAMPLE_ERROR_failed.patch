@@ -1,0 +1,35 @@
+diff --git a/src/main/java/org/jsoup/parser/Parser.java b/src/main/java/org/jsoup/parser/Parser.java
+index 5f71aaf..8c0e503 100644
+--- a/src/main/java/org/jsoup/parser/Parser.java
++++ b/src/main/java/org/jsoup/parser/Parser.java
+@@ -178,27 +178,13 @@ public class Parser {
+         }
+     }
+ 
+-    private Attribute parseAttribute() {
+-        tq.consumeWhitespace();
++private Attribute parseAttribute() {
+         String key = tq.consumeAttributeKey();
+-        String value = "";
+         tq.consumeWhitespace();
++        String value = "";
+         if (tq.matchChomp("=")) {
+             tq.consumeWhitespace();
+-
+-            if (tq.matchChomp(SQ)) {
+-                value = tq.chompTo(SQ);
+-            } else if (tq.matchChomp(DQ)) {
+-                value = tq.chompTo(DQ);
+-            } else {
+-                StringBuilder valueAccum = new StringBuilder();
+-                // no ' or " to look for, so scan to end tag or space (or end of stream)
+-                while (!tq.matchesAny("<", "/>", ">") && !tq.matchesWhitespace() && !tq.isEmpty()) {
+-                    valueAccum.append(tq.consume());
+-                }
+-                value = valueAccum.toString();
+-            }
+-            tq.consumeWhitespace();
++            value = tq.consumeAttributeValue();
+         }
+         if (key.length() != 0)
+             return Attribute.createFromEncoded(key, value);

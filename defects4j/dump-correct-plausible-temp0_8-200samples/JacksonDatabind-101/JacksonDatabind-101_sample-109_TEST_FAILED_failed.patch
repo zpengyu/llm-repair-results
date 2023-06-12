@@ -1,0 +1,22 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/deser/BeanDeserializer.java b/src/main/java/com/fasterxml/jackson/databind/deser/BeanDeserializer.java
+index 3c89dc109..614e24c4c 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/deser/BeanDeserializer.java
++++ b/src/main/java/com/fasterxml/jackson/databind/deser/BeanDeserializer.java
+@@ -782,6 +779,17 @@ public class BeanDeserializer
+                                 "Cannot create polymorphic instances with unwrapped values");
+                         return null;
+                     }
++                    // how about any setter? We'll get copies but...
++                    if (_anySetter != null) {
++                        // Need to copy to a separate buffer first
++                        TokenBuffer b2 = TokenBuffer.asCopyOfValue(p);
++                        try {
++                            buffer.bufferAnyProperty(_anySetter, propName,
++                                    _anySetter.deserialize(b2.asParserOnFirstToken(), ctxt));
++                        } catch (Exception e) {
++                            wrapAndThrow(e, _beanType.getRawClass(), propName, ctxt);
++                        }
++                    }
+                     return _unwrappedPropertyHandler.processUnwrapped(p, ctxt, bean, tokens);
+                 }
+                 continue;

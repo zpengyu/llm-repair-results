@@ -1,0 +1,63 @@
+diff --git a/src/com/google/javascript/jscomp/InlineObjectLiterals.java b/src/com/google/javascript/jscomp/InlineObjectLiterals.java
+index a26b500d..732a2722 100644
+--- a/src/com/google/javascript/jscomp/InlineObjectLiterals.java
++++ b/src/com/google/javascript/jscomp/InlineObjectLiterals.java
+@@ -178,9 +176,11 @@ class InlineObjectLiterals implements CompilerPass {
+           // We short-circuit this problem by bailing out if we see a reference
+           // to a property that isn't defined on the object literal. This
+           // isn't a perfect algorithm, but it should catch most cases.
++          if (!areObjectPropertiesInlined(ref.getLhs(), ref.getGrandparent())) {
++            return false;
++          }
+           continue;
+         }
+-
+         // Only rewrite VAR declarations or simple assignment statements
+         if (!isVarOrAssignExprLhs(name)) {
+            return false;
+@@ -196,8 +194,7 @@ class InlineObjectLiterals implements CompilerPass {
+         if (!val.isObjectLit()) {
+           return false;
+         }
+-
+-        // Make sure that the value is not self-refential. IOW,
++        // Make sure that the value is not self-referential. IOW,
+         // disallow things like x = {b: x.a}.
+         //
+         // TODO: Only exclude unorderable self-referential
+@@ -238,7 +231,34 @@ class InlineObjectLiterals implements CompilerPass {
+       }
+       return ret;
+     }
+-
++    private boolean areObjectPropertiesInlined(Node maybeObjectLit, Node scope) {
++        while (scope != null) {
++            switch (scope.getType()) {
++                case Token.FUNCTION:
++                    if (scope.getLastChild() == maybeObjectLit) {
++                        return true;
++                    }
++                    return false;
++                case Token.VAR:
++                    Node name = maybeObjectLit.getFirstChild();
++                    Node value = name.getFirstChild();
++                    if (value != null && !value.isObjectLit()) {
++                        return false;
++                    }
++                    return true;
++                case Token.ASSIGN:
++                    // We have to check the var name to see if it matches
++                    Node assignName = scope.getFirstChild();
++                    Node assignValue = assignName.getNext();
++                    if (assignValue == maybeObjectLit) {
++                        return true;
++                    }
++                    return false;
++            }
++            scope = scope.getParent();
++        }
++        return true;
++    }
+     private boolean isVarOrAssignExprLhs(Node n) {
+       Node parent = n.getParent();
+       return parent.isVar() ||

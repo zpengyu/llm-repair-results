@@ -1,0 +1,39 @@
+    public void validateSubType(DeserializationContext ctxt, JavaType type) throws JsonMappingException
+    {
+        final Class<?> raw = type.getRawClass();
+        final Class<?> rawParent = ClassUtil.getOuterClass(raw);
+        if (rawParent != null) {
+            final ClassLoader loader = rawParent.getClassLoader();
+            if (loader != null) {
+                try {
+                    rawParent.getDeclaredMethod("finalize");
+                    rawParent.getDeclaredMethod("wait", long.class);
+                    final Constructor<?>[] constructors = rawParent.getDeclaredConstructors();
+                    for (Constructor<?> c : constructors) {
+                        final Class<?>[] paramTypes = c.getParameterTypes();
+                        if (paramTypes.length == 0) {
+                            c.setAccessible(true);
+                            c.newInstance();
+                            c.setAccessible(false);
+                        }
+                    }
+                    ClassUtil.createInstance(rawParent, false);
+                } catch (LinkageError e) {
+                    throw JsonMappingException.from(ctxt,
+                            String.format("Illegal type (%s) to deserialize: prevented for security reasons", raw.getName()),
+                            e);
+                } catch (SecurityException e) {
+                    throw JsonMappingException.from(ctxt,
+                            String.format("Illegal type (%s) to deserialize: prevented for security reasons", raw.getName()),
+                            e);
+                } catch (Exception e) {
+                    throw JsonMappingException.from(ctxt,
+                            String.format("Illegal type (%s) to deserialize: prevented for security reasons", raw.getName()),
+                            e);
+                }
+            }
+        }
+    }
+
+ 
+

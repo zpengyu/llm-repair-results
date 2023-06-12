@@ -1,0 +1,29 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/ser/std/StdKeySerializer.java b/src/main/java/com/fasterxml/jackson/databind/ser/std/StdKeySerializer.java
+index 60ce578bf..ae40f64e6 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/ser/std/StdKeySerializer.java
++++ b/src/main/java/com/fasterxml/jackson/databind/ser/std/StdKeySerializer.java
+@@ -24,16 +24,22 @@ public class StdKeySerializer extends StdSerializer<Object>
+     @Override
+     public void serialize(Object value, JsonGenerator jgen, SerializerProvider provider) throws IOException {
+         String str;
+-
++        if (value == null) {
++            provider.defaultSerializeNullKey(jgen);
++            return;
++        }
+         if (value instanceof Date) {
+             provider.defaultSerializeDateKey((Date) value, jgen);
+             return;
+         } else {
+             str = value.toString();
+         }
++        if (str.length() == 0) {
++            provider.defaultSerializeEmptyStringKey(jgen);
++            return;
++        }
+         jgen.writeFieldName(str);
+     }
+-
+     @Override
+     public JsonNode getSchema(SerializerProvider provider, Type typeHint) throws JsonMappingException {
+         return createSchemaNode("string");

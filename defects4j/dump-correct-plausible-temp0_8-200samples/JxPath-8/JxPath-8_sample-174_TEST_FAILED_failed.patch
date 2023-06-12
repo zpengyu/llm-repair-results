@@ -1,0 +1,28 @@
+diff --git a/src/java/org/apache/commons/jxpath/ri/compiler/CoreOperationRelationalExpression.java b/src/java/org/apache/commons/jxpath/ri/compiler/CoreOperationRelationalExpression.java
+index 2a40620..7a0534c 100644
+--- a/src/java/org/apache/commons/jxpath/ri/compiler/CoreOperationRelationalExpression.java
++++ b/src/java/org/apache/commons/jxpath/ri/compiler/CoreOperationRelationalExpression.java
+@@ -54,9 +54,6 @@ public abstract class CoreOperationRelationalExpression extends CoreOperation {
+     protected abstract boolean evaluateCompare(int compare);
+ 
+     private boolean compute(Object left, Object right) {
+-        left = reduce(left);
+-        right = reduce(right);
+-
+         if (left instanceof InitialContext) {
+             ((InitialContext) left).reset();
+         }
+@@ -72,11 +69,10 @@ public abstract class CoreOperationRelationalExpression extends CoreOperation {
+         if (right instanceof Iterator) {
+             return containsMatch((Iterator) right, left);
+         }
+-        double ld = InfoSetUtil.doubleValue(left);
+-        double rd = InfoSetUtil.doubleValue(right);
++        double ld = InfoSetUtil.doubleValue(reduce(left));
++        double rd = InfoSetUtil.doubleValue(reduce(right));
+         return evaluateCompare(ld == rd ? 0 : ld < rd ? -1 : 1);
+     }
+-
+     private Object reduce(Object o) {
+         if (o instanceof SelfContext) {
+             o = ((EvalContext) o).getSingleNodePointer();

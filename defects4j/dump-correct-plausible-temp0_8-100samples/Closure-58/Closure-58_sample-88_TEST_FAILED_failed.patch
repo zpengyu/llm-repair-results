@@ -1,0 +1,36 @@
+diff --git a/src/com/google/javascript/jscomp/LiveVariablesAnalysis.java b/src/com/google/javascript/jscomp/LiveVariablesAnalysis.java
+index 94e813d8..d57dfee8 100644
+--- a/src/com/google/javascript/jscomp/LiveVariablesAnalysis.java
++++ b/src/com/google/javascript/jscomp/LiveVariablesAnalysis.java
+@@ -241,18 +234,21 @@ class LiveVariablesAnalysis extends
+           addToSetIfLocal(n, gen);
+         }
+         return;
+-
+       default:
+-        if (NodeUtil.isAssignmentOp(n) && NodeUtil.isName(n.getFirstChild())) {
+-          Node lhs = n.getFirstChild();
+-          if (!conditional) {
+-            addToSetIfLocal(lhs, kill);
+-          }
+-          if (!NodeUtil.isAssign(n)) {
+-            // assignments such as a += 1 reads a.
+-            addToSetIfLocal(lhs, gen);
++        if (NodeUtil.isAssignmentOp(n)) {
++            Node lhs = n.getFirstChild();
++          if (NodeUtil.isName(lhs)) {
++            if (!conditional) {
++              addToSetIfLocal(lhs, kill);
++            }
++            if (!NodeUtil.isAssign(n)) {
++              // assignments such as a += 1 reads a.
++              addToSetIfLocal(lhs, gen);
++            }
++            computeGenKill(lhs.getNext(), gen, kill, conditional);
++          } else {
++            computeGenKill(lhs, gen, kill, conditional);
+           }
+-          computeGenKill(lhs.getNext(), gen, kill, conditional);
+         } else {
+           for (Node c = n.getFirstChild(); c != null; c = c.getNext()) {
+             computeGenKill(c, gen, kill, conditional);

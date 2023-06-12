@@ -1,0 +1,40 @@
+diff --git a/src/main/java/org/apache/commons/compress/compressors/bzip2/BZip2CompressorInputStream.java b/src/main/java/org/apache/commons/compress/compressors/bzip2/BZip2CompressorInputStream.java
+index bfedfd0b..95a62e36 100644
+--- a/src/main/java/org/apache/commons/compress/compressors/bzip2/BZip2CompressorInputStream.java
++++ b/src/main/java/org/apache/commons/compress/compressors/bzip2/BZip2CompressorInputStream.java
+@@ -200,13 +200,22 @@ public class BZip2CompressorInputStream extends CompressorInputStream implements
+         switch (currentState) {
+         case EOF:
+             return -1;
+-
+         case START_BLOCK_STATE:
++            if (this.in != null) {
++                this.currentNBlocks = this.in.readInt();
++                if (this.currentNBlocks < 0) {
++                    this.currentNBlocks = 0;
++                    currentState = EOF_STATE;
++                    return -1;
++                }
++                this.bsBuff = 0;
++                this.bsLive = 0;
++                setupBlock();
++                return read0();
++            }
+             throw new IllegalStateException();
+-
+         case RAND_PART_A_STATE:
+             throw new IllegalStateException();
+-
+         case RAND_PART_B_STATE:
+             setupRandPartB();
+             break;
+@@ -225,7 +230,8 @@ public class BZip2CompressorInputStream extends CompressorInputStream implements
+         case NO_RAND_PART_C_STATE:
+             setupNoRandPartC();
+             break;
+-
++        case EOF_STATE:
++            return -1;
+         default:
+             throw new IllegalStateException();
+         }

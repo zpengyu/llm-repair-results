@@ -1,0 +1,24 @@
+diff --git a/src/com/google/javascript/jscomp/TypeInference.java b/src/com/google/javascript/jscomp/TypeInference.java
+index ab353933..6953ba1e 100644
+--- a/src/com/google/javascript/jscomp/TypeInference.java
++++ b/src/com/google/javascript/jscomp/TypeInference.java
+@@ -1133,9 +1132,18 @@ class TypeInference
+           }
+         }
+       }
++    } else {
++      ObjectType objType = ObjectType.cast(type.restrictByNotNullOrUndefined());
++      if (objType != null) {
++        for (String prop : objType.getOwnPropertyNames()) {
++          if (!objType.isPropertyTypeDeclared(prop)) {
++            objType.defineInferredProperty(prop,
++                getNativeType(JSTypeNative.NO_TYPE), null);
++          }
++        }
++      }
+     }
+   }
+-
+   /**
+    * If we access a property of a symbol, then that symbol is not
+    * null or undefined.

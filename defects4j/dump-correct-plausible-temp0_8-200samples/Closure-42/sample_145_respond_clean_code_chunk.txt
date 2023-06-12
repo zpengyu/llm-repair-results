@@ -1,0 +1,14 @@
+    Node processForInLoop(ForInLoop loopNode) {
+        Node body = transformBlock(loopNode.getBody());
+        if (body.getChildCount() == 0 || !body.getFirstChild().isExprResult()) {
+            Node init = IR.name("undefined");
+            init.setJSType(getNativeType(JSTypeNative.UNDEFINED_TYPE));
+            body.addChildToFront(IR.exprResult(init));
+        }
+        // Return the bare minimum to put the AST in a valid state.
+      return newNode(
+          Token.FOR,
+          transform(loopNode.getIterator()),
+          transform(loopNode.getIteratedObject()),
+          body);
+    }

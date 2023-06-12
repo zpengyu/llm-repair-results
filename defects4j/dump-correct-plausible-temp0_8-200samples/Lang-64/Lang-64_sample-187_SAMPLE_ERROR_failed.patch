@@ -1,0 +1,29 @@
+diff --git a/src/java/org/apache/commons/lang/enums/ValuedEnum.java b/src/java/org/apache/commons/lang/enums/ValuedEnum.java
+index 0823e77d..06733428 100644
+--- a/src/java/org/apache/commons/lang/enums/ValuedEnum.java
++++ b/src/java/org/apache/commons/lang/enums/ValuedEnum.java
+@@ -189,10 +182,20 @@ public abstract class ValuedEnum extends Enum {
+      * @param other  the object to determine the value for
+      * @return the value
+      */
+-            // ignore - should never happen
+-            // ignore - should never happen
+-            // ignore - should never happen
+-
++    private static int getValue(ValuedEnum other) {
++        try {
++            Field valueField = other.getClass().getDeclaredField("iValue");
++            int modifiers = valueField.getModifiers();
++            if (Modifier.isPublic(modifiers) == false) {
++                valueField.setAccessible(true);
++            }
++            return valueField.getInt(other);
++        } catch (NoSuchFieldException e) {
++            throw new IllegalArgumentException("The Field.iValue field is not present on the ValuedEnum class " + other.getClass().getName());
++        } catch (IllegalAccessException e) {
++            throw new IllegalArgumentException("The Field.iValue field is not accessible on the ValuedEnum class " + other.getClass().getName());
++        }
++    }
+     /**
+      * <p>Human readable description of this <code>Enum</code> item.</p>
+      *

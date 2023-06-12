@@ -1,0 +1,24 @@
+diff --git a/src/com/google/javascript/jscomp/CodeGenerator.java b/src/com/google/javascript/jscomp/CodeGenerator.java
+index b58df9b3..074b0dea 100644
+--- a/src/com/google/javascript/jscomp/CodeGenerator.java
++++ b/src/com/google/javascript/jscomp/CodeGenerator.java
+@@ -1056,7 +1054,18 @@ class CodeGenerator {
+     sb.append(quote);
+     return sb.toString();
+   }
+-
++  private static void appendHexJavaScriptRepresentation(StringBuilder sb,
++                                                        char c) {
++    // We use hex escape rather than unicode escape here because
++    // unicode escape doesn't always work in JavaScript. See
++    // http://code.google.com/p/google-caja/issues/detail?id=1355
++    sb.append('\\');
++    sb.append('x');
++    sb.append(HEX_CHARS[(c >>> 12) & 0xf]);
++    sb.append(HEX_CHARS[(c >>> 8) & 0xf]);
++    sb.append(HEX_CHARS[(c >>> 4) & 0xf]);
++    sb.append(HEX_CHARS[(c >>> 0) & 0xf]);
++  }
+   static String identifierEscape(String s) {
+     // First check if escaping is needed at all -- in most cases it isn't.
+     if (NodeUtil.isLatin(s)) {

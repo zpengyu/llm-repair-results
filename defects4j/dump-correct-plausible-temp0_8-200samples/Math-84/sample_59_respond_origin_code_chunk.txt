@@ -1,0 +1,62 @@
+    protected void iterateSimplex(final Comparator<RealPointValuePair> comparator)
+        throws FunctionEvaluationException, OptimizationException, IllegalArgumentException {
+
+        while (true) {
+
+            incrementIterationsCounter();
+
+            // save the original vertex
+            final RealPointValuePair[] original = simplex;
+            final RealPointValuePair best = original[0];
+
+            // perform a reflection step
+            final RealPointValuePair reflected = evaluateNewSimplex(original, 1.0, comparator);
+            if (comparator.compare(reflected, best) < 0) {
+
+                // compute the expanded simplex
+                final RealPointValuePair[] reflectedSimplex = simplex;
+                final RealPointValuePair expanded = evaluateNewSimplex(original, khi, comparator);
+                if (comparator.compare(reflected, expanded) <= 0) {
+                    // accept the reflected simplex
+                    simplex = reflectedSimplex;
+                } else {
+                    // accept the expanded simplex
+                    simplex = expanded;
+                }
+
+                return;
+
+            }
+
+            // perform an outside contraction step
+            final RealPointValuePair[] originalOut = simplex;
+            final RealPointValuePair contractedOut = evaluateNewSimplex(originalOut, gamma, comparator);
+            if (comparator.compare(contractedOut, best) <= 0) {
+                // accept the contracted simplex
+                simplex = contractedOut;
+                // check convergence
+                return;
+            }
+
+            // perform an inside contraction step
+            final RealPointValuePair contractedIn = evaluateNewSimplex(original, -gamma, comparator);
+            if (comparator.compare(contractedIn, best) < 0) {
+                // accept the contracted simplex
+                simplex = contractedIn;
+            } else {
+                // perform a reduction step
+                for (int i = 1; i < simplex.length; ++i) {
+                    for (int j = 0; j < simplex[i].getPoint().length; ++j) {
+                        final double[] v = simplex[i].getPointRef();
+                        v[j] = best.getPoint()[j] - sigma * (v[j] - best.getPoint()[j]);
+                    }
+                }
+                evaluate(simplex[0].getPoint(), comparator);
+            }
+
+            return;
+
+        }
+
+    }
+

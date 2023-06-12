@@ -1,0 +1,100 @@
+diff --git a/src/main/java/org/jsoup/nodes/LeafNode.java b/src/main/java/org/jsoup/nodes/LeafNode.java
+index 0e068b5..43c74f3 100644
+--- a/src/main/java/org/jsoup/nodes/LeafNode.java
++++ b/src/main/java/org/jsoup/nodes/LeafNode.java
+@@ -5,75 +5,51 @@ import org.jsoup.helper.Validate;
+ import java.util.List;
+ 
+ abstract class LeafNode extends Node {
+-
+-    Object value; // either a string value, or an attribute map (in the rare case multiple attributes are set)
+-
++    Attributes attributes; // either null, or an Attributes collection.
+     protected final boolean hasAttributes() {
+-        return value instanceof Attributes;
++        return attributes != null;
+     }
+-
+     @Override
+     public final Attributes attributes() {
+-        ensureAttributes();
+-        return (Attributes) value;
+-    }
+-
+-    private void ensureAttributes() {
+-        if (!hasAttributes()) {
+-            Object coreValue = value;
+-            Attributes attributes = new Attributes();
+-            value = attributes;
+-            if (coreValue != null)
+-                attributes.put(nodeName(), (String) coreValue);
+-        }
++        if (!hasAttributes())
++            attributes = new Attributes();
++        return attributes;
+     }
+-
+-    String coreValue() {
+-        return attr(nodeName());
+-    }
+-
+-    void coreValue(String value) {
+-        attr(nodeName(), value);
+-    }
+-
+     @Override
+     public String attr(String key) {
+         Validate.notNull(key);
+-        if (!hasAttributes()) {
+-            return key.equals(nodeName()) ? (String) value : EmptyString;
+-        }
+-        return super.attr(key);
++        if (!hasAttributes())
++            return "";
++        return attributes.hasKey(key) ? attributes.getIgnoreCase(key) : "";
+     }
+-
+     @Override
+     public Node attr(String key, String value) {
+-        if (!hasAttributes() && key.equals(nodeName())) {
+-            this.value = value;
+-        } else {
+-            ensureAttributes();
+-            super.attr(key, value);
+-        }
++        ensureAttributes();
++        attributes.putIgnoreCase(key, value);
+         return this;
+     }
+-
+     @Override
+     public boolean hasAttr(String key) {
+         ensureAttributes();
+-        return super.hasAttr(key);
++        return attributes.hasKeyIgnoreCase(key);
+     }
+-
+     @Override
+     public Node removeAttr(String key) {
+         ensureAttributes();
+-        return super.removeAttr(key);
++        attributes.removeIgnoreCase(key);
++        return this;
+     }
+-
+     @Override
+     public String absUrl(String key) {
+         ensureAttributes();
+-        return super.absUrl(key);
++        Validate.notEmpty(key);
++        if (!hasAttributes()) return "";
++        if (!attributes.hasKeyIgnoreCase(key)) return "";
++        String relUrl = attributes.getIgnoreCase(key);
++        if (relUrl.startsWith("http://") || relUrl.startsWith("https://"))
++            return relUrl;
++        return StringUtil.resolve(baseUri(), relUrl);
+     }
+-
+     @Override
+     public String baseUri() {
+         return hasParent() ? parent().baseUri() : "";

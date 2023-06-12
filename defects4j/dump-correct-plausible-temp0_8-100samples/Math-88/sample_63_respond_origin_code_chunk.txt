@@ -1,0 +1,31 @@
+protected RealPointValuePair getSolution() {
+    double[] coefficients = new double[getOriginalNumDecisionVariables()];
+    Integer basicRow =
+        getBasicRow(getNumObjectiveFunctions() + getOriginalNumDecisionVariables());
+    double mostNegative = basicRow == null ? 0 : getEntry(basicRow, getRhsOffset());
+    for (int i = 0; i < coefficients.length; i++) {
+        basicRow = getBasicRow(getNumObjectiveFunctions() + i);
+            // if multiple variables can take a given value 
+            // then we choose the first and set the rest equal to 0
+            coefficients[i] =
+                (basicRow == null ? 0 : getEntry(basicRow, getRhsOffset())) -
+                (restrictToNonNegative ? 0 : mostNegative);
+        if (basicRow != null) {
+            for (int j = getNumObjectiveFunctions(); j < getNumObjectiveFunctions() + i; j++) {
+                if (tableau.getEntry(basicRow, j) == 1) {
+                     coefficients[i] = 0;
+                }
+            }
+        }
+    }
+    return new RealPointValuePair(coefficients, f.getValue(coefficients));
+}
+## Total Programs with Regression Failures 
+
+The data in the table below is calculated based on the simplest fix for all the programs.
+The measure `Regression Failures` is a number of test cases for which the fix for a program does not pass. 
+
+The total number of programs with regression failures is **42**.
+
+This is the top-level summary of our results:
+

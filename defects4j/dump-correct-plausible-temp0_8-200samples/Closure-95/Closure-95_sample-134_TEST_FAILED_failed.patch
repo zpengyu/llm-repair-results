@@ -1,0 +1,91 @@
+diff --git a/src/com/google/javascript/jscomp/TypedScopeCreator.java b/src/com/google/javascript/jscomp/TypedScopeCreator.java
+index a5b356fb..1eb72491 100644
+--- a/src/com/google/javascript/jscomp/TypedScopeCreator.java
++++ b/src/com/google/javascript/jscomp/TypedScopeCreator.java
+@@ -896,49 +894,44 @@ final class TypedScopeCreator implements ScopeCreator {
+       // scope where the root object appears. This helps out people
+       // who declare "global" names in an anonymous namespace.
+       Scope scopeToDeclareIn = scope;
+-
+-        // don't try to declare in the global scope if there's
+-        // already a symbol there with this name.
+-
+-      // declared in closest scope?
+-      if (scopeToDeclareIn.isDeclared(variableName, false)) {
+-        Var oldVar = scopeToDeclareIn.getVar(variableName);
+-        validator.expectUndeclaredVariable(
+-            sourceName, n, parent, oldVar, variableName, type);
+-      } else {
+-        if (!inferred) {
+-          setDeferredType(n, type);
+-        }
+-        CompilerInput input = compiler.getInput(sourceName);
+-        scopeToDeclareIn.declare(variableName, n, type, input, inferred);
+-
+-        if (shouldDeclareOnGlobalThis) {
+-          ObjectType globalThis =
+-              typeRegistry.getNativeObjectType(JSTypeNative.GLOBAL_THIS);
+-          boolean isExtern = input.isExtern();
+-          if (inferred) {
+-            globalThis.defineInferredProperty(variableName,
+-                type == null ?
+-                    getNativeType(JSTypeNative.NO_TYPE) :
+-                    type,
+-                isExtern);
+-          } else {
+-            globalThis.defineDeclaredProperty(variableName, type, isExtern);
++      if (scopeToDeclareIn.isGlobal()) {
++        if (scopeToDeclareIn.isDeclared(variableName, false)) {
++          Var oldVar = scopeToDeclareIn.getVar(variableName);
++          validator.expectUndeclaredVariable(
++              sourceName, n, parent, oldVar, variableName, type);
++        } else {
++          if (!inferred) {
++            setDeferredType(n, type);
+           }
+-        }
+-
+-        // If we're in the global scope, also declare var.prototype
+-        // in the scope chain.
+-        if (scopeToDeclareIn.isGlobal() && type instanceof FunctionType) {
+-          FunctionType fnType = (FunctionType) type;
+-          if (fnType.isConstructor() || fnType.isInterface()) {
+-            FunctionType superClassCtor = fnType.getSuperClassConstructor();
+-            scopeToDeclareIn.declare(variableName + ".prototype", n,
+-                fnType.getPrototype(), compiler.getInput(sourceName),
+-                /* declared iff there's an explicit supertype */
+-                superClassCtor == null ||
+-                superClassCtor.getInstanceType().equals(
+-                    getNativeType(OBJECT_TYPE)));
++          CompilerInput input = compiler.getInput(sourceName);
++          scopeToDeclareIn.declare(variableName, n, type, input, inferred);
++          if (shouldDeclareOnGlobalThis) {
++            ObjectType globalThis =
++                typeRegistry.getNativeObjectType(JSTypeNative.GLOBAL_THIS);
++            boolean isExtern = input.isExtern();
++            if (inferred) {
++              globalThis.defineInferredProperty(variableName,
++                  type == null ?
++                      getNativeType(JSTypeNative.NO_TYPE) :
++                      type,
++                  isExtern);
++            } else {
++              globalThis.defineDeclaredProperty(variableName, type, isExtern);
++            }
++          }
++          // If we're in the global scope, also declare var.prototype
++          // in the scope chain.
++          if (scopeToDeclareIn.isGlobal() && type instanceof FunctionType) {
++            FunctionType fnType = (FunctionType) type;
++            if (fnType.isConstructor() || fnType.isInterface()) {
++              FunctionType superClassCtor = fnType.getSuperClassConstructor();
++              scopeToDeclareIn.declare(variableName + ".prototype", n,
++                  fnType.getPrototype(), compiler.getInput(sourceName),
++                  /* declared iff there's an explicit supertype */
++                  superClassCtor == null ||
++                  superClassCtor.getInstanceType().equals(
++                      getNativeType(OBJECT_TYPE)));
++            }
+           }
+         }
+       }

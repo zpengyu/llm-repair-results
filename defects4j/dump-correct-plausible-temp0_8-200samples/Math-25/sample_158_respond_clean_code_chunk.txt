@@ -1,0 +1,38 @@
+public class SinFunction implements ParametricUnivariateFunction {
+    /** {@inheritDoc} */
+    public double value(double x, double[] parameters)
+        throws NullArgumentException, DimensionMismatchException {
+        validateParameters(parameters);
+        return parameters[0] * FastMath.sin(parameters[1] * x + parameters[2]);
+    }
+    /** {@inheritDoc} */
+    public double[] gradient(double x, double[] parameters)
+        throws NullArgumentException, DimensionMismatchException {
+        validateParameters(parameters);
+        final double cos = FastMath.cos(parameters[1] * x + parameters[2]);
+        final double factor = parameters[0] * parameters[1] * cos;
+        return new double[] { FastMath.sin(parameters[1] * x + parameters[2]),
+                              factor,
+                              factor };
+    }
+    /**
+     * Validates parameters to ensure they are appropriate for the evaluation of
+     * the {@link #value(double, double[])} and {@link #gradient(double, double[])}
+     * methods.
+     *
+     * @param param Values for sigma, mean and amplitude.
+     * @throws NullArgumentException if {@code param} is {@code null}.
+     * @throws DimensionMismatchException if the size of {@code param} is
+     * not 3.
+     */
+    private void validateParameters(double[] param)
+        throws NullArgumentException,
+        DimensionMismatchException {
+        if (param == null) {
+            throw new NullArgumentException();
+        }
+        if (param.length != 3) {
+            throw new DimensionMismatchException(param.length, 3);
+        }
+    }
+}

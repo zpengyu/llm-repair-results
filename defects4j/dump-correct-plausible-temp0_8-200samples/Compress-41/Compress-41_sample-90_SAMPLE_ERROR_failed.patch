@@ -1,0 +1,18 @@
+diff --git a/src/main/java/org/apache/commons/compress/archivers/zip/ZipArchiveInputStream.java b/src/main/java/org/apache/commons/compress/archivers/zip/ZipArchiveInputStream.java
+index 5d4c0a82..70075fcd 100644
+--- a/src/main/java/org/apache/commons/compress/archivers/zip/ZipArchiveInputStream.java
++++ b/src/main/java/org/apache/commons/compress/archivers/zip/ZipArchiveInputStream.java
+@@ -316,9 +297,12 @@ public ZipArchiveEntry getNextZipEntry() throws IOException {
+                         new BoundedInputStream(in, current.entry.getCompressedSize()));
+             } else if (current.entry.getMethod() == ZipMethod.BZIP2.getCode()) {
+                 current.in = new BZip2CompressorInputStream(new BoundedInputStream(in, current.entry.getCompressedSize()));
++            } else if (current.entry.getMethod() == ZipMethod.UNKNOWN.getCode()) {
++                // rethrow exception if the unknown compression method
++                // was detected
++                current.in = new UnsupportedZipFeatureException(current.entry, "Unknown compression method");
+             }
+         }
+-        
+         entriesRead++;
+         return current.entry;
+     }

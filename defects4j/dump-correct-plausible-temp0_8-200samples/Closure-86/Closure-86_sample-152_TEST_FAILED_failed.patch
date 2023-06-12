@@ -1,0 +1,31 @@
+diff --git a/src/com/google/javascript/jscomp/NodeUtil.java b/src/com/google/javascript/jscomp/NodeUtil.java
+index 933d4ffa..ccdd5936 100644
+--- a/src/com/google/javascript/jscomp/NodeUtil.java
++++ b/src/com/google/javascript/jscomp/NodeUtil.java
+@@ -2435,10 +2435,10 @@ public final class NodeUtil {
+       case Token.AND:
+       case Token.OR:
+         return evaluatesToLocalValue(value.getFirstChild(), locals)
+-           && evaluatesToLocalValue(value.getLastChild(), locals);
++            && evaluatesToLocalValue(value.getLastChild(), locals);
+       case Token.HOOK:
+         return evaluatesToLocalValue(value.getFirstChild().getNext(), locals)
+-           && evaluatesToLocalValue(value.getLastChild(), locals);
++            && evaluatesToLocalValue(value.getLastChild(), locals);
+       case Token.INC:
+       case Token.DEC:
+         if (value.getBooleanProp(Node.INCRDECR_PROP)) {
+@@ -2451,9 +2451,11 @@ public final class NodeUtil {
+       case Token.NAME:
+         return isImmutableValue(value) || locals.apply(value);
+       case Token.GETELEM:
++        return isImmutableValue(value.getFirstChild())
++            && evaluatesToLocalValue(value.getLastChild(), locals);
+       case Token.GETPROP:
+-        // There is no information about the locality of object properties.
+-        return locals.apply(value);
++        return isImmutableValue(value.getFirstChild())
++            || locals.apply(value);
+       case Token.CALL:
+         return callHasLocalResult(value)
+             || isToStringMethodCall(value)

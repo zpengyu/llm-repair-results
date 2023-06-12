@@ -1,0 +1,33 @@
+diff --git a/src/main/java/org/jsoup/safety/Cleaner.java b/src/main/java/org/jsoup/safety/Cleaner.java
+index c6879b1..705df87 100644
+--- a/src/main/java/org/jsoup/safety/Cleaner.java
++++ b/src/main/java/org/jsoup/safety/Cleaner.java
+@@ -79,17 +70,20 @@ public class Cleaner {
+                     ElementMeta meta = createSafeElement(sourceEl);
+                     Element destChild = meta.el;
+                     destination.appendChild(destChild);
+-
+                     numDiscarded += meta.numAttribsDiscarded;
+                     numDiscarded += copySafeNodes(sourceEl, destChild);
+-                } else {
+-                    numDiscarded++;
+-                    numDiscarded += copySafeNodes(sourceEl, destination);
++                } else if (source instanceof TextNode) { // not a safe tag, but there may be safe attrs
++                    if (!sourceEl.hasText()) { // notext elements can sketchily be safe, e.g. BR, IMG, INPUT
++                        if (whitelist.isSafeAttribute(sourceTag, sourceEl, sourceAttr))
++                            destAttrs.put(sourceAttr);
++                        else
++                            numDiscarded++;
++                    } else {
++                        numDiscarded++;
++                    }
+                 }
+-            } else if (source instanceof TextNode) {
+-                TextNode sourceText = (TextNode) source;
+-                TextNode destText = new TextNode(sourceText.getWholeText(), source.baseUri());
+-                destination.appendChild(destText);
++                numDiscarded++;
++                numDiscarded += copySafeNodes(sourceEl, destination);
+             }
+         }
+         return numDiscarded;

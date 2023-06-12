@@ -1,0 +1,49 @@
+diff --git a/src/org/mockito/internal/configuration/SpyAnnotationEngine.java b/src/org/mockito/internal/configuration/SpyAnnotationEngine.java
+index e292e1300..7f1c84fa4 100644
+--- a/src/org/mockito/internal/configuration/SpyAnnotationEngine.java
++++ b/src/org/mockito/internal/configuration/SpyAnnotationEngine.java
+@@ -35,12 +35,7 @@ public class SpyAnnotationEngine implements AnnotationEngine {
+                 try {
+                     Object instance = field.get(testClass);
+                     if (instance == null) {
+-                        throw new MockitoException("Cannot create a @Spy for '" + field.getName() + "' field because the *instance* is missing\n" +
+-                        		  "The instance must be created *before* initMocks();\n" +
+-                                  "Example of correct usage of @Spy:\n" +
+-                            	  "   @Spy List mock = new LinkedList();\n" +
+-                            	  "   //also, don't forget about MockitoAnnotations.initMocks();");
+-
++                        instance = createSpy(field, testClass);
+                     }
+                     if (new MockUtil().isMock(instance)) { 
+                         // instance has been spied earlier
+@@ -56,7 +51,29 @@ public class SpyAnnotationEngine implements AnnotationEngine {
+             }
+         }
+     }
+-    
++	private Object createSpy(Field field, Object testClass) {
++        Type fieldType = field.getGenericType();
++        if (fieldType instanceof ParameterizedType) {
++            ParameterizedType parameterizedType = (ParameterizedType) fieldType;
++            if (parameterizedType.getRawType().equals(List.class)) {
++                return new LinkedList();
++            }
++            if (parameterizedType.getRawType().equals(Set.class)) {
++                return new HashSet();
++            }
++            if (parameterizedType.getRawType().equals(Queue.class)) {
++                return new LinkedList();
++            }
++            if (parameterizedType.getRawType().equals(Map.class)) {
++                return new HashMap();
++            }
++        }
++        throw new MockitoException("Cannot create a @Spy for '" + field.getName() + "' field because the *instance* is missing\n" +
++        		  "The instance must be created *before* initMocks();\n" +
++                  "Example of correct usage of @Spy:\n" +
++            	  "   @Spy List mock = new LinkedList();\n" +
++            	  "   //also, don't forget about MockitoAnnotations.initMocks();");
++    }    
+     //TODO duplicated elsewhere
+     void assertNoAnnotations(Class annotation, Field field, Class ... undesiredAnnotations) {
+         for (Class u : undesiredAnnotations) {

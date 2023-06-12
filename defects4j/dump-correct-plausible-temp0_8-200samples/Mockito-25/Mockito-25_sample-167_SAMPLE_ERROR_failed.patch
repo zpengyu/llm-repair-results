@@ -1,0 +1,49 @@
+diff --git a/src/org/mockito/internal/stubbing/defaultanswers/ReturnsDeepStubs.java b/src/org/mockito/internal/stubbing/defaultanswers/ReturnsDeepStubs.java
+index 6fa773f53..9eb5c900d 100644
+--- a/src/org/mockito/internal/stubbing/defaultanswers/ReturnsDeepStubs.java
++++ b/src/org/mockito/internal/stubbing/defaultanswers/ReturnsDeepStubs.java
+@@ -63,11 +56,12 @@ public class ReturnsDeepStubs implements Answer<Object>, Serializable {
+     			return stubbedInvocationMatcher.answer(invocation);
+     		}
+ 		}
+-
+         // deep stub
+-        return recordDeepStubMock(invocation, container);
++        if(returnTypeGenericMetadata.typeArgumentsOfRawType().isEmpty())
++        	return recordDeepStubMock(invocation, container);
++        else
++        	return recordParameterizedDeepStubMock(invocation, container, returnTypeGenericMetadata);
+     }
+-
+     /**
+      * Creates a mock using the Generics Metadata.
+      *
+@@ -87,10 +76,26 @@ public class ReturnsDeepStubs implements Answer<Object>, Serializable {
+                 return mock;
+             }
+         }, false);
+-
+         return mock;
+     }
+-
++    private Object recordParameterizedDeepStubMock(InvocationOnMock invocation, InvocationContainerImpl container, GenericMetadataSupport returnTypeGenericMetadata) {
++        Class<?> clz = invocation.getMethod().getReturnType();
++        final Object mock = org.mockito.Mockito.mock(clz, this, resolveTypeArgumentsForParameterizedDeepStub(returnTypeGenericMetadata));
++        container.addAnswer(new Answer<Object>() {
++            public Object answer(InvocationOnMock invocation) throws Throwable {
++                return mock;
++            }
++        }, false);
++        return mock;
++    }
++    private Class<?>[] resolveTypeArgumentsForParameterizedDeepStub(GenericMetadataSupport returnTypeGenericMetadata) {
++    	List<Class<?>> typeArgumentsOfRawType = returnTypeGenericMetadata.typeArgumentsOfRawType();
++    	Class<?>[] typeArguments = new Class<?>[typeArgumentsOfRawType.size()];
++    	for(int i=0; i<typeArguments.length; i++) {
++    		typeArguments[i] = Object.class;
++    	}
++    	return typeArguments;
++    }
+     protected GenericMetadataSupport actualParameterizedType(Object mock) {
+         CreationSettings mockSettings = (CreationSettings) new MockUtil().getMockHandler(mock).getMockSettings();
+         return GenericMetadataSupport.inferFrom(mockSettings.getTypeToMock());

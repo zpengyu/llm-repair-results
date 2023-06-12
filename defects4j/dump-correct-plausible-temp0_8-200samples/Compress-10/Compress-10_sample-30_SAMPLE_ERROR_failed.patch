@@ -1,0 +1,38 @@
+diff --git a/src/main/java/org/apache/commons/compress/archivers/zip/ZipFile.java b/src/main/java/org/apache/commons/compress/archivers/zip/ZipFile.java
+index fd5d1894..4bd5e672 100644
+--- a/src/main/java/org/apache/commons/compress/archivers/zip/ZipFile.java
++++ b/src/main/java/org/apache/commons/compress/archivers/zip/ZipFile.java
+@@ -805,7 +805,9 @@ public class ZipFile {
+         // the hashcode - see COMPRESS-164
+         // Map needs to be reconstructed in order to keep central
+         // directory order
+-        for (ZipArchiveEntry ze : entries.keySet()) {
++        final LinkedHashMap<ZipArchiveEntry, OffsetEntry> newEntries
++            = new LinkedHashMap<ZipArchiveEntry, OffsetEntry>();
++        for (final ZipArchiveEntry ze : entries.keySet()) {
+             OffsetEntry offsetEntry = entries.get(ze);
+             long offset = offsetEntry.headerOffset;
+             archive.seek(offset + LFH_OFFSET_FOR_FILENAME_LENGTH);
+@@ -818,8 +820,8 @@ public class ZipFile {
+             while (lenToSkip > 0) {
+                 int skipped = archive.skipBytes(lenToSkip);
+                 if (skipped <= 0) {
+-                    throw new RuntimeException("failed to skip file name in"
+-                                               + " local file header");
++                    throw new IOException("failed to skip file name in"
++                                          + " local file header");
+                 }
+                 lenToSkip -= skipped;
+             }
+@@ -839,9 +840,10 @@ public class ZipFile {
+                     nameMap.put(ze.getName(), ze);
+                 }
+             }
++            newEntries.put(ze, offsetEntry);
+         }
++        entries = newEntries;
+     }
+-
+     /**
+      * Checks whether the archive starts with a LFH.  If it doesn't,
+      * it may be an empty archive.

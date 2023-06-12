@@ -1,0 +1,63 @@
+    public static double linearCombination(final double[] a, final double[] b)
+        throws DimensionMismatchException {
+        final int len = a.length;
+        if (len != b.length) {
+            throw new DimensionMismatchException(len, b.length);
+        }
+            // Revert to scalar multiplication.
+        final double[] prodHigh = new double[len];
+        double prodLowSum = 0;
+        for (int i = 0; i < len; i++) {
+            final double ai = a[i];
+            final double ca = SPLIT_FACTOR * ai;
+            final double aHigh = ca - (ca - ai);
+            final double aLow = ai - aHigh;
+            final double bi = b[i];
+            final double cb = SPLIT_FACTOR * bi;
+            final double bHigh = cb - (cb - bi);
+            final double bLow = bi - bHigh;
+            prodHigh[i] = ai * bi;
+            final double prodLow = aLow * bLow - (((prodHigh[i] -
+                                                    aHigh * bHigh) -
+                                                   aLow * bHigh) -
+                                                  aHigh * bLow);
+            prodLowSum += prodLow;
+        }
+        double hY = prodHigh[0];
+        double hX = hY;
+        double lY = prodLowSum + prodHigh[0];
+        double lX = lY;
+        for (int i = 1; i < len; i++) {
+            final double y = prodHigh[i];
+            final double hY2 = hY + y;
+            lY += y - (hY2 - hY);
+            hY = hY2;
+            final double x = prodHigh[i - 1];
+            final double hX2 = hX + x;
+            lX += x - (hX2 - hX);
+            hX = hX2;
+            if (FastMath.abs(hX) > FastMath.abs(hY)) {
+                final double c = SPLIT_FACTOR * hX;
+                final double hXs = c - (c - hX);
+                final double lXs = hX - hXs;
+                lX += lXs;
+                hX = hXs;
+            } else {
+                final double c = SPLIT_FACTOR * hY;
+                final double hYs = c - (c - hY);
+                final double lYs = hY - hYs;
+                lY += lYs;
+                hY = hYs;
+            }
+        }
+        double result = hX + hY;
+        if (Double.isNaN(result)) {
+            // either we have split infinite numbers or some coefficients were NaNs,
+            // just rely on the naive implementation and let IEEE754 handle this
+            result = 0;
+            for (int i = 0; i < len; ++i) {
+                result += a[i] * b[i];
+            }
+        }
+        return result;
+    }

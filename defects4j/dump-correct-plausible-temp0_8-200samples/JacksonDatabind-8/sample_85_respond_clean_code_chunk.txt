@@ -1,0 +1,44 @@
+    protected void verifyNonDup(AnnotatedWithParams newOne, int typeIndex, boolean explicit)
+    {
+        final int mask = (1 << typeIndex);
+        _hasNonDefaultCreator = true;
+        AnnotatedWithParams oldOne = _creators[typeIndex];
+        // already had an explicitly marked one?
+        if (oldOne != null) {
+            /* But ensure we only assign highest priority one.
+             * Currently, this is when...
+             */
+            if ((_explicitCreators & mask) != 0) {
+                /* 23-Oct-2013, tatu: Must handle case where same creator
+                 *   is being overridden; for example, if a class has explicit
+                 *   default constructor, it may be overridden by implicit
+                 *   bean constructor.
+                 */
+                if (oldOne.getClass() == newOne.getClass()) {
+                    return;
+                }
+            }
+            // one more thing: ok to override in sub-class
+            if (oldOne.getClass() == newOne.getClass()) {
+                // [databind#667]: avoid one particular class of bogus problems
+                if (oldOne.getDeclaringClass() != newOne.getDeclaringClass()) {
+                    throw new IllegalArgumentException("Conflicting "+TYPE_DESCS[typeIndex]
+                            +" creators: already had "+oldOne+", encountered "+newOne);
+                }
+                return;
+            }
+            if (oldOne.getDeclaringClass().isAssignableFrom(newOne.getDeclaringClass())) {
+                // new type more specific, use it
+                _creators[typeIndex] = _fixAccess(newOne);
+                if (explicit) {
+                    _explicitCreators |= mask;
+                }
+                return;
+            }
+            // old type more specific, use it
+        }
+        if (explicit) {
+            _explicitCreators |= mask;
+        }
+        _creators[typeIndex] = _fixAccess(newOne);
+    }

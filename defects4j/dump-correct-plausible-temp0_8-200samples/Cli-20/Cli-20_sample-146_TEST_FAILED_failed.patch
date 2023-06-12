@@ -1,0 +1,77 @@
+diff --git a/src/java/org/apache/commons/cli/PosixParser.java b/src/java/org/apache/commons/cli/PosixParser.java
+index 2b1bbb1..5f35fa6 100644
+--- a/src/java/org/apache/commons/cli/PosixParser.java
++++ b/src/java/org/apache/commons/cli/PosixParser.java
+@@ -111,17 +108,20 @@ public class PosixParser extends Parser {
+             // handle long option --foo or --foo=bar
+             if (token.startsWith("--"))
+             {
+-                if (token.indexOf('=') != -1)
++                String longOpt = token;
++                String longOptValue = null;
++                int idx = token.indexOf('=');
++                if (idx != -1)
+                 {
+-                    tokens.add(token.substring(0, token.indexOf('=')));
+-                    tokens.add(token.substring(token.indexOf('=') + 1, token.length()));
++                    longOpt = token.substring(0, idx);
++                    longOptValue = token.substring(idx + 1, token.length());
+                 }
+-                else
++                tokens.add(longOpt);
++                if (longOptValue != null)
+                 {
+-                    tokens.add(token);
++                    tokens.add(longOptValue);
+                 }
+             }
+-
+             // single hyphen
+             else if ("-".equals(token))
+             {
+@@ -129,18 +129,39 @@ public class PosixParser extends Parser {
+             }
+             else if (token.startsWith("-"))
+             {
+-                if (token.length() == 2)
++                String opt = token;
++                String optValue = null;
++                int idx = token.indexOf('=');
++                if (idx != -1)
+                 {
+-                    processOptionToken(token, stopAtNonOption);
++                    opt = token.substring(0, idx);
++                    optValue = token.substring(idx + 1, token.length());
+                 }
+-                else if (options.hasOption(token))
++                if (options.hasOption(opt))
+                 {
+-                    tokens.add(token);
++                    tokens.add(opt);
++                    if (optValue != null)
++                    {
++                        tokens.add(optValue);
++                    }
+                 }
+-                // requires bursting
+                 else
+                 {
+-                    burstToken(token, stopAtNonOption);
++                    if (opt.length() > 2)
++                    {
++                        for (int i = 1; i < opt.length(); i++)
++                        {
++                            tokens.add("-" + opt.charAt(i));
++                        }
++                        if (optValue != null)
++                        {
++                            tokens.add(optValue);
++                        }
++                    }
++                    else
++                    {
++                        tokens.add(token);
++                    }
+                 }
+             }
+             else if (stopAtNonOption)

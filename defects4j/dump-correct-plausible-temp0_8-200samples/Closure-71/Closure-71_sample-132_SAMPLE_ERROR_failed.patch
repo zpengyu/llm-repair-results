@@ -1,0 +1,21 @@
+diff --git a/src/com/google/javascript/jscomp/CheckAccessControls.java b/src/com/google/javascript/jscomp/CheckAccessControls.java
+index c4ecc477..d890b8a8 100644
+--- a/src/com/google/javascript/jscomp/CheckAccessControls.java
++++ b/src/com/google/javascript/jscomp/CheckAccessControls.java
+@@ -494,6 +488,16 @@ class CheckAccessControls implements ScopedCallback, HotSwapCompilerPass {
+                     validator.getReadableJSTypeName(
+                         getprop.getFirstChild(), true)));
+           }
++        } else {
++          // visibility is PUBLIC
++          // check if getprop is a constructor, and if so,
++          // is it a class.
++          // if so, check if the current scope is not inside the class
++          // function declaration.
++          if (docInfo.isConstructor() &&
++              isValidPublicConstructorAccess(parent)) {
++            return;
++          }
+         }
+       }
+     }

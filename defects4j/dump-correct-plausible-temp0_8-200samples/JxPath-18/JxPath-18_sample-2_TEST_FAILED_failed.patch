@@ -1,0 +1,67 @@
+diff --git a/src/java/org/apache/commons/jxpath/ri/axes/AttributeContext.java b/src/java/org/apache/commons/jxpath/ri/axes/AttributeContext.java
+index 25d0931..c4fb485 100644
+--- a/src/java/org/apache/commons/jxpath/ri/axes/AttributeContext.java
++++ b/src/java/org/apache/commons/jxpath/ri/axes/AttributeContext.java
+@@ -30,12 +30,10 @@ import org.apache.commons.jxpath.ri.model.NodePointer;
+  * @version $Revision$ $Date$
+  */
+ public class AttributeContext extends EvalContext {
+-
+     private NodeTest nodeTest;
+-    private boolean setStarted = false;
+     private NodeIterator iterator;
+     private NodePointer currentNodePointer;
+-
++    private boolean started = false;
+     /**
+      * @param parentContext represents the previous step on the path
+      * @param nodeTest is the name of the attribute we are looking for
+@@ -48,13 +45,11 @@ public class AttributeContext extends EvalContext {
+     public NodePointer getCurrentNodePointer() {
+         return currentNodePointer;
+     }
+-
+     public void reset() {
+-        setStarted = false;
+-        iterator = null;
+         super.reset();
++        started = false;
++        iterator = null;
+     }
+-
+     public boolean setPosition(int position) {
+         if (position < getCurrentPosition()) {
+             reset();
+@@ -67,22 +61,24 @@ public class AttributeContext extends EvalContext {
+         }
+         return true;
+     }
+-
+     public boolean nextNode() {
+         super.setPosition(getCurrentPosition() + 1);
+-        if (!setStarted) {
+-            setStarted = true;
++        if (!started) {
++            started = true;
+             if (!(nodeTest instanceof NodeNameTest)) {
+                 return false;
+             }
+             QName name = ((NodeNameTest) nodeTest).getNodeName();
+             iterator =
+                 parentContext.getCurrentNodePointer().attributeIterator(name);
+-        }
+-        if (iterator == null) {
+-            return false;
+-        }
+-        if (!iterator.setPosition(iterator.getPosition() + 1)) {
++            if (iterator == null) {
++                return false;
++            }
++            if (!iterator.setPosition(iterator.getPosition() + 1)) {
++                return false;
++            }
++        } else if (iterator != null &&
++                   !iterator.setPosition(iterator.getPosition() + 1)) {
+             return false;
+         }
+         currentNodePointer = iterator.getNodePointer();

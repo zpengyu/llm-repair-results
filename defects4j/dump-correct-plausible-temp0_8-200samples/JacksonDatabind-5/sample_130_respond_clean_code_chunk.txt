@@ -1,0 +1,40 @@
+    protected void _addMethodMixIns(Class<?> targetClass, AnnotatedMethodMap methods,
+            Class<?> mixInCls, AnnotatedMethodMap mixIns)
+    {
+        List<Class<?>> parents = new ArrayList<Class<?>>();
+        parents.add(mixInCls);
+        ClassUtil.findSuperTypes(mixInCls, targetClass, parents);
+        for (Class<?> mixin : parents) {
+            for (Method m : mixin.getDeclaredMethods()) {
+                if (!_isIncludableMemberMethod(m)) {
+                    continue;
+                }
+                AnnotatedMethod old = methods.find(m);
+                if (old == null) {
+                    AnnotatedMethod am = _constructMethod(m);
+                    methods.add(am);
+                    // Also: may need to add mix-in annotations
+                    _addMixUnders(m, am);
+                } else {
+                    // Well, or, as per [Issue#515], multi-level merge within mixins...
+                    AnnotatedMethod am = old;
+                    // either just make sure annotations are visible...
+                    _addMixUnders(m, am);
+                    // ... or add new annotation, if one with same name not yet added
+                    Annotation[] anns = m.getDeclaredAnnotations();
+                    for (Annotation ann : anns) {
+                        String name = ann.annotationType().getName();
+                        if (!am.isAnnotationPresent(name)) {
+                            try {
+                                am.addIfNotPresent(ann);
+                            } catch (IllegalArgumentException e) {
+                                // 23-Sep-2015, tatu: Probably not a good idea; but for
+                                //   now, let's support it
+                                am.addOrOverride(ann);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }

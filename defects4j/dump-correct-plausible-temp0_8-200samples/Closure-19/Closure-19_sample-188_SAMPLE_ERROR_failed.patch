@@ -1,0 +1,19 @@
+diff --git a/src/com/google/javascript/jscomp/type/ChainableReverseAbstractInterpreter.java b/src/com/google/javascript/jscomp/type/ChainableReverseAbstractInterpreter.java
+index abff329b..74b692da 100644
+--- a/src/com/google/javascript/jscomp/type/ChainableReverseAbstractInterpreter.java
++++ b/src/com/google/javascript/jscomp/type/ChainableReverseAbstractInterpreter.java
+@@ -168,9 +166,11 @@ public abstract class ChainableReverseAbstractInterpreter
+         origType = origType == null ? getNativeType(UNKNOWN_TYPE) : origType;
+         scope.inferQualifiedSlot(node, qualifiedName, origType, type);
+         break;
+-
+-        // "this" references aren't currently modeled in the CFG.
+-
++      case Token.THIS:
++        Preconditions.checkArgument(type.isSubtype(getNativeType(OBJECT_TYPE)));
++        Preconditions.checkState(scope.getTypeOfThis() == null);
++        scope.inferDeclaredTypeOf("this", type);
++        break;
+       default:
+         throw new IllegalArgumentException("Node cannot be refined. \n" +
+             node.toStringTree());

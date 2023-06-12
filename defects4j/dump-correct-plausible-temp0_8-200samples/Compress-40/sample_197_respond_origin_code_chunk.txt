@@ -1,0 +1,31 @@
+    public long readBits(final int count) throws IOException {
+        if (count < 0 || count > MAXIMUM_CACHE_SIZE) {
+            throw new IllegalArgumentException("count must not be negative or greater than " + MAXIMUM_CACHE_SIZE);
+        }
+        while (bitsCachedSize < count) {
+            final long nextByte = in.read();
+            if (nextByte < 0) {
+                return nextByte;
+            }
+            if (byteOrder == ByteOrder.LITTLE_ENDIAN) {
+                bitsCached |= (nextByte << bitsCachedSize);
+            } else {
+                bitsCached <<= 8;
+                bitsCached |= nextByte;
+            }
+            bitsCachedSize += 8;
+        }
+        if (count < MAXIMUM_CACHE_SIZE - 8) {
+            final long bitsOut = (bitsCached >> (bitsCachedSize - count)) & MASKS[count];
+            bitsCachedSize -= count;
+            bitsCached &= MASKS[bitsCachedSize];
+            return bitsOut;
+        }
+        final long bitsOut = bitsCached;
+        bitsCachedSize = 0;
+        bitsCached = 0;
+        return bitsOut;
+    }
+
+
+ 

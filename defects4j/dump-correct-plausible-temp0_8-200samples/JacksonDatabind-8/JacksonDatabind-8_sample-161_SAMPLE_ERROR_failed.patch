@@ -1,0 +1,32 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/deser/impl/CreatorCollector.java b/src/main/java/com/fasterxml/jackson/databind/deser/impl/CreatorCollector.java
+index fd590d628..7e6a08e2e 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/deser/impl/CreatorCollector.java
++++ b/src/main/java/com/fasterxml/jackson/databind/deser/impl/CreatorCollector.java
+@@ -293,11 +291,25 @@ public class CreatorCollector
+             // one more thing: ok to override in sub-class
+             if (oldOne.getClass() == newOne.getClass()) {
+                 // [databind#667]: avoid one particular class of bogus problems
+-
++                // (14-Jun-2017, tatu): Actually, need to re-consider this check a bit,
++                //   as it turns out it is possible to get two different annotated
++                //   constructors in case of inner classes (esp. anonymous ones) where
++                //   one is static and other is non-static.
++                //   Not sure if we want to allow this (or if there is any legitimate
++                //   use case), but we should detect at least.
++                boolean canOverride = false;
++                Class<?> newOneDecl = ClassUtil.getDeclaringClass(newOne.getAnnotated());
++                if (newOneDecl != null) {
++                    Class<?> oldOneDecl = ClassUtil.getDeclaringClass(oldOne.getAnnotated());
++                    canOverride = (newOneDecl != oldOneDecl)
++                            && newOneDecl.isAssignableFrom(oldOneDecl);
++                }
++                if (!canOverride) {
+                     throw new IllegalArgumentException("Conflicting "+TYPE_DESCS[typeIndex]
+                             +" creators: already had explicitly marked "+oldOne+", encountered "+newOne);
++                }
+                 // otherwise, which one to choose?
+-                    // new type more generic, use old
++                // new type more generic, use old
+                 // new type more specific, use it
+             }
+         }

@@ -1,0 +1,76 @@
+    protected void burstToken(String token, boolean stopAtNonOption)
+    {
+        if (token.length() == 2 && token.startsWith("--"))
+        {
+            handleLongOptionToken(token, stopAtNonOption);
+        }
+        else if (token.startsWith("-"))
+        {
+            handleShortAndLongOptionToken(token, stopAtNonOption);
+        }
+        else
+        {
+            tokens.add(token);
+        }
+    }
+    private void handleShortAndLongOptionToken(String token, boolean stopAtNonOption)
+    {
+        for (int i = 1; i < token.length(); i++)
+        {
+            String ch = String.valueOf(token.charAt(i));
+            if (options.hasOption(ch))
+            {
+                tokens.add("-" + ch);
+                currentOption = options.getOption(ch);
+                if (currentOption.hasArg())
+                {
+                    String arg = token.substring(i + 1);
+                    if (!arg.isEmpty())
+                    {
+                        tokens.add(arg);
+                        break;
+                    }
+                }
+            }
+            else if (stopAtNonOption)
+            {
+                process(token.substring(i));
+            }
+            else
+            {
+                tokens.add(token);
+                break;
+            }
+        }
+    }
+    private void handleLongOptionToken(String token, boolean stopAtNonOption)
+    {
+        String opt = Util.stripLeadingHyphens(token);
+        if (!options.hasOption(opt))
+        {
+            if (stopAtNonOption)
+            {
+                process(token);
+            }
+            else
+            {
+                tokens.add(token);
+            }
+        }
+        else
+        {
+            tokens.add(token);
+            currentOption = options.getOption(opt);
+            if (currentOption.hasArg())
+            {
+                if (token.length() == 2)
+                {
+                    tokens.add("");
+                }
+                else
+                {
+                    tokens.add(token.substring(2));
+                }
+            }
+        }
+    }

@@ -1,0 +1,27 @@
+diff --git a/src/org/mockito/internal/configuration/SpyAnnotationEngine.java b/src/org/mockito/internal/configuration/SpyAnnotationEngine.java
+index e292e1300..9379029b6 100644
+--- a/src/org/mockito/internal/configuration/SpyAnnotationEngine.java
++++ b/src/org/mockito/internal/configuration/SpyAnnotationEngine.java
+@@ -40,13 +40,18 @@ public class SpyAnnotationEngine implements AnnotationEngine {
+                                   "Example of correct usage of @Spy:\n" +
+                             	  "   @Spy List mock = new LinkedList();\n" +
+                             	  "   //also, don't forget about MockitoAnnotations.initMocks();");
+-
+                     }
+-                    if (new MockUtil().isMock(instance)) { 
+-                        // instance has been spied earlier
++                    if (new MockUtil().isMock(instance)) { // instance has been spied earlier
+                         Mockito.reset(instance);
+                     } else {
+-                        field.set(testClass, Mockito.spy(instance));
++                        instance = Mockito.spy(instance);
++                        field.set(testClass, instance);
++                    }
++                    // new added code
++                    if (field.isAnnotationPresent(Captor.class)) {
++                        ArgumentCaptor<?> argumentCaptor = ArgumentCaptor.forClass(field.getType());
++                        Mockito.doReturn(argumentCaptor.capture()).when(instance).getArgumentCaptor();
++                        field.set(testClass, argumentCaptor);
+                     }
+                 } catch (IllegalAccessException e) {
+                     throw new MockitoException("Problems initiating spied field " + field.getName(), e);

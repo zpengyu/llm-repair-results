@@ -1,0 +1,42 @@
+diff --git a/src/main/java/com/fasterxml/jackson/core/sym/ByteQuadsCanonicalizer.java b/src/main/java/com/fasterxml/jackson/core/sym/ByteQuadsCanonicalizer.java
+index 20d72c04..b783dffc 100644
+--- a/src/main/java/com/fasterxml/jackson/core/sym/ByteQuadsCanonicalizer.java
++++ b/src/main/java/com/fasterxml/jackson/core/sym/ByteQuadsCanonicalizer.java
+@@ -871,20 +871,27 @@ public final class ByteQuadsCanonicalizer
+         }
+     }
+ 
+-    private void _verifySharing()
+-    {
+-        if (_hashShared) {
+-            _hashArea = Arrays.copyOf(_hashArea, _hashArea.length);
+-            _names = Arrays.copyOf(_names, _names.length);
+-            _hashShared = false;
+-            // 09-Sep-2015, tatu: As per [jackson-core#216], also need to ensure
+-            //    we rehash as needed, as need-rehash flag is not copied from parent
+-        }
++private void _verifySharing()
++{
++    if (_hashShared) {
++        int[] oldHashArea = _hashArea;
++        _hashArea = Arrays.copyOf(_hashArea, _hashArea.length);
++        _names = Arrays.copyOf(_names, _names.length);
++        _hashShared = false;
++        // 09-Sep-2015, tatu: As per [jackson-core#216], also need to ensure
++        //    we rehash as needed, as need-rehash flag is not copied from parent
+         if (_needRehash) {
+             rehash();
++        } else if (_hashArea.length > DEFAULT_NAME_HASH_SIZE) {
++            /* Can not be shared anymore, but let's only use the
++             * default-sized bucket array if that's what parent had
++             */
++            if (oldHashArea.length == DEFAULT_NAME_HASH_SIZE) {
++                _hashArea = oldHashArea;
++            }
+         }
+     }
+-
++}
+     /**
+      * Method called to find the location within hash table to add a new symbol in.
+      */

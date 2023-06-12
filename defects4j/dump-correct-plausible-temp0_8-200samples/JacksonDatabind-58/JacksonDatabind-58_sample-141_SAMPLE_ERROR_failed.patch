@@ -1,0 +1,17 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/deser/BeanDeserializerFactory.java b/src/main/java/com/fasterxml/jackson/databind/deser/BeanDeserializerFactory.java
+index bc8e6736f..72a4486ba 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/deser/BeanDeserializerFactory.java
++++ b/src/main/java/com/fasterxml/jackson/databind/deser/BeanDeserializerFactory.java
+@@ -707,7 +707,11 @@ public class BeanDeserializerFactory
+     {
+         // need to ensure method is callable (for non-public)
+         AnnotatedMember mutator = propDef.getNonConstructorMutator();
+-
++        if (mutator == null) {
++            ctxt.reportBadPropertyDefinition(beanDesc, propDef,
++                    "Could not find creator property with name '%s' (in class %s)",
++                    propDef.getName(), beanDesc.getBeanClass().getName());
++        }
+         if (ctxt.canOverrideAccessModifiers()) {
+             // [databind#877]: explicitly prevent forced access to `cause` of `Throwable`;
+             // never needed and attempts may cause problems on some platforms.

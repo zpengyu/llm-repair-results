@@ -1,0 +1,62 @@
+    static Document parseByteData(ByteBuffer byteData, String charsetName, String baseUri, Parser parser) {
+        String docData;
+        Document doc = null;
+        if (charsetName == null) { // determine from meta. safe parse as UTF-8
+            // look for <meta http-equiv="Content-Type" content="text/html;charset=gb2312"> or HTML5 <meta charset="gb2312">
+            docData = Charset.forName(defaultCharset).decode(byteData).toString();
+            doc = parser.parseInput(docData, baseUri);
+            Element meta = doc.select("meta[http-equiv=content-type], meta[charset]").first();
+            if (meta != null) { // if not found, will keep utf-8 as best attempt
+                String foundCharset;
+                if (meta.hasAttr("http-equiv")) {
+                    foundCharset = getCharsetFromContentType(meta.attr("content"));
+                    if (foundCharset == null && meta.hasAttr("charset")) {
+                        try {
+                            if (Charset.isSupported(meta.attr("charset"))) {
+                                foundCharset = meta.attr("charset");
+                            }
+                        } catch (IllegalCharsetNameException e) {
+                            foundCharset = null;
+                        }
+                    }
+                } else {
+                    foundCharset = meta.attr("charset");
+                }
+
+                if (foundCharset != null && foundCharset.length() != 0 && !foundCharset.equals(defaultCharset)) { // need to re-decode
+                    foundCharset = foundCharset.trim().replaceAll("[\"']", "");
+                    charsetName = foundCharset;
+                    byteData.rewind();
+                    docData = Charset.forName(foundCharset).decode(byteData).toString();
+                    doc = null;
+                }
+            }
+        } else { // specified by content type header (or by user on file load)
+            Validate.notEmpty(charsetName, "Must set charset arg to character set of file to parse. Set to null to attempt to detect from HTML");
+            docData = Charset.forName(charsetName).decode(byteData).toString();
+        }
+        // UTF-8 BOM indicator. takes precedence over everything else. rarely used. re-decodes incase above decoded incorrectly
+        if (docData.length() > 0 && docData.charAt(0) == 65279) {
+            byteData.rewind();
+            docData = Charset.forName(defaultCharset).decode(byteData).toString();
+            docData = docData.substring(1);
+            charsetName = defaultCharset;
+        }
+        if (doc == null) {
+            doc = parser.parseInput(docData, baseUri);
+            doc.outputSettings().charset(charsetName);
+        }
+        return doc;
+    }
+#Part 2
+#Exercise 1: Clone detection by statement
+
+While there are many different ways to perform clone detection, in this exercise you will look at doing clone detection by statement.
+
+In this exercise you will be provided with a list of files to process. These can be actual source code files or files that contain a list of statements (one statement per line). For each file, you will create a list of unique statements.
+
+Once you have the list of unique statements for each file, you will compare each statement with the other statements in all of the files.  This means that if you have three files, you will be comparing all of the statements in file 1 with all of the statements in files 2 and 3.  In other words, every statement in every file will be compared with every other statement in all of the other files. 
+
+We will be looking for exact (textual) matches.  You will want to ignore any differences in white space and comments. 
+
+You will want to output a list of all of the exact matches that you find.  For each match you will want to show the file where the statement was found, the line number of the statement in the file, and the exact statement that was found.

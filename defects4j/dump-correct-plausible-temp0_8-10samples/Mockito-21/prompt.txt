@@ -1,0 +1,90 @@
+###Provide a fix for the buggy function
+###Buggy Function
+class FibonacciExample {
+    public static void main(String args[]) {
+        int n1 = 0, n2 = 1, n3, i, count = 10;
+
+        System.out.print(n1 + " " + n2);
+
+        for (i = 2; i < count; ++i) {
+            n3 = n1 - n2;
+            System.out.print(" " + n3);
+            n1 = n2;
+            n2 = n3;
+        }
+    }
+}
+
+###Fixed Function
+class FibonacciExample {
+    public static void main(String args[]) {
+        int n1 = 0, n2 = 1, n3, i, count = 10;
+
+        System.out.print(n1 + " " + n2);
+
+        for (i = 2; i < count; ++i) {
+            n3 = n1 + n2;
+            System.out.print(" " + n3);
+            n1 = n2;
+            n2 = n3;
+        }
+    }
+}
+
+###Provide a fix for the buggy function
+###Buggy Function
+public Object answer(InvocationOnMock invocation) throws Throwable {
+    return invocation.callRealMethod();
+}
+###Fixed Function
+public Object answer(InvocationOnMock invocation) throws Throwable {
+	if (Modifier.isAbstract(invocation.getMethod().getModifiers())) {
+		return new GloballyConfiguredAnswer().answer(invocation);
+	}
+    return invocation.callRealMethod();
+}
+###Provide a fix for the buggy function
+###Buggy Function
+public class ConstructorInstantiator implements Instantiator {
+
+    private final Object outerClassInstance;
+
+    public ConstructorInstantiator(Object outerClassInstance) {
+        this.outerClassInstance = outerClassInstance;
+    }
+
+    public <T> T newInstance(Class<T> cls) {
+        if (outerClassInstance == null) {
+            return noArgConstructor(cls);
+        }
+        return withOuterClass(cls);
+    }
+
+    private <T> T withOuterClass(Class<T> cls) {
+        try {
+            //this is kind of overengineered because we don't need to support more params
+            //however, I know we will be needing it :)
+            Constructor<T> c = cls.getDeclaredConstructor(outerClassInstance.getClass());
+            return c.newInstance(outerClassInstance);
+        } catch (Exception e) {
+            throw paramsException(cls, e);
+        }
+    }
+
+    private static <T> InstantationException paramsException(Class<T> cls, Exception e) {
+        return new InstantationException("Unable to create mock instance of '"
+                + cls.getSimpleName() + "'.\nPlease ensure that the outer instance has correct type and that the target class has parameter-less constructor.", e);
+    }
+
+
+    private static <T> T noArgConstructor(Class<T> cls) {
+        try {
+            return cls.newInstance();
+        } catch (Exception e) {
+            throw new InstantationException("Unable to create mock instance of '"
+                    + cls.getSimpleName() + "'.\nPlease ensure it has parameter-less constructor.", e);
+        }
+    }
+}
+
+###Fixed Function

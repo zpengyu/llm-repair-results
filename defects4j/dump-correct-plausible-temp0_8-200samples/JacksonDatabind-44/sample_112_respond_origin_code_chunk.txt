@@ -1,0 +1,28 @@
+    protected JavaType _narrow(Class<?> subclass)
+    {
+        if (_class == subclass) {
+            return this;
+        }
+        if (!_class.isAssignableFrom(subclass)) { // just a sanity check
+            throw new IllegalArgumentException("Class "+subclass.getName()+" not sub-type of "
+                    +_class.getName());
+        }
+        JavaType superCls = _superClass;
+        // First: super-type, if any
+        if (superCls != null) {
+            if (superCls.getRawClass().isAssignableFrom(subclass)) {
+                return superCls.narrowBy(subclass);
+            }
+        }
+        // Otherwise, check super-interfaces
+        for (JavaType intCls : _superInterfaces) {
+            if (intCls.getRawClass().isAssignableFrom(subclass)) {
+                return intCls.narrowBy(subclass);
+            }
+        }
+        // should not get here but...
+        return new SimpleType(subclass, _bindings, superCls, _superInterfaces,
+                _valueHandler, _typeHandler, _asStatic);
+    }
+##3.2.2.2.2 Guessing Faulty Statements
+

@@ -1,0 +1,50 @@
+
+private void guessAOmega() {
+
+            // initialize the sums for the linear model between the two integrals
+            double sx2 = 0;
+            double sy2 = 0;
+            double sxy = 0;
+            double sxz = 0;
+            double syz = 0;
+
+            // f_1(x_0) and f_2(x_0)
+            double f1Integral = 0;
+            double f2Integral = 0;
+            double startX = observations[0].getX();
+            for (int i = 1; i < observations.length; ++i) {
+                // one step forward
+                final double previousX = startX;
+                startX = observations[i].getX();
+
+                // update the integrals of f<sup>2</sup> and f'<sup>2</sup>
+                // considering a linear model for f (and therefore constant f')
+                final double dx = startX - previousX;
+                final double previousY = observations[i - 1].getY();
+                final double currentY  = observations[i].getY();
+                final double f1StepIntegral = dx * previousY;
+                final double f2StepIntegral = dx * previousY * previousY / 2;
+
+                final double x = startX - observations[0].getX();
+                f1Integral += f1StepIntegral;
+                f2Integral += f2StepIntegral;
+
+                sx2 += x * x;
+                sy2 += f2Integral * f2Integral;
+                sxy += x * f1Integral;
+                sxz += x * f2Integral;
+                syz += f2Integral * f1Integral;
+            }
+
+            // compute the amplitude and pulsation coefficients
+            double c1 = sy2 * sxz - sxy * syz;
+            double c2 = sxy * sxz - sx2 * syz;
+            double c3 = sx2 * sy2 - sxy * sxy;
+            if (c3 == 0) {
+                throw new ZeroException();
+            }
+            a = FastMath.sqrt(c1 / c2);
+            omega = FastMath.sqrt(c2 / c3);
+        }
+
+#Provide a fix for the buggy function

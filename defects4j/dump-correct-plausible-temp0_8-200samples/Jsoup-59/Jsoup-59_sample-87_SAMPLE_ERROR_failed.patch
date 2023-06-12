@@ -1,0 +1,32 @@
+diff --git a/src/main/java/org/jsoup/parser/Token.java b/src/main/java/org/jsoup/parser/Token.java
+index 85d7ec8..3955e94 100644
+--- a/src/main/java/org/jsoup/parser/Token.java
++++ b/src/main/java/org/jsoup/parser/Token.java
+@@ -104,15 +103,18 @@ abstract class Token {
+             if (pendingAttributeName != null) {
+                 // the tokeniser has skipped whitespace control chars, but trimming could collapse to empty for other control codes, so verify here
+                 pendingAttributeName = pendingAttributeName.trim();
+-                    Attribute attribute;
+-                    if (hasPendingAttributeValue)
+-                        attribute = new Attribute(pendingAttributeName,
+-                            pendingAttributeValue.length() > 0 ? pendingAttributeValue.toString() : pendingAttributeValueS);
+-                    else if (hasEmptyAttributeValue)
+-                        attribute = new Attribute(pendingAttributeName, "");
+-                    else
+-                        attribute = new BooleanAttribute(pendingAttributeName);
+-                    attributes.put(attribute);
++                // if needed, normalise whitespace in attribute name, before creating new attribute object
++                if (normalizeAttributes && (INVALID_NORMALIZING_WHITESPACE.matcher(pendingAttributeName).find()))
++                    pendingAttributeName = StringUtil.normaliseWhitespace(pendingAttributeName);
++                Attribute attribute;
++                if (hasPendingAttributeValue)
++                    attribute = new Attribute(pendingAttributeName,
++                        pendingAttributeValue.length() > 0 ? pendingAttributeValue.toString() : pendingAttributeValueS);
++                else if (hasEmptyAttributeValue)
++                    attribute = new Attribute(pendingAttributeName, "");
++                else
++                    attribute = new BooleanAttribute(pendingAttributeName);
++                attributes.put(attribute);
+             }
+             pendingAttributeName = null;
+             hasEmptyAttributeValue = false;

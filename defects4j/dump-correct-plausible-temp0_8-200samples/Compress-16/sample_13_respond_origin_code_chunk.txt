@@ -1,0 +1,41 @@
+ public ArchiveInputStream createArchiveInputStream(final InputStream in) throws ArchiveException {
+        if (in == null) {
+            throw new IllegalArgumentException("Stream must not be null.");
+        }
+
+        if (!in.markSupported()) {
+            throw new IllegalArgumentException("Mark is not supported.");
+        }
+
+        final byte[] signature = new byte[12];
+        in.mark(signature.length);
+        try {
+            final int signatureLength = in.read(signature);
+            in.reset();
+            if (TarArchiveInputStream.matches(signature, signatureLength)) {
+                return new TarArchiveInputStream(in);
+            }
+            if (CpioArchiveInputStream.matches(signature, signatureLength)) {
+                return new CpioArchiveInputStream(in);
+            }
+            if (ArArchiveInputStream.matches(signature, signatureLength)) {
+                return new ArArchiveInputStream(in);
+            }
+            if (ZipArchiveInputStream.matches(signature, signatureLength)) {
+                return new ZipArchiveInputStream(in);
+            }
+            if (DumpArchiveInputStream.matches(signature, signatureLength)) {
+                return new DumpArchiveInputStream(in);
+            }
+            final byte[] dumpsig = new byte[32];
+            in.mark(dumpsig.length);
+            final int dumpSignatureLength = in.read(dumpsig);
+            in.reset();
+            if (DumpArchiveInputStream.matches(dumpsig, dumpSignatureLength)) {
+                return new DumpArchiveInputStream(in);
+            }
+        } catch (final IOException e) {
+            throw new ArchiveException("Could not use reset and mark operations.", e);
+        }
+        throw new ArchiveException("No Archiver found for the stream signature");
+    }

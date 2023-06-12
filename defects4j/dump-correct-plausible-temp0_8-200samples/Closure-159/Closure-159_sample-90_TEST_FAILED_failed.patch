@@ -1,0 +1,20 @@
+diff --git a/src/com/google/javascript/jscomp/InlineFunctions.java b/src/com/google/javascript/jscomp/InlineFunctions.java
+index 50f6bac0..5182ba00 100644
+--- a/src/com/google/javascript/jscomp/InlineFunctions.java
++++ b/src/com/google/javascript/jscomp/InlineFunctions.java
+@@ -779,8 +779,14 @@ class InlineFunctions implements SpecializationAwareCompilerPass {
+       if (child.getType() == Token.NAME) {
+         changed.add(child.getString());
+       }
++      // If it is a call to a constructor, like 'new F()'
++      if (child.getType() == Token.NEW) {
++        child = child.getFirstChild();
++        if (child.getType() == Token.NAME) {
++          changed.add(child.getString());
++        }
++      }
+     }
+-
+     for (Node c = node.getFirstChild(); c != null; c = c.getNext()) {
+       findCalledFunctions(c, changed);
+     }

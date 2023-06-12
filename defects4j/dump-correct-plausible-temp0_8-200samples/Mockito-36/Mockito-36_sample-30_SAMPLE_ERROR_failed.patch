@@ -1,0 +1,18 @@
+diff --git a/src/org/mockito/internal/invocation/Invocation.java b/src/org/mockito/internal/invocation/Invocation.java
+index abfec1178..af0c1919f 100644
+--- a/src/org/mockito/internal/invocation/Invocation.java
++++ b/src/org/mockito/internal/invocation/Invocation.java
+@@ -199,9 +199,11 @@ public class Invocation implements PrintableInvocation, InvocationOnMock, Printi
+     }
+ 
+     public Object callRealMethod() throws Throwable {
+-        return realMethod.invoke(mock, rawArguments);
++        Object result = realMethod.invoke(mock, rawArguments);
++        if (result == null)
++            return null;
++        return RedefinitionEngine.redefine(result);
+     }
+-
+     public String toString(PrintSettings printSettings) {
+         return toString(argumentsToMatchers(), printSettings);
+     }

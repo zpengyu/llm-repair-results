@@ -1,0 +1,28 @@
+    public double solve(final UnivariateRealFunction f,
+                        final double min, final double max, final double initial)
+        throws MaxIterationsExceededException, FunctionEvaluationException {
+        clearResult();
+        verifyInterval(min, max);
+        verifyInterval(min, initial);
+        verifyInterval(initial, max);
+        // return the initial guess if it is good enough
+        double yInitial = f.value(initial);
+        if (Math.abs(yInitial) <= functionValueAccuracy) {
+            setResult(initial, 0);
+            return result;
+        }
+        // reduce interval if min and initial bracket the root
+        if (isBracketing(min, initial, f)) {
+            return solve(f, min, initial, yInitial, initial, min, yInitial);
+        }
+        // reduce interval if initial and max bracket the root
+        if (isBracketing(initial, max, f)) {
+            return solve(f, initial, max, yInitial, max, initial, yInitial);
+        }
+        if (yInitial * yMin > 0) {
+            throw MathRuntimeException.createIllegalArgumentException(
+                  NON_BRACKETING_MESSAGE, min, max, yInitial, yMin);
+        }
+        // full Brent algorithm starting with provided initial guess
+        return solve(f, min, yMin, max, yMax, initial, yInitial);
+    }

@@ -1,0 +1,46 @@
+diff --git a/src/main/java/org/jsoup/helper/W3CDom.java b/src/main/java/org/jsoup/helper/W3CDom.java
+index f866f43..8a10010 100644
+--- a/src/main/java/org/jsoup/helper/W3CDom.java
++++ b/src/main/java/org/jsoup/helper/W3CDom.java
+@@ -83,20 +83,13 @@ public class W3CDom {
+             namespacesStack.push(new HashMap<>(namespacesStack.peek())); // inherit from above on the stack
+             if (source instanceof org.jsoup.nodes.Element) {
+                 org.jsoup.nodes.Element sourceEl = (org.jsoup.nodes.Element) source;
+-
+-                String prefix = updateNamespaces(sourceEl);
+-                String namespace = namespacesStack.peek().get(prefix);
+-                String tagName = sourceEl.tagName();
+-
+-                Element el =
+-                    doc.createElementNS(namespace, tagName);
+-                copyAttributes(sourceEl, el);
++                Element destEl = createElement(sourceEl);
+                 if (dest == null) { // sets up the root
+-                    doc.appendChild(el);
++                    doc.appendChild(destEl);
+                 } else {
+-                    dest.appendChild(el);
++                    dest.appendChild(destEl);
+                 }
+-                dest = el; // descend
++                dest = destEl; // descend
+             } else if (source instanceof org.jsoup.nodes.TextNode) {
+                 org.jsoup.nodes.TextNode sourceText = (org.jsoup.nodes.TextNode) source;
+                 Text text = doc.createTextNode(sourceText.getWholeText());
+@@ -113,7 +106,15 @@ public class W3CDom {
+                 // unhandled
+             }
+         }
+-
++        private Element createElement(org.jsoup.nodes.Element sourceEl) {
++            String prefix = updateNamespaces(sourceEl);
++            String namespace = namespacesStack.peek().get(prefix);
++            String tagName = sourceEl.tagName();
++            Element el =
++                doc.createElementNS(namespace, tagName);
++            copyAttributes(sourceEl, el);
++            return el;
++        }
+         public void tail(org.jsoup.nodes.Node source, int depth) {
+             if (source instanceof org.jsoup.nodes.Element && dest.getParentNode() instanceof Element) {
+                 dest = (Element) dest.getParentNode(); // undescend. cromulent.

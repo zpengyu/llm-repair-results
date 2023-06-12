@@ -1,0 +1,22 @@
+diff --git a/src/java/org/apache/commons/codec/binary/Base64.java b/src/java/org/apache/commons/codec/binary/Base64.java
+index 8088d96d..7d457849 100644
+--- a/src/java/org/apache/commons/codec/binary/Base64.java
++++ b/src/java/org/apache/commons/codec/binary/Base64.java
+@@ -442,6 +441,17 @@ public class Base64 implements BinaryEncoder, BinaryDecoder {
+                         buf[pos++] = PAD;
+                     }
+                     break;
++                case 3:
++                    buf[pos++] = encodeTable[(x >> 18) & MASK_6BITS];
++                    buf[pos++] = encodeTable[(x >> 12) & MASK_6BITS];
++                    buf[pos++] = encodeTable[(x >> 6) & MASK_6BITS];
++                    buf[pos++] = encodeTable[x & MASK_6BITS];
++                    // URL-SAFE skips the padding to further reduce size.
++                    if (encodeTable == STANDARD_ENCODE_TABLE) {
++                        buf[pos++] = PAD;
++                        buf[pos++] = PAD;
++                    }
++                    break;
+             }
+             if (lineLength > 0) {
+                 System.arraycopy(lineSeparator, 0, buf, pos, lineSeparator.length);

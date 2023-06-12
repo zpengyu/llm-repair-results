@@ -1,0 +1,87 @@
+diff --git a/src/com/google/javascript/jscomp/UnreachableCodeElimination.java b/src/com/google/javascript/jscomp/UnreachableCodeElimination.java
+index 60bfd244..9a7596df 100644
+--- a/src/com/google/javascript/jscomp/UnreachableCodeElimination.java
++++ b/src/com/google/javascript/jscomp/UnreachableCodeElimination.java
+@@ -48,40 +48,13 @@ class UnreachableCodeElimination extends AbstractPostOrderCallback
+     implements CompilerPass, ScopedCallback  {
+   private static final Logger logger =
+     Logger.getLogger(UnreachableCodeElimination.class.getName());
+-
+   private final AbstractCompiler compiler;
+   private final boolean removeNoOpStatements;
+-
+-  Deque<ControlFlowGraph<Node>> cfgStack =
+-      new LinkedList<ControlFlowGraph<Node>>();
+-
+-  ControlFlowGraph<Node> curCfg = null;
+-
+   UnreachableCodeElimination(AbstractCompiler compiler,
+       boolean removeNoOpStatements) {
+     this.compiler = compiler;
+     this.removeNoOpStatements = removeNoOpStatements;
+   }
+-
+-  @Override
+-  public void enterScope(NodeTraversal t) {
+-    Scope scope = t.getScope();
+-
+-    // Computes the control flow graph.
+-    ControlFlowAnalysis cfa = new ControlFlowAnalysis(compiler, false, false);
+-    cfa.process(null, scope.getRootNode());
+-    cfgStack.push(curCfg);
+-    curCfg = cfa.getCfg();
+-
+-    new GraphReachability<Node, ControlFlowGraph.Branch>(curCfg)
+-        .compute(curCfg.getEntry().getValue());
+-  }
+-
+-  @Override
+-  public void exitScope(NodeTraversal t) {
+-    curCfg = cfgStack.pop();
+-  }
+-
+   @Override
+   public void process(Node externs, Node root) {
+     NodeTraversal.traverse(compiler, root, this);
+@@ -95,20 +67,11 @@ class UnreachableCodeElimination extends AbstractPostOrderCallback
+     if (n.getType() == Token.FUNCTION || n.getType() == Token.SCRIPT) {
+       return;
+     }
+-
+-    DiGraphNode<Node, Branch> gNode = curCfg.getDirectedGraphNode(n);
+-    if (gNode == null) { // Not in CFG.
+-      return;
+-    }
+-    if (gNode.getAnnotation() != GraphReachability.REACHABLE ||
+-        (removeNoOpStatements && !NodeUtil.mayHaveSideEffects(n))) {
+-      removeDeadExprStatementSafely(n);
++    if (n.getParent() == null) {
+       return;
+     }
+-
+     tryRemoveUnconditionalBranching(n);
+   }
+-
+   /**
+    * Tries to remove n if an unconditional branch node (break, continue or
+    * return) if the target of n is the same as the the follow of n. That is, if
+@@ -143,19 +105,6 @@ class UnreachableCodeElimination extends AbstractPostOrderCallback
+     if (n == null) {
+        return n;
+     }
+-
+-    DiGraphNode<Node, Branch> gNode = curCfg.getDirectedGraphNode(n);
+-
+-    if (gNode == null) {
+-      return n;
+-    }
+-
+-    if (n.getParent() == null) {
+-      List<DiGraphEdge<Node,Branch>> outEdges = gNode.getOutEdges();
+-      if (outEdges.size() == 1) {
+-        return tryRemoveUnconditionalBranching(outEdges.get(0).getDestination().getValue());
+-      }
+-    }
+     switch (n.getType()) {
+       case Token.BLOCK:
+         if (n.hasChildren()) {

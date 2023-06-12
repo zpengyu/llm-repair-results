@@ -1,0 +1,29 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/deser/DeserializerCache.java b/src/main/java/com/fasterxml/jackson/databind/deser/DeserializerCache.java
+index b56ef54a9..2ff9a5b9c 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/deser/DeserializerCache.java
++++ b/src/main/java/com/fasterxml/jackson/databind/deser/DeserializerCache.java
+@@ -533,14 +533,23 @@ public final class DeserializerCache
+      *
+      * @since 2.8.11
+      */
+-    private boolean _hasCustomHandlers(JavaType t) {
++     private boolean _hasCustomHandlers(JavaType t) {
++        // Container types can have both value and type handlers...
+         if (t.isContainerType()) {
+             // First: value types may have both value and type handlers
+             JavaType ct = t.getContentType();
+             if (ct != null) {
+                 return (ct.getValueHandler() != null) || (ct.getTypeHandler() != null);
++            }
+             // Second: map(-like) types may have value handler for key (but not type; keys are untyped)
++            if (t instanceof MapLikeType) {
++                ct = ((MapLikeType) t).getKeyType();
++                if (ct != null) {
++                    return ct.getValueHandler() != null;
++                }
+             }
++            // But arrays (and Collection(s)) have just value handlers:
++            return t.getRawClass() != Collection.class;
+         }
+         return false;
+     }

@@ -1,0 +1,58 @@
+diff --git a/src/main/java/org/apache/commons/compress/archivers/zip/ZipArchiveEntry.java b/src/main/java/org/apache/commons/compress/archivers/zip/ZipArchiveEntry.java
+index 6e20d4e4..9b4282f9 100644
+--- a/src/main/java/org/apache/commons/compress/archivers/zip/ZipArchiveEntry.java
++++ b/src/main/java/org/apache/commons/compress/archivers/zip/ZipArchiveEntry.java
+@@ -654,36 +654,24 @@ public class ZipArchiveEntry extends java.util.zip.ZipEntry
+             return false;
+         }
+         ZipArchiveEntry other = (ZipArchiveEntry) obj;
+-        String myName = getName();
+-        String otherName = other.getName();
+-        if (myName == null) {
+-            if (otherName != null) {
+-                return false;
+-            }
+-        } else if (!myName.equals(otherName)) {
++        if (getTime() != other.getTime()
++            || getInternalAttributes() != other.getInternalAttributes()
++            || getPlatform() != other.getPlatform()
++            || getExternalAttributes() != other.getExternalAttributes()
++            || getMethod() != other.getMethod()
++            || getSize() != other.getSize()
++            || getCrc() != other.getCrc()
++            || getCompressedSize() != other.getCompressedSize()) {
+             return false;
+         }
+-        String myComment = getComment();
+-        String otherComment = other.getComment();
+-        if (myComment == null) {
+-            if (otherComment != null) {
+-                return false;
+-            }
+-        } else if (!myComment.equals(otherComment)) {
++        if (!Objects.equals(getName(), other.getName())
++            || !Objects.equals(getComment(), other.getComment())
++            || !Arrays.equals(getCentralDirectoryExtra(),
++                other.getCentralDirectoryExtra())
++            || !Arrays.equals(getLocalFileDataExtra(),
++                other.getLocalFileDataExtra())
++            || !gpb.equals(other.gpb)) {
+             return false;
+         }
+-        return getTime() == other.getTime()
+-            && getInternalAttributes() == other.getInternalAttributes()
+-            && getPlatform() == other.getPlatform()
+-            && getExternalAttributes() == other.getExternalAttributes()
+-            && getMethod() == other.getMethod()
+-            && getSize() == other.getSize()
+-            && getCrc() == other.getCrc()
+-            && getCompressedSize() == other.getCompressedSize()
+-            && Arrays.equals(getCentralDirectoryExtra(),
+-                             other.getCentralDirectoryExtra())
+-            && Arrays.equals(getLocalFileDataExtra(),
+-                             other.getLocalFileDataExtra())
+-            && gpb.equals(other.gpb);
+-    }
+-}
++        return true;
++    }}

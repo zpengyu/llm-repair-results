@@ -1,0 +1,27 @@
+diff --git a/src/main/java/org/joda/time/format/DateTimeFormatter.java b/src/main/java/org/joda/time/format/DateTimeFormatter.java
+index 8f9d3948..b03ad226 100644
+--- a/src/main/java/org/joda/time/format/DateTimeFormatter.java
++++ b/src/main/java/org/joda/time/format/DateTimeFormatter.java
+@@ -712,6 +710,9 @@ public class DateTimeFormatter {
+         DateTimeParserBucket bucket = new DateTimeParserBucket(
+             instantLocal, chrono, iLocale, iPivotYear, defaultYear);
+         int newPos = parser.parseInto(bucket, text, position);
++        if (iZone != null) {
++            instant.setZone(iZone);
++        }
+         instant.setMillis(bucket.computeMillis(false, text));
+         if (iOffsetParsed && bucket.getOffsetInteger() != null) {
+             int parsedOffset = bucket.getOffsetInteger();
+@@ -721,12 +722,8 @@ public class DateTimeFormatter {
+             chrono = chrono.withZone(bucket.getZone());
+         }
+         instant.setChronology(chrono);
+-        if (iZone != null) {
+-            instant.setZone(iZone);
+-        }
+         return newPos;
+     }
+-
+     /**
+      * Parses a datetime from the given text, returning the number of
+      * milliseconds since the epoch, 1970-01-01T00:00:00Z.

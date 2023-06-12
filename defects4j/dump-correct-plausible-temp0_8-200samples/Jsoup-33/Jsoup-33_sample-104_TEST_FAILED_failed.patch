@@ -1,0 +1,32 @@
+diff --git a/src/main/java/org/jsoup/parser/HtmlTreeBuilder.java b/src/main/java/org/jsoup/parser/HtmlTreeBuilder.java
+index 5c8d58c..57a4966 100644
+--- a/src/main/java/org/jsoup/parser/HtmlTreeBuilder.java
++++ b/src/main/java/org/jsoup/parser/HtmlTreeBuilder.java
+@@ -154,20 +154,19 @@ class HtmlTreeBuilder extends TreeBuilder {
+     }
+ 
+     Element insert(Token.StartTag startTag) {
++        Element el;
+         // handle empty unknown tags
+         // when the spec expects an empty tag, will directly hit insertEmpty, so won't generate this fake end tag.
+         if (startTag.isSelfClosing()) {
+-            Element el = insertEmpty(startTag);
+-            stack.add(el);
+-            tokeniser.emit(new Token.EndTag(el.tagName()));  // ensure we get out of whatever state we are in. emitted for yielded processing
+-            return el;
++            el = insertEmpty(startTag);
++        } else {
++            el = new Element(Tag.valueOf(startTag.name()), baseUri, startTag.attributes);
++            insert(el);
+         }
+-        
+-        Element el = new Element(Tag.valueOf(startTag.name()), baseUri, startTag.attributes);
+-        insert(el);
++        stack.add(el);
++        tokeniser.emit(new Token.EndTag(el.tagName()));  // ensure we get out of whatever state we are in. emitted for yielded processing
+         return el;
+     }
+-
+     Element insert(String startTagName) {
+         Element el = new Element(Tag.valueOf(startTagName), baseUri);
+         insert(el);

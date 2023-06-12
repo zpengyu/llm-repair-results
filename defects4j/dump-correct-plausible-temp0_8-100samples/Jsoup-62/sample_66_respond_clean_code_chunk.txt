@@ -1,0 +1,16 @@
+        boolean anyOtherEndTag(Token t, HtmlTreeBuilder tb) {
+            String name = t.asEndTag().normalName();
+            Element node = tb.getStack().get(tb.getStack().size() -1);
+            if (node.nodeName().equals(name)) {
+                tb.generateImpliedEndTags(name);
+                if (!name.equals(tb.currentElement().nodeName()))
+                    tb.error(this);
+                tb.popStackToClose(name);
+            } else {
+                if (tb.isSpecial(node)) {
+                    tb.error(this);
+                    return false;
+                }
+            }
+            return true;
+        }

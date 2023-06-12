@@ -1,0 +1,25 @@
+diff --git a/src/main/java/com/fasterxml/jackson/dataformat/xml/deser/FromXmlParser.java b/src/main/java/com/fasterxml/jackson/dataformat/xml/deser/FromXmlParser.java
+index a1fed7d..6cd94b7 100644
+--- a/src/main/java/com/fasterxml/jackson/dataformat/xml/deser/FromXmlParser.java
++++ b/src/main/java/com/fasterxml/jackson/dataformat/xml/deser/FromXmlParser.java
+@@ -619,6 +616,7 @@ public class FromXmlParser
+         // mostly copied from 'nextToken()'
+         while (token == XmlTokenStream.XML_START_ELEMENT) {
+             if (_mayBeLeaf) {
++                // Simple leaf-element:
+                 _nextToken = JsonToken.FIELD_NAME;
+                 _parsingContext = _parsingContext.createChildObjectContext(-1, -1);
+                 _currToken = JsonToken.START_OBJECT;
+@@ -675,10 +672,8 @@ public class FromXmlParser
+                 _mayBeLeaf = false;
+                 // Also: must skip following END_ELEMENT
+                 _xmlTokens.skipEndElement();
+-
+-                // NOTE: this is different from nextToken() -- NO work-around
+-                // for otherwise empty List/array
+-                _currToken = JsonToken.VALUE_STRING;
++                _nextToken = JsonToken.START_ARRAY;
++                _currToken = JsonToken.FIELD_NAME;
+                 return _currText;
+             }
+             // If not a leaf, need to transform into property...

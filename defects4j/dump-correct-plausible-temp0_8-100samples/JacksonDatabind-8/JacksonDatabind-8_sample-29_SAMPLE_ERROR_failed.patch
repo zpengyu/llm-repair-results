@@ -1,0 +1,62 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/deser/impl/CreatorCollector.java b/src/main/java/com/fasterxml/jackson/databind/deser/impl/CreatorCollector.java
+index fd590d628..ea51d0cc4 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/deser/impl/CreatorCollector.java
++++ b/src/main/java/com/fasterxml/jackson/databind/deser/impl/CreatorCollector.java
+@@ -293,11 +291,16 @@ public class CreatorCollector
+             // one more thing: ok to override in sub-class
+             if (oldOne.getClass() == newOne.getClass()) {
+                 // [databind#667]: avoid one particular class of bogus problems
+-
++                if (oldOne.getClass() == newOne.getClass()) {
+                     throw new IllegalArgumentException("Conflicting "+TYPE_DESCS[typeIndex]
+                             +" creators: already had explicitly marked "+oldOne+", encountered "+newOne);
++                }
+                 // otherwise, which one to choose?
+-                    // new type more generic, use old
++                if (!isCreatorMoreSpecific(oldOne, newOne)) {
++                    throw new IllegalArgumentException("Conflicting "+TYPE_DESCS[typeIndex]
++                            +" creators: already had "+oldOne+", encountered "+newOne);
++                }
++                // new type more generic, use old
+                 // new type more specific, use it
+             }
+         }
+@@ -306,7 +309,37 @@ public class CreatorCollector
+         }
+         _creators[typeIndex] = _fixAccess(newOne);
+     }
+-
++    private static boolean isCreatorMoreSpecific(AnnotatedWithParams oldOne, AnnotatedWithParams newOne)
++    {
++        // Not 100% fool-proof, but should work most of the time...
++        // except perhaps for custom annotations.
++        Class<?> oldRaw = oldOne.getRawParameterType(0);
++        Class<?> newRaw = newOne.getRawParameterType(0);
++        if (oldRaw != newRaw) {
++            return oldRaw.isAssignableFrom(newRaw);
++        }
++        // Ok, same raw, need to check annotations
++        Annotation[] oldAnns = oldOne.getParameterAnnotations(0);
++        Annotation[] newAnns = newOne.getParameterAnnotations(0);
++        if (oldAnns.length != newAnns.length) {
++            return (oldAnns.length < newAnns.length);
++        }
++        for (Annotation a : oldAnns) {
++            if (!hasAnnotation(newAnns, a)) {
++                return false;
++            }
++        }
++        return true;
++    }
++    private static boolean hasAnnotation(Annotation[] anns, Annotation toFind)
++    {
++        for (Annotation a : anns) {
++            if (a.annotationType() == toFind.annotationType()) {
++                return true;
++            }
++        }
++        return false;
++    }
+     /*
+     /**********************************************************
+     /* Helper class(es)

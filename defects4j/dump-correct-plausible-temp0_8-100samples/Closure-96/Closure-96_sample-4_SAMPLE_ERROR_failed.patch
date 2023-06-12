@@ -1,0 +1,31 @@
+diff --git a/src/com/google/javascript/jscomp/TypeCheck.java b/src/com/google/javascript/jscomp/TypeCheck.java
+index 83a73c74..97348c96 100644
+--- a/src/com/google/javascript/jscomp/TypeCheck.java
++++ b/src/com/google/javascript/jscomp/TypeCheck.java
+@@ -1412,11 +1411,22 @@ public class TypeCheck implements NodeTraversal.Callback, CompilerPass {
+         parameter = parameters.next();
+       argument = arguments.next();
+       ordinal++;
+-
+-      validator.expectArgumentMatchesParameter(t, argument,
+-          getJSType(argument), getJSType(parameter), call, ordinal);
++      if (!validator.expectArgumentMatchesParameter(t, argument,
++          getJSType(argument), getJSType(parameter), call, ordinal)) {
++        // Report wrong number of arguments if the validator's check failed.
++        int numArgs = call.getChildCount() - 1;
++        int minArgs = functionType.getMinArguments();
++        int maxArgs = functionType.getMaxArguments();
++        if (minArgs > numArgs || maxArgs < numArgs) {
++          report(t, call, WRONG_ARGUMENT_COUNT,
++              validator.getReadableJSTypeName(call.getFirstChild(), false),
++              String.valueOf(numArgs), String.valueOf(minArgs),
++              maxArgs != Integer.MAX_VALUE ?
++              " and no more than " + maxArgs + " argument(s)" : "");
++        }
++        break;
++      }
+     }
+-
+     int numArgs = call.getChildCount() - 1;
+     int minArgs = functionType.getMinArguments();
+     int maxArgs = functionType.getMaxArguments();

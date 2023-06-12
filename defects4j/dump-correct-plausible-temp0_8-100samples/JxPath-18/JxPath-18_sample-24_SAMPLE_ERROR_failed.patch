@@ -1,0 +1,72 @@
+diff --git a/src/java/org/apache/commons/jxpath/ri/axes/AttributeContext.java b/src/java/org/apache/commons/jxpath/ri/axes/AttributeContext.java
+index 25d0931..ee7cfdf 100644
+--- a/src/java/org/apache/commons/jxpath/ri/axes/AttributeContext.java
++++ b/src/java/org/apache/commons/jxpath/ri/axes/AttributeContext.java
+@@ -29,55 +29,14 @@ import org.apache.commons.jxpath.ri.model.NodePointer;
+  * @author Dmitri Plotnikov
+  * @version $Revision$ $Date$
+  */
+-public class AttributeContext extends EvalContext {
+-
+-    private NodeTest nodeTest;
+-    private boolean setStarted = false;
+-    private NodeIterator iterator;
+-    private NodePointer currentNodePointer;
+-
+-    /**
+-     * @param parentContext represents the previous step on the path
+-     * @param nodeTest is the name of the attribute we are looking for
+-     */
+-    public AttributeContext(EvalContext parentContext, NodeTest nodeTest) {
+-        super(parentContext);
+-        this.nodeTest = nodeTest;
+-    }
+-
+-    public NodePointer getCurrentNodePointer() {
+-        return currentNodePointer;
+-    }
+-
+-    public void reset() {
+-        setStarted = false;
+-        iterator = null;
+-        super.reset();
+-    }
+-
+-    public boolean setPosition(int position) {
+-        if (position < getCurrentPosition()) {
+-            reset();
+-        }
+-
+-        while (getCurrentPosition() < position) {
+-            if (!nextNode()) {
+-                return false;
+-            }
+-        }
+-        return true;
+-    }
+-
+-    public boolean nextNode() {
+-        super.setPosition(getCurrentPosition() + 1);
++public boolean nextNode() {
+         if (!setStarted) {
+             setStarted = true;
+             if (!(nodeTest instanceof NodeNameTest)) {
+                 return false;
+             }
+             QName name = ((NodeNameTest) nodeTest).getNodeName();
+-            iterator =
+-                parentContext.getCurrentNodePointer().attributeIterator(name);
++            iterator = parentContext.getCurrentNodePointer().attributeIterator(name);
+         }
+         if (iterator == null) {
+             return false;
+@@ -85,7 +44,7 @@ public class AttributeContext extends EvalContext {
+         if (!iterator.setPosition(iterator.getPosition() + 1)) {
+             return false;
+         }
++        super.setPosition(super.getCurrentPosition() + 1);
+         currentNodePointer = iterator.getNodePointer();
+         return true;
+     }
+\ No newline at end of file
+-}

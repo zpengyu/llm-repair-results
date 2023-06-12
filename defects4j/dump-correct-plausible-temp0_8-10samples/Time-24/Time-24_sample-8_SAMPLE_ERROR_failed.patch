@@ -1,0 +1,27 @@
+diff --git a/src/main/java/org/joda/time/format/DateTimeParserBucket.java b/src/main/java/org/joda/time/format/DateTimeParserBucket.java
+index 2accc16d..65901096 100644
+--- a/src/main/java/org/joda/time/format/DateTimeParserBucket.java
++++ b/src/main/java/org/joda/time/format/DateTimeParserBucket.java
+@@ -373,10 +371,20 @@ public class DateTimeParserBucket {
+                 throw new IllegalArgumentException(message);
+             }
+         }
+-        
++        for (int i = 0; i < count; i++) {
++            if (savedFields[i].iField.getDurationField() == null) {
++                continue;
++            }
++            if (savedFields[i].iField.getType() == DurationFieldType.hours()) {
++                return millis - (millis + iOffset) % DateTimeConstants.MILLIS_PER_HOUR;
++            } else if (savedFields[i].iField.getType() == DurationFieldType.minutes()) {
++                return millis - (millis + iOffset) % DateTimeConstants.MILLIS_PER_MINUTE;
++            } else if (savedFields[i].iField.getType() == DurationFieldType.seconds()) {
++                return millis - (millis + iOffset) % DateTimeConstants.MILLIS_PER_SECOND;
++            }
++        }
+         return millis;
+     }    
+-    
+     /**
+      * Sorts elements [0,high). Calling java.util.Arrays isn't always the right
+      * choice since it always creates an internal copy of the array, even if it

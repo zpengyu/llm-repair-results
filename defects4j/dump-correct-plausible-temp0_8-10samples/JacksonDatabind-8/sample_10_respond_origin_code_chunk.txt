@@ -1,0 +1,45 @@
+    protected void verifyNonDup(AnnotatedWithParams newOne, int typeIndex, boolean explicit)
+    {
+        final int mask = (1 << typeIndex);
+        _hasNonDefaultCreator = true;
+        AnnotatedWithParams oldOne = _creators[typeIndex];
+        // already had an explicitly marked one?
+        if (oldOne != null) {
+            // ... but only if marked explicitly.
+            if ((_explicitCreators & mask) != 0) {
+                // both explicit: verify
+                if (!explicit) { // otherwise only verify if neither explicitly annotated.
+                    return;
+                }
+                if (oldOne.getClass() == newOne.getClass()) {
+                    throw new IllegalArgumentException("Conflicting "+TYPE_DESCS[typeIndex]
+                            +" creators: already had explicitly marked "+oldOne+", encountered "+newOne);
+                }
+                // 31-Jan-2015, tatu: For now, let's actually require explicit to win over implicit.
+                //   If there is use case against this, can reconsider -- but should consider
+                //   deprecating implicit, as it makes things a bit hairy
+                return;
+            }
+            // but skip, if new one not annotated
+            if (!explicit) {
+                return;
+            }
+            // one more thing: ok to override in sub-class
+            if (oldOne.getClass() == newOne.getClass()) {
+                // [databind#667]: avoid one particular class of bogus problems
+                if (oldOne.getAnnotation(JacksonInject.class) != null) {
+                    return;
+                }
+                if (newOne.getAnnotation(JacksonInject.class) != null) {
+                    return;
+                }
+            }
+            // new type more generic, use old
+            // new type more specific, use it
+        }
+        if (explicit) {
+            _explicitCreators |= mask;
+        }
+        _creators[typeIndex] = _fixAccess(newOne);
+    }
+

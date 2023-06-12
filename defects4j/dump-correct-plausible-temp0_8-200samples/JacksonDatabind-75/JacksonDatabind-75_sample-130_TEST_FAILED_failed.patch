@@ -1,0 +1,31 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/ser/std/EnumSerializer.java b/src/main/java/com/fasterxml/jackson/databind/ser/std/EnumSerializer.java
+index d72ea4ad1..0bbd4de28 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/ser/std/EnumSerializer.java
++++ b/src/main/java/com/fasterxml/jackson/databind/ser/std/EnumSerializer.java
+@@ -78,10 +72,6 @@ public class EnumSerializer
+     public static EnumSerializer construct(Class<?> enumClass, SerializationConfig config,
+             BeanDescription beanDesc, JsonFormat.Value format)
+     {
+-        /* 08-Apr-2015, tatu: As per [databind#749], we can not statically determine
+-         *   between name() and toString(), need to construct `EnumValues` with names,
+-         *   handle toString() case dynamically (for example)
+-         */
+         EnumValues v = EnumValues.constructFromName(config, (Class<Enum<?>>) enumClass);
+         Boolean serializeAsIndex = _isShapeWrittenUsingIndex(enumClass, format, true);
+         return new EnumSerializer(v, serializeAsIndex);
+@@ -232,9 +210,11 @@ public class EnumSerializer
+         if (shape.isNumeric() || (shape == Shape.ARRAY)) {
+             return Boolean.TRUE;
+         }
+-        // 07-Mar-2017, tatu: Also means `OBJECT` not available as property annotation...
+-        throw new IllegalArgumentException(String.format(
+-                "Unsupported serialization shape (%s) for Enum %s, not supported as %s annotation",
++        if (shape != Shape.OBJECT) {
++            throw new IllegalArgumentException(String.format(
++                    "Unsupported serialization shape (%s) for Enum %s, not supported as %s annotation",
+                     shape, enumClass.getName(), (fromClass? "class" : "property")));
++        }
++        return null;
+     }
+ }
+\ No newline at end of file

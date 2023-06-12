@@ -1,0 +1,21 @@
+diff --git a/src/main/java/org/jsoup/parser/HtmlTreeBuilder.java b/src/main/java/org/jsoup/parser/HtmlTreeBuilder.java
+index 5c8d58c..39cd8e7 100644
+--- a/src/main/java/org/jsoup/parser/HtmlTreeBuilder.java
++++ b/src/main/java/org/jsoup/parser/HtmlTreeBuilder.java
+@@ -162,8 +162,14 @@ class HtmlTreeBuilder extends TreeBuilder {
+             tokeniser.emit(new Token.EndTag(el.tagName()));  // ensure we get out of whatever state we are in. emitted for yielded processing
+             return el;
+         }
+-        
+-        Element el = new Element(Tag.valueOf(startTag.name()), baseUri, startTag.attributes);
++        Tag tag = Tag.valueOf(startTag.name());
++        Element el = new Element(tag, baseUri, startTag.attributes);
++        if (tag.isFormListed() && stack.size() > 0) {
++            Element lastForm = formElement();
++            if (lastForm != null) {
++                lastForm.addFormElement(el);
++            }
++        }
+         insert(el);
+         return el;
+     }

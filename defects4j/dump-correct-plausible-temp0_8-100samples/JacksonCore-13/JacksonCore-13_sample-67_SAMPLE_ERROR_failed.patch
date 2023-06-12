@@ -1,0 +1,84 @@
+diff --git a/src/main/java/com/fasterxml/jackson/core/json/JsonGeneratorImpl.java b/src/main/java/com/fasterxml/jackson/core/json/JsonGeneratorImpl.java
+index 81b90fed..86fa120e 100644
+--- a/src/main/java/com/fasterxml/jackson/core/json/JsonGeneratorImpl.java
++++ b/src/main/java/com/fasterxml/jackson/core/json/JsonGeneratorImpl.java
+@@ -194,4 +168,78 @@ public abstract class JsonGeneratorImpl extends GeneratorBase
+         writeFieldName(fieldName);
+         writeString(value);
+     }
++    @Override
++    public void copyCurrentEvent(JsonParser p) throws IOException
++    {
++        JsonToken t = p.currentToken();
++        if (t == null) {
++            _reportError("No current event to copy");
++        }
++        switch (t.id()) {
++        case ID_FIELD_NAME:
++            writeFieldName(p.getCurrentName());
++            break;
++        case ID_START_OBJECT:
++            writeStartObject();
++            break;
++        case ID_END_OBJECT:
++            writeEndObject();
++            break;
++        case ID_START_ARRAY:
++            writeStartArray();
++            break;
++        case ID_END_ARRAY:
++            writeEndArray();
++            break;
++        case ID_EMBEDDED_OBJECT:
++            writeObject(p.getEmbeddedObject());
++            break;
++        case ID_RAW_STRING:
++        {
++            /* Should we try to make use of the
++             * copyCurrentStructure method? For now this should be
++             * enough:
++             */
++            //fall through
++        }
++        case ID_STRING:
++            writeString(p.getText());
++            break;
++        case ID_NUMBER_INT:
++            switch (p.getNumberType()) {
++            case INT:
++                writeNumber(p.getIntValue());
++                break;
++            case BIG_INTEGER:
++                writeNumber(p.getBigIntegerValue());
++                break;
++            default:
++                writeNumber(p.getLongValue());
++            }
++            break;
++        case ID_TRUE:
++            writeBoolean(true);
++            break;
++        case ID_FALSE:
++            writeBoolean(false);
++            break;
++        case ID_NULL:
++            writeNull();
++            break;
++        case ID_NUMBER_FLOAT:
++            switch (p.getNumberType()) {
++            case BIG_DECIMAL:
++                writeNumber(p.getDecimalValue());
++                break;
++            case FLOAT:
++                writeNumber(p.getFloatValue());
++                break;
++            default:
++                writeNumber(p.getDoubleValue());
++            }
++            break;
++        default:
++            _cantHappen();
++        }
++    }
+ }
+\ No newline at end of file

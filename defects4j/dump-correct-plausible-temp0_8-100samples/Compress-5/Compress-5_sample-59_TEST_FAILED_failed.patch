@@ -1,0 +1,47 @@
+diff --git a/src/main/java/org/apache/commons/compress/archivers/zip/ZipArchiveInputStream.java b/src/main/java/org/apache/commons/compress/archivers/zip/ZipArchiveInputStream.java
+index fc7b80d5..672f1884 100644
+--- a/src/main/java/org/apache/commons/compress/archivers/zip/ZipArchiveInputStream.java
++++ b/src/main/java/org/apache/commons/compress/archivers/zip/ZipArchiveInputStream.java
+@@ -237,7 +236,41 @@ public class ZipArchiveInputStream extends ArchiveInputStream {
+                 throw new ZipException(e.getMessage());
+             }
+             if (read == 0 && inf.finished()) {
+-                return -1;
++                if (current.getMethod() == ZipArchiveOutputStream.DEFLATED) {
++                    /*
++                     * This is to handle bug report:
++                     *
++                     * http://issues.apache.org/bugzilla/show_bug.cgi?id=27213
++                     *
++                     * deflate method in JRE will leave un-consumed input in the
++                     * buffer when the current entry is finished but the overall
++                     * stream is not finished.
++                     *
++                     * The workaround is:
++                     *
++                     * 1. Attempt inflate one more time.
++                     *
++                     * 2. If still no data is produced and the overall stream is finished,
++                     *    we have to consume the data left in the buffer to
++                     *    keep the crc value up to date.
++                     */
++                    try {
++                        inf.setInput(buf, offsetInBuffer, lengthOfLastRead);
++                        read = inf.inflate(buffer, start, length);
++                    } catch (DataFormatException e) {
++                        throw new ZipException(e.getMessage());
++                    }
++                    if (read == 0) {
++                        if (inf.finished()) {
++                            readBytesOfEntry += lengthOfLastRead;
++                            crc.update(buf, offsetInBuffer, lengthOfLastRead);
++                            lengthOfLastRead = offsetInBuffer = 0;
++                        }
++                        return -1;
++                    }
++                } else {
++                    return -1;
++                }
+             }
+             crc.update(buffer, start, read);
+             return read;

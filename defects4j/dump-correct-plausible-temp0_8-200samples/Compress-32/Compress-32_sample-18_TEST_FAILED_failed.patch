@@ -1,0 +1,25 @@
+diff --git a/src/main/java/org/apache/commons/compress/archivers/tar/TarArchiveInputStream.java b/src/main/java/org/apache/commons/compress/archivers/tar/TarArchiveInputStream.java
+index 87ff4aab..904771dd 100644
+--- a/src/main/java/org/apache/commons/compress/archivers/tar/TarArchiveInputStream.java
++++ b/src/main/java/org/apache/commons/compress/archivers/tar/TarArchiveInputStream.java
+@@ -493,6 +493,9 @@ public class TarArchiveInputStream extends ArchiveInputStream {
+         for (Entry<String, String> ent : headers.entrySet()){
+             String key = ent.getKey();
+             String val = ent.getValue();
++            if (isNullOrEmpty(key) || isNullOrEmpty(val)){
++                continue;
++            }
+             if ("path".equals(key)){
+                 currEntry.setName(val);
+             } else if ("linkpath".equals(key)){
+@@ -516,7 +519,9 @@ public class TarArchiveInputStream extends ArchiveInputStream {
+             }
+         }
+     }
+-
++    private boolean isNullOrEmpty(String str) {
++        return str == null || str.trim().isEmpty();
++    }
+     /**
+      * Adds the sparse chunks from the current entry to the sparse chunks,
+      * including any additional sparse entries following the current entry.

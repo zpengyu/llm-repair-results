@@ -1,0 +1,38 @@
+diff --git a/src/main/java/org/apache/commons/compress/archivers/tar/TarArchiveOutputStream.java b/src/main/java/org/apache/commons/compress/archivers/tar/TarArchiveOutputStream.java
+index da6bbfde..71cf2b53 100644
+--- a/src/main/java/org/apache/commons/compress/archivers/tar/TarArchiveOutputStream.java
++++ b/src/main/java/org/apache/commons/compress/archivers/tar/TarArchiveOutputStream.java
+@@ -482,14 +481,27 @@ public class TarArchiveOutputStream extends ArchiveOutputStream {
+                 actualLength = line.getBytes(CharsetNames.UTF_8).length;
+             }
+             w.write(line);
++            if (w.toString().getBytes(CharsetNames.UTF_8).length > 512) {
++                w.flush();
++                w.close();
++                byte[] data = w.toString().getBytes(CharsetNames.UTF_8);
++                pex.setSize(data.length);
++                putArchiveEntry(pex);
++                write(data);
++                closeArchiveEntry();
++                w = new StringWriter();
++            }
++        }
++        if (w.toString().getBytes(CharsetNames.UTF_8).length > 0) {
++            w.flush();
++            w.close();
++            byte[] data = w.toString().getBytes(CharsetNames.UTF_8);
++            pex.setSize(data.length);
++            putArchiveEntry(pex);
++            write(data);
++            closeArchiveEntry();
+         }
+-        byte[] data = w.toString().getBytes(CharsetNames.UTF_8);
+-        pex.setSize(data.length);
+-        putArchiveEntry(pex);
+-        write(data);
+-        closeArchiveEntry();
+     }
+-
+     private String stripTo7Bits(String name) {
+         final int length = name.length();
+         StringBuffer result = new StringBuffer(length);

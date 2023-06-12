@@ -1,0 +1,98 @@
+    public int read(byte[] buffer, int start, int length) throws IOException {
+        if (closed) {
+            throw new IOException("The stream is closed");
+        }
+        if (inf.finished() || current == null) {
+            return -1;
+        }
+
+        // avoid int overflow, check null buffer
+        if (start <= buffer.length && length >= 0 && start >= 0
+            && buffer.length - start >= length) {
+            if (current.getMethod() == ZipArchiveOutputStream.STORED) {
+                int csize = (int) current.getSize();
+                if (readBytesOfEntry >= csize) {
+                    return -1;
+                }
+                if (offsetInBuffer >= lengthOfLastRead) {
+                    offsetInBuffer = 0;
+                    if ((lengthOfLastRead = in.read(buf)) == -1) {
+                        return -1;
+                    }
+                    count(lengthOfLastRead);
+                    bytesReadFromStream += lengthOfLastRead;
+                }
+                int toRead = length > lengthOfLastRead
+                    ? lengthOfLastRead - offsetInBuffer
+                    : length;
+                if ((csize - readBytesOfEntry) < toRead) {
+                    toRead = csize - readBytesOfEntry;
+                }
+                System.arraycopy(buf, offsetInBuffer, buffer, start, toRead);
+                offsetInBuffer += toRead;
+                readBytesOfEntry += toRead;
+                crc.update(buffer, start, toRead);
+                return toRead;
+            }
+            if (inf.needsInput()) {
+                fill();
+                if (lengthOfLastRead > 0) {
+                    bytesReadFromStream += lengthOfLastRead;
+                }
+            }
+            int read = 0;
+            try {
+                read = inf.inflate(buffer, start, length);
+            } catch (DataFormatException e) {
+                throw new ZipException(e.getMessage());
+            }
+            if (read == 0 && inf.finished()) {
+                return -1;
+            }
+            crc.update(buffer, start, read);
+            return read;
+        }
+        throw new ArrayIndexOutOfBoundsException();
+    }
+##Phase III: RE:Extracting relevant information from FPs (30%)
+
+Using the FPs provided in Phase II, extract the following information
+* Number of FPs for each tool
+* For each FP, determine the kind of bug and provide a detailed explanation. The following kinds of bugs would be looked into:
+ * API misuse
+ * Arithmetic errors
+ * De-referencing
+ * File handling
+ * File handling
+ * Null pointer dereference
+ * Method missing
+ * Return value
+ * Resource leak
+ * Concurrency
+ * Race condition
+ * Data race
+ * Non-terminating
+ * Deadlock
+* For each FP, fix the buggy code
+* Explain how you arrived at the diagnosis and fix
+
+##Phase IV: RE:Extracting relevant information from patches (40%)
+
+Using the patch information provided in Phase II, extract the following information
+* For each bug, the number of patches available
+* Determine if the patch fixes the bug
+* Count the number of bugs for which only one patch is available
+* Explain how you determined the above information
+##Phase I
+* Download the data and extract into a folder in your machine.
+* Import the projects into Eclipse
+* Run the code through the following tools
+ * PMD
+ * FindBugs
+ * Jlint
+ * CheckStyle
+ * Gendarme
+ * JSHint
+ * Emma
+* Provide a summary of the number of bugs found by each tool and the total number of bugs found
+ 

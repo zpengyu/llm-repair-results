@@ -1,0 +1,23 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/jsontype/impl/SubTypeValidator.java b/src/main/java/com/fasterxml/jackson/databind/jsontype/impl/SubTypeValidator.java
+index fe9cba8d4..ef9452931 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/jsontype/impl/SubTypeValidator.java
++++ b/src/main/java/com/fasterxml/jackson/databind/jsontype/impl/SubTypeValidator.java
+@@ -91,10 +89,15 @@ public class SubTypeValidator
+                     }
+                 }
+             }
++            // 05-Jan-2018, tatu: Also need to check interfaces, as per [databind#1855]
++            for (Class<?> iface : raw.getInterfaces()) {
++                String intf = iface.getName();
++                if (_cfgIllegalClassNames.contains(intf)) {
++                    break main_check;
++                }
++            }
+             return;
+         } while (false);
+-
+         throw JsonMappingException.from(ctxt,
+                 String.format("Illegal type (%s) to deserialize: prevented for security reasons", full));
+-    }
+-}
++    }}

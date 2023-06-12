@@ -1,0 +1,28 @@
+diff --git a/src/main/java/org/apache/commons/compress/archivers/tar/TarArchiveOutputStream.java b/src/main/java/org/apache/commons/compress/archivers/tar/TarArchiveOutputStream.java
+index da6bbfde..b88aa450 100644
+--- a/src/main/java/org/apache/commons/compress/archivers/tar/TarArchiveOutputStream.java
++++ b/src/main/java/org/apache/commons/compress/archivers/tar/TarArchiveOutputStream.java
+@@ -454,21 +454,12 @@ public class TarArchiveOutputStream extends ArchiveOutputStream {
+     void writePaxHeaders(String entryName,
+                          Map<String, String> headers) throws IOException {
+         String name = "./PaxHeaders.X/" + stripTo7Bits(entryName);
+-            // TarEntry's constructor would think this is a directory
+-            // and not allow any data to be written
+-        if (name.length() >= TarConstants.NAMELEN) {
+-            name = name.substring(0, TarConstants.NAMELEN - 1);
+-        }
+-        TarArchiveEntry pex = new TarArchiveEntry(name,
+-                                                  TarConstants.LF_PAX_EXTENDED_HEADER_LC);
+-
++        TarArchiveEntry pex = new TarArchiveEntry(name, TarConstants.LF_PAX_EXTENDED_HEADER_LC);
+         StringWriter w = new StringWriter();
+         for (Map.Entry<String, String> h : headers.entrySet()) {
+             String key = h.getKey();
+             String value = h.getValue();
+-            int len = key.length() + value.length()
+-                + 3 /* blank, equals and newline */
+-                + 2 /* guess 9 < actual length < 100 */;
++            int len = key.length() + value.length() + 3 /* blank, equals and newline */ + 2 /* guess 9 < actual length < 100 */;
+             String line = len + " " + key + "=" + value + "\n";
+             int actualLength = line.getBytes(CharsetNames.UTF_8).length;
+             while (len != actualLength) {

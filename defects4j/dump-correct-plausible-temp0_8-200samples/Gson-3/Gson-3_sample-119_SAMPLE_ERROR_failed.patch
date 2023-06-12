@@ -1,0 +1,85 @@
+diff --git a/gson/src/main/java/com/google/gson/internal/ConstructorConstructor.java b/gson/src/main/java/com/google/gson/internal/ConstructorConstructor.java
+index cd5c2f6c..b9ff23cd 100644
+--- a/gson/src/main/java/com/google/gson/internal/ConstructorConstructor.java
++++ b/gson/src/main/java/com/google/gson/internal/ConstructorConstructor.java
+@@ -125,53 +125,7 @@ public final class ConstructorConstructor {
+    * subtypes.
+    */
+   @SuppressWarnings("unchecked") // use runtime checks to guarantee that 'T' is what it is
+-  private <T> ObjectConstructor<T> newDefaultImplementationConstructor(
+-      final Type type, Class<? super T> rawType) {
+-    if (Collection.class.isAssignableFrom(rawType)) {
+-      if (SortedSet.class.isAssignableFrom(rawType)) {
+-        return new ObjectConstructor<T>() {
+-          @Override public T construct() {
+-            return (T) new TreeSet<Object>();
+-          }
+-        };
+-      } else if (EnumSet.class.isAssignableFrom(rawType)) {
+-        return new ObjectConstructor<T>() {
+-          @SuppressWarnings("rawtypes")
+-          @Override public T construct() {
+-            if (type instanceof ParameterizedType) {
+-              Type elementType = ((ParameterizedType) type).getActualTypeArguments()[0];
+-              if (elementType instanceof Class) {
+-                return (T) EnumSet.noneOf((Class)elementType);
+-              } else {
+-                throw new JsonIOException("Invalid EnumSet type: " + type.toString());
+-              }
+-            } else {
+-              throw new JsonIOException("Invalid EnumSet type: " + type.toString());
+-            }
+-          }
+-        };
+-      } else if (Set.class.isAssignableFrom(rawType)) {
+-        return new ObjectConstructor<T>() {
+-          @Override public T construct() {
+-            return (T) new LinkedHashSet<Object>();
+-          }
+-        };
+-      } else if (Queue.class.isAssignableFrom(rawType)) {
+-        return new ObjectConstructor<T>() {
+-          @Override public T construct() {
+-            return (T) new LinkedList<Object>();
+-          }
+-        };
+-      } else {
+-        return new ObjectConstructor<T>() {
+-          @Override public T construct() {
+-            return (T) new ArrayList<Object>();
+-          }
+-        };
+-      }
+-    }
+-
+-    if (Map.class.isAssignableFrom(rawType)) {
++if (Map.class.isAssignableFrom(rawType)) {
+       if (SortedMap.class.isAssignableFrom(rawType)) {
+         return new ObjectConstructor<T>() {
+           @Override public T construct() {
+@@ -185,18 +139,20 @@ public final class ConstructorConstructor {
+             return (T) new LinkedHashMap<Object, Object>();
+           }
+         };
+-      } else {
++      } else if (type instanceof ParameterizedType) {
+         return new ObjectConstructor<T>() {
+           @Override public T construct() {
+             return (T) new LinkedTreeMap<String, Object>();
+           }
+         };
++      } else {
++        return new ObjectConstructor<T>() {
++          @Override public T construct() {
++            return (T) new LinkedHashMap<Object, Object>();
++          }
++        };
+       }
+     }
+-
+-    return null;
+-  }
+-
+   private <T> ObjectConstructor<T> newUnsafeAllocator(
+       final Type type, final Class<? super T> rawType) {
+     return new ObjectConstructor<T>() {

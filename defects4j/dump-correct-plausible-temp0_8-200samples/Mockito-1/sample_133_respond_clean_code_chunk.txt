@@ -1,0 +1,20 @@
+    public void captureArgumentsFrom(Invocation invocation) {
+        if (invocation.getMethod().isVarArgs()) {
+            int indexOfVararg = invocation.getRawArguments().length - 1;
+            Object varargs = invocation.getRawArguments()[indexOfVararg];
+            for (Matcher m : matchers.subList(indexOfVararg, matchers.size())) {
+                if (m instanceof CapturesArguments) {
+                    for (Object argument : (Object[]) varargs) {
+                        ((CapturesArguments) m).captureFrom(argument);
+                    }
+                }
+            }
+        } else {
+            for (int position = 0; position < matchers.size(); position++) {
+                Matcher m = matchers.get(position);
+                if (m instanceof CapturesArguments) {
+                    ((CapturesArguments) m).captureFrom(invocation.getArgumentAt(position, Object.class));
+                }
+            }
+        }
+    }

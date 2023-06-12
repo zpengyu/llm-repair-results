@@ -1,0 +1,31 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/jsontype/impl/SubTypeValidator.java b/src/main/java/com/fasterxml/jackson/databind/jsontype/impl/SubTypeValidator.java
+index fe9cba8d4..dcfe2c22e 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/jsontype/impl/SubTypeValidator.java
++++ b/src/main/java/com/fasterxml/jackson/databind/jsontype/impl/SubTypeValidator.java
+@@ -70,9 +70,15 @@ public class SubTypeValidator
+         // via default typing -- catch them here.
+         final Class<?> raw = type.getRawClass();
+         String full = raw.getName();
+-
+         main_check:
+         do {
++            // 05-Jan-2017, tatu: As per [databind#1319] there are some classes that are
++            //   *not* dangerous (unless used incorrectly), but we do want to warn.
++            if (_cfgWarnClassNames.contains(full)) {
++                ctxt.reportBadDefinition(type,
++                        String.format("Illegal type (%s) to deserialize: prevented for security reasons", full));
++                return;
++            }
+             if (_cfgIllegalClassNames.contains(full)) {
+                 break;
+             }
+@@ -93,8 +98,6 @@ public class SubTypeValidator
+             }
+             return;
+         } while (false);
+-
+         throw JsonMappingException.from(ctxt,
+                 String.format("Illegal type (%s) to deserialize: prevented for security reasons", full));
+-    }
+-}
++    }}

@@ -1,0 +1,118 @@
+diff --git a/src/java/org/apache/commons/cli/PosixParser.java b/src/java/org/apache/commons/cli/PosixParser.java
+index 2b1bbb1..f253874 100644
+--- a/src/java/org/apache/commons/cli/PosixParser.java
++++ b/src/java/org/apache/commons/cli/PosixParser.java
+@@ -94,70 +94,65 @@ public class PosixParser extends Parser {
+      * when an non option is found.
+      * @return The flattened <code>arguments</code> String array.
+      */
+-    protected String[] flatten(Options options, String[] arguments, boolean stopAtNonOption)
++protected String[] flatten(Options options, String[] arguments, boolean stopAtNonOption)
++{
++    init();
++    this.options = options;
++    // an iterator for the command line tokens
++    Iterator iter = Arrays.asList(arguments).iterator();
++    // process each command line token
++    while (iter.hasNext())
+     {
+-        init();
+-        this.options = options;
+-
+-        // an iterator for the command line tokens
+-        Iterator iter = Arrays.asList(arguments).iterator();
+-
+-        // process each command line token
+-        while (iter.hasNext())
++        // get the next command line token
++        String token = (String) iter.next();
++        // handle long option --foo or --foo=bar
++        if (token.startsWith("--"))
+         {
+-            // get the next command line token
+-            String token = (String) iter.next();
+-
+-            // handle long option --foo or --foo=bar
+-            if (token.startsWith("--"))
++            if (token.indexOf('=') != -1)
+             {
+-                if (token.indexOf('=') != -1)
+-                {
+-                    tokens.add(token.substring(0, token.indexOf('=')));
+-                    tokens.add(token.substring(token.indexOf('=') + 1, token.length()));
+-                }
+-                else
+-                {
+-                    tokens.add(token);
+-                }
++                tokens.add(token.substring(0, token.indexOf('=')));
++                tokens.add(token.substring(token.indexOf('=') + 1, token.length()));
+             }
+-
+-            // single hyphen
+-            else if ("-".equals(token))
++            else
+             {
+                 tokens.add(token);
+             }
+-            else if (token.startsWith("-"))
++        }
++        // single hyphen
++        else if ("-".equals(token))
++        {
++            tokens.add(token);
++        }
++        else if (token.startsWith("-"))
++        {
++            // single character opts that take arguments don't get grouped
++            if (token.length() == 2 && options.hasOption(token.charAt(1)) && options.getOption(token.charAt(1)).hasArg())
+             {
+-                if (token.length() == 2)
+-                {
+-                    processOptionToken(token, stopAtNonOption);
+-                }
+-                else if (options.hasOption(token))
+-                {
+-                    tokens.add(token);
+-                }
+-                // requires bursting
+-                else
+-                {
+-                    burstToken(token, stopAtNonOption);
+-                }
++                tokens.add(token);
+             }
+-            else if (stopAtNonOption)
++            // all others get grouped
++            else if (options.hasOption(token))
+             {
+-                process(token);
++                tokens.add(token);
+             }
++            // requires bursting
+             else
+             {
+-                tokens.add(token);
++                burstToken(token, stopAtNonOption);
+             }
+-
+-            gobble(iter);
+         }
+-
+-        return (String[]) tokens.toArray(new String[tokens.size()]);
++        else if (stopAtNonOption)
++        {
++            process(token);
++        }
++        else
++        {
++            tokens.add(token);
++        }
++        gobble(iter);
+     }
+-
++    return (String[]) tokens.toArray(new String[tokens.size()]);
++}
+     /**
+      * Adds the remaining tokens to the processed tokens list.
+      *

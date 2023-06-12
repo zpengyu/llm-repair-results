@@ -1,0 +1,28 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/ser/std/DateTimeSerializerBase.java b/src/main/java/com/fasterxml/jackson/databind/ser/std/DateTimeSerializerBase.java
+index ae5fd6538..2a133a473 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/ser/std/DateTimeSerializerBase.java
++++ b/src/main/java/com/fasterxml/jackson/databind/ser/std/DateTimeSerializerBase.java
+@@ -91,9 +86,22 @@ public abstract class DateTimeSerializerBase<T>
+         //    So: require it be `SimpleDateFormat`; can't config other types
+ //            serializers.reportBadDefinition(handledType(), String.format(
+             // Ugh. No way to change `Locale`, create copy; must re-crete completely:
++        if (_customFormat != null) {
++            SimpleDateFormat df;
++            try {
++                df = (SimpleDateFormat) _customFormat.clone();
++            } catch (CloneNotSupportedException e) {
++                throw new IllegalStateException(String.format(
++                        "Internal error: SimpleDateFormat of type '%s' is not cloneable",
++                        _customFormat.getClass().getName()));
++            }
++            df.setTimeZone(serializers.getTimeZone());
++            return withFormat(Boolean.FALSE, df);
++        }
++        // 29-Jun-2016, tatu: Looks like `toString()` is actually stable enough,
++        //   at least for well-known built-in ones...
+         return this;
+     }
+-
+     /*
+     /**********************************************************
+     /* Accessors

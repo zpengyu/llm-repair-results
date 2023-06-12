@@ -1,0 +1,52 @@
+public static Locale toLocale(final String str) {
+    if (str == null) {
+        return null;
+    }
+    if (str.isEmpty()) {
+        throw new IllegalArgumentException("Invalid locale format: " + str);
+    }
+    if (str.startsWith("_")) {
+        throw new IllegalArgumentException("Invalid locale format: " + str);
+    }
+    final char sep = '_';
+    final int len = str.length();
+    String language = "";
+    String country = "";
+    String variant = "";
+    if (len < 2) {
+        language = str;
+    } else {
+        final String[] words = str.split("_", -1);
+        final int count = words.length;
+        switch (count) {
+            case 1:
+                language = words[0];
+                break;
+            case 2:
+                language = words[0];
+                country = words[1];
+                break;
+            default:
+                language = words[0];
+                country = words[1];
+                int start = 2;
+                if (words[1].isEmpty() && count > 2) {
+                    // Make sure we skip the empty string between the
+                    // separator and the next word.
+                    start = 3;
+                }
+                final StringBuilder buf = new StringBuilder();
+                for (int i = start; i < count; i++) {
+                    if (i > start) {
+                        buf.append(sep);
+                    }
+                    buf.append(words[i]);
+                }
+                variant = buf.toString();
+        }
+    }
+    if (language.isEmpty() && country.isEmpty() && variant.isEmpty()) {
+        throw new IllegalArgumentException("Invalid locale format: " + str);
+    }
+    return new Locale(language, country, variant);
+}

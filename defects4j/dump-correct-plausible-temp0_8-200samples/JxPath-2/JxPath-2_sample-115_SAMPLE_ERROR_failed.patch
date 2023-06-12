@@ -1,0 +1,33 @@
+diff --git a/src/java/org/apache/commons/jxpath/ri/compiler/Expression.java b/src/java/org/apache/commons/jxpath/ri/compiler/Expression.java
+index 927f617..1e57431 100644
+--- a/src/java/org/apache/commons/jxpath/ri/compiler/Expression.java
++++ b/src/java/org/apache/commons/jxpath/ri/compiler/Expression.java
+@@ -66,9 +61,25 @@ public abstract class Expression {
+      * Evaluates the expression. If the result is a node set, returns
+      * the first element of the node set.
+      */
+-    public abstract Object computeValue(EvalContext context);
+-    public abstract Object compute(EvalContext context);
+-
++    public Object computeValue(EvalContext context) {
++        Object result = compute(context);
++        if (result == null) {
++            return null;
++        }
++        if (result instanceof EvalContext) {
++            return ((EvalContext) result).getSingleNodePointer().getValue();
++        }
++        if (ValueUtils.isAtomic(result)) {
++            return result;
++        }
++        return ValueUtils.getValue((Pointer) result);
++    }
++    /**
++     * @deprecated Use computeValue instead
++     */
++    public Object compute(EvalContext context) {
++        return computeValue(context);
++    }
+     public Iterator iterate(EvalContext context) {
+         Object result = compute(context);
+         if (result instanceof EvalContext) {

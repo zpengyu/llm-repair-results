@@ -1,0 +1,27 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/ser/std/EnumSerializer.java b/src/main/java/com/fasterxml/jackson/databind/ser/std/EnumSerializer.java
+index d72ea4ad1..4b069185c 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/ser/std/EnumSerializer.java
++++ b/src/main/java/com/fasterxml/jackson/databind/ser/std/EnumSerializer.java
+@@ -135,12 +124,19 @@ public class EnumSerializer
+         }
+         // [databind#749]: or via toString()?
+         if (serializers.isEnabled(SerializationFeature.WRITE_ENUMS_USING_TO_STRING)) {
+-            gen.writeString(en.toString());
++            if(en == null) {
++                serializers.defaultSerializeNull(gen);
++            } else {
++                gen.writeString(en.toString());
++            }
+             return;
+         }
+-        gen.writeString(_values.serializedValueFor(en));
++        if(en == null) {
++            serializers.defaultSerializeNull(gen);
++        } else {
++            gen.writeString(_values.serializedValueFor(en));
++        }
+     }
+-
+     /*
+     /**********************************************************
+     /* Schema support

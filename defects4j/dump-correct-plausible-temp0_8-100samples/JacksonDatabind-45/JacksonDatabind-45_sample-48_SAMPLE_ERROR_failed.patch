@@ -1,0 +1,38 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/ser/std/DateTimeSerializerBase.java b/src/main/java/com/fasterxml/jackson/databind/ser/std/DateTimeSerializerBase.java
+index 7709acdcd..720c39cbf 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/ser/std/DateTimeSerializerBase.java
++++ b/src/main/java/com/fasterxml/jackson/databind/ser/std/DateTimeSerializerBase.java
+@@ -53,15 +53,29 @@ public abstract class DateTimeSerializerBase<T>
+         if (property != null) {
+             JsonFormat.Value format = serializers.getAnnotationIntrospector().findFormat((Annotated)property.getMember());
+             if (format != null) {
+-
+-            	// Simple case first: serialize as numeric timestamp?
++                TimeZone tz = format.getTimeZone();
++                if (tz != null) {
++                    _timezone = tz;
++                }
++                String pattern = format.getPattern();
++                if (pattern != null) {
++                    Locale loc = format.getLocale();
++                    if (loc == null) {
++                        loc = serializers.getLocale();
++                    }
++                    _format = new SimpleDateFormat(pattern, loc);
++                    if (tz == null) {
++                        tz = serializers.getTimeZone();
++                    }
++                    _format.setTimeZone(tz);
++                    return withFormat(Boolean.FALSE, _format);
++                }
++                // Simple case first: serialize as numeric timestamp?
+                 JsonFormat.Shape shape = format.getShape();
+                 if (shape.isNumeric()) {
+                     return withFormat(Boolean.TRUE, null);
+                 }
+-
+                 if (format.getShape() == JsonFormat.Shape.STRING) {
+-                    TimeZone tz = format.getTimeZone();
+                     final String pattern = format.hasPattern()
+                                     ? format.getPattern()
+                                     : StdDateFormat.DATE_FORMAT_STR_ISO8601;

@@ -1,0 +1,27 @@
+    private void getNumUseInUseCfgNode(final Node cfgNode) {
+      numUsesWithinCfgNode = 0;
+      AbstractCfgNodeTraversalCallback gatherCb =
+          new AbstractCfgNodeTraversalCallback() {
+        @Override
+        public void visit(NodeTraversal t, Node n, Node parent) {
+          if (n.isName() && n.getString().equals(varName) &&
+            // We make a special exception when the entire cfgNode is a chain
+            // of assignments, since in that case the assignment statements
+            // will happen after the inlining of the right hand side.
+            // TODO(blickly): Make the SIDE_EFFECT_PREDICATE check more exact
+            //   and remove this special case.
+              !(parent.isAssign() &&
+               (parent.getFirstChild() == n))) {
+              // Don't count lhs of top-level assignment chain
+              numUsesWithinCfgNode++;
+          }
+          else if (n.isAssign() && parent.isExprResult()) {
+            // We've hit the end of the chain of assignments
+            // Increase the number of uses by the number of assignments
+            // as in: `a = 1, b = 2` will be expanded to `1, 2`
+            numUsesWithinCfgNode += NodeUtil.getAssignNode(n).getChildCount() - 1;
+          }
+        }
+      };
+      NodeTraversal.traverse(compiler, cfgNode, gatherCb);
+    }

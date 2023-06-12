@@ -1,0 +1,43 @@
+diff --git a/src/main/java/org/jsoup/helper/DataUtil.java b/src/main/java/org/jsoup/helper/DataUtil.java
+index 6de0c40..f0688fa 100644
+--- a/src/main/java/org/jsoup/helper/DataUtil.java
++++ b/src/main/java/org/jsoup/helper/DataUtil.java
+@@ -88,11 +88,21 @@ public final class DataUtil {
+     static Document parseByteData(ByteBuffer byteData, String charsetName, String baseUri, Parser parser) {
+         String docData;
+         Document doc = null;
+-
+         // look for BOM - overrides any other header or input
+-
++        if (byteData.limit() >= 3 && (byteData.get(0) & 0xFF) == 0xEF && (byteData.get(1) & 0xFF) == 0xBB && (byteData.get(2) & 0xFF) == 0xBF) {
++            charsetName = defaultCharset;
++            byteData.position(3);
++        } else if (byteData.limit() >= 2) {
++            if ((byteData.get(0) & 0xFF) == 0xFE && (byteData.get(1) & 0xFF) == 0xFF) {
++                charsetName = "utf-16be";
++                byteData.position(2);
++            } else if ((byteData.get(0) & 0xFF) == 0xFF && (byteData.get(1) & 0xFF) == 0xFE) {
++                charsetName = "utf-16le";
++                byteData.position(2);
++            }
++        }
++        // look for <meta http-equiv="Content-Type" content="text/html;charset=gb2312"> or HTML5 <meta charset="gb2312">
+         if (charsetName == null) { // determine from meta. safe parse as UTF-8
+-            // look for <meta http-equiv="Content-Type" content="text/html;charset=gb2312"> or HTML5 <meta charset="gb2312">
+             docData = Charset.forName(defaultCharset).decode(byteData).toString();
+             doc = parser.parseInput(docData, baseUri);
+             Element meta = doc.select("meta[http-equiv=content-type], meta[charset]").first();
+@@ -123,13 +132,6 @@ public final class DataUtil {
+             Validate.notEmpty(charsetName, "Must set charset arg to character set of file to parse. Set to null to attempt to detect from HTML");
+             docData = Charset.forName(charsetName).decode(byteData).toString();
+         }
+-        if (docData.length() > 0 && docData.charAt(0) == UNICODE_BOM) {
+-            byteData.rewind();
+-            docData = Charset.forName(defaultCharset).decode(byteData).toString();
+-            docData = docData.substring(1);
+-            charsetName = defaultCharset;
+-            doc = null;
+-        }
+         if (doc == null) {
+             doc = parser.parseInput(docData, baseUri);
+             doc.outputSettings().charset(charsetName);

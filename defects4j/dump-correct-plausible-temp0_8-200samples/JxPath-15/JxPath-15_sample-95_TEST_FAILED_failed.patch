@@ -1,0 +1,34 @@
+diff --git a/src/java/org/apache/commons/jxpath/ri/axes/UnionContext.java b/src/java/org/apache/commons/jxpath/ri/axes/UnionContext.java
+index 0ea5b51..5fb772b 100644
+--- a/src/java/org/apache/commons/jxpath/ri/axes/UnionContext.java
++++ b/src/java/org/apache/commons/jxpath/ri/axes/UnionContext.java
+@@ -32,7 +32,7 @@ import org.apache.commons.jxpath.ri.model.NodePointer;
+ public class UnionContext extends NodeSetContext {
+     private EvalContext contexts[];
+     private boolean prepared;
+-
++    private boolean contextHasMore;
+     public UnionContext(EvalContext parentContext, EvalContext contexts[]) {
+         super(parentContext, new BasicNodeSet());
+         this.contexts = contexts;
+@@ -62,4 +60,19 @@ public class UnionContext extends NodeSetContext {
+         }
+         return super.setPosition(position);
+     }
++    public boolean nextNode() {
++        if (setPosition(getPosition() + 1)) {
++            return true;
++        } else if (contextHasMore) {
++            for (int i = 0; i < contexts.length; i++) {
++                EvalContext context = contexts[i];
++                if (context.nextSet()) {
++                    contextHasMore = true;
++                    return true;
++                }
++            }
++        }
++        contextHasMore = false;
++        return false;
++    }
+ }
+\ No newline at end of file

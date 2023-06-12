@@ -1,0 +1,61 @@
+diff --git a/src/java/org/apache/commons/jxpath/ri/compiler/CoreOperationCompare.java b/src/java/org/apache/commons/jxpath/ri/compiler/CoreOperationCompare.java
+index cc45a8f..e326f4d 100644
+--- a/src/java/org/apache/commons/jxpath/ri/compiler/CoreOperationCompare.java
++++ b/src/java/org/apache/commons/jxpath/ri/compiler/CoreOperationCompare.java
+@@ -49,39 +49,28 @@ public abstract class CoreOperationCompare extends CoreOperation {
+     {
+         Object l = left.compute(context);
+         Object r = right.compute(context);
+-
+-//        System.err.println("COMPARING: " +
+-//            (l == null ? "null" : l.getClass().getName()) + " " +
+-//            (r == null ? "null" : r.getClass().getName()));
+-
+-        if (l instanceof InitialContext || l instanceof SelfContext) {
+-            l = ((EvalContext) l).getSingleNodePointer();
+-        }
+-
+-        if (r instanceof InitialContext || r instanceof SelfContext) {
+-            r = ((EvalContext) r).getSingleNodePointer();
+-        }
+-
+-        if (l instanceof Collection) {
+-            l = ((Collection) l).iterator();
+-        }
+-
+-        if (r instanceof Collection) {
+-            r = ((Collection) r).iterator();
++        l = compareIterator(l, r);
++        r = compareIterator(r, l);
++        return equal(l, r);
++    }
++    private Object compareIterator(
++        Object iteratee,
++        Object compared) 
++    {
++        if (iteratee instanceof InitialContext || iteratee instanceof SelfContext) {
++            iteratee = ((EvalContext) iteratee).getSingleNodePointer();
+         }
+-
+-        if ((l instanceof Iterator) && !(r instanceof Iterator)) {
+-            return contains((Iterator) l, r);
++        if (iteratee instanceof Collection) {
++            iteratee = ((Collection) iteratee).iterator();
+         }
+-        if (!(l instanceof Iterator) && (r instanceof Iterator)) {
+-            return contains((Iterator) r, l);
++        if (iteratee instanceof Iterator && !(compared instanceof Iterator)) {
++            return contains((Iterator) iteratee, compared);
+         }
+-        if (l instanceof Iterator && r instanceof Iterator) {
+-            return findMatch((Iterator) l, (Iterator) r);
++        if (iteratee instanceof Iterator && compared instanceof Iterator) {
++            return findMatch((Iterator) iteratee, (Iterator) compared);
+         }
+-        return equal(l, r);
++        return iteratee;
+     }
+-
+     protected boolean contains(Iterator it, Object value) {
+         while (it.hasNext()) {
+             Object element = it.next();

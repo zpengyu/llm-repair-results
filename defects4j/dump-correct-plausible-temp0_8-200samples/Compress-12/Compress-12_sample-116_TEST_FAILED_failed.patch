@@ -1,0 +1,52 @@
+diff --git a/src/main/java/org/apache/commons/compress/archivers/tar/TarArchiveInputStream.java b/src/main/java/org/apache/commons/compress/archivers/tar/TarArchiveInputStream.java
+index 52bb7455..5ef25c59 100644
+--- a/src/main/java/org/apache/commons/compress/archivers/tar/TarArchiveInputStream.java
++++ b/src/main/java/org/apache/commons/compress/archivers/tar/TarArchiveInputStream.java
+@@ -173,23 +173,18 @@ public class TarArchiveInputStream extends ArchiveInputStream {
+         if (hasHitEOF) {
+             return null;
+         }
+-
+         if (currEntry != null) {
+             long numToSkip = entrySize - entryOffset;
+-
+-            while (numToSkip > 0) {
++            if (numToSkip > 0) {
+                 long skipped = skip(numToSkip);
+-                if (skipped <= 0) {
+-                    throw new RuntimeException("failed to skip current tar entry");
++                if (skipped != numToSkip) {
++                    throw new IOException("failed to skip current tar"
++                                          + " entry");
+                 }
+-                numToSkip -= skipped;
+             }
+-
+             readBuf = null;
+         }
+-
+         byte[] headerBuf = getRecord();
+-
+         if (hasHitEOF) {
+             currEntry = null;
+             return null;
+@@ -220,15 +213,14 @@ public class TarArchiveInputStream extends ArchiveInputStream {
+             }
+             currEntry.setName(longName.toString());
+         }
+-
+-        if (currEntry.isPaxHeader()){ // Process Pax headers
++        if (currEntry.isPaxHeader()) {
++            // Process Pax headers
+             paxHeaders();
+         }
+-
+-        if (currEntry.isGNUSparse()){ // Process sparse files
++        if (currEntry.isGNUSparse()) {
++            // Process sparse files
+             readGNUSparse();
+         }
+-
+         // If the size of the next element in the archive has changed
+         // due to a new size being reported in the posix header
+         // information, we update entrySize here so that it contains

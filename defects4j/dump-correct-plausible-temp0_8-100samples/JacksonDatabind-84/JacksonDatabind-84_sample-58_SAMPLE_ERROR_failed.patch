@@ -1,0 +1,28 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/type/ResolvedRecursiveType.java b/src/main/java/com/fasterxml/jackson/databind/type/ResolvedRecursiveType.java
+index 7b8c69af7..ebcd77af7 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/type/ResolvedRecursiveType.java
++++ b/src/main/java/com/fasterxml/jackson/databind/type/ResolvedRecursiveType.java
+@@ -104,11 +86,17 @@ public class ResolvedRecursiveType extends TypeBase
+     public boolean equals(Object o) {
+         if (o == this) return true;
+         if (o == null) return false;
+-        // Do NOT ever match unresolved references
+-        if (_referencedType == null) {
+-            return false;
++        // If the other type is also an unresolved recursive type, compare the referenced types
++        if (o.getClass() == getClass()) {
++            return _referencedType.equals(((ResolvedRecursiveType) o).getSelfReferencedType());
+         }
+-        return (o.getClass() == getClass()
+-                && _referencedType.equals(((ResolvedRecursiveType) o).getSelfReferencedType()));
++        // Otherwise, just compare to the referenced type
++        return _referencedType.equals(o);
++    }
++    @Override
++    public int hashCode() {
++        // Not sure why this is needed, but looks like hash code of some types is used
++        // for caching things (from unit tests) and such... so, better safe than sorry.
++        return _referencedType.hashCode();
+     }
+ }
+\ No newline at end of file

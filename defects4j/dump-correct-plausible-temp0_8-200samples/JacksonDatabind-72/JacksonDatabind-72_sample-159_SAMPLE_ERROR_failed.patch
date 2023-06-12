@@ -1,0 +1,27 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/deser/impl/InnerClassProperty.java b/src/main/java/com/fasterxml/jackson/databind/deser/impl/InnerClassProperty.java
+index 128a8346f..568da1930 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/deser/impl/InnerClassProperty.java
++++ b/src/main/java/com/fasterxml/jackson/databind/deser/impl/InnerClassProperty.java
+@@ -164,4 +141,21 @@ public final class InnerClassProperty
+         }
+         return new InnerClassProperty(this, new AnnotatedConstructor(null, _creator, null, null));
+     }
++    @Override
++    public Object deserialize(JsonParser p, DeserializationContext ctxt)
++        throws IOException
++    {
++        if (_valueInstantiator != null) {
++            return _valueInstantiator.createUsingDelegate(ctxt, _valueDeserializer.deserialize(p, ctxt));
++        }
++        // else...
++        Object bean;
++        try {
++            bean = _creator.newInstance(null);
++        } catch (Exception e) {
++            ClassUtil.unwrapAndThrowAsIAE(e, "Failed to instantiate class "+_creator.getDeclaringClass().getName()+", problem: "+e.getMessage());
++            return null;
++        }
++        return _valueDeserializer.deserialize(p, ctxt, bean);
++    }
+ }
+\ No newline at end of file

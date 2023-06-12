@@ -1,0 +1,20 @@
+diff --git a/src/main/java/org/jsoup/parser/XmlTreeBuilder.java b/src/main/java/org/jsoup/parser/XmlTreeBuilder.java
+index 24141a4..42456dc 100644
+--- a/src/main/java/org/jsoup/parser/XmlTreeBuilder.java
++++ b/src/main/java/org/jsoup/parser/XmlTreeBuilder.java
+@@ -93,9 +93,13 @@ public class XmlTreeBuilder extends TreeBuilder {
+                     insert.attributes().addAll(el.attributes());
+             }
+         }
+-        insertNode(insert);
++        if (insertNode(insert)) {
++            return;
++        }
++        for (int i = childNodes.size() - 1; i >= 0; i--) {
++            childNodes.get(i).insert(commentToken);
++        }
+     }
+-
+     void insert(Token.Character token) {
+         final String data = token.getData();
+         insertNode(token.isCData() ? new CDataNode(data) : new TextNode(data));

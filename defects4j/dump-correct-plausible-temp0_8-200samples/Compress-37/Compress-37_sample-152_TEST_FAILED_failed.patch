@@ -1,0 +1,107 @@
+diff --git a/src/main/java/org/apache/commons/compress/archivers/tar/TarArchiveInputStream.java b/src/main/java/org/apache/commons/compress/archivers/tar/TarArchiveInputStream.java
+index 958af286..5b8d17bc 100644
+--- a/src/main/java/org/apache/commons/compress/archivers/tar/TarArchiveInputStream.java
++++ b/src/main/java/org/apache/commons/compress/archivers/tar/TarArchiveInputStream.java
+@@ -449,58 +449,57 @@ public class TarArchiveInputStream extends ArchiveInputStream {
+     // NOTE, using a Map here makes it impossible to ever support GNU
+     // sparse files using the PAX Format 0.0, see
+     // https://www.gnu.org/software/tar/manual/html_section/tar_92.html#SEC188
+-    Map<String, String> parsePaxHeaders(final InputStream i)
+-        throws IOException {
+-        final Map<String, String> headers = new HashMap<String, String>(globalPaxHeaders);
+-        // Format is "length keyword=value\n";
+-        while(true){ // get length
+-            int ch;
+-            int len = 0;
+-            int read = 0;
+-            while((ch = i.read()) != -1) {
+-                read++;
+-                if (ch == ' '){
+-                    // Get keyword
+-                    final ByteArrayOutputStream coll = new ByteArrayOutputStream();
+-                    while((ch = i.read()) != -1) {
+-                        read++;
+-                        if (ch == '='){ // end of keyword
+-                            final String keyword = coll.toString(CharsetNames.UTF_8);
+-                            // Get rest of entry
+-                            final int restLen = len - read;
+-                            if (restLen == 1) { // only NL
+-                                headers.remove(keyword);
+-                            } else {
+-                                final byte[] rest = new byte[restLen];
+-                                final int got = IOUtils.readFully(i, rest);
+-                                if (got != restLen) {
+-                                    throw new IOException("Failed to read "
+-                                                          + "Paxheader. Expected "
+-                                                          + restLen
+-                                                          + " bytes, read "
+-                                                          + got);
+-                                }
+-                                // Drop trailing NL
+-                                final String value = new String(rest, 0,
+-                                                          restLen - 1, CharsetNames.UTF_8);
+-                                headers.put(keyword, value);
++Map<String, String> parsePaxHeaders(final InputStream i)
++    throws IOException {
++    final Map<String, String> headers = new HashMap<String, String>(globalPaxHeaders);
++    // Format is "length keyword=value\n";
++    while(true) { // get length
++        int ch;
++        int len = 0;
++        int read = 0;
++        while((ch = i.read()) != -1) {
++            read++;
++            if (ch == ' ') {
++                // Get keyword
++                final ByteArrayOutputStream coll = new ByteArrayOutputStream();
++                while((ch = i.read()) != -1) {
++                    read++;
++                    if (ch == '=') { // end of keyword
++                        final String keyword = coll.toString(CharsetNames.UTF_8);
++                        // Get rest of entry
++                        final int restLen = len - read;
++                        if (restLen == 1) { // only NL
++                            headers.remove(keyword);
++                        } else {
++                            final byte[] rest = new byte[restLen];
++                            final int got = IOUtils.readFully(i, rest);
++                            if (got != restLen) {
++                                throw new IOException("Failed to read "
++                                    + "Paxheader. Expected "
++                                    + restLen
++                                    + " bytes, read "
++                                    + got);
+                             }
+-                            break;
++                            // Drop trailing NL
++                            final String value = new String(rest, 0,
++                                restLen - 1, CharsetNames.UTF_8);
++                            headers.put(keyword, value);
+                         }
+-                        coll.write((byte) ch);
++                        break;
+                     }
+-                    break; // Processed single header
++                    coll.write((byte) ch);
+                 }
+-                len *= 10;
+-                len += ch - '0';
+-            }
+-            if (ch == -1){ // EOF
+-                break;
++                break; // Processed single header
+             }
++            len *= 10;
++            len += ch - '0';
++        }
++        if (ch == -1) { // EOF
++            break;
+         }
+-        return headers;
+     }
+-
++    return headers;
++}
+     private void applyPaxHeadersToCurrentEntry(final Map<String, String> headers) {
+         /*
+          * The following headers are defined for Pax.

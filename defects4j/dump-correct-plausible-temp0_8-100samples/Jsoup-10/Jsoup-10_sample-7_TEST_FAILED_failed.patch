@@ -1,0 +1,25 @@
+diff --git a/src/main/java/org/jsoup/nodes/Node.java b/src/main/java/org/jsoup/nodes/Node.java
+index 0d0f9d4..f2e6a40 100644
+--- a/src/main/java/org/jsoup/nodes/Node.java
++++ b/src/main/java/org/jsoup/nodes/Node.java
+@@ -155,8 +155,6 @@ public abstract class Node implements Cloneable {
+      */
+     public String absUrl(String attributeKey) {
+         Validate.notEmpty(attributeKey);
+-
+-        String relUrl = attr(attributeKey);
+         if (!hasAttr(attributeKey)) {
+             return ""; // nothing to make absolute with
+         } else {
+@@ -166,9 +164,10 @@ public abstract class Node implements Cloneable {
+                     base = new URL(baseUri);
+                 } catch (MalformedURLException e) {
+                     // the base is unsuitable, but the attribute may be abs on its own, so try that
+-                    URL abs = new URL(relUrl);
++                    URL abs = new URL(attr(attributeKey));
+                     return abs.toExternalForm();
+                 }
++                String relUrl = attr(attributeKey);
+                 // workaround: java resolves '//path/file + ?foo' to '//path/?foo', not '//path/file?foo' as desired
+                 URL abs = new URL(base, relUrl);
+                 return abs.toExternalForm();

@@ -1,0 +1,24 @@
+    protected JavaType _typeFromId(String id, DatabindContext ctxt) throws IOException
+    {
+        /* 30-Jan-2010, tatu: Most ids are basic class names; so let's first
+         *    check if any generics info is added; and only then ask factory
+         *    to do translation when necessary
+         */
+        TypeFactory tf = ctxt.getTypeFactory();
+        if (id.indexOf('<') > 0) {
+            // note: may want to try combining with specialization (esp for EnumMap)?
+            // 17-Aug-2017, tatu: As per [databind#1735] need to ensure assignment
+            //    compatibility -- needed later anyway, and not doing so may open
+            //    security issues.
+            JavaType t = tf.constructFromCanonical(id);
+                // Probably cleaner to have a method in `TypeFactory` but can't add in patch
+            return t;
+        }
+        // 17-Aug-2017, tatu: As per [databind#1735] need to ensure assignment
+        //    compatibility -- needed later anyway, and not doing so may open
+        //    security issues.
+        JavaType t = tf.findType(id);
+        return (t == null) ? null : t;
+        // return tf.constructSpecializedType(_baseType, cls);
+    }
+

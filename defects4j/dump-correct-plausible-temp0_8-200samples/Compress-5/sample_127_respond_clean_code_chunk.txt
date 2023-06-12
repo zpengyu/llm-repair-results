@@ -1,0 +1,29 @@
+    public int read(byte[] buffer, int start, int length) throws IOException {
+        if (buffer == null) {
+            throw new NullPointerException();
+        } else if (start < 0 || length < 0 || length > buffer.length - start) {
+            throw new IndexOutOfBoundsException();
+        } else if (length == 0) {
+            return 0;
+        }
+        try {
+            ensureOpen();
+            for (;;) {
+                if (position == count) {
+                    fill();
+                    if (position == count)
+                        return -1;
+                }
+                if (inf.finished() || inf.needsDictionary())
+                    return -1;
+                if (inf.needsInput())
+                    fill();
+                int n = readBytes(buffer, start, length);
+                if (n != 0)
+                    return n;
+            }
+        } catch (DataFormatException e) {
+            String s = e.getMessage();
+            throw new ZipException(s != null ? s : "Invalid ZLIB data format");
+        }
+    }

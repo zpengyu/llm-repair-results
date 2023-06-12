@@ -1,0 +1,47 @@
+    public PropertyName findNameForSerialization(Annotated a)
+    {
+        String name = null;
+        JsonGetter jg = _findAnnotation(a, JsonGetter.class);
+        if (jg != null) {
+            name = jg.value();
+        } else {
+            JsonProperty pann = _findAnnotation(a, JsonProperty.class);
+            if (pann != null) {
+                name = pann.value();
+                /* 22-Apr-2014, tatu: Should figure out a better way to do this, but
+                 *   it's actually bit tricky to do it more efficiently (meta-annotations
+                 *   add more lookups; AnnotationMap costs etc)
+                 */
+            } else {
+                JsonRawValue raw = _findAnnotation(a, JsonRawValue.class);
+                if (raw != null && raw.value()) {
+                    name = "";
+                } else {
+                    JsonSerialize ann = _findAnnotation(a, JsonSerialize.class);
+                    if (ann != null) {
+                        Class<?> serClass = ann.using();
+                        if (serClass != None.class) {
+                            return null;
+                        }
+                        Class<?> inclClass = ann.include();
+                        if (inclClass != JsonSerialize.Inclusion.class) {
+                            /* So far seems like it makes sense to do this here, but...
+                             * not completely sure:
+                             */
+                            JsonInclude.Include incl = _annotationIntrospector.findSerializationInclusion(a, inclClass);
+                            if (incl == JsonInclude.Include.NON_DEFAULT) {
+                                return PropertyName.USE_DEFAULT;
+                            }
+                        }
+                    } else {
+                        JsonView annView = _findAnnotation(a, JsonView.class);
+                        if (annView != null) {
+                            return null;
+                        }
+                        return null;
+                    }
+                }
+            }
+        }
+        return PropertyName.construct(name);
+    }

@@ -1,0 +1,39 @@
+  JSType meet(JSType that) {
+    if (isTop() || that.isTop()) {
+      return that;
+    } else if (isUnknownType() || that.isUnknownType()) {
+      return getNativeType(JSTypeNative.UNKNOWN_TYPE);
+    }
+    if (this.isObject() && that.isObject()) {
+      if (this.isEquivalentTo(that)) {
+        return that;
+      } else {
+        return getNativeType(JSTypeNative.NO_OBJECT_TYPE);
+      }
+    } else if (this.isObject()) {
+      return that;
+    } else if (that.isObject()) {
+      return this;
+    }
+    UnionTypeBuilder builder = new UnionTypeBuilder(registry);
+    for (JSType alternate : alternates) {
+      if (alternate.isSubtype(that)) {
+        builder.addAlternate(alternate);
+      }
+    }
+    if (that instanceof UnionType) {
+      for (JSType otherAlternate : ((UnionType) that).alternates) {
+        if (otherAlternate.isSubtype(this)) {
+          builder.addAlternate(otherAlternate);
+        }
+      }
+    } else if (that.isSubtype(this)) {
+      builder.addAlternate(that);
+    }
+    JSType result = builder.build();
+    if (result != null) {
+      return result;
+    } else {
+      return getNativeType(JSTypeNative.NO_TYPE);
+    }
+  }

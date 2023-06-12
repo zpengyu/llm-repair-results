@@ -1,0 +1,18 @@
+  private void traverse(Node node) {
+    // The goal here is to avoid retraversing
+    // the entire AST to catch newly created opportunities.
+    // So we track whether a "unit of code" has changed,
+    // and revisit immediately.
+    if (!shouldVisit(node)) {
+      return;
+    }
+    Node next;
+    for (Node c = node.getFirstChild(); c != null; c = next) {
+      next = c.getNext();
+      traverse(c);
+    }
+    do {
+      visit(node);
+    } while (shouldRetraverse(node));
+    exitNode(node);
+  }

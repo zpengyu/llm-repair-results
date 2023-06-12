@@ -1,0 +1,34 @@
+diff --git a/src/com/google/javascript/jscomp/FlowSensitiveInlineVariables.java b/src/com/google/javascript/jscomp/FlowSensitiveInlineVariables.java
+index 0a7f29c3..a5e46b0e 100644
+--- a/src/com/google/javascript/jscomp/FlowSensitiveInlineVariables.java
++++ b/src/com/google/javascript/jscomp/FlowSensitiveInlineVariables.java
+@@ -98,16 +96,25 @@ class FlowSensitiveInlineVariables extends AbstractPostOrderCallback
+         if (n.isNew() && NodeUtil.constructorCallHasSideEffects(n)) {
+           return true;
+         }
+-
+-
++        // If the node is the name of a variable and the parent of the name node
++        // is a call, the variable is being passed to a function, thus we need
++        // to check the definition of the variable.
++        if (n.isName() &&
++            NodeUtil.isGet(n.getParent()) &&
++            n.hasChildren() &&
++            n.getFirstChild().isGetProp()) {
++          Node var = n.getFirstChild().getFirstChild();
++          if (!apply(var)) {
++            return false;
++          }
++        }
+         for (Node c = n.getFirstChild(); c != null; c = c.getNext()) {
+           if (!ControlFlowGraph.isEnteringNewCfgNode(c) && apply(c)) {
+             return true;
+           }
+         }
+         return false;
+-      }
+-  };
++      }  };
+ 
+   public FlowSensitiveInlineVariables(AbstractCompiler compiler) {
+     this.compiler = compiler;

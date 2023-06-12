@@ -1,0 +1,101 @@
+###Provide a fix for the buggy function
+###Buggy Function
+class FibonacciExample {
+    public static void main(String args[]) {
+        int n1 = 0, n2 = 1, n3, i, count = 10;
+
+        System.out.print(n1 + " " + n2);
+
+        for (i = 2; i < count; ++i) {
+            n3 = n1 - n2;
+            System.out.print(" " + n3);
+            n1 = n2;
+            n2 = n3;
+        }
+    }
+}
+
+###Fixed Function
+class FibonacciExample {
+    public static void main(String args[]) {
+        int n1 = 0, n2 = 1, n3, i, count = 10;
+
+        System.out.print(n1 + " " + n2);
+
+        for (i = 2; i < count; ++i) {
+            n3 = n1 + n2;
+            System.out.print(" " + n3);
+            n1 = n2;
+            n2 = n3;
+        }
+    }
+}
+
+###Provide a fix for the buggy function
+###Buggy Function
+private static boolean isReduceableFunctionExpression(Node n) {
+  return NodeUtil.isFunctionExpression(n);
+}
+###Fixed Function
+private static boolean isReduceableFunctionExpression(Node n) {
+  return NodeUtil.isFunctionExpression(n)
+      && !NodeUtil.isGetOrSetKey(n.getParent());
+}
+###Provide a fix for the buggy function
+###Buggy Function
+  String getReadableJSTypeName(Node n, boolean dereference) {
+
+    // The best type name is the actual type name.
+
+    // If we're analyzing a GETPROP, the property may be inherited by the
+    // prototype chain. So climb the prototype chain and find out where
+    // the property was originally defined.
+    if (n.isGetProp()) {
+      ObjectType objectType = getJSType(n.getFirstChild()).dereference();
+      if (objectType != null) {
+        String propName = n.getLastChild().getString();
+        if (objectType.getConstructor() != null &&
+            objectType.getConstructor().isInterface()) {
+          objectType = FunctionType.getTopDefiningInterface(
+              objectType, propName);
+        } else {
+          // classes
+          while (objectType != null && !objectType.hasOwnProperty(propName)) {
+            objectType = objectType.getImplicitPrototype();
+          }
+        }
+
+        // Don't show complex function names or anonymous types.
+        // Instead, try to get a human-readable type name.
+        if (objectType != null &&
+            (objectType.getConstructor() != null ||
+             objectType.isFunctionPrototypeType())) {
+          return objectType.toString() + "." + propName;
+        }
+      }
+    }
+
+    JSType type = getJSType(n);
+    if (dereference) {
+      ObjectType dereferenced = type.dereference();
+      if (dereferenced != null) {
+        type = dereferenced;
+      }
+    }
+    if (type.isFunctionPrototypeType() ||
+        (type.toObjectType() != null &&
+         type.toObjectType().getConstructor() != null)) {
+      return type.toString();
+    }
+    String qualifiedName = n.getQualifiedName();
+    if (qualifiedName != null) {
+      return qualifiedName;
+    } else if (type.isFunctionType()) {
+      // Don't show complex function names.
+      return "function";
+    } else {
+      return type.toString();
+    }
+  }
+
+###Fixed Function

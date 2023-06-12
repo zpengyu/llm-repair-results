@@ -1,0 +1,54 @@
+diff --git a/src/java/org/apache/commons/jxpath/ri/axes/AttributeContext.java b/src/java/org/apache/commons/jxpath/ri/axes/AttributeContext.java
+index 25d0931..6c7e007 100644
+--- a/src/java/org/apache/commons/jxpath/ri/axes/AttributeContext.java
++++ b/src/java/org/apache/commons/jxpath/ri/axes/AttributeContext.java
+@@ -30,12 +30,10 @@ import org.apache.commons.jxpath.ri.model.NodePointer;
+  * @version $Revision$ $Date$
+  */
+ public class AttributeContext extends EvalContext {
+-
+     private NodeTest nodeTest;
+-    private boolean setStarted = false;
+     private NodeIterator iterator;
+     private NodePointer currentNodePointer;
+-
++    private int currentPosition = 0;
+     /**
+      * @param parentContext represents the previous step on the path
+      * @param nodeTest is the name of the attribute we are looking for
+@@ -48,30 +45,25 @@ public class AttributeContext extends EvalContext {
+     public NodePointer getCurrentNodePointer() {
+         return currentNodePointer;
+     }
+-
+     public void reset() {
+-        setStarted = false;
++        currentPosition = 0;
+         iterator = null;
+         super.reset();
+     }
+-
+     public boolean setPosition(int position) {
+-        if (position < getCurrentPosition()) {
++        if (position < currentPosition) {
+             reset();
+         }
+-
+-        while (getCurrentPosition() < position) {
++        while (currentPosition < position) {
+             if (!nextNode()) {
+                 return false;
+             }
+         }
+         return true;
+     }
+-
+     public boolean nextNode() {
+-        super.setPosition(getCurrentPosition() + 1);
+-        if (!setStarted) {
+-            setStarted = true;
++        currentPosition++;
++        if (iterator == null) {
+             if (!(nodeTest instanceof NodeNameTest)) {
+                 return false;
+             }

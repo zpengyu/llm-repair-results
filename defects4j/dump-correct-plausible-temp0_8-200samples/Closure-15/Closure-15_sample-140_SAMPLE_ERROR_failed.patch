@@ -1,0 +1,36 @@
+diff --git a/src/com/google/javascript/jscomp/FlowSensitiveInlineVariables.java b/src/com/google/javascript/jscomp/FlowSensitiveInlineVariables.java
+index 0a7f29c3..e5a48000 100644
+--- a/src/com/google/javascript/jscomp/FlowSensitiveInlineVariables.java
++++ b/src/com/google/javascript/jscomp/FlowSensitiveInlineVariables.java
+@@ -98,16 +96,27 @@ class FlowSensitiveInlineVariables extends AbstractPostOrderCallback
+         if (n.isNew() && NodeUtil.constructorCallHasSideEffects(n)) {
+           return true;
+         }
+-
+-
++        // If n is a IF and it is not the root node, ignore it. This
++        // allows us to correctly handle cases such as:
++        // if (foo)
++        //   return a;
++        // else
++        //   return b;
++        //
++        // In this case, there are two return statements and the control
++        // flow graph contains two nodes that return a value. In such
++        // cases, we should be looking at the control flow graph and not
++        // the AST.
++        if (n.isIf() && n != root) {
++          return false;
++        }
+         for (Node c = n.getFirstChild(); c != null; c = c.getNext()) {
+           if (!ControlFlowGraph.isEnteringNewCfgNode(c) && apply(c)) {
+             return true;
+           }
+         }
+         return false;
+-      }
+-  };
++      }  };
+ 
+   public FlowSensitiveInlineVariables(AbstractCompiler compiler) {
+     this.compiler = compiler;

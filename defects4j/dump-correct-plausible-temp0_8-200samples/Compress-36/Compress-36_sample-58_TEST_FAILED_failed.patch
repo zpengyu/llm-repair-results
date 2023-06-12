@@ -1,0 +1,29 @@
+diff --git a/src/main/java/org/apache/commons/compress/archivers/sevenz/SevenZFile.java b/src/main/java/org/apache/commons/compress/archivers/sevenz/SevenZFile.java
+index 6bf6dc68..f602f972 100644
+--- a/src/main/java/org/apache/commons/compress/archivers/sevenz/SevenZFile.java
++++ b/src/main/java/org/apache/commons/compress/archivers/sevenz/SevenZFile.java
+@@ -899,10 +899,6 @@ public class SevenZFile implements Closeable {
+     }
+ 
+     private InputStream getCurrentStream() throws IOException {
+-        if (deferredBlockStreams.isEmpty()) {
+-            throw new IllegalStateException("No current 7z entry (call getNextEntry() first).");
+-        }
+-        
+         while (deferredBlockStreams.size() > 1) {
+             // In solid compression mode we need to decompress all leading folder'
+             // streams to get access to an entry. We defer this until really needed
+@@ -911,10 +907,11 @@ public class SevenZFile implements Closeable {
+             IOUtils.skip(stream, Long.MAX_VALUE);
+             stream.close();
+         }
+-
++        if (deferredBlockStreams.isEmpty()) {
++            throw new IllegalStateException("No current 7z entry (call getNextEntry() first).");
++        }
+         return deferredBlockStreams.get(0);
+     }
+-
+     /**
+      * Reads data into an array of bytes.
+      * 

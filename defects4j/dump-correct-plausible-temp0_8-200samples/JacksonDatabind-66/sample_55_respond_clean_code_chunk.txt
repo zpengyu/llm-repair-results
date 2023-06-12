@@ -1,0 +1,22 @@
+        public final Object deserializeKey(String key, DeserializationContext ctxt)
+            throws IOException
+        {
+            if (key == null) { // is this even legal call?
+                return null;
+            }
+            if (_keyDeserializer == null) {
+                // 13-Aug-2014, tatu: We are getting plain key, but caller will expect Map instance;
+                //   meaning we must deserialize it too
+                return ctxt.findKeyDeserializer(_keyType, _property).deserializeKey(key, ctxt);
+            }
+            try {
+                // Ugh... should not have to give parser which may or may not be correct one...
+                Object result = _keyDeserializer.deserializeKey(key, ctxt);
+                if (result != null) {
+                    return result;
+                }
+                return ctxt.handleWeirdKey(_keyClass, key, "not a valid representation");
+            } catch (Exception re) {
+                return ctxt.handleWeirdKey(_keyClass, key, "not a valid representation: %s", re.getMessage());
+            }
+        }

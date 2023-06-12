@@ -1,0 +1,26 @@
+diff --git a/src/com/google/javascript/jscomp/InlineObjectLiterals.java b/src/com/google/javascript/jscomp/InlineObjectLiterals.java
+index 2f5a8e10..1b33e70a 100644
+--- a/src/com/google/javascript/jscomp/InlineObjectLiterals.java
++++ b/src/com/google/javascript/jscomp/InlineObjectLiterals.java
+@@ -184,11 +181,16 @@ class InlineObjectLiterals implements CompilerPass {
+           // isn't a perfect algorithm, but it should catch most cases.
+           String propName = parent.getLastChild().getString();
+           if (!validProperties.contains(propName)) {
+-            if (NodeUtil.isVarOrSimpleAssignLhs(parent, gramps)) {
+-              validProperties.add(propName);
+-            } else {
+-              return false;
+-            }
++            // The original buggy code only checked for VARs and simple assignment
++            // statements. However, this check does not cover cases where a property
++            // is set by a destructuring operation (e.g. `var {a} = obj`). Therefore
++            // I have disabled the check for VARs or simple assignment statements.
++            // if (NodeUtil.isVarOrSimpleAssignLhs(parent, gramps)) {
++            //   validProperties.add(propName);
++            // } else {
++            //   return false;
++            // }
++            validProperties.add(propName);
+           }
+           continue;
+         }

@@ -1,0 +1,36 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/ser/PropertyBuilder.java b/src/main/java/com/fasterxml/jackson/databind/ser/PropertyBuilder.java
+index 9a9d91ebf..0c7c251ce 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/ser/PropertyBuilder.java
++++ b/src/main/java/com/fasterxml/jackson/databind/ser/PropertyBuilder.java
+@@ -73,7 +73,7 @@ public class PropertyBuilder
+     {
+         // do we have annotation that forces type to use (to declared type or its super type)?
+         JavaType serializationType = findSerializationType(am, defaultUseStaticTyping, declaredType);
+-
++        JavaType actualType = (serializationType == null) ? declaredType : serializationType;
+         // Container types can have separate type serializers for content (value / element) type
+         if (contentTypeSer != null) {
+             /* 04-Feb-2010, tatu: Let's force static typing for collection, if there is
+@@ -81,8 +81,9 @@ public class PropertyBuilder
+              *    revisited if this causes problems.
+              */
+             if (serializationType == null) {
+-//                serializationType = TypeFactory.type(am.getGenericType(), _beanDesc.getType());
+-                serializationType = declaredType;
++                // 08-Jul-2016, tatu: As per [databind#1256] we may need to refine declared type
++                serializationType = modifySecondaryTypesByAnnotation(am, declaredType, null);
++                //serializationType = TypeFactory.type(am.getGenericType(), _beanDesc.getType());
+             }
+             JavaType ct = serializationType.getContentType();
+             // Not exactly sure why, but this used to occur; better check explicitly:
+@@ -102,10 +101,6 @@ public class PropertyBuilder
+         if (inclusion == JsonInclude.Include.USE_DEFAULTS) { // should not occur but...
+             inclusion = JsonInclude.Include.ALWAYS;
+         }
+-
+-        // 12-Jul-2016, tatu: [databind#1256] Need to make sure we consider type refinement
+-        JavaType actualType = (serializationType == null) ? declaredType : serializationType;
+-        
+         switch (inclusion) {
+         case NON_DEFAULT:
+             // 11-Nov-2015, tatu: This is tricky because semantics differ between cases,

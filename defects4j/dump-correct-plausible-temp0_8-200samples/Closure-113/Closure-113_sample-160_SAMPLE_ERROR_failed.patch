@@ -1,0 +1,54 @@
+diff --git a/src/com/google/javascript/jscomp/ProcessClosurePrimitives.java b/src/com/google/javascript/jscomp/ProcessClosurePrimitives.java
+index 385e8b07..f8145610 100644
+--- a/src/com/google/javascript/jscomp/ProcessClosurePrimitives.java
++++ b/src/com/google/javascript/jscomp/ProcessClosurePrimitives.java
+@@ -311,28 +309,38 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback
+         if (moduleGraph != null &&
+             module != providedModule &&
+             !moduleGraph.dependsOn(module, providedModule)) {
+-          compiler.report(
+-              t.makeError(n, XMODULE_REQUIRE_ERROR, ns,
+-                  providedModule.getName(),
+-                  module.getName()));
++          if (!processedProvide) {
++            processedProvide = true;
++            compiler.report(
++                t.makeError(n, XMODULE_REQUIRE_ERROR, ns,
++                    providedModule.getName(),
++                    module.getName()));
++          } else {
++            parent.detachFromParent();
++            compiler.reportCodeChange();
++          }
++        } else if (!processedProvide) {
++          processedProvide = true;
++          JSModule module = t.getModule();
++          if (moduleGraph != null &&
++              module != providedModule &&
++              !moduleGraph.dependsOn(module, providedModule)) {
++            compiler.report(
++                t.makeError(n, XMODULE_REQUIRE_ERROR, ns,
++                    providedModule.getName(),
++                    module.getName()));
++          }
+         }
+       }
+-
+       maybeAddToSymbolTable(left);
+       maybeAddStringNodeToSymbolTable(arg);
+-
+       // Requires should be removed before further processing.
+       // Some clients run closure pass multiple times, first with
+       // the checks for broken requires turned off. In these cases, we
+       // allow broken requires to be preserved by the first run to
+       // let them be caught in the subsequent run.
+-      if (provided != null) {
+-        parent.detachFromParent();
+-        compiler.reportCodeChange();
+-      }
+     }
+   }
+-
+   /**
+    * Handles a goog.provide call.
+    */

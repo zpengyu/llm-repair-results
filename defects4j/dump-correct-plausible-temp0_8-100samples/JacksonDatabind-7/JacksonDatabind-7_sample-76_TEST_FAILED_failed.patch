@@ -1,0 +1,19 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/util/TokenBuffer.java b/src/main/java/com/fasterxml/jackson/databind/util/TokenBuffer.java
+index c700587c8..af5ea4d24 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/util/TokenBuffer.java
++++ b/src/main/java/com/fasterxml/jackson/databind/util/TokenBuffer.java
+@@ -402,7 +402,14 @@ public class TokenBuffer
+      */
+     public TokenBuffer deserialize(JsonParser jp, DeserializationContext ctxt) throws IOException
+     {
++        if (jp.hasCurrentToken()) {
+             copyCurrentStructure(jp);
++        } else {
++            // 31-Mar-2015, tatu: Added support for "de-serializing" from TokenBuffer;
++            //    in case we are to be populated from there, need to start with leading START_OBJECT
++            //    marker. This can be used by certain data format backends as well.
++            writeStartObject();
++        }
+         /* 28-Oct-2014, tatu: As per #592, need to support a special case of starting from
+          *    FIELD_NAME, which is taken to mean that we are missing START_OBJECT, but need
+          *    to assume one did exist.

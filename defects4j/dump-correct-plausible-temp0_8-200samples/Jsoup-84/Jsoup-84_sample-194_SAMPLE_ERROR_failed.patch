@@ -1,0 +1,30 @@
+diff --git a/src/main/java/org/jsoup/helper/W3CDom.java b/src/main/java/org/jsoup/helper/W3CDom.java
+index f866f43..b82cab9 100644
+--- a/src/main/java/org/jsoup/helper/W3CDom.java
++++ b/src/main/java/org/jsoup/helper/W3CDom.java
+@@ -83,13 +83,10 @@ public class W3CDom {
+             namespacesStack.push(new HashMap<>(namespacesStack.peek())); // inherit from above on the stack
+             if (source instanceof org.jsoup.nodes.Element) {
+                 org.jsoup.nodes.Element sourceEl = (org.jsoup.nodes.Element) source;
+-
+                 String prefix = updateNamespaces(sourceEl);
+                 String namespace = namespacesStack.peek().get(prefix);
+-                String tagName = sourceEl.tagName();
+-
+                 Element el =
+-                    doc.createElementNS(namespace, tagName);
++                    doc.createElementNS(namespace, sourceEl.tagName());
+                 copyAttributes(sourceEl, el);
+                 if (dest == null) { // sets up the root
+                     doc.appendChild(el);
+@@ -109,6 +106,10 @@ public class W3CDom {
+                 org.jsoup.nodes.DataNode sourceData = (org.jsoup.nodes.DataNode) source;
+                 Text node = doc.createTextNode(sourceData.getWholeData());
+                 dest.appendChild(node);
++            } else if (source instanceof org.jsoup.nodes.DocumentType) {
++                org.jsoup.nodes.DocumentType sourceDocType = (org.jsoup.nodes.DocumentType) source;
++                DocumentType docType = doc.getImplementation().createDocumentType(sourceDocType.attr("name"), sourceDocType.attr("publicId"), sourceDocType.attr("systemId"));
++                doc.appendChild(docType);
+             } else {
+                 // unhandled
+             }

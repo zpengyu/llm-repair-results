@@ -1,0 +1,70 @@
+diff --git a/src/org/mockito/internal/util/Primitives.java b/src/org/mockito/internal/util/Primitives.java
+index b44b8253d..834733892 100644
+--- a/src/org/mockito/internal/util/Primitives.java
++++ b/src/org/mockito/internal/util/Primitives.java
+@@ -8,31 +8,11 @@ import java.util.HashMap;
+ import java.util.Map;
+ 
+ @SuppressWarnings("unchecked")
+-public class Primitives {
+-    
+-    public static <T> Class<T> primitiveTypeOf(Class<T> clazz) {
+-        if(clazz.isPrimitive()) {
+-            return clazz;
+-        }
+-        return (Class<T>) primitiveTypes.get(clazz);
+-    }
+-
+-    public static boolean isPrimitiveWrapper(Class<?> type) {
+-        return wrapperReturnValues.containsKey(type);
+-    }
+-
+-    public static <T> T primitiveWrapperOf(Class<T> type) {
+-        return (T) wrapperReturnValues.get(type);
+-    }
+-
+-    public static <T> T primitiveValueOrNullFor(Class<T> primitiveType) {
+-        return (T) primitiveValues.get(primitiveType);
+-    }
+-    private static Map<Class<?>, Class<?>> wrapperTypes = new HashMap<Class<?>, Class<?>>();
++private static Map<Class<?>, Class<?>> wrapperTypes = new HashMap<Class<?>, Class<?>>();
+     private static Map<Class<?>, Class<?>> primitiveTypes = new HashMap<Class<?>, Class<?>>();
+     private static Map<Class<?>, Object> wrapperReturnValues = new HashMap<Class<?>, Object>();
+     private static Map<Class<?>, Object> primitiveValues = new HashMap<Class<?>, Object>();
+-
++    private static Map<Class<?>, Class<?>> primitiveTypeOf = new HashMap<Class<?>, Class<?>>();
+     static {
+         primitiveTypes.put(Boolean.class, Boolean.TYPE);
+         primitiveTypes.put(Character.class, Character.TYPE);
+@@ -65,4 +43,30 @@ public class Primitives {
+         primitiveValues.put(float.class, 0F);
+         primitiveValues.put(double.class, 0);
+     }
++    static {
++        primitiveTypeOf.put(boolean.class, Boolean.class);
++        primitiveTypeOf.put(char.class, Character.class);
++        primitiveTypeOf.put(byte.class, Byte.class);
++        primitiveTypeOf.put(short.class, Short.class);
++        primitiveTypeOf.put(int.class, Integer.class);
++        primitiveTypeOf.put(long.class, Long.class);
++        primitiveTypeOf.put(float.class, Float.class);
++        primitiveTypeOf.put(double.class, Double.class);
++    }
++public class Primitives {
++    public static <T> Class<T> primitiveTypeOf(Class<T> clazz) {
++        if(clazz.isPrimitive()) {
++            return (Class<T>) primitiveTypeOf.get(clazz);
++        }
++        return (Class<T>) primitiveTypes.get(clazz);
++    }
++    public static boolean isPrimitiveWrapper(Class<?> type) {
++        return wrapperReturnValues.containsKey(type);
++    }
++    public static <T> T primitiveWrapperOf(Class<T> type) {
++        return (T) wrapperReturnValues.get(type);
++    }
++    public static <T> T primitiveValueOrNullFor(Class<T> primitiveType) {
++        return (T) primitiveValues.get(primitiveType);
++    }
+ }
+\ No newline at end of file

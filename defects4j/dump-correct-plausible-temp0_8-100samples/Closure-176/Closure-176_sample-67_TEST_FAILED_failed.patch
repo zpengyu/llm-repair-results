@@ -1,0 +1,20 @@
+diff --git a/src/com/google/javascript/jscomp/TypeInference.java b/src/com/google/javascript/jscomp/TypeInference.java
+index 53e8cb48..92527bc5 100644
+--- a/src/com/google/javascript/jscomp/TypeInference.java
++++ b/src/com/google/javascript/jscomp/TypeInference.java
+@@ -544,10 +543,11 @@ class TypeInference
+         // is as narrow as it can possibly be, but we need to make
+         // sure we back-infer the <string> element constraint on
+         // the left hand side, so we use the left hand side.
+-
+-        boolean isVarTypeBetter = !isVarDeclaration || var == null || var.isTypeInferred();
+-            // Makes it easier to check for NPEs.
+-
++        boolean isVarTypeBetter =
++            isVarDeclaration &&
++            (var == null ||
++             resultType.isSubtype(var.getType()) ||
++             !var.getType().isSubtype(resultType));
+         // TODO(nicksantos): This might be a better check once we have
+         // back-inference of object/array constraints.  It will probably
+         // introduce more type warnings.  It uses the result type iff it's

@@ -1,0 +1,37 @@
+diff --git a/src/main/java/org/apache/commons/compress/archivers/tar/TarArchiveOutputStream.java b/src/main/java/org/apache/commons/compress/archivers/tar/TarArchiveOutputStream.java
+index da6bbfde..52e062a1 100644
+--- a/src/main/java/org/apache/commons/compress/archivers/tar/TarArchiveOutputStream.java
++++ b/src/main/java/org/apache/commons/compress/archivers/tar/TarArchiveOutputStream.java
+@@ -488,8 +487,31 @@ public class TarArchiveOutputStream extends ArchiveOutputStream {
+         putArchiveEntry(pex);
+         write(data);
+         closeArchiveEntry();
++        if(shouldInclude(entryName, headers)) {
++			currentEntry = new TarArchiveEntry(entryName);
++			currentEntry.setUserId(userId);
++			currentEntry.setUserName(userName);
++			currentEntry.setGroupId(groupId);
++			currentEntry.setGroupName(groupName);
++			currentEntry.setMode(mode);
++			currentEntry.setSize(size);
++			currentEntry.setModTime(time);
++			currentEntry.setNames(names);
++			currentEntry.setLinkName(linkName);
++			currentEntry.setDevMajor(devMajor);
++			currentEntry.setDevMinor(devMinor);
++			if (entryFactory != null) {
++				currentEntry = entryFactory.createArchiveEntry(this,
++						currentEntry);
++			}
++			if (currentEntry == null) {
++				entryFailed();
++				return;
++			}
++			write(currentEntry);
++			currentEntry = null;
++		}
+     }
+-
+     private String stripTo7Bits(String name) {
+         final int length = name.length();
+         StringBuffer result = new StringBuffer(length);

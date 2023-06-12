@@ -1,0 +1,43 @@
+diff --git a/src/com/google/javascript/jscomp/FlowSensitiveInlineVariables.java b/src/com/google/javascript/jscomp/FlowSensitiveInlineVariables.java
+index 73531dc5..1f11d8c1 100644
+--- a/src/com/google/javascript/jscomp/FlowSensitiveInlineVariables.java
++++ b/src/com/google/javascript/jscomp/FlowSensitiveInlineVariables.java
+@@ -476,27 +475,25 @@ class FlowSensitiveInlineVariables extends AbstractPostOrderCallback
+       numUsesWithinCfgNode = 0;
+       AbstractCfgNodeTraversalCallback gatherCb =
+           new AbstractCfgNodeTraversalCallback() {
+-
+         @Override
+         public void visit(NodeTraversal t, Node n, Node parent) {
+-          if (n.isName() && n.getString().equals(varName) &&
+-            // We make a special exception when the entire cfgNode is a chain
+-            // of assignments, since in that case the assignment statements
+-            // will happen after the inlining of the right hand side.
+-            // TODO(blickly): Make the SIDE_EFFECT_PREDICATE check more exact
+-            //   and remove this special case.
+-              !(parent.isAssign() &&
+-               (parent.getFirstChild() == n))) {
++          if (n.isName() && n.getString().equals(varName)) {
++            if ((parent.isAssign() && parent.getFirstChild() == n) &&
++              // We make a special exception when the entire cfgNode is a chain
++              // of assignments, since in that case the assignment statements
++              // will happen after the inlining of the right hand side.
++              // TODO(blickly): Make the SIDE_EFFECT_PREDICATE check more exact
++              //   and remove this special case.
++                !(cfgNode.getFirstChild().isAssign() &&
++                 cfgNode.getFirstChild().getNext().isExprResult())) {
+               // Don't count lhs of top-level assignment chain
+               numUsesWithinCfgNode++;
++            }
+           }
+         }
+-
+       };
+-
+       NodeTraversal.traverse(compiler, cfgNode, gatherCb);
+-    }
+-  }
++    }  }
+ 
+   /**
+    * Given an expression by its root and sub-expression n, return true if there

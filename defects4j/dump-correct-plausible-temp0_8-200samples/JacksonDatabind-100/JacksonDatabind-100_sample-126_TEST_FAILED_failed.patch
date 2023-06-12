@@ -1,0 +1,16 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/node/TreeTraversingParser.java b/src/main/java/com/fasterxml/jackson/databind/node/TreeTraversingParser.java
+index afb9f1869..b7db7aefc 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/node/TreeTraversingParser.java
++++ b/src/main/java/com/fasterxml/jackson/databind/node/TreeTraversingParser.java
+@@ -364,6 +364,11 @@ public class TreeTraversingParser extends ParserMinimalBase
+             if (data != null) {
+                 return data;
+             }
++            // [databind#2096]: similar for `asText()`: plain text node
++            // and "textualized" POJO node
++            if (n.isTextual()) {
++                return b64variant.decode(n.asText());
++            }
+             if (n.isPojo()) {
+                 Object ob = ((POJONode) n).getPojo();
+                 if (ob instanceof byte[]) {

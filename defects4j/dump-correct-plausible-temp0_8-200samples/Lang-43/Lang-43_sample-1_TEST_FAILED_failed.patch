@@ -1,0 +1,44 @@
+diff --git a/src/java/org/apache/commons/lang/text/ExtendedMessageFormat.java b/src/java/org/apache/commons/lang/text/ExtendedMessageFormat.java
+index c63fbf6d..bfd46115 100644
+--- a/src/java/org/apache/commons/lang/text/ExtendedMessageFormat.java
++++ b/src/java/org/apache/commons/lang/text/ExtendedMessageFormat.java
+@@ -423,26 +423,22 @@ public class ExtendedMessageFormat extends MessageFormat {
+         }
+         int lastHold = start;
+         for (int i = pos.getIndex(); i < pattern.length(); i++) {
+-            if (escapingOn && pattern.substring(i).startsWith(ESCAPED_QUOTE)) {
+-                appendTo.append(c, lastHold, pos.getIndex() - lastHold).append(
+-                        QUOTE);
+-                pos.setIndex(i + ESCAPED_QUOTE.length());
+-                lastHold = pos.getIndex();
+-                continue;
+-            }
+-            switch (c[pos.getIndex()]) {
+-            case QUOTE:
+-                next(pos);
+-                return appendTo == null ? null : appendTo.append(c, lastHold,
+-                        pos.getIndex() - lastHold);
+-            default:
+-                next(pos);
++            if (escapingOn && c[i] == QUOTE) {
++                if ((i+1) < pattern.length() && pattern.charAt(i+1) == QUOTE) {
++                    appendTo.append(c, lastHold, pos.getIndex() - lastHold).append(
++                            QUOTE);
++                    pos.setIndex(i + 1);
++                    lastHold = pos.getIndex();
++                    continue;
++                } else {
++                    break;
++                }
+             }
++            next(pos);
+         }
+-        throw new IllegalArgumentException(
+-                "Unterminated quoted string at position " + start);
++        return appendTo == null ? null : appendTo.append(c, lastHold,
++                pos.getIndex() - lastHold);
+     }
+-
+     /**
+      * Consume quoted string only
+      * 

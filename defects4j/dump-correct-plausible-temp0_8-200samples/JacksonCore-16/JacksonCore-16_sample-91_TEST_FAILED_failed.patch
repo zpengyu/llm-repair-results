@@ -1,0 +1,64 @@
+diff --git a/src/main/java/com/fasterxml/jackson/core/util/JsonParserSequence.java b/src/main/java/com/fasterxml/jackson/core/util/JsonParserSequence.java
+index bed27f2b..bf59fd46 100644
+--- a/src/main/java/com/fasterxml/jackson/core/util/JsonParserSequence.java
++++ b/src/main/java/com/fasterxml/jackson/core/util/JsonParserSequence.java
+@@ -32,7 +30,7 @@ public class JsonParserSequence extends JsonParserDelegate
+      *
+      * @since 2.8
+      */
+-
++    protected boolean _hasToken;
+     /*
+      *******************************************************
+      * Construction
+@@ -103,6 +95,10 @@ public class JsonParserSequence extends JsonParserDelegate
+     @Override
+     public JsonToken nextToken() throws IOException, JsonParseException
+     {
++        if (_hasToken) {
++            _hasToken = false;
++            return delegate.currentToken();
++        }
+         JsonToken t = delegate.nextToken();
+         if (t != null) return t;
+         while (switchToNext()) {
+@@ -111,7 +107,29 @@ public class JsonParserSequence extends JsonParserDelegate
+         }
+         return null;
+     }
+-
++    @Override
++    public JsonToken currentToken() {
++        if (_hasToken) {
++            return delegate.currentToken();
++        }
++        return super.currentToken();
++    }
++    @Override
++    public boolean hasCurrentToken() {
++        if (_hasToken) {
++            return true;
++        }
++        return super.hasCurrentToken();
++    }
++    @Override
++    public JsonParser skipChildren() throws IOException, JsonParseException {
++        if (!_hasToken) {
++            super.skipChildren();
++        } else {
++            delegate.skipChildren();
++        }
++        return this;
++    }
+     /*
+     /*******************************************************
+     /* Additional extended API
+@@ -147,6 +162,7 @@ public class JsonParserSequence extends JsonParserDelegate
+             return false;
+         }
+         delegate = _parsers[_nextParser++];
++        _hasToken = false;
+         return true;
+     }
+ }
+\ No newline at end of file

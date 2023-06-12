@@ -1,0 +1,42 @@
+diff --git a/src/com/google/javascript/jscomp/CheckGlobalThis.java b/src/com/google/javascript/jscomp/CheckGlobalThis.java
+index 42c1411a..ff166acf 100644
+--- a/src/com/google/javascript/jscomp/CheckGlobalThis.java
++++ b/src/com/google/javascript/jscomp/CheckGlobalThis.java
+@@ -141,11 +129,34 @@ final class CheckGlobalThis implements Callback {
+       // Always report a THIS on the left side of an assign.
+       return true;
+     }
+-
+     // Also report a THIS with a property access.
+-    return false;
++    if (parent != null && parent.getType() == Token.GETPROP) {
++      return true;
++    }
++    // Don't report THIS in function arguments.
++    if (parent != null &&
++        (parent.getType() == Token.LP ||
++         parent.getType() == Token.ARRAY_PATTERN)) {
++      return false;
++    }
++    // Don't report THIS in array literals.
++    if (parent != null &&
++        (parent.getType() == Token.ARRAY_LITERAL)) {
++      return false;
++    }
++    // Don't report THIS in object literals.
++    if (parent != null &&
++        (parent.getType() == Token.OBJECT_PATTERN ||
++         parent.getType() == Token.OBJECT_LITERAL)) {
++      return false;
++    }
++    // Don't report THIS in property names.
++    if (parent != null &&
++        parent.getType() == Token.STRING_KEY) {
++      return false;
++    }
++    return true;
+   }
+-
+   /**
+    * Gets a function's JSDoc information, if it has any. Checks for a few
+    * patterns (ellipses show where JSDoc would be):

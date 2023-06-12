@@ -1,0 +1,32 @@
+diff --git a/src/com/google/javascript/jscomp/CodeGenerator.java b/src/com/google/javascript/jscomp/CodeGenerator.java
+index b58df9b3..adfb3bbb 100644
+--- a/src/com/google/javascript/jscomp/CodeGenerator.java
++++ b/src/com/google/javascript/jscomp/CodeGenerator.java
+@@ -986,10 +986,10 @@ class CodeGenerator {
+ 
+   /** Helper to escape javascript string as well as regular expression */
+   static String strEscape(String s, char quote,
+-                          String doublequoteEscape,
+-                          String singlequoteEscape,
+-                          String backslashEscape,
+-                          CharsetEncoder outputCharsetEncoder) {
++      String doublequoteEscape,
++      String singlequoteEscape,
++      String backslashEscape,
++      CharsetEncoder outputCharsetEncoder) {
+     StringBuilder sb = new StringBuilder(s.length() + 2);
+     sb.append(quote);
+     for (int i = 0; i < s.length(); i++) {
+@@ -1048,7 +1046,11 @@ class CodeGenerator {
+               // Other characters can be misinterpreted by some js parsers,
+               // or perhaps mangled by proxies along the way,
+               // so we play it safe and unicode escape them.
+-              appendHexJavaScriptRepresentation(sb, c);
++              if ((c >= 0xD800 && c < 0xE000) || (c >= 0x10FFFF)) {
++                appendHexJavaScriptRepresentation(sb, c);
++              } else {
++                sb.append(c);
++              }
+             }
+           }
+       }

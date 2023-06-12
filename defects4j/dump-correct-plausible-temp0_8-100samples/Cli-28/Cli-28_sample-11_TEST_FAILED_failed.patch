@@ -1,0 +1,63 @@
+diff --git a/src/java/org/apache/commons/cli/Parser.java b/src/java/org/apache/commons/cli/Parser.java
+index 7bef0c6..ed62992 100644
+--- a/src/java/org/apache/commons/cli/Parser.java
++++ b/src/java/org/apache/commons/cli/Parser.java
+@@ -259,37 +258,36 @@ public abstract class Parser implements CommandLineParser
+         for (Enumeration e = properties.propertyNames(); e.hasMoreElements();)
+         {
+             String option = e.nextElement().toString();
+-
+-            if (!cmd.hasOption(option))
++            Option opt = getOptions().getOption(option);
++            if (opt != null)
+             {
+-                Option opt = getOptions().getOption(option);
+-
+                 // get the value from the properties instance
+                 String value = properties.getProperty(option);
+-
+-                if (opt.hasArg())
++                if (!cmd.hasOption(option))
+                 {
+-                    if (opt.getValues() == null || opt.getValues().length == 0)
++                    if (opt.hasArg())
+                     {
+-                        try
+-                        {
+-                            opt.addValueForProcessing(value);
+-                        }
+-                        catch (RuntimeException exp)
++                        if (opt.getValues() == null || opt.getValues().length == 0)
+                         {
+-                            // if we cannot add the value don't worry about it
++                            try
++                            {
++                                opt.addValueForProcessing(value);
++                            }
++                            catch (RuntimeException exp)
++                            {
++                                // if we cannot add the value don't worry about it
++                            }
+                         }
+                     }
++                    else if (!("yes".equalsIgnoreCase(value)
++                            || "true".equalsIgnoreCase(value)
++                            || "1".equalsIgnoreCase(value)))
++                    {
++                        // if the value is not yes, true or 1 then don't add the
++                        // option to the CommandLine
++                        break;
++                    }
+                 }
+-                else if (!("yes".equalsIgnoreCase(value)
+-                        || "true".equalsIgnoreCase(value)
+-                        || "1".equalsIgnoreCase(value)))
+-                {
+-                    // if the value is not yes, true or 1 then don't add the
+-                    // option to the CommandLine
+-                    break;
+-                }
+-
+                 cmd.addOption(opt);
+             }
+         }

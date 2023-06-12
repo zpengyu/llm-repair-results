@@ -1,0 +1,36 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/deser/impl/CreatorCollector.java b/src/main/java/com/fasterxml/jackson/databind/deser/impl/CreatorCollector.java
+index fd590d628..12bdb8854 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/deser/impl/CreatorCollector.java
++++ b/src/main/java/com/fasterxml/jackson/databind/deser/impl/CreatorCollector.java
+@@ -288,16 +287,27 @@ public class CreatorCollector
+                 }
+                 // both explicit: verify
+                 // otherwise only verify if neither explicitly annotated.
++                verifyNonDupExplicitCreator(oldOne, newOne, typeIndex);
++                return;
+             }
+-
+             // one more thing: ok to override in sub-class
+-            if (oldOne.getClass() == newOne.getClass()) {
++            // [databind#627]: add explicit check for MarkedClass (not sub-class)
++            if (oldOne.getClass() == newOne.getClass()
++                    || (oldOne instanceof AnnotatedWithParams && newOne instanceof AnnotatedWithParams
++                    && oldOne.getClass() == newOne.getClass())) {
+                 // [databind#667]: avoid one particular class of bogus problems
+-
++                if (oldOne.getClass() == newOne.getClass()) {
+                     throw new IllegalArgumentException("Conflicting "+TYPE_DESCS[typeIndex]
+                             +" creators: already had explicitly marked "+oldOne+", encountered "+newOne);
++                }
+                 // otherwise, which one to choose?
+-                    // new type more generic, use old
++                if (oldOne instanceof AnnotatedWithParams && newOne instanceof AnnotatedWithParams) {
++                    Class<?> oldClass = oldOne.getClass();
++                    Class<?> newClass = newOne.getClass();
++                    if (oldClass.isAssignableFrom(newClass)) { // new type more generic, use old
++                        return;
++                    }
++                }
+                 // new type more specific, use it
+             }
+         }

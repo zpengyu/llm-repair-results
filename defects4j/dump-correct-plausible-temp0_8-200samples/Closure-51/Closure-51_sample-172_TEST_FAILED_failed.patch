@@ -1,0 +1,24 @@
+diff --git a/src/com/google/javascript/jscomp/CodeConsumer.java b/src/com/google/javascript/jscomp/CodeConsumer.java
+index dbdb0a9b..5a9d27d2 100644
+--- a/src/com/google/javascript/jscomp/CodeConsumer.java
++++ b/src/com/google/javascript/jscomp/CodeConsumer.java
+@@ -281,9 +240,16 @@ abstract class CodeConsumer {
+    * @return Whether the a line break can be added after the specified BLOCK.
+    */
+   boolean breakAfterBlockFor(Node n, boolean statementContext) {
+-    return statementContext;
++    // We should only break after blocks if we're not going to break after the
++    // node that the block belongs to.
++    // For example, if we're going to break after the parent FOR or WHILE
++    // node then it would be redundant to also break after the block that
++    // belongs to the FOR or WHILE node.
++    Node parent = n.getParent();
++    return statementContext &&
++        !NodeUtil.isControlStructure(parent) &&
++        !NodeUtil.isStatementBlock(parent);
+   }
+-
+   /** Called when we're at the end of a file. */
+   void endFile() {}
+ }
+\ No newline at end of file

@@ -1,0 +1,32 @@
+diff --git a/src/main/java/org/apache/commons/compress/archivers/tar/TarArchiveInputStream.java b/src/main/java/org/apache/commons/compress/archivers/tar/TarArchiveInputStream.java
+index 52bb7455..19b99192 100644
+--- a/src/main/java/org/apache/commons/compress/archivers/tar/TarArchiveInputStream.java
++++ b/src/main/java/org/apache/commons/compress/archivers/tar/TarArchiveInputStream.java
+@@ -173,14 +173,24 @@ public class TarArchiveInputStream extends ArchiveInputStream {
+         if (hasHitEOF) {
+             return null;
+         }
+-
+         if (currEntry != null) {
+             long numToSkip = entrySize - entryOffset;
+-
++            if (numToSkip > 0) {
++                // Note: Without the following check, the underlying stream
++                // skip() implementation may be called even if there is
++                // no more data to skip, for archives with trailing
++                // zero-blocks. This causes the underlying stream to throw
++                // an exception in those cases.
++                if (in.available() == 0) {
++                    hasHitEOF = true;
++                    return null;
++                }
++            }
+             while (numToSkip > 0) {
+                 long skipped = skip(numToSkip);
+                 if (skipped <= 0) {
+-                    throw new RuntimeException("failed to skip current tar entry");
++                    throw new RuntimeException("failed to skip current tar"
++                                               + " entry");
+                 }
+                 numToSkip -= skipped;
+             }

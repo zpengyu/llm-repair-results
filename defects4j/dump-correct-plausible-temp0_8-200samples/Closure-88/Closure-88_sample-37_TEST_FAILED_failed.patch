@@ -1,0 +1,24 @@
+diff --git a/src/com/google/javascript/jscomp/DeadAssignmentsElimination.java b/src/com/google/javascript/jscomp/DeadAssignmentsElimination.java
+index 19b8b6bd..e5cbbc9f 100644
+--- a/src/com/google/javascript/jscomp/DeadAssignmentsElimination.java
++++ b/src/com/google/javascript/jscomp/DeadAssignmentsElimination.java
+@@ -332,7 +332,11 @@ class DeadAssignmentsElimination extends AbstractPostOrderCallback implements
+         return VariableLiveness.READ;
+       }
+     }
+-
++    Node parent = n.getParent();
++    if (parent != null && NodeUtil.isName(n) && NodeUtil.isAssign(parent) &&
++        variable.equals(n.getString())) {
++      return VariableLiveness.KILL;
++    }
+     // Expressions are evaluated left-right, depth first.
+     for (Node child = n.getFirstChild();
+         child != null; child = child.getNext()) {
+@@ -344,5 +348,4 @@ class DeadAssignmentsElimination extends AbstractPostOrderCallback implements
+       }
+     }
+     return VariableLiveness.MAYBE_LIVE;
+-  }
+-}
++  }}

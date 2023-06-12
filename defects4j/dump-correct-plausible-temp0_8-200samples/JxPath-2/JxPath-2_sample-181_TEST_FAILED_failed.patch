@@ -1,0 +1,72 @@
+diff --git a/src/java/org/apache/commons/jxpath/ri/compiler/Expression.java b/src/java/org/apache/commons/jxpath/ri/compiler/Expression.java
+index 927f617..6377bdf 100644
+--- a/src/java/org/apache/commons/jxpath/ri/compiler/Expression.java
++++ b/src/java/org/apache/commons/jxpath/ri/compiler/Expression.java
+@@ -41,14 +40,8 @@ public abstract class Expression {
+     protected static final Double ZERO = new Double(0);
+     protected static final Double ONE = new Double(1);
+     protected static final Double NOT_A_NUMBER = new Double(Double.NaN);
+-
+     private boolean contextDependencyKnown = false;
+     private boolean contextDependent;
+-
+-    /**
+-     * Returns true if this expression should be re-evaluated
+-     * each time the current position in the context changes.
+-     */
+     public boolean isContextDependent() {
+         if (!contextDependencyKnown) {
+             contextDependent = computeContextDependent();
+@@ -56,19 +49,9 @@ public abstract class Expression {
+         }
+         return contextDependent;
+     }
+-
+-    /**
+-     * Implemented by subclasses and result is cached by isContextDependent()
+-     */
+     public abstract boolean computeContextDependent();
+-
+-    /**
+-     * Evaluates the expression. If the result is a node set, returns
+-     * the first element of the node set.
+-     */
+     public abstract Object computeValue(EvalContext context);
+     public abstract Object compute(EvalContext context);
+-
+     public Iterator iterate(EvalContext context) {
+         Object result = compute(context);
+         if (result instanceof EvalContext) {
+@@ -76,26 +59,22 @@ public abstract class Expression {
+         }
+         return ValueUtils.iterate(result);
+     }
+-
+     public Iterator iteratePointers(EvalContext context) {
+         Object result = compute(context);
+-        if (result == null) {
+-            return Collections.EMPTY_LIST.iterator();
+-        }
+         if (result instanceof EvalContext) {
+             return (EvalContext) result;
++        } else if (result == null) {
++            return Collections.EMPTY_LIST.iterator();
++        } else {
++            return new PointerIterator(ValueUtils.iterate(result),
++                    new QName(null, "value"),
++                    context.getRootContext().getCurrentNodePointer().getLocale());
+         }
+-        return new PointerIterator(ValueUtils.iterate(result),
+-                new QName(null, "value"),
+-                context.getRootContext().getCurrentNodePointer().getLocale());
+     }
+-
+     public static class PointerIterator implements Iterator {
+         private Iterator iterator;
+         private QName qname;
+         private Locale locale;
+-
+-        //to what method does the following comment refer?
+         /**
+          * @deprecated Use the method that takes a NamespaceManager
+          */

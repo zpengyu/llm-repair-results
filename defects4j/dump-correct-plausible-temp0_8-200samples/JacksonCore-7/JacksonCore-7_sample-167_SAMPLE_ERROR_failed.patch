@@ -1,0 +1,35 @@
+diff --git a/src/main/java/com/fasterxml/jackson/core/json/JsonWriteContext.java b/src/main/java/com/fasterxml/jackson/core/json/JsonWriteContext.java
+index e7db7dd9..dcfcd0f4 100644
+--- a/src/main/java/com/fasterxml/jackson/core/json/JsonWriteContext.java
++++ b/src/main/java/com/fasterxml/jackson/core/json/JsonWriteContext.java
+@@ -166,18 +166,23 @@ public class JsonWriteContext extends JsonStreamContext
+     public int writeValue() {
+         // Most likely, object:
+         if (_type == TYPE_OBJECT) {
+-            _gotName = false;
+-            ++_index;
+-            return STATUS_OK_AFTER_COLON;
++            if (_gotName) {
++                _gotName = false;
++                ++_index;
++                return STATUS_OK_AFTER_COLON;
++            }
++            _type = TYPE_OBJECT_CLOSE;
++            return writeEndObject();
+         }
+-
+         // Ok, array?
+         if (_type == TYPE_ARRAY) {
+-            int ix = _index;
++            if (_index < 0) {
++                _type = TYPE_ARRAY_CLOSE;
++                return writeEndArray();
++            }
+             ++_index;
+-            return (ix < 0) ? STATUS_OK_AS_IS : STATUS_OK_AFTER_COMMA;
++            return STATUS_OK_AFTER_COMMA;
+         }
+-        
+         // Nope, root context
+         // No commas within root context, but need space
+         ++_index;

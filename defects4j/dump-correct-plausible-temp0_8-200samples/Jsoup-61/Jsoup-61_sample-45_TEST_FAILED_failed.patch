@@ -1,0 +1,66 @@
+diff --git a/src/main/java/org/jsoup/nodes/Element.java b/src/main/java/org/jsoup/nodes/Element.java
+index 6aeaeb5..aedb733 100644
+--- a/src/main/java/org/jsoup/nodes/Element.java
++++ b/src/main/java/org/jsoup/nodes/Element.java
+@@ -1089,6 +1089,7 @@ public class Element extends Node {
+      */
+     // performance sensitive
+     public boolean hasClass(String className) {
++        Validate.notEmpty(className);
+         final String classAttr = attributes.get("class");
+         final int len = classAttr.length();
+         final int wantLen = className.length();
+@@ -1096,41 +1096,24 @@ public class Element extends Node {
+         if (len == 0 || len < wantLen) {
+             return false;
+         }
+-
+-        // if both lengths are equal, only need compare the className with the attribute
+-        if (len == wantLen) {
+-            return className.equalsIgnoreCase(classAttr);
+-        }
+-
+-        // otherwise, scan for whitespace and compare regions (with no string or arraylist allocations)
+-        boolean inClass = false;
+-        int start = 0;
++        // split the class string around whitespace
++        StringBuilder sb = new StringBuilder();
++        char c;
+         for (int i = 0; i < len; i++) {
+-            if (Character.isWhitespace(classAttr.charAt(i))) {
+-                if (inClass) {
+-                    // white space ends a class name, compare it with the requested one, ignore case
+-                    if (i - start == wantLen && classAttr.regionMatches(true, start, className, 0, wantLen)) {
+-                        return true;
+-                    }
+-                    inClass = false;
+-                }
+-            } else {
+-                if (!inClass) {
+-                    // we're in a class name : keep the start of the substring
+-                    inClass = true;
+-                    start = i;
+-                }
++            c = classAttr.charAt(i);
++            if (Character.isWhitespace(c)) {
++                sb.append(c);
+             }
+         }
+-
+-        // check the last entry
+-        if (inClass && len - start == wantLen) {
+-            return classAttr.regionMatches(true, start, className, 0, wantLen);
++        // now compare each class name
++        String[] classes = sb.toString().split("\\s+");
++        for (String cn : classes) {
++            if (className.equalsIgnoreCase(cn)) {
++                return true;
++            }
+         }
+-
+         return false;
+     }
+-
+     /**
+      Add a class name to this element's {@code class} attribute.
+      @param className class name to add

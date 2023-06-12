@@ -1,0 +1,22 @@
+diff --git a/src/com/google/javascript/jscomp/NameAnalyzer.java b/src/com/google/javascript/jscomp/NameAnalyzer.java
+index 25e2b5d4..40998e4e 100644
+--- a/src/com/google/javascript/jscomp/NameAnalyzer.java
++++ b/src/com/google/javascript/jscomp/NameAnalyzer.java
+@@ -924,7 +913,16 @@ final class NameAnalyzer implements CompilerPass {
+         }
+       }
+     }
+-
++  /**
++   * Record a reference from parent to the given name if it is not already
++   * accounted for in the dependency graph.
++   */
++  private void recordReference(String parent, String name, RefType type) {
++    Ref outputRef = getRef(parent, name, type);
++    if (outputRef != null) {
++      getRef(parent, name, RefType.REGULAR).addInputRef(outputRef);
++    }
++  }
+     /**
+      * A value whose result is the return value of a function call
+      * can be an alias to global object. The dependency on the call target will

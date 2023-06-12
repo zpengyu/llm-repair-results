@@ -1,0 +1,53 @@
+diff --git a/src/com/google/javascript/jscomp/parsing/IRFactory.java b/src/com/google/javascript/jscomp/parsing/IRFactory.java
+index 32a15610..dae94d29 100644
+--- a/src/com/google/javascript/jscomp/parsing/IRFactory.java
++++ b/src/com/google/javascript/jscomp/parsing/IRFactory.java
+@@ -554,13 +552,44 @@ public class IRFactory {
+         lp.addChildToBack(transform(param));
+       }
+       node.addChildToBack(lp);
+-
+       Node bodyNode = transform(functionNode.getBody());
+       parseDirectives(bodyNode);
+-      node.addChildToBack(bodyNode);
+-     return node;
++      // if body is a block and there is more than one child in the block
++      // then we want to wrap all children except the first in a block.
++      // this way we ensure that the function body is a block and we can
++      // handle the return case below and get the correct return statement.
++      //
++      // example of what we are trying to prevent:
++      // function test() {
++      //   console.log("foo");
++      //   return;
++      //   console.log("bar");
++      // }
++      //
++      // should be:
++      //
++      // function test() {
++      //   console.log("foo");
++      //   return;
++      //   { console.log("bar"); }
++      // }
++      Node currentNode = bodyNode;
++      while (currentNode.getChildCount() == 1) {
++        currentNode = currentNode.getFirstChild();
++      }
++      if (currentNode.getChildCount() > 1
++          && currentNode.isBlock()
++          && (currentNode.getFirstChild().isReturn()
++              || currentNode.getFirstChild().isThrow())) {
++        // wrap the block so that we only return from the first statement
++        Node wrapper = new Node(Token.BLOCK);
++        wrapper.addChildToBack(currentNode.getFirstChild());
++        currentNode.detachChildren();
++        currentNode.addChildrenToBack(wrapper);
++      }
++      node.addChildToBack(currentNode);
++      return node;
+     }
+-
+     @Override
+     Node processIfStatement(IfStatement statementNode) {
+       Node node = newNode(Token.IF);

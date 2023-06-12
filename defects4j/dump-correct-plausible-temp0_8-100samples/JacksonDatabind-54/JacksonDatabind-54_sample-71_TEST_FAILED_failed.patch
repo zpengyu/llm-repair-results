@@ -1,0 +1,33 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/ser/PropertyBuilder.java b/src/main/java/com/fasterxml/jackson/databind/ser/PropertyBuilder.java
+index 9a9d91ebf..bff6e7e83 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/ser/PropertyBuilder.java
++++ b/src/main/java/com/fasterxml/jackson/databind/ser/PropertyBuilder.java
+@@ -81,7 +80,6 @@ public class PropertyBuilder
+              *    revisited if this causes problems.
+              */
+             if (serializationType == null) {
+-//                serializationType = TypeFactory.type(am.getGenericType(), _beanDesc.getType());
+                 serializationType = declaredType;
+             }
+             JavaType ct = serializationType.getContentType();
+@@ -92,11 +90,18 @@ public class PropertyBuilder
+             }
+             serializationType = serializationType.withContentTypeHandler(contentTypeSer);
+             ct = serializationType.getContentType();
++            /* 27-Feb-2010, tatu: But also, it may happen that we also have annotations
++             *    on actual value class.
++             */
++            if (am != null) {
++                AnnotationIntrospector.ReferenceProperty refType = _annotationIntrospector.findReferenceType(am);
++                if (refType != null && refType.isBackReference()) {
++                    serializationType = serializationType.withContentTypeHandler(null);
++                }
++            }
+         }
+-        
+         Object valueToSuppress = null;
+         boolean suppressNulls = false;
+-
+         JsonInclude.Value inclV = _defaultInclusion.withOverrides(propDef.findInclusion());
+         JsonInclude.Include inclusion = inclV.getValueInclusion();
+         if (inclusion == JsonInclude.Include.USE_DEFAULTS) { // should not occur but...

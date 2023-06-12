@@ -1,0 +1,34 @@
+diff --git a/gson/src/main/java/com/google/gson/internal/UnsafeAllocator.java b/gson/src/main/java/com/google/gson/internal/UnsafeAllocator.java
+index a72d3d10..9170c727 100644
+--- a/gson/src/main/java/com/google/gson/internal/UnsafeAllocator.java
++++ b/gson/src/main/java/com/google/gson/internal/UnsafeAllocator.java
+@@ -107,4 +102,28 @@ public abstract class UnsafeAllocator {
+    * throw an {@link java.lang.UnsupportedOperationException}
+    * @param c instance of the class to be checked
+    */
++  private static void checkClass(Class<?> c) {
++    Class<?> enclosing = c.getEnclosingClass();
++    // anonymous or local class
++    if (enclosing != null && !Modifier.isStatic(c.getModifiers())) {
++      throw new UnsupportedOperationException("Cannot allocate " + c);
++    }
++    // interface or abstract class
++    if (c.isInterface() || Modifier.isAbstract(c.getModifiers())) {
++      throw new UnsupportedOperationException("Cannot allocate " + c);
++    }
++  }
++  /**
++   * Check if the class can be instantiated by unsafe allocator. If the instance has interface or abstract modifiers
++   * throw an {@link java.lang.UnsupportedOperationException}
++   * @param c instance of the class to be checked
++   */
++  private static <T> T newInstance(Class<T> c) {
++    checkClass(c);
++    try {
++      return create().newInstance(c);
++    } catch (Exception e) {
++      throw new RuntimeException(e);
++    }
++  }
+ }
+\ No newline at end of file

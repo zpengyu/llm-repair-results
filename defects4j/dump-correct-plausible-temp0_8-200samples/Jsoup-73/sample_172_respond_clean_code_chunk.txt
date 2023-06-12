@@ -1,0 +1,32 @@
+        private void copyAttributes(org.jsoup.nodes.Node source, Element el) {
+            for (Attribute attribute : source.attributes()) {
+                // valid xml attribute names are: ^[a-zA-Z_:][-a-zA-Z0-9_:.]
+                String key = attribute.getKey().replaceAll("[^-a-zA-Z0-9_:.]", "");
+                if (key.matches("[a-zA-Z_:][-a-zA-Z0-9_:.]*"))
+                    el.setAttributeNS(null,key, attribute.getValue());
+            }
+        }
+        /**
+         * Finds any namespaces defined in this element. Returns any tag prefix.
+         */
+        private String updateNamespaces(org.jsoup.nodes.Element el) {
+            // scan the element for namespace declarations
+            // like: xmlns="blah" or xmlns:prefix="blah"
+            Attributes attributes = el.attributes();
+            for (Attribute attr : attributes) {
+                String key = attr.getKey();
+                String prefix;
+                if (key.equals(xmlnsKey)) {
+                    prefix = "";
+                } else if (key.startsWith(xmlnsPrefix)) {
+                    prefix = key.substring(xmlnsPrefix.length());
+                } else {
+                    continue;
+                }
+                namespaces.put(prefix, attr.getValue());
+            }
+            // get the element prefix if any
+            int pos = el.tagName().indexOf(":");
+            return pos > 0 ? el.tagName().substring(0, pos) : null;
+        }
+    }

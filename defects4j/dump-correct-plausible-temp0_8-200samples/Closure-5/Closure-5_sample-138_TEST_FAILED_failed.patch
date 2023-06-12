@@ -1,0 +1,35 @@
+diff --git a/src/com/google/javascript/jscomp/InlineObjectLiterals.java b/src/com/google/javascript/jscomp/InlineObjectLiterals.java
+index 2f5a8e10..46c8b0cd 100644
+--- a/src/com/google/javascript/jscomp/InlineObjectLiterals.java
++++ b/src/com/google/javascript/jscomp/InlineObjectLiterals.java
+@@ -153,6 +153,30 @@ class InlineObjectLiterals implements CompilerPass {
+      * </pre>
+      */
+     private boolean isInlinableObject(List<Reference> refs) {
++      if (refs.size() > 1) {
++        // Need to ensure that the call does not contain an assignment to the
++        // var that could affect future calls.
++        for (Reference ref : refs) {
++          Node name = ref.getNode();
++          Node parent = ref.getParent();
++          Node gramps = ref.getGrandparent();
++          if (parent.isGetProp()) {
++            Preconditions.checkState(parent.getFirstChild() == name);
++            // A call target may be using the object as a 'this' value.
++            if (gramps.isCall()
++                && gramps.getFirstChild() == parent) {
++              return false;
++            }
++          } else {
++            // Only rewrite VAR declarations or simple assignment statements
++            if (!isVarOrAssignExprLhs(name)) {
++              return false;
++            }
++            // We only allow the case of a single assignment to a single var.
++            return false;
++          }
++        }
++      }
+       boolean ret = false;
+       Set<String> validProperties = Sets.newHashSet();
+       for (Reference ref : refs) {

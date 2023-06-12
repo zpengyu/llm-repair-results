@@ -1,0 +1,23 @@
+diff --git a/src/com/google/javascript/jscomp/InlineObjectLiterals.java b/src/com/google/javascript/jscomp/InlineObjectLiterals.java
+index 2f5a8e10..ef8ee55d 100644
+--- a/src/com/google/javascript/jscomp/InlineObjectLiterals.java
++++ b/src/com/google/javascript/jscomp/InlineObjectLiterals.java
+@@ -166,14 +165,14 @@ class InlineObjectLiterals implements CompilerPass {
+         if (parent.isGetProp()) {
+           Preconditions.checkState(parent.getFirstChild() == name);
+           // A call target may be using the object as a 'this' value.
+-          if (gramps.isCall()
+-              && gramps.getFirstChild() == parent) {
++          if (gramps.isCall() && gramps.getFirstChild() == parent) {
+             return false;
+           }
+-
+           // Deleting a property has different semantics from deleting
+           // a variable, so deleted properties should not be inlined.
+-
++          if (NodeUtil.isDelete(gramps)) {
++            return false;
++          }
+           // NOTE(nicksantos): This pass's object-splitting algorithm has
+           // a blind spot. It assumes that if a property isn't defined on an
+           // object, then the value is undefined. This is not true, because

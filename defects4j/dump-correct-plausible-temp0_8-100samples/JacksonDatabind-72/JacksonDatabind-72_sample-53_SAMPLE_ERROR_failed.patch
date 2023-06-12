@@ -1,0 +1,84 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/deser/impl/InnerClassProperty.java b/src/main/java/com/fasterxml/jackson/databind/deser/impl/InnerClassProperty.java
+index 128a8346f..a43edfd1e 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/deser/impl/InnerClassProperty.java
++++ b/src/main/java/com/fasterxml/jackson/databind/deser/impl/InnerClassProperty.java
+@@ -37,15 +34,22 @@ public final class InnerClassProperty
+      * Serializable version of single-arg constructor we use for value instantiation.
+      */
+     protected AnnotatedConstructor _annotated;
+-
++    /**
++     * As an exception to general rules, we need to know the declaring Class
++     * as well. This is because we need to know the Class to instantiate
++     * when deserializing. And this can not be reliably done using constructor
++     * itself as it does not include declaring class for member constructor
++     * (only for local classes).
++     */
++    final protected Class<?> _creatorClass;
+     public InnerClassProperty(SettableBeanProperty delegate,
+             Constructor<?> ctor)
+     {
+         super(delegate);
+         _delegate = delegate;
+         _creator = ctor;
++        _creatorClass = ctor.getDeclaringClass();
+     }
+-
+     /**
+      * Constructor used with JDK Serialization; needed to handle transient
+      * Constructor, wrap/unwrap in/out-of Annotated variant.
+@@ -59,21 +63,21 @@ public final class InnerClassProperty
+         if (_creator == null) {
+             throw new IllegalArgumentException("Missing constructor (broken JDK (de)serialization?)");
+         }
++        _creatorClass = _creator.getDeclaringClass();
+     }
+-    
+     protected InnerClassProperty(InnerClassProperty src, JsonDeserializer<?> deser)
+     {
+         super(src, deser);
+         _delegate = src._delegate.withValueDeserializer(deser);
+         _creator = src._creator;
++        _creatorClass = src._creatorClass;
+     }
+-
+     protected InnerClassProperty(InnerClassProperty src, PropertyName newName) {
+         super(src, newName);
+         _delegate = src._delegate.withName(newName);
+         _creator = src._creator;
++        _creatorClass = src._creatorClass;
+     }
+-
+     @Override
+     public InnerClassProperty withName(PropertyName newName) {
+         return new InnerClassProperty(this, newName);
+@@ -118,7 +113,28 @@ public final class InnerClassProperty
+             value = _valueDeserializer.deserializeWithType(jp, ctxt, _valueTypeDeserializer);
+         } else  { // the usual case
+             try {
+-                value = _creator.newInstance(bean);
++                // 31-May-2016, tatu: If a [databind#1659], better ensure that
++                //   we have enough types to know the type to construct...
++                if (bean == null) {
++                    if (ctxt.isEnabled(DeserializationFeature.FAIL_ON_INCOMPATIBLE_CREATOR_PROPERTIES)) {
++                        // 04-Jun-2017, tatu: [databind#1659] Also may need to check
++                        //   if we have a polymorphic "type id" being used
++                        if (_creatorClass != null && _creator.getParameterCount() == 0) {
++                            JavaType type = ctxt.constructType(_creatorClass);
++                            throw ctxt.mappingException("Creator has no properties but is not a concrete-type-hinted Creator (of type %s)",
++                                    type);
++                        }
++                        // but if we are polymorphic, should be ok
++                        SettableBeanProperty[] properties = _creator.getParameterTypes();
++                        if (properties.length == 1 && properties[0].hasTypeId()) {
++                            return;
++                        }
++                        throw ctxt.mappingException("Can not map creator property "+getName());
++                    }
++                    value = null;
++                } else {
++                    value = _creator.newInstance(bean);
++                }
+             } catch (Exception e) {
+                 ClassUtil.unwrapAndThrowAsIAE(e, "Failed to instantiate class "+_creator.getDeclaringClass().getName()+", problem: "+e.getMessage());
+                 value = null;

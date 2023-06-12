@@ -1,0 +1,21 @@
+diff --git a/src/main/java/org/joda/time/DateTimeZone.java b/src/main/java/org/joda/time/DateTimeZone.java
+index f7e3d277..a9f9e0e0 100644
+--- a/src/main/java/org/joda/time/DateTimeZone.java
++++ b/src/main/java/org/joda/time/DateTimeZone.java
+@@ -594,9 +594,14 @@ public abstract class DateTimeZone implements Serializable {
+             map.put("NST", "Pacific/Auckland");
+             cZoneIdConversion = map;
+         }
+-        return map.get(id);
++        String convertedId = map.get(id);
++        if (convertedId == null) {
++            if (id != null && id.length() == 3 && (id.charAt(0) >= 'A' && id.charAt(0) <= 'Z') && (id.charAt(1) >= 'A' && id.charAt(1) <= 'Z') && (id.charAt(2) >= 'A' && id.charAt(2) <= 'Z')) {
++                convertedId = id;
++            }
++        }
++        return convertedId;
+     }
+-
+     private static int parseOffset(String str) {
+         // Can't use a real chronology if called during class
+         // initialization. Offset parser doesn't need it anyhow.

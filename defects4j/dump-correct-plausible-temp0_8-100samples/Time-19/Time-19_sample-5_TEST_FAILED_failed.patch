@@ -1,0 +1,22 @@
+diff --git a/src/main/java/org/joda/time/DateTimeZone.java b/src/main/java/org/joda/time/DateTimeZone.java
+index 17672725..af52371d 100644
+--- a/src/main/java/org/joda/time/DateTimeZone.java
++++ b/src/main/java/org/joda/time/DateTimeZone.java
+@@ -897,6 +897,17 @@ public abstract class DateTimeZone implements Serializable {
+                     return offsetLocal;
+                 }
+             }
++            // For negative offsets going into DST, we need to do the same as above,
++            // but a long way round.
++            long prevLocal = previousTransition(instantLocal);
++            long prevAdjusted = previousTransition(instantLocal - offsetLocal);
++            if (prevLocal != prevAdjusted) {
++                long nextLocal = nextTransition(instantLocal);
++                long nextAdjusted = nextTransition(instantLocal - offsetLocal);
++                if (nextLocal != nextAdjusted) {
++                    return offsetLocal;
++                }
++            }
+         } else if (offsetLocal > 0) {
+             long prev = previousTransition(instantAdjusted);
+             if (prev < instantAdjusted) {

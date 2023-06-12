@@ -1,0 +1,62 @@
+diff --git a/src/java/org/apache/commons/cli/GnuParser.java b/src/java/org/apache/commons/cli/GnuParser.java
+index 14a9cc0..8c79f98 100644
+--- a/src/java/org/apache/commons/cli/GnuParser.java
++++ b/src/java/org/apache/commons/cli/GnuParser.java
+@@ -70,25 +67,38 @@ public class GnuParser extends Parser {
+             }
+             else if (arg.startsWith("-"))
+             {
+-                String opt = Util.stripLeadingHyphens(arg);
+-
+-                if (options.hasOption(opt))
++                if (arg.length() == 1)
+                 {
++                    // this is the special case where
++                    // "-" is actually the argument
+                     tokens.add(arg);
+                 }
+                 else
+                 {
+-                    if (options.hasOption(arg.substring(0, 2)))
++                    String opt = Util.stripLeadingHyphens(arg);
++                    if (options.hasOption(opt))
+                     {
+-                        // the format is --foo=value or -foo=value
+-                        // the format is a special properties option (-Dproperty=value)
+-                        tokens.add(arg.substring(0, 2)); // -D
+-                        tokens.add(arg.substring(2)); // property=value
++                        tokens.add(arg);
+                     }
+                     else
+                     {
+-                        eatTheRest = stopAtNonOption;
+-                        tokens.add(arg);
++                        if (opt.indexOf('=') != -1 && options.hasOption(opt.substring(0, opt.indexOf('='))))
++                        {
++                            // the format is --foo=value or -foo=value
++                            tokens.add(arg.substring(0, arg.indexOf('='))); // --foo
++                            tokens.add(arg.substring(arg.indexOf('=') + 1)); // value
++                        }
++                        else if (options.hasOption(arg.substring(0, 2)))
++                        {
++                            // the format is a special properties option (-Dproperty=value)
++                            tokens.add(arg.substring(0, 2)); // -D
++                            tokens.add(arg.substring(2)); // property=value
++                        }
++                        else
++                        {
++                            eatTheRest = stopAtNonOption;
++                            tokens.add(arg);
++                        }
+                     }
+                 }
+             }
+@@ -105,7 +114,5 @@ public class GnuParser extends Parser {
+                 }
+             }
+         }
+-
+         return (String[]) tokens.toArray(new String[tokens.size()]);
+-    }
+-}
++    }}

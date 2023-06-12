@@ -1,0 +1,40 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/type/SimpleType.java b/src/main/java/com/fasterxml/jackson/databind/type/SimpleType.java
+index 09fc2487a..a7e14b15f 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/type/SimpleType.java
++++ b/src/main/java/com/fasterxml/jackson/databind/type/SimpleType.java
+@@ -122,9 +122,16 @@ public class SimpleType // note: until 2.6 was final
+     @Deprecated
+     protected JavaType _narrow(Class<?> subclass)
+     {
+-        if (_class == subclass) {
++        // 17-Jan-2017, tatu: IMPORTANT: since JavaType is supposed to be immutable,
++        //   can not just change it. Need to use a new instance.
++        if (subclass == _class) {
+             return this;
+         }
++        if (_class.isAssignableFrom(subclass)) {
++            JavaType subtype = new SimpleType(subclass, _bindings, this, _superInterfaces,
++                    _valueHandler, _typeHandler, _asStatic);
++            return subtype;
++        }
+         // Should we check that there is a sub-class relationship?
+         // 15-Jan-2016, tatu: Almost yes, but there are some complications with
+         //    placeholder values (`Void`, `NoClass`), so can not quite do yet.
+@@ -133,13 +140,11 @@ public class SimpleType // note: until 2.6 was final
+             throw new IllegalArgumentException("Class "+subclass.getName()+" not sub-type of "
+                     +_class.getName());
+                     */
+-            return new SimpleType(subclass, _bindings, this, _superInterfaces,
+-                    _valueHandler, _typeHandler, _asStatic);
+-        // Otherwise, stitch together the hierarchy. First, super-class
+-        // if not found, try a super-interface
+-        // should not get here but...
++            // Otherwise, stitch together the hierarchy. First, super-class
++            // if not found, try a super-interface
++            // should not get here but...
++            throw new IllegalArgumentException("Internal error: SimpleType.narrow("+subclass.getName()+") returned null");
+     }
+-
+     @Override
+     public JavaType withContentType(JavaType contentType) {
+         throw new IllegalArgumentException("Simple types have no content types; can not call withContentType()");

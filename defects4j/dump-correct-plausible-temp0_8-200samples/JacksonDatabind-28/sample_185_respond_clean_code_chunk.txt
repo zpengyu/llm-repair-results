@@ -1,0 +1,12 @@
+        public ArrayNode deserialize(JsonParser p, DeserializationContext ctxt) throws IOException
+        {
+            if (p.isExpectedStartArrayToken()) {
+                return deserializeArray(p, ctxt, ctxt.getNodeFactory());
+            }
+            // 25-Nov-2015, tatu: For 2.6, minor change to allow coercion from single String value.
+            //   See [databind#1132]
+            if (p.hasTokenId(JsonTokenId.ID_STRING)) {
+                return deserializeFromString(p, ctxt);
+            }
+            throw ctxt.mappingException(ArrayNode.class);
+        }

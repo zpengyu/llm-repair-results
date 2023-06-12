@@ -1,0 +1,23 @@
+protected void _addMethodMixIns(Class<?> targetClass, AnnotatedMethodMap methods,
+        Class<?> mixInCls, AnnotatedMethodMap mixIns)
+{
+    List<Class<?>> parents = new ArrayList<Class<?>>();
+    parents.add(mixInCls);
+    ClassUtil.findSuperTypes(mixInCls, targetClass, parents);
+    for (Class<?> mixin : parents) {
+        for (Method m : mixin.getDeclaredMethods()) {
+            if (!_isIncludableMemberMethod(m)) {
+                continue;
+            }
+            AnnotatedMethod am = methods.find(m);
+            if (am != null) {
+                _addMixUnders(m, am);
+            } else {
+                /* 14-Feb-2010, tatu: to support non-visible mix-in, need to call
+                 *   constructor...
+                 */
+                mixIns.add(_constructMethod(m));
+            }
+        }
+    }
+}

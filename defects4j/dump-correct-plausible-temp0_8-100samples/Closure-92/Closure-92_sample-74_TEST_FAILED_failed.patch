@@ -1,0 +1,43 @@
+diff --git a/src/com/google/javascript/jscomp/ProcessClosurePrimitives.java b/src/com/google/javascript/jscomp/ProcessClosurePrimitives.java
+index d1d12a3c..7d71d32b 100644
+--- a/src/com/google/javascript/jscomp/ProcessClosurePrimitives.java
++++ b/src/com/google/javascript/jscomp/ProcessClosurePrimitives.java
+@@ -781,7 +779,11 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback
+       } else {
+         // Handle the case where there's not a duplicate definition.
+         replacementNode = createDeclarationNode();
+-        if (firstModule == minimumModule) {
++        // If the first node is a function param, then the function
++        // declaration is already hoisted, so we don't need to move the
++        // replacement node.
++        if (firstModule == minimumModule &&
++            !isParamOfHoistedFunction(firstNode)) {
+           firstNode.getParent().addChildBefore(replacementNode, firstNode);
+         } else {
+           // In this case, the name was implicitly provided by two independent
+@@ -807,7 +809,24 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback
+         compiler.reportCodeChange();
+       }
+     }
+-
++    private boolean isParamOfHoistedFunction(Node n) {
++      if (NodeUtil.isFunctionExpression(n.getParent())) {
++        return false;
++      }
++      Node parent = n.getParent();
++      while (parent.getParent() != null) {
++        if (parent.getType() == Token.FUNCTION) {
++          Node grandparent = parent.getParent();
++          if (grandparent.getType() != Token.SCRIPT) {
++            return true;
++          } else {
++            return false;
++          }
++        }
++        parent = parent.getParent();
++      }
++      return false;
++    }
+     /**
+      * Create the declaration node for this name, without inserting it
+      * into the AST.

@@ -1,0 +1,82 @@
+    public static long parseOctal(final byte[] buffer, final int offset, final int length) {
+        long    result = 0;
+        int     end = offset + length;
+        int     start = offset;
+
+        if (length < 2){
+            throw new IllegalArgumentException("Length "+length+" must be at least 2");
+        }
+
+        boolean allNUL = true;
+        for (int i = start; i < end; i++){
+            if (buffer[i] != 0){
+                allNUL = false;
+                break;
+            }
+        }
+        if (allNUL) {
+            return 0L;
+        }
+
+        // Skip leading spaces
+        while (start < end){
+            if (buffer[start] == ' '){
+                start++;
+            } else {
+                break;
+            }
+        }
+
+        // Must have trailing NUL or space
+        byte trailer;
+        trailer = buffer[end-1];
+        if (trailer == 0 || trailer == ' '){
+            end--;
+        } else {
+            throw new IllegalArgumentException(
+                    exceptionMessage(buffer, offset, length, end-1, trailer));
+        }
+        // May have additional NUL or space
+        trailer = buffer[end-1];
+        if (trailer == 0 || trailer == ' '){
+            end--;
+        }
+
+        for ( ;start < end; start++) {
+            final byte currentByte = buffer[start];
+            // CheckStyle:MagicNumber OFF
+            if (currentByte < '0' || currentByte > '7'){
+                throw new IllegalArgumentException(
+                        exceptionMessage(buffer, offset, length, start, currentByte));
+            }
+            result = (result << 3) + (currentByte - '0'); // convert from ASCII
+            // CheckStyle:MagicNumber ON
+        }
+
+        return result;
+    }
+    private static String exceptionMessage(final byte[] buffer, final int offset, final int length, final int illegal, final byte badByte) {
+        StringBuffer messageBuffer = new StringBuffer();
+        if (illegal < 0) {
+            messageBuffer.append("Illegal octal digit at buffer[0], ");
+            messageBuffer.append("value is 0x");
+            messageBuffer.append(Integer.toHexString(badByte));
+        } else if (illegal >= offset + length) {
+            messageBuffer.append("Missing trailing NUL or space character at end of buffer, ");
+            messageBuffer.append("got 0x");
+            messageBuffer.append(Integer.toHexString(badByte));
+        } else {
+            messageBuffer.append("Illegal octal digit at buffer[");
+            messageBuffer.append(illegal-offset);
+            messageBuffer.append("], ");
+            messageBuffer.append("value is 0x");
+            messageBuffer.append(Integer.toHexString(badByte));
+        }
+        messageBuffer.append(" [offset=");
+        messageBuffer.append(offset);
+        messageBuffer.append(", length=");
+        messageBuffer.append(length);
+        messageBuffer.append("]");
+        return messageBuffer.toString();
+    }
+

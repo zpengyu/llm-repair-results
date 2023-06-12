@@ -1,0 +1,32 @@
+diff --git a/src/com/google/javascript/jscomp/CollapseProperties.java b/src/com/google/javascript/jscomp/CollapseProperties.java
+index c24c69b2..f2af0d4d 100644
+--- a/src/com/google/javascript/jscomp/CollapseProperties.java
++++ b/src/com/google/javascript/jscomp/CollapseProperties.java
+@@ -183,15 +181,18 @@ class CollapseProperties implements CompilerPass {
+           }
+         }
+       }
+-
+-      // Check if {@code name} has any aliases left after the
+-      // local-alias-inlining above.
+-      if ((name.type == Name.Type.OBJECTLIT ||
+-           name.type == Name.Type.FUNCTION) &&
+-          name.aliasingGets == 0 && name.props != null) {
+-        // All of {@code name}'s children meet condition (a), so they can be
+-        // added to the worklist.
+-        workList.addAll(name.props);
++      else {
++        // Don't consider name further if it was not inlined, in case that
++        // un-inlined alias escapes.
++        // Check if {@code name} has any aliases left after the
++        // local-alias-inlining above.
++        if ((name.type == Name.Type.OBJECTLIT ||
++             name.type == Name.Type.FUNCTION) &&
++            name.aliasingGets == 0 && name.props != null) {
++          // All of {@code name}'s children meet condition (a), so they can be
++          // added to the worklist.
++          workList.addAll(name.props);
++        }
+       }
+     }
+   }

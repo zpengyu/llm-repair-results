@@ -1,0 +1,78 @@
+diff --git a/src/main/java/org/apache/commons/lang3/RandomStringUtils.java b/src/main/java/org/apache/commons/lang3/RandomStringUtils.java
+index 7f269a0c..7191ee51 100644
+--- a/src/main/java/org/apache/commons/lang3/RandomStringUtils.java
++++ b/src/main/java/org/apache/commons/lang3/RandomStringUtils.java
+@@ -236,11 +235,10 @@ public class RandomStringUtils {
+                     start = ' ';                
+                 }
+         }
+-
+-        char[] buffer = new char[count];
++        int temp_count = count;
++        char[] buffer = new char[temp_count];
+         int gap = end - start;
+-
+-        while (count-- != 0) {
++        while (temp_count-- != 0) {
+             char ch;
+             if (chars == null) {
+                 ch = (char) (random.nextInt(gap) + start);
+@@ -251,36 +249,44 @@ public class RandomStringUtils {
+                     || numbers && Character.isDigit(ch)
+                     || !letters && !numbers) {
+                 if(ch >= 56320 && ch <= 57343) {
+-                    if(count == 0) {
+-                        count++;
++                    if(temp_count == 0) {
++                        temp_count++;
+                     } else {
+                         // low surrogate, insert high surrogate after putting it in
+-                        buffer[count] = ch;
+-                        count--;
+-                        buffer[count] = (char) (55296 + random.nextInt(128));
++                        buffer[temp_count] = ch;
++                        temp_count--;
++                        buffer[temp_count] = (char) (55296 + random.nextInt(128));
+                     }
+                 } else if(ch >= 55296 && ch <= 56191) {
+-                    if(count == 0) {
+-                        count++;
++                    if(temp_count == 0) {
++                        temp_count++;
+                     } else {
+                         // high surrogate, insert low surrogate before putting it in
+-                        buffer[count] = (char) (56320 + random.nextInt(128));
+-                        count--;
+-                        buffer[count] = ch;
++                        buffer[temp_count] = (char) (56320 + random.nextInt(128));
++                        temp_count--;
++                        buffer[temp_count] = ch;
+                     }
+                 } else if(ch >= 56192 && ch <= 56319) {
+                     // private high surrogate, no effing clue, so skip it
+-                    count++;
++                    temp_count++;
+                 } else {
+-                    buffer[count] = ch;
++                    buffer[temp_count] = ch;
+                 }
+             } else {
+-                count++;
++                temp_count++;
+             }
+         }
++        temp_count = buffer.length-1;
++        int j = count-1;
++        while(temp_count>=0){
++            char temp = buffer[temp_count];
++            buffer[temp_count]=buffer[j];
++            buffer[j]=temp;
++            temp_count--;
++            j--;
++        }
+         return new String(buffer);
+     }
+-
+     /**
+      * <p>Creates a random string whose length is the number of characters
+      * specified.</p>

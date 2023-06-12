@@ -1,0 +1,23 @@
+diff --git a/src/org/mockito/internal/stubbing/answers/AnswersValidator.java b/src/org/mockito/internal/stubbing/answers/AnswersValidator.java
+index 5d8057846..db9d8a354 100644
+--- a/src/org/mockito/internal/stubbing/answers/AnswersValidator.java
++++ b/src/org/mockito/internal/stubbing/answers/AnswersValidator.java
+@@ -24,10 +20,15 @@ public class AnswersValidator {
+         if (answer instanceof DoesNothing) {
+             validateDoNothing((DoesNothing) answer, invocation);
+         }
+-        
++        if (answer instanceof ReturnsArgumentAt) {
++            validateReturnsArgumentAt((ReturnsArgumentAt) answer, invocation);
++        }
++    }
++    private void validateReturnsArgumentAt(ReturnsArgumentAt answer, Invocation invocation) {
++        if (answer.getIndex() >= invocation.getArguments().length) {
++            reporter.noArgumentAtGivenIndex(answer.getIndex(), invocation.getArguments().length, invocation.getMethodName());
++        }
+     }
+-
+-
+     private void validateDoNothing(DoesNothing answer, Invocation invocation) {
+         if (!invocation.isVoid()) {
+             reporter.onlyVoidMethodsCanBeSetToDoNothing();

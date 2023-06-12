@@ -1,0 +1,22 @@
+diff --git a/src/com/google/javascript/jscomp/CodeConsumer.java b/src/com/google/javascript/jscomp/CodeConsumer.java
+index 47ecfb1d..f8b1e6d6 100644
+--- a/src/com/google/javascript/jscomp/CodeConsumer.java
++++ b/src/com/google/javascript/jscomp/CodeConsumer.java
+@@ -262,10 +261,15 @@ abstract class CodeConsumer {
+         add(Long.toString(value));
+       }
+     } else {
+-      add(String.valueOf(x));
++      BigDecimal bigDecimal = new BigDecimal(String.valueOf(x));
++      int scale = bigDecimal.precision() - bigDecimal.scale();
++      int desiredScale = 16;
++      if (scale > desiredScale) {
++        desiredScale = scale;
++      }
++      add(bigDecimal.setScale(desiredScale, RoundingMode.HALF_UP).toPlainString());
+     }
+   }
+-
+   static boolean isNegativeZero(double x) {
+     return x == 0.0 && Math.copySign(1, x) == -1.0;
+   }

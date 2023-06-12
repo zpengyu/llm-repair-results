@@ -1,0 +1,36 @@
+public class Timer {
+    private final long durationMillis;
+    private long startTime = -1;
+    private volatile boolean counting = false;
+    public Timer(long durationMillis) {
+        this.durationMillis = durationMillis;
+    }
+    /**
+     * Informs whether the timer is still counting down.
+     */
+    public boolean isCounting() {
+        if (startTime != -1) {
+            return counting;
+        } else {
+            return true;
+        }
+    }
+    /**
+     * Starts the timer count down.
+     */
+    public void start() {
+        startTime = System.currentTimeMillis();
+        counting = true;
+        new Thread() {
+            @Override
+            public void run() {
+                try {
+                    sleep(durationMillis);
+                    counting = false;
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
+        }.start();
+    }
+}

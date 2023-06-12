@@ -1,0 +1,75 @@
+diff --git a/src/main/java/org/apache/commons/codec/binary/BaseNCodecInputStream.java b/src/main/java/org/apache/commons/codec/binary/BaseNCodecInputStream.java
+index 78f4d67e..7392be58 100644
+--- a/src/main/java/org/apache/commons/codec/binary/BaseNCodecInputStream.java
++++ b/src/main/java/org/apache/commons/codec/binary/BaseNCodecInputStream.java
+@@ -139,20 +131,59 @@ public class BaseNCodecInputStream extends FilterInputStream {
+      *
+      * @throws IllegalArgumentException if the provided skip length is negative
+      */
+-
+-        // skip in chunks of 512 bytes
+-
+-
++    @Override
++    public long skip(long n) throws IOException {
++        if (n < 0) {
++            throw new IllegalArgumentException("Negative skip length: " + n);
++        }
++        final int chunkSize = 512;
++        long remain = n;
++        byte[] skipBuffer = new byte[chunkSize];
++        while (remain > 0) {
++            int skipped = read(skipBuffer, 0, (int) Math.min(remain, chunkSize));
++            if (skipped == EOF) {
++                break;
++            }
++            remain -= skipped;
++        }
++        return n - remain;
++    }
+     /**
+      * {@inheritDoc}
+      *
+      * @return <code>0</code> if the {@link InputStream} has reached <code>EOF</code>,
+      * <code>1</code> otherwise
+      */
+-        // Note: the logic is similar to the InflaterInputStream:
+-        //       as long as we have not reached EOF, indicate that there is more
+-        //       data available. As we do not know for sure how much data is left,
+-        //       just return 1 as a safe guess.
+-
+-        // use the EOF flag of the underlying codec instance
++    @Override
++    public int available() throws IOException {
++        return baseNCodec.hasData() ? 1 : 0; // EOF (-1) is expected by InputStreamReader
++    }
++    /**
++     * {@inheritDoc}
++     *
++     * @throws IOException if the stream is already closed or if the underlying
++     * BaseNCodec is not in the expected EOF state.
++     */
++    @Override
++    public void close() throws IOException {
++        if (!isClosed) {
++            isClosed = true;
++            try {
++                // deal with the fact that closing a BaseNCodec can sometimes
++                // require reading more data from the input stream
++                if (doEncode) {
++                    baseNCodec.encode(singleByte, 0, EOF);
++                } else {
++                    baseNCodec.decode(singleByte, 0, EOF);
++                }
++            } finally {
++                in.close();
++            }
++            baseNCodec.streamEOF();
++            if (!baseNCodec.hasData()) {
++                return;
++            }
++            throw new IOException("BaseNCodec didn't correctly pad its input.");
++        }
++    }
+ }
+\ No newline at end of file

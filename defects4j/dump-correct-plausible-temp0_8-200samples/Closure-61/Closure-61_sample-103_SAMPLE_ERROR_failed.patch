@@ -1,0 +1,27 @@
+diff --git a/src/com/google/javascript/jscomp/NodeUtil.java b/src/com/google/javascript/jscomp/NodeUtil.java
+index 53389622..1d082ec4 100644
+--- a/src/com/google/javascript/jscomp/NodeUtil.java
++++ b/src/com/google/javascript/jscomp/NodeUtil.java
+@@ -943,13 +940,16 @@ public final class NodeUtil {
+         return false;
+       }
+     } else if (nameNode.getType() == Token.GETPROP) {
+-      if (callNode.hasOneChild()
+-          && OBJECT_METHODS_WITHOUT_SIDEEFFECTS.contains(
+-                nameNode.getLastChild().getString())) {
++      if (nameNode.isGetElem()
++          && (nameNode.getLastChild().isString()
++              || nameNode.getLastChild().isNumber())
++          && callNode.hasOneChild()) {
+         return false;
+-      }
+-
+-      if (callNode.isOnlyModifiesThisCall()
++      } else if (nameNode.isGetProp()
++          && (OBJECT_METHODS_WITHOUT_SIDEEFFECTS.contains(
++                nameNode.getLastChild().getString()))) {
++        return false;
++      } else if (callNode.isOnlyModifiesThisCall()
+           && evaluatesToLocalValue(nameNode.getFirstChild())) {
+         return false;
+       }

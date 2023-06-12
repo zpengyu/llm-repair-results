@@ -1,0 +1,17 @@
+diff --git a/src/com/google/javascript/jscomp/PeepholeFoldConstants.java b/src/com/google/javascript/jscomp/PeepholeFoldConstants.java
+index 0f2a6d44..71f4592c 100644
+--- a/src/com/google/javascript/jscomp/PeepholeFoldConstants.java
++++ b/src/com/google/javascript/jscomp/PeepholeFoldConstants.java
+@@ -701,7 +695,11 @@ public class PeepholeFoldConstants extends AbstractPeepholeOptimization {
+           throw new AssertionError("Unknown shift operator: " +
+               Node.tokenToName(n.getType()));
+       }
+-
++      // check ranges again to handle the result of the zero-fill right shift
++      if (!(result >= Integer.MIN_VALUE && result <= Integer.MAX_VALUE)) {
++        error(BITWISE_OPERAND_OUT_OF_RANGE, left);
++        return n;
++      }
+       Node newNumber = Node.newNumber(result);
+       n.getParent().replaceChild(n, newNumber);
+       reportCodeChange();

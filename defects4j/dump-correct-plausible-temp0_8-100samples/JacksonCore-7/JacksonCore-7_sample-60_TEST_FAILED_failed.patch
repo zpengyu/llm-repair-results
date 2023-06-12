@@ -1,0 +1,21 @@
+diff --git a/src/main/java/com/fasterxml/jackson/core/json/JsonWriteContext.java b/src/main/java/com/fasterxml/jackson/core/json/JsonWriteContext.java
+index e7db7dd9..d1868d66 100644
+--- a/src/main/java/com/fasterxml/jackson/core/json/JsonWriteContext.java
++++ b/src/main/java/com/fasterxml/jackson/core/json/JsonWriteContext.java
+@@ -166,11 +166,12 @@ public class JsonWriteContext extends JsonStreamContext
+     public int writeValue() {
+         // Most likely, object:
+         if (_type == TYPE_OBJECT) {
+-            _gotName = false;
+-            ++_index;
+-            return STATUS_OK_AFTER_COLON;
++            if (!_gotName) { // if expecting a name, can't write value
++                _gotName = false;
++                ++_index;
++                return STATUS_OK_AFTER_COLON;
++            }
+         }
+-
+         // Ok, array?
+         if (_type == TYPE_ARRAY) {
+             int ix = _index;

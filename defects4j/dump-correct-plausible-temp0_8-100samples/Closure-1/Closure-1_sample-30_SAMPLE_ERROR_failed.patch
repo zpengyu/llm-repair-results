@@ -1,0 +1,22 @@
+diff --git a/src/com/google/javascript/jscomp/RemoveUnusedVars.java b/src/com/google/javascript/jscomp/RemoveUnusedVars.java
+index 41175cf3..9aef1ba5 100644
+--- a/src/com/google/javascript/jscomp/RemoveUnusedVars.java
++++ b/src/com/google/javascript/jscomp/RemoveUnusedVars.java
+@@ -403,9 +400,16 @@ class RemoveUnusedVars
+     } else {
+       callSiteOptimizer.optimize(fnScope, referenced);
+     }
++    // If the function is a class constructor, never remove the first parameter
++    // (the class extends parameter).
++    if (isEs6ClassConstructor(function)) {
++      Node classExtendsArg = getClassExtendsArgument(argList);
++      if (classExtendsArg != null) {
++        classExtendsArg.putBooleanProp(Node.IS_REFERENCED_PARAMETER, true);
++      }
++    }
+   }
+ 
+-
+   /**
+    * @return the LP node containing the function parameters.
+    */

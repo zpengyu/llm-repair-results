@@ -1,0 +1,23 @@
+diff --git a/src/com/google/javascript/rhino/jstype/PrototypeObjectType.java b/src/com/google/javascript/rhino/jstype/PrototypeObjectType.java
+index 07a3d799..d50e2948 100644
+--- a/src/com/google/javascript/rhino/jstype/PrototypeObjectType.java
++++ b/src/com/google/javascript/rhino/jstype/PrototypeObjectType.java
+@@ -570,9 +569,17 @@ class PrototypeObjectType extends ObjectType {
+     // properties on this object.
+     if (constraint.isRecordType()) {
+       matchRecordTypeConstraint(constraint.toObjectType());
++    } else {
++      // {function(new:Number)}
++      if (constraint.isConstructor()) {
++        constraint = constraint.toMaybeFunctionType().getInstanceType();
++      }
++      // {(null|undefined)}
++      if (!constraint.isUninstantiatedObjectType()) {
++        removeProperty("proto");
++      }
+     }
+   }
+-
+   public void matchRecordTypeConstraint(ObjectType constraintObj) {
+     for (String prop : constraintObj.getOwnPropertyNames()) {
+       JSType propType = constraintObj.getPropertyType(prop);

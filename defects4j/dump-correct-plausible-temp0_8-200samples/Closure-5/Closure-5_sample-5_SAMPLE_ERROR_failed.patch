@@ -1,0 +1,25 @@
+diff --git a/src/com/google/javascript/jscomp/InlineObjectLiterals.java b/src/com/google/javascript/jscomp/InlineObjectLiterals.java
+index 2f5a8e10..6db5e27c 100644
+--- a/src/com/google/javascript/jscomp/InlineObjectLiterals.java
++++ b/src/com/google/javascript/jscomp/InlineObjectLiterals.java
+@@ -242,12 +233,14 @@ class InlineObjectLiterals implements CompilerPass {
+             }
+           }
+         }
+-
+-
+-        // We have found an acceptable object literal assignment. As
+-        // long as there are no other assignments that mess things up,
+-        // we can inline.
+-        ret = true;
++        // Make sure the object literal doesn't have any keys that will
++        // alias other properties.
++        if (validProperties.containsAll(NodeUtil.getObjectLiteralKeys(val))) {
++          // We have found an acceptable object literal assignment. As
++          // long as there are no other assignments that mess things up,
++          // we can inline.
++          ret = true;
++        }
+       }
+       return ret;
+     }

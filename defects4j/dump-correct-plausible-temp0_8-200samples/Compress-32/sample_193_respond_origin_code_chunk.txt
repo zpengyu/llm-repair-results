@@ -1,0 +1,56 @@
+    private void applyPaxHeadersToCurrentEntry(Map<String, String> headers) {
+        /*
+         * The following headers are defined for Pax.
+         * atime, ctime, charset: cannot use these without changing TarArchiveEntry fields
+         * mtime
+         * comment
+         * gid, gname
+         * linkpath
+         * size
+         * uid,uname
+         * SCHILY.devminor, SCHILY.devmajor: don't have setters/getters for those
+         */
+        for (Entry<String, String> ent : headers.entrySet()){
+            String key = ent.getKey();
+            String val = ent.getValue();
+            if ("path".equals(key)){
+                currEntry.setName(val);
+            } else if ("linkpath".equals(key)){
+                currEntry.setLinkName(val);
+            } else if ("gid".equals(key)){
+                int groupId = Integer.parseInt(val);
+                if (groupId >= 0 && groupId <= Integer.MAX_VALUE) {
+                    currEntry.setGroupId(groupId);
+                }
+            } else if ("gname".equals(key)){
+                currEntry.setGroupName(val);
+            } else if ("uid".equals(key)){
+                int userId = Integer.parseInt(val);
+                if (userId >= 0 && userId <= Integer.MAX_VALUE) {
+                    currEntry.setUserId(userId);
+                }
+            } else if ("uname".equals(key)){
+                currEntry.setUserName(val);
+            } else if ("size".equals(key)){
+                long size = Long.parseLong(val);
+                if (size >= 0 && size <= Integer.MAX_VALUE) {
+                    currEntry.setSize(size);
+                }
+            } else if ("mtime".equals(key)){
+                double modTime = Double.parseDouble(val);
+                if (modTime >= 0 && modTime <= Integer.MAX_VALUE) {
+                    currEntry.setModTime((long) (modTime * 1000));
+                }
+            } else if ("SCHILY.devminor".equals(key)){
+                int devMinor = Integer.parseInt(val);
+                if (devMinor >= 0 && devMinor <= Integer.MAX_VALUE) {
+                    currEntry.setDevMinor(devMinor);
+                }
+            } else if ("SCHILY.devmajor".equals(key)){
+                int devMajor = Integer.parseInt(val);
+                if (devMajor >= 0 && devMajor <= Integer.MAX_VALUE) {
+                    currEntry.setDevMajor(devMajor);
+                }
+            }
+        }
+    }

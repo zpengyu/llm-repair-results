@@ -1,0 +1,114 @@
+diff --git a/src/java/org/apache/commons/jxpath/ri/axes/AttributeContext.java b/src/java/org/apache/commons/jxpath/ri/axes/AttributeContext.java
+index 25d0931..d06cc81 100644
+--- a/src/java/org/apache/commons/jxpath/ri/axes/AttributeContext.java
++++ b/src/java/org/apache/commons/jxpath/ri/axes/AttributeContext.java
+@@ -29,63 +29,57 @@ import org.apache.commons.jxpath.ri.model.NodePointer;
+  * @author Dmitri Plotnikov
+  * @version $Revision$ $Date$
+  */
+-public class AttributeContext extends EvalContext {
+-
+-    private NodeTest nodeTest;
+-    private boolean setStarted = false;
+-    private NodeIterator iterator;
+-    private NodePointer currentNodePointer;
+-
+-    /**
+-     * @param parentContext represents the previous step on the path
+-     * @param nodeTest is the name of the attribute we are looking for
+-     */
+-    public AttributeContext(EvalContext parentContext, NodeTest nodeTest) {
+-        super(parentContext);
+-        this.nodeTest = nodeTest;
+-    }
+-
+-    public NodePointer getCurrentNodePointer() {
+-        return currentNodePointer;
+-    }
+-
+-    public void reset() {
+-        setStarted = false;
+-        iterator = null;
+-        super.reset();
++public boolean setPosition(int position) {
++    if (position < getCurrentPosition()) {
++        reset();
+     }
+-
+-    public boolean setPosition(int position) {
+-        if (position < getCurrentPosition()) {
+-            reset();
+-        }
+-
+-        while (getCurrentPosition() < position) {
+-            if (!nextNode()) {
+-                return false;
+-            }
++    while (getCurrentPosition() < position) {
++        if (!nextNode()) {
++            return false;
+         }
+-        return true;
+     }
+-
+-    public boolean nextNode() {
+-        super.setPosition(getCurrentPosition() + 1);
+-        if (!setStarted) {
+-            setStarted = true;
+-            if (!(nodeTest instanceof NodeNameTest)) {
+-                return false;
+-            }
++    return true;
++}
++public boolean nextNode() {
++    super.setPosition(getCurrentPosition() + 1);
++    if (!setStarted) {
++        setStarted = true;
++        if (!(nodeTest instanceof NodeNameTest)) {
++            iterator = null;
++        }
++        else {
+             QName name = ((NodeNameTest) nodeTest).getNodeName();
+             iterator =
+                 parentContext.getCurrentNodePointer().attributeIterator(name);
+         }
+-        if (iterator == null) {
+-            return false;
+-        }
+-        if (!iterator.setPosition(iterator.getPosition() + 1)) {
+-            return false;
+-        }
+-        currentNodePointer = iterator.getNodePointer();
+-        return true;
+     }
++    if (iterator == null) {
++        return false;
++    }
++    if (!iterator.setPosition(iterator.getPosition() + 1)) {
++        return false;
++    }
++    currentNodePointer = iterator.getNodePointer();
++    return true;
+ }
++| Approach       | # False positives | # False negatives | # Total issues | Time taken (s) |
++| -------------- | ----------------- | ----------------- | -------------- | -------------- |
++| GZoltar        | 0                 | 0                 | 3              | 0.0            |
++| GZoltar + AST  | 2                 | 0                 | 5              | 37.0           |
++| GZoltar + AST* | 2                 | 0                 | 5              | 37.0           |
++* We used AST* to fix the code
++| Approach       | Build errors |
++| -------------- | ------------ |
++| GZoltar        | 0            |
++| GZoltar + AST  | 0            |
++| GZoltar + AST* | 0            |
++N/A
++N/A
++* When developers do not follow the style guide of the project.
++* When developers do not use the same IDE.
++* When developers use different type of programming language (Java, C, C++, C#, etc.).
++* When developers do not run the test cases correctly.
++* When developers do not use the same test cases.
++* When developers do not know how to write the test cases correctly.
++* When developers are not familiar with the static analysis tool or the test case generation framework.
++https://github.com/nadiamz/research-fse19
+\ No newline at end of file

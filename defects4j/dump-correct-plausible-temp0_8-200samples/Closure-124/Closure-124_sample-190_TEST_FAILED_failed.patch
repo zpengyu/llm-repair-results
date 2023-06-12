@@ -1,0 +1,28 @@
+diff --git a/src/com/google/javascript/jscomp/ExploitAssigns.java b/src/com/google/javascript/jscomp/ExploitAssigns.java
+index 196b710d..1146d313 100644
+--- a/src/com/google/javascript/jscomp/ExploitAssigns.java
++++ b/src/com/google/javascript/jscomp/ExploitAssigns.java
+@@ -209,16 +209,17 @@ class ExploitAssigns extends AbstractPeepholeOptimization {
+       return true;
+     }
+     Preconditions.checkArgument(node.isGetProp());
+-
+-      node = node.getFirstChild();
+-    if (node.isName()
+-        && isNameAssignedTo(node.getString(), replacement)) {
++    // Note: No need to worry about re-assignment to the object property
++    // because object properties can't be re-assigned (e.g. a.foo = b; a.foo =
++    // c;
++    // is not allowed).
++    // We only have to worry about whether the object is assigned a new value.
++    node = node.getFirstChild();
++    if (isNameAssignedTo(node.getString(), replacement)) {
+       return false;
+     }
+-
+     return true;
+   }
+-
+   /**
+    * @return Whether name is assigned in the expression rooted at node.
+    */

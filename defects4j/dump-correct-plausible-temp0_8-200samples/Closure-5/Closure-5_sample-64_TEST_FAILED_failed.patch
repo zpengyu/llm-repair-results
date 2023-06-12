@@ -1,0 +1,21 @@
+diff --git a/src/com/google/javascript/jscomp/InlineObjectLiterals.java b/src/com/google/javascript/jscomp/InlineObjectLiterals.java
+index 2f5a8e10..b8531a94 100644
+--- a/src/com/google/javascript/jscomp/InlineObjectLiterals.java
++++ b/src/com/google/javascript/jscomp/InlineObjectLiterals.java
+@@ -233,10 +224,12 @@ class InlineObjectLiterals implements CompilerPass {
+           // will happen.
+           for (Reference t : refs) {
+             Node refNode = t.getParent();
+-            while (!NodeUtil.isStatementBlock(refNode)) {
+-              if (refNode == childVal) {
+-                // There's a self-referential assignment
+-                return false;
++            while (refNode != childVal) {
++              if (refNode.isGetProp()) {
++                if (!refNode.getParent().isCall()) {
++                  return false;
++                }
++                break;
+               }
+               refNode = refNode.getParent();
+             }

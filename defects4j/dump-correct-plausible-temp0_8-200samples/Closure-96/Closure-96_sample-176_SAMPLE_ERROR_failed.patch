@@ -1,0 +1,47 @@
+diff --git a/src/com/google/javascript/jscomp/TypeCheck.java b/src/com/google/javascript/jscomp/TypeCheck.java
+index 83a73c74..11944da8 100644
+--- a/src/com/google/javascript/jscomp/TypeCheck.java
++++ b/src/com/google/javascript/jscomp/TypeCheck.java
+@@ -1416,19 +1414,31 @@ public class TypeCheck implements NodeTraversal.Callback, CompilerPass {
+       validator.expectArgumentMatchesParameter(t, argument,
+           getJSType(argument), getJSType(parameter), call, ordinal);
+     }
+-
+-    int numArgs = call.getChildCount() - 1;
+-    int minArgs = functionType.getMinArguments();
+-    int maxArgs = functionType.getMaxArguments();
+-    if (minArgs > numArgs || maxArgs < numArgs) {
+-      report(t, call, WRONG_ARGUMENT_COUNT,
+-              validator.getReadableJSTypeName(call.getFirstChild(), false),
+-              String.valueOf(numArgs), String.valueOf(minArgs),
+-              maxArgs != Integer.MAX_VALUE ?
+-              " and no more than " + maxArgs + " argument(s)" : "");
++    if (argument != null && argument.isSpread()) {
++      int numParams = functionType.getMaxArguments();
++      if (parameter != null) {
++        // Uses the last parameter's ordinal.
++        validator.expectArgumentMatchesParameter(t, argument,
++            getJSType(argument), getJSType(parameter), call, ordinal,
++            "Argument at position " + ordinal + " of call to function " +
++            "expected to be an array of at least " +
++            (numParams - ordinal) + " elements. " +
++            "The rest parameter may be an empty array or it may contain " +
++            "elements of a more specific type, but all preceding arguments " +
++            "must be matched exactly.");
++      }
++      int numArgs = call.getChildCount() - 1;
++      int minArgs = functionType.getMinArguments();
++      int maxArgs = functionType.getMaxArguments();
++      if (minArgs > numArgs || maxArgs < numArgs) {
++        report(t, call, WRONG_ARGUMENT_COUNT,
++                validator.getReadableJSTypeName(call.getFirstChild(), false),
++                String.valueOf(numArgs), String.valueOf(minArgs),
++                maxArgs != Integer.MAX_VALUE ?
++                " and no more than " + maxArgs + " argument(s)" : "");
++      }
+     }
+   }
+-
+   /**
+    * Visits a RETURN node.
+    *

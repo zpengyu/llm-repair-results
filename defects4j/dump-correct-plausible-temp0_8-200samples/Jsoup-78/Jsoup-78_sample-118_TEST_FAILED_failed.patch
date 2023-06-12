@@ -1,0 +1,25 @@
+diff --git a/src/main/java/org/jsoup/helper/DataUtil.java b/src/main/java/org/jsoup/helper/DataUtil.java
+index bbbd8fb..f7f19c0 100644
+--- a/src/main/java/org/jsoup/helper/DataUtil.java
++++ b/src/main/java/org/jsoup/helper/DataUtil.java
+@@ -148,9 +142,19 @@ public final class DataUtil {
+             if (charsetName == null)
+                 charsetName = defaultCharset;
+             BufferedReader reader = new BufferedReader(new InputStreamReader(input, charsetName), bufferSize);
++            if(charsetName.equals("UTF-8")){
+                 doc = parser.parseInput(reader, baseUri);
+                 // io exception when parsing (not seen before because reading the stream as we go)
+-            doc.outputSettings().charset(charsetName);
++                doc.outputSettings().charset(charsetName);
++            }else{
++                if(!charsetName.equals("GBK")){
++                    charsetName = "GBK";
++                }
++                BufferedReader read = new BufferedReader(new InputStreamReader(input, charsetName), bufferSize);
++                doc = parser.parseInput(read, baseUri);
++                // io exception when parsing (not seen before because reading the stream as we go)
++                doc.outputSettings().charset(charsetName);
++            }
+         }
+         input.close();
+         return doc;

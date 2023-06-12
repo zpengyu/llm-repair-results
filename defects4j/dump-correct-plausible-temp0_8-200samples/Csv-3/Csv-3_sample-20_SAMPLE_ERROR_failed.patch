@@ -1,0 +1,45 @@
+diff --git a/src/main/java/org/apache/commons/csv/Lexer.java b/src/main/java/org/apache/commons/csv/Lexer.java
+index c161334..e399f4b 100644
+--- a/src/main/java/org/apache/commons/csv/Lexer.java
++++ b/src/main/java/org/apache/commons/csv/Lexer.java
+@@ -108,11 +108,38 @@ abstract class Lexer {
+             throw new IOException("EOF whilst processing escape sequence");
+         default:
+             // Now check for meta-characters
++            if (c >= '0' && c <= '7') {
++                // Ok, this is an escaped octal value
++                final int ch2 = in.read();
++                final int ch3 = in.read();
++                return (c - '0') * 64 + (ch2 - '0') * 8 + (ch3 - '0');
++            } else if (c == 'x' || c == 'X') {
++                // Ok, this is an escaped hex value
++                int ch2 = in.read();
++                int ch3 = in.read();
++                if (isHexDigit(ch2) && isHexDigit(ch3)) {
++                    return hexToInt(ch2, ch3);
++                }
++                // look for white space
++                while (isWhitespace(ch2) || isWhitespace(ch3)) {
++                    if (isWhitespace(ch2)) {
++                        ch2 = in.read();
++                    }
++                    if (isWhitespace(ch3)) {
++                        ch3 = in.read();
++                    }
++                }
++                if (isHexDigit(ch2) && isHexDigit(ch3)) {
++                    return hexToInt(ch2, ch3);
++                } else {
++                    return c;
++                }
++            } else {
++                // indicate unexpected char - available from in.getLastChar()
+                 return c;
+-            // indicate unexpected char - available from in.getLastChar()
++            }
+         }
+     }
+-
+     void trimTrailingSpaces(final StringBuilder buffer) {
+         int length = buffer.length();
+         while (length > 0 && Character.isWhitespace(buffer.charAt(length - 1))) {

@@ -1,0 +1,26 @@
+diff --git a/src/com/google/javascript/jscomp/FunctionInjector.java b/src/com/google/javascript/jscomp/FunctionInjector.java
+index c17b3cb3..a9917845 100644
+--- a/src/com/google/javascript/jscomp/FunctionInjector.java
++++ b/src/com/google/javascript/jscomp/FunctionInjector.java
+@@ -713,9 +709,9 @@ class FunctionInjector {
+         Preconditions.checkState(!NodeUtil.isFunctionObjectApply(callNode));
+       }
+     }
+-
+     // FUNCTION NODE -> LP NODE: [ ARG1, ARG2, ... ]
+     Node fnParam = NodeUtil.getFunctionParameters(fnNode).getFirstChild();
++    int cArgCount = 0;
+     while (cArg != null || fnParam != null) {
+       // For each named parameter check if a mutable argument use more than one.
+       if (fnParam != null) {
+@@ -741,6 +734,10 @@ class FunctionInjector {
+         if (NodeUtil.mayHaveSideEffects(cArg, compiler)) {
+           return CanInlineResult.NO;
+         }
++        cArgCount++;
++        if (cArgCount > InlineCostEstimator.DIRECT_CALL_MAX_ARGS) {
++          return CanInlineResult.TOO_MANY_ARGUMENTS;
++        }
+         cArg = cArg.getNext();
+       }
+     }

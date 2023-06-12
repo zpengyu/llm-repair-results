@@ -1,0 +1,18 @@
+  protected void declareNameInScope(FlowScope scope, Node node, JSType type) {
+    String varName = null;
+    switch (node.getType()) {
+      case Token.NAME:
+        varName = node.getString();
+        break;
+      case Token.GETPROP:
+        String qualifiedName = node.getQualifiedName();
+        Preconditions.checkNotNull(qualifiedName);
+        varName = qualifiedName;
+        break;
+        // "this" references aren't currently modeled in the CFG.
+      default:
+        throw new IllegalArgumentException("Node cannot be refined. \n" +
+            node.toStringTree());
+    }
+    scope.inferSlotType(varName, type);
+  }

@@ -1,0 +1,44 @@
+diff --git a/src/main/java/org/apache/commons/math3/analysis/differentiation/DSCompiler.java b/src/main/java/org/apache/commons/math3/analysis/differentiation/DSCompiler.java
+index fc9944c36..57ce847c5 100644
+--- a/src/main/java/org/apache/commons/math3/analysis/differentiation/DSCompiler.java
++++ b/src/main/java/org/apache/commons/math3/analysis/differentiation/DSCompiler.java
+@@ -1412,13 +1407,35 @@ public class DSCompiler {
+             for (int i = 1; i < tmp2.length; ++i) {
+                 result[resultOffset + i] = -2 * tmp2[i]; // +/-pi - 2 * atan(y / (r - x))
+             }
+-
+         }
+-
+         // fix value to take special cases (+0/+0, +0/-0, -0/+0, -0/-0, +/-infinity) correctly
+-
++        for (int i = 0; i < result.length; ++i) {
++            if (Double.isNaN(result[i])) {
++                // try to handle all special cases here
++                if (Double.isNaN(x[i + xOffset]) || Double.isNaN(y[i + yOffset])) {
++                    result[i + resultOffset] = Double.NaN;
++                } else if (x[i + xOffset] == 0) {
++                    if (y[i + yOffset] == 0) {
++                        result[i + resultOffset] = Double.NaN;
++                    } else if (Double.isInfinite(y[i + yOffset])) {
++                        result[i + resultOffset] = ((y[i + yOffset] < 0) ? -FastMath.PI : FastMath.PI) / 2;
++                    } else {
++                        result[i + resultOffset] = (y[i + yOffset] < 0) ? -FastMath.PI : FastMath.PI;
++                    }
++                } else if (y[i + yOffset] == 0) {
++                    if (Double.isInfinite(x[i + xOffset])) {
++                        result[i + resultOffset] = 0;
++                    } else {
++                        result[i + resultOffset] = (x[i + xOffset] < 0) ? -FastMath.PI : FastMath.PI;
++                    }
++                } else if (Double.isInfinite(x[i + xOffset]) && Double.isInfinite(y[i + yOffset])) {
++                    result[i + resultOffset] = (x[i + xOffset] < 0) ? FastMath.PI / 2 : -FastMath.PI / 2;
++                } else {
++                    result[i + resultOffset] = Double.NaN;
++                }
++            }
++        }
+     }
+-
+     /** Compute hyperbolic cosine of a derivative structure.
+      * @param operand array holding the operand
+      * @param operandOffset offset of the operand in its array

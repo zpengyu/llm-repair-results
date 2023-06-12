@@ -1,0 +1,34 @@
+diff --git a/src/main/java/org/jsoup/helper/DataUtil.java b/src/main/java/org/jsoup/helper/DataUtil.java
+index bbbd8fb..a5dcf4c 100644
+--- a/src/main/java/org/jsoup/helper/DataUtil.java
++++ b/src/main/java/org/jsoup/helper/DataUtil.java
+@@ -148,14 +142,25 @@ public final class DataUtil {
+             if (charsetName == null)
+                 charsetName = defaultCharset;
+             BufferedReader reader = new BufferedReader(new InputStreamReader(input, charsetName), bufferSize);
++            // io exception when parsing (not seen before because reading the stream as we go)
++            if (fullyRead)
+                 doc = parser.parseInput(reader, baseUri);
+-                // io exception when parsing (not seen before because reading the stream as we go)
+-            doc.outputSettings().charset(charsetName);
++            else {
++                // there is the (obscure) case of a non-fully read, non-empty stream. We read the inputstream into a byte array,
++                // so we can parse a single time, safely.
++                byte[] remaining = readToByteBuffer(input, bufferSize > 0 ? bufferSize : Integer.MAX_VALUE).array();
++                input.close();
++                byte[] total = new byte[firstBytes.limit() + remaining.length];
++                System.arraycopy(firstBytes.array(), 0, total, 0, firstBytes.limit());
++                System.arraycopy(remaining, 0, total, firstBytes.limit(), remaining.length);
++                String charset = firstBytes.hasArray() ? Charset.forName(charsetName).decode(firstBytes.array(), firstBytes.arrayOffset(), firstBytes.limit()).toString() : Charset.forName(charsetName).decode(firstBytes).toString() + Charset.forName(charsetName).decode(remaining).toString();
++                doc = parser.parseInput(charset, baseUri);
++                doc.outputSettings().charset(charsetName);
++            }
++            reader.close();
+         }
+-        input.close();
+         return doc;
+     }
+-
+     /**
+      * Read the input stream into a byte buffer. To deal with slow input streams, you may interrupt the thread this
+      * method is executing on. The data read until being interrupted will be available.

@@ -1,0 +1,68 @@
+diff --git a/src/main/java/org/apache/commons/compress/archivers/zip/ZipArchiveEntry.java b/src/main/java/org/apache/commons/compress/archivers/zip/ZipArchiveEntry.java
+index 6e20d4e4..261bdc71 100644
+--- a/src/main/java/org/apache/commons/compress/archivers/zip/ZipArchiveEntry.java
++++ b/src/main/java/org/apache/commons/compress/archivers/zip/ZipArchiveEntry.java
+@@ -654,13 +654,26 @@ public class ZipArchiveEntry extends java.util.zip.ZipEntry
+             return false;
+         }
+         ZipArchiveEntry other = (ZipArchiveEntry) obj;
+-        String myName = getName();
+-        String otherName = other.getName();
+-        if (myName == null) {
+-            if (otherName != null) {
+-                return false;
+-            }
+-        } else if (!myName.equals(otherName)) {
++        if (!Arrays.equals(centralDirectoryExtra,
++                           other.centralDirectoryExtra)) {
++            return false;
++        }
++        if (getInternalAttributes() != other.getInternalAttributes()) {
++            return false;
++        }
++        if (getExternalAttributes() != other.getExternalAttributes()) {
++            return false;
++        }
++        if (getPlatform() != other.getPlatform()) {
++            return false;
++        }
++        if (crc != other.crc) {
++            return false;
++        }
++        if (getMethod() != other.getMethod()) {
++            return false;
++        }
++        if (gpb != other.gpb) {
+             return false;
+         }
+         String myComment = getComment();
+@@ -672,18 +685,18 @@ public class ZipArchiveEntry extends java.util.zip.ZipEntry
+         } else if (!myComment.equals(otherComment)) {
+             return false;
+         }
++        String myName = getName();
++        String otherName = other.getName();
++        if (myName == null) {
++            if (otherName != null) {
++                return false;
++            }
++        } else if (!myName.equals(otherName)) {
++            return false;
++        }
+         return getTime() == other.getTime()
+-            && getInternalAttributes() == other.getInternalAttributes()
+-            && getPlatform() == other.getPlatform()
+-            && getExternalAttributes() == other.getExternalAttributes()
+-            && getMethod() == other.getMethod()
+             && getSize() == other.getSize()
+-            && getCrc() == other.getCrc()
+             && getCompressedSize() == other.getCompressedSize()
+-            && Arrays.equals(getCentralDirectoryExtra(),
+-                             other.getCentralDirectoryExtra())
+             && Arrays.equals(getLocalFileDataExtra(),
+-                             other.getLocalFileDataExtra())
+-            && gpb.equals(other.gpb);
+-    }
+-}
++                             other.getLocalFileDataExtra());
++    }}

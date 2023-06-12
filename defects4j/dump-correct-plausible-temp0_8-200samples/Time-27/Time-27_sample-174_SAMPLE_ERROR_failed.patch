@@ -1,0 +1,22 @@
+diff --git a/src/main/java/org/joda/time/format/PeriodFormatterBuilder.java b/src/main/java/org/joda/time/format/PeriodFormatterBuilder.java
+index a6bf55c7..e72d6716 100644
+--- a/src/main/java/org/joda/time/format/PeriodFormatterBuilder.java
++++ b/src/main/java/org/joda/time/format/PeriodFormatterBuilder.java
+@@ -798,9 +798,17 @@ public class PeriodFormatterBuilder {
+         int size = elementPairs.size();
+         if (size >= 2 && elementPairs.get(0) instanceof Separator) {
+             Separator sep = (Separator) elementPairs.get(0);
++            if (sep.iAfterParser == null && sep.iAfterPrinter == null) {
+                 PeriodFormatter f = toFormatter(elementPairs.subList(2, size), notPrinter, notParser);
+                 sep = sep.finish(f.getPrinter(), f.getParser());
+                 return new PeriodFormatter(sep, sep);
++            } else {
++                // Separator has already been used, so must be cloned here.
++                Separator copy = new Separator(sep.iBefore, sep.iAfterParser, sep.iAfterPrinter, sep.iUseBefore);
++                PeriodFormatter f = toFormatter(elementPairs.subList(2, size), notPrinter, notParser);
++                copy = copy.finish(f.getPrinter(), f.getParser());
++                return new PeriodFormatter(copy, copy);
++            }
+         }
+         Object[] comp = createComposite(elementPairs);
+         if (notPrinter) {

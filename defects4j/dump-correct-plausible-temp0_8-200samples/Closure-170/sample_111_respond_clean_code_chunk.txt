@@ -1,0 +1,20 @@
+private void getNumUseInUseCfgNode(final Node cfgNode) {
+  numUsesWithinCfgNode = 0;
+  AbstractCfgNodeTraversalCallback gatherCb =
+      new AbstractCfgNodeTraversalCallback() {
+    @Override
+    public void visit(NodeTraversal t, Node n, Node parent) {
+      if (n.isName() && n.getString().equals(varName)) {
+        // Make sure we don't count refs from the top-level
+        // assignment chain in cases where the entire cfgNode
+        // is a chain of assignments.
+        if (parent.isAssign() &&
+            (parent.getFirstChild() == n)) {
+          return;
+        }
+        numUsesWithinCfgNode++;
+      }
+    }
+  };
+  NodeTraversal.traverse(compiler, cfgNode, gatherCb);
+}

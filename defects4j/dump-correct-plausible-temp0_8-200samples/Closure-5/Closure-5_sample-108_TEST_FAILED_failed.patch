@@ -1,0 +1,16 @@
+diff --git a/src/com/google/javascript/jscomp/InlineObjectLiterals.java b/src/com/google/javascript/jscomp/InlineObjectLiterals.java
+index 2f5a8e10..3b61f164 100644
+--- a/src/com/google/javascript/jscomp/InlineObjectLiterals.java
++++ b/src/com/google/javascript/jscomp/InlineObjectLiterals.java
+@@ -186,6 +183,11 @@ class InlineObjectLiterals implements CompilerPass {
+           if (!validProperties.contains(propName)) {
+             if (NodeUtil.isVarOrSimpleAssignLhs(parent, gramps)) {
+               validProperties.add(propName);
++            } else if (NodeUtil.isGetOrSetKey(parent.getParent())) {
++              // Object literal getter/setter definitions assign the property
++              // but do not define it.  We must allow them since we can't
++              // rename them.
++              validProperties.add(propName);
+             } else {
+               return false;
+             }

@@ -1,0 +1,50 @@
+diff --git a/src/com/google/javascript/jscomp/CodeGenerator.java b/src/com/google/javascript/jscomp/CodeGenerator.java
+index a9d0a5b0..7c765f2f 100644
+--- a/src/com/google/javascript/jscomp/CodeGenerator.java
++++ b/src/com/google/javascript/jscomp/CodeGenerator.java
+@@ -954,10 +954,10 @@ class CodeGenerator {
+ 
+   /** Helper to escape javascript string as well as regular expression */
+   static String strEscape(String s, char quote,
+-                          String doublequoteEscape,
+-                          String singlequoteEscape,
+-                          String backslashEscape,
+-                          CharsetEncoder outputCharsetEncoder) {
++             String doublequoteEscape,
++             String singlequoteEscape,
++             String backslashEscape,
++             CharsetEncoder outputCharsetEncoder) {
+     StringBuilder sb = new StringBuilder(s.length() + 2);
+     sb.append(quote);
+     for (int i = 0; i < s.length(); i++) {
+@@ -1023,7 +1021,29 @@ class CodeGenerator {
+     sb.append(quote);
+     return sb.toString();
+   }
+-
++  /**
++   * Appends the hex representation of a unicode code point to a string builder.
++   *
++   * @param sb The string builder to append to.
++   * @param codePoint The code point to append.
++   */
++  private static void appendHexJavaScriptRepresentation(
++      StringBuilder sb, int codePoint) {
++    // JavaScript has no hex escapes, so we use unicode escapes.
++    // This will also work for characters outside the basic multilingual plane,
++    // since those characters are expressed as two surrogate chars.
++    sb.append("\\u");
++    if (codePoint < 0x1000) {
++      sb.append('0');
++    }
++    if (codePoint < 0x100) {
++      sb.append('0');
++    }
++    if (codePoint < 0x10) {
++      sb.append('0');
++    }
++    sb.append(Integer.toHexString(codePoint));
++  }
+   static String identifierEscape(String s) {
+     // First check if escaping is needed at all -- in most cases it isn't.
+     if (NodeUtil.isLatin(s)) {

@@ -1,0 +1,42 @@
+diff --git a/src/main/java/org/jsoup/parser/TreeBuilder.java b/src/main/java/org/jsoup/parser/TreeBuilder.java
+index f4faad4..089e23a 100644
+--- a/src/main/java/org/jsoup/parser/TreeBuilder.java
++++ b/src/main/java/org/jsoup/parser/TreeBuilder.java
+@@ -76,4 +63,36 @@ abstract class TreeBuilder {
+         int size = stack.size();
+         return size > 0 ? stack.get(size-1) : null;
+     }
++    protected void popStackToClose(String elName) {
++        ErrorContext errCtx = errorContext();
++        String nodeName = currentElement().nodeName();
++        if (!nodeName.equals(elName))
++            errCtx.error(String.format("Unexpected close tag <%s>. Expected %s", nodeName, elName));
++        else
++            popStackToClose(currentElement().nodeName());
++    }
++    protected void popStackToClose(Token.EndTag endTag) {
++        String elName = endTag.name();
++        Element element = currentElement();
++        if (element == null || !element.nodeName().equals(elName))
++            return;
++        popStackToClose(elName);
++    }
++    protected void popStackToClose(String elName) {
++        ErrorContext errCtx = errorContext();
++        Element currentEl = currentElement();
++        if (currentEl.nodeName().equals(elName)) {
++            stack.remove(stack.size()-1);
++            return;
++        }
++        errCtx.error(String.format("Unexpected close tag <%s>. Open %s", elName, currentEl.nodeName()));
++        Element popped;
++        do {
++            popped = stack.remove(stack.size()-1);
++            errCtx.error(String.format("Missing end tag: %s", popped.nodeName()));
++        } while (!popped.nodeName().equals(elName));
++    }
++    protected ErrorContext errorContext() {
++        return new ErrorContext(reader, tokeniser, errors);
++    }
+ }
+\ No newline at end of file

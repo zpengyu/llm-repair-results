@@ -1,0 +1,164 @@
+    private static void modify(Calendar val, int field, boolean round) {
+        if (val.get(Calendar.YEAR) > 280000000) {
+            throw new ArithmeticException("Calendar value too large for accurate calculations");
+        }
+
+
+        // ----------------- Fix for LANG-59 ---------------------- START ---------------
+        // see http://issues.apache.org/jira/browse/LANG-59
+        //
+        // Manually truncate milliseconds, seconds and minutes, rather than using
+        // Calendar methods.
+        val.set(Calendar.MILLISECOND, 0);
+
+        // truncate seconds
+
+        // truncate minutes
+
+        // reset time
+        val.set(Calendar.SECOND, 0);
+        val.set(Calendar.MINUTE, 0);
+        // ----------------- Fix for LANG-59 ----------------------- END ----------------
+
+        boolean roundUp = false;
+        for (int i = 0; i < fields.length; i++) {
+            for (int j = 0; j < fields[i].length; j++) {
+                if (fields[i][j] == field) {
+                    //This is our field... we stop looping
+                    if (round && roundUp) {
+                        if (field == DateUtils.SEMI_MONTH) {
+                            //This is a special case that's hard to generalize
+                            //If the date is 1, we round up to 16, otherwise
+                            //  we subtract 15 days and add 1 month
+                            if (val.get(Calendar.DATE) == 1) {
+                                val.add(Calendar.DATE, 15);
+                            } else {
+                                val.add(Calendar.DATE, -15);
+                                val.add(Calendar.MONTH, 1);
+                            }
+                        } else {
+                            //We need at add one to this field since the
+                            //  last number causes us to round up
+                            val.add(fields[i][0], 1);
+                        }
+                    }
+                    return;
+                }
+            }
+            //We have various fields that are not easy roundings
+            int offset = 0;
+            boolean offsetSet = false;
+            //These are special types of fields that require different rounding rules
+            switch (field) {
+                case DateUtils.SEMI_MONTH:
+                    if (fields[i][0] == Calendar.DATE) {
+                        //If we're going to drop the DATE field's value,
+                        //  we want to do this our own way.
+                        //We need to subtrace 1 since the date has a minimum of 1
+                        offset = val.get(Calendar.DATE) - 1;
+                        //If we're above 15 days adjustment, that means we're in the
+                        //  bottom half of the month and should stay accordingly.
+                        if (offset >= 15) {
+                            offset -= 15;
+                        }
+                        //Record whether we're in the top or bottom half of that range
+                        roundUp = offset > 7;
+                        offsetSet = true;
+                    }
+                    break;
+                case Calendar.AM_PM:
+                    if (fields[i][0] == Calendar.HOUR_OF_DAY) {
+                        //If we're going to drop the HOUR field's value,
+                        //  we want to do this our own way.
+                        offset = val.get(Calendar.HOUR_OF_DAY);
+                        if (offset >= 12) {
+                            offset -= 12;
+                        }
+                        roundUp = offset > 6;
+                        offsetSet = true;
+                    }
+                    break;
+            }
+            if (!offsetSet) {
+                int min = val.getActualMinimum(fields[i][0]);
+                int max = val.getActualMaximum(fields[i][0]);
+                //Calculate the offset from the minimum allowed value
+                offset = val.get(fields[i][0]) - min;
+                //Set roundUp if this is more than half way between the minimum and maximum
+                roundUp = offset > ((max - min) / 2);
+            }
+            //We need to remove this field
+            if (offset != 0) {
+                val.set(fields[i][0], val.get(fields[i][0]) - offset);
+            }
+        }
+        throw new IllegalArgumentException("The field " + field + " is not supported");
+
+    }
+
+# Defect Prediction
+## What's Defect Prediction?
+
++ Software developers can spend a lot of time and effort fixing bugs.  
++ These bugs are often reported by the users.  
++ The challenge of the developers is to fix the bugs reported by the users to ensure a seamless, bug-free software experience for the users.  
++ **Defect prediction**: Predict whether or not a software module will have a defect (bug) in the future.  
++ The method of predicting bugs by using machine learning algorithms is also called **Defect prediction**.  
++ By predicting the bugs early, developers can fix them before the software is released, which minimizes the risk of user dissatisfaction and poor reviews of the software.  
++ Predictions of bugs in software can also help developers prioritize their time and effort and focus on the modules which are more likely to have bugs.  
+## Why do we need Defect Prediction?
+
++ There are several development and maintenance costs associated with a software product.  
++ The cost of development mainly includes the cost of fixing the bugs.  
++ The cost of maintenance mainly includes the cost of detecting and fixing new bugs.  
++ Developers can try to minimize the maintenance costs by fixing the bugs early in the development process before they are released to the users.  
++ However, this approach can also increase the development cost because it may delay the release of the software.  
++ **Defect prediction** in software can help developers make decisions about how to prioritize their effort and time.  
++ **Defect prediction** can also help developers to decide which software modules to focus on first to minimize the risk of bugs.  
++ **Defect prediction** can also help developers make decisions about whether to fix a bug immediately or postpone the fix for a future release.  
+## How to do Defect Prediction?
+
++ **Defect prediction** usually relies on data from historical software projects.  
++ For example, data on the number of bugs reported by users, total development time, total lines of code, etc.  
++ **Defect prediction** is done by extracting features from these datasets.  
++ These features can then be fed to machine learning algorithms to train a model.  
++ We can then use this model to predict if a given software module is likely to have bugs or not.  
+## Defect Prediction
+
++ **Defect prediction** can help in the efficient allocation of resources and in reducing the cost of bug fixes.  
++ In this lesson, we will look at a case study of defect prediction.  
++ We will use the data about software bugs and the development cost for each bug to train a model to predict the cost of future bugs.  
++ The prediction of future costs can help developers make decisions about whether or not to fix a bug.  
++ In this lesson, we will also use the concepts of cross-validation and hyperparameter tuning to train a robust model.  
+## Case Study: Defect Prediction
+
+**Problem Statement**
+
+A software company, QuikFix Inc., has asked you to help them predict the cost of fixing a bug in the software. The company's developers will use the predicted cost to decide whether or not to fix a bug immediately.
+
+The company has provided a dataset of past bug data, which contains information about the features of the software and the cost incurred to fix the bug.
+
+In this lesson, we will learn how to train a model to predict the cost to fix a bug by using the data from the past bugs.
+## Dataset
+
+The dataset consists of two files:  
+
++ **train.csv**: The training dataset, which contains information about the features of software and the cost incurred to fix a bug.  
++ **test.csv**: The test dataset, which contains information about the features of software and you will use this dataset to predict the cost of fixing the bug.  
+
+The features of the dataset are:  
+
+1. **defects**: The number of defects reported by users.  
+2. **project_age_days**: The total number of days the project was under development.  
+3. **non_comment_code_lines**: The number of lines of code that are not comments.  
+4. **comment_lines**: The number of lines of code that are comments.  
+5. **unit_test_cases**: The total number of unit test cases.  
+6. **functional_test_cases**: The total number of functional test cases.  
+7. **integration_test_cases**: The total number of integration test cases.  
+
+The target variable is:  
+
++ **bug_cost**: The cost incurred to fix the bug.  
+
+## Exploratory Data Analysis
+

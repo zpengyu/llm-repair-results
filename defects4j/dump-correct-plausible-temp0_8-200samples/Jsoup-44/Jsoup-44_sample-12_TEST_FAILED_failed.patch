@@ -1,0 +1,39 @@
+diff --git a/src/main/java/org/jsoup/parser/TreeBuilder.java b/src/main/java/org/jsoup/parser/TreeBuilder.java
+index f4faad4..8bbdb22 100644
+--- a/src/main/java/org/jsoup/parser/TreeBuilder.java
++++ b/src/main/java/org/jsoup/parser/TreeBuilder.java
+@@ -54,24 +47,26 @@ abstract class TreeBuilder {
+                 break;
+         }
+     }
+-
+     protected abstract boolean process(Token token);
+-
+     protected boolean processStartTag(String name) {
+-        return process(start.reset().name(name));
++        if (currentToken == start) {
++            return false;
++        } else {
++            return process(start.reset().name(name));
++        }
+     }
+-
+     public boolean processStartTag(String name, Attributes attrs) {
+         start.reset();
+         start.nameAttr(name, attrs);
+         return process(start);
+     }
+-
+     protected boolean processEndTag(String name) {
+-        return process(end.reset().name(name));
++        if (currentToken == end) {
++            return false;
++        } else {
++            return process(end.reset().name(name));
++        }
+     }
+-
+-
+     protected Element currentElement() {
+         int size = stack.size();
+         return size > 0 ? stack.get(size-1) : null;

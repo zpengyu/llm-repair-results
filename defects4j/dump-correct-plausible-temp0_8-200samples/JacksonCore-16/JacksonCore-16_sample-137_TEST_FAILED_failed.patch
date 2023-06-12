@@ -1,0 +1,34 @@
+diff --git a/src/main/java/com/fasterxml/jackson/core/util/JsonParserSequence.java b/src/main/java/com/fasterxml/jackson/core/util/JsonParserSequence.java
+index bed27f2b..271d1f06 100644
+--- a/src/main/java/com/fasterxml/jackson/core/util/JsonParserSequence.java
++++ b/src/main/java/com/fasterxml/jackson/core/util/JsonParserSequence.java
+@@ -32,7 +30,7 @@ public class JsonParserSequence extends JsonParserDelegate
+      *
+      * @since 2.8
+      */
+-
++    protected boolean _hasToken;
+     /*
+      *******************************************************
+      * Construction
+@@ -44,8 +41,8 @@ public class JsonParserSequence extends JsonParserDelegate
+         super(parsers[0]);
+         _parsers = parsers;
+         _nextParser = 1;
++        _hasToken = false;
+     }
+-
+     /**
+      * Method that will construct a parser (possibly a sequence) that
+      * contains all given sub-parsers.
+@@ -103,6 +96,10 @@ public class JsonParserSequence extends JsonParserDelegate
+     @Override
+     public JsonToken nextToken() throws IOException, JsonParseException
+     {
++        if (_hasToken) {
++            _hasToken = false;
++            return delegate.currentToken();
++        }
+         JsonToken t = delegate.nextToken();
+         if (t != null) return t;
+         while (switchToNext()) {

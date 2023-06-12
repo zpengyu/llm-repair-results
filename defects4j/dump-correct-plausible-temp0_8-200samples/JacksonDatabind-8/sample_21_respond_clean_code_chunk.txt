@@ -1,0 +1,23 @@
+    protected void verifyNonDup(AnnotatedWithParams newOne, int typeIndex, boolean explicit)
+    {
+        final int mask = (1 << typeIndex);
+        _hasNonDefaultCreator = true;
+        AnnotatedWithParams oldOne = _creators[typeIndex];
+        // already had an explicitly marked one?
+        if (oldOne != null) {
+            // Skip if new one has no annotation and old was annotation-based
+            if (explicit) { // otherwise only verify if neither explicitly annotated.
+                if (oldOne.getClass() == newOne.getClass()) {
+                    // [databind#667]: avoid one particular class of bogus problems
+                    if (oldOne.getAnnotation(JsonCreator.class) != null) {
+                        throw new IllegalArgumentException("Conflicting " + TYPE_DESCS[typeIndex]
+                                + " creators: already had explicitly marked " + oldOne + ", encountered " + newOne);
+                    }
+                }
+            }
+        }
+        if (explicit) {
+            _explicitCreators |= mask;
+        }
+        _creators[typeIndex] = _fixAccess(newOne);
+    }

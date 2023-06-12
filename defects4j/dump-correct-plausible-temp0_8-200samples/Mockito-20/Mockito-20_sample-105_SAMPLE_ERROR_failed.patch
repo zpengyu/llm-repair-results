@@ -1,0 +1,31 @@
+diff --git a/src/org/mockito/internal/creation/bytebuddy/ByteBuddyMockMaker.java b/src/org/mockito/internal/creation/bytebuddy/ByteBuddyMockMaker.java
+index ddaada2f1..a18728882 100644
+--- a/src/org/mockito/internal/creation/bytebuddy/ByteBuddyMockMaker.java
++++ b/src/org/mockito/internal/creation/bytebuddy/ByteBuddyMockMaker.java
+@@ -31,10 +31,24 @@ public class ByteBuddyMockMaker implements MockMaker {
+         );
+         T mockInstance = null;
+         try {
+-            mockInstance = classInstantiator.instantiate(mockedProxyType);
++            if (mockedProxyType.getModifiers() == Modifier.PUBLIC) {
++                mockInstance = classInstantiator.instantiate(mockedProxyType);
++            } else {
++                Method method;
++                try {
++                    method = mockedProxyType.getDeclaredMethod("mockito$mock$0");
++                    method.setAccessible(true);
++                    mockInstance = mockedProxyType.cast(method.invoke(null));
++                } catch (NoSuchMethodException e) {
++                    throw new MockitoException("Unable to create mock instance of type '" + mockedProxyType.getSuperclass().getSimpleName() + "'", e);
++                } catch (InvocationTargetException e) {
++                    throw new MockitoException("Unable to create mock instance of type '" + mockedProxyType.getSuperclass().getSimpleName() + "'", e);
++                } catch (IllegalAccessException e) {
++                    throw new MockitoException("Unable to create mock instance of type '" + mockedProxyType.getSuperclass().getSimpleName() + "'", e);
++                }
++            }
+             MockMethodInterceptor.MockAccess mockAccess = (MockMethodInterceptor.MockAccess) mockInstance;
+             mockAccess.setMockitoInterceptor(new MockMethodInterceptor(asInternalMockHandler(handler), settings));
+-
+             return ensureMockIsAssignableToMockedType(settings, mockInstance);
+         } catch (ClassCastException cce) {
+             throw new MockitoException(join(

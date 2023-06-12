@@ -1,0 +1,25 @@
+diff --git a/src/main/java/org/jsoup/parser/Parser.java b/src/main/java/org/jsoup/parser/Parser.java
+index 8cc01d2..fb49a88 100644
+--- a/src/main/java/org/jsoup/parser/Parser.java
++++ b/src/main/java/org/jsoup/parser/Parser.java
+@@ -129,18 +127,13 @@ public class Parser {
+             if (attribute != null)
+                 attributes.put(attribute);
+         }
+-
+         Tag tag = Tag.valueOf(tagName);
+         Element child = new Element(tag, baseUri, attributes);
+-
+         boolean isEmptyElement = tag.isEmpty(); // empty element if empty tag (e.g. img) or self-closed el (<div/>
+-        if (tq.matchChomp("/>")) { // close empty element or tag
+-            isEmptyElement = true;
+-        } else {
+-            tq.matchChomp(">");
++        if (tq.matchesAny("/>", ">")) { // close empty element or tag
++            tq.consume();
+         }
+         addChildToParent(child, isEmptyElement);
+-
+         // pc data only tags (textarea, script): chomp to end tag, add content as text node
+         if (tag.isData()) {
+             String data = tq.chompTo("</" + tagName);

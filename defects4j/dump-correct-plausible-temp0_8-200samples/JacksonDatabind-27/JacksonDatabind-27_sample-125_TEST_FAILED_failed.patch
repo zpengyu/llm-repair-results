@@ -1,0 +1,33 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/deser/BeanDeserializer.java b/src/main/java/com/fasterxml/jackson/databind/deser/BeanDeserializer.java
+index cd54e7788..dcbf16618 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/deser/BeanDeserializer.java
++++ b/src/main/java/com/fasterxml/jackson/databind/deser/BeanDeserializer.java
+@@ -796,7 +794,6 @@ public class BeanDeserializer
+                 } else {
+                     // Last creator property to set?
+                     if (buffer.assignParameter(creatorProp, _deserializeWithErrorWrapping(p, ctxt, creatorProp))) {
+-                        t = p.nextToken(); // to move to following FIELD_NAME/END_OBJECT
+                         Object bean;
+                         try {
+                             bean = creator.build(ctxt, buffer);
+@@ -805,11 +802,10 @@ public class BeanDeserializer
+                             continue; // never gets here
+                         }
+                         // if so, need to copy all remaining tokens into buffer
+-                        while (t == JsonToken.FIELD_NAME) {
+-                            p.nextToken(); // to skip name
++                        while (p.nextToken() != JsonToken.END_OBJECT) {
+                             tokens.copyCurrentStructure(p);
+-                            t = p.nextToken();
+                         }
++                        tokens.writeEndObject();
+                         if (bean.getClass() != _beanType.getRawClass()) {
+                             // !!! 08-Jul-2011, tatu: Could theoretically support; but for now
+                             //   it's too complicated, so bail out
+@@ -854,5 +849,4 @@ public class BeanDeserializer
+             wrapInstantiationProblem(e, ctxt);
+             return null; // never gets here
+         }
+-    }
+-}
++    }}

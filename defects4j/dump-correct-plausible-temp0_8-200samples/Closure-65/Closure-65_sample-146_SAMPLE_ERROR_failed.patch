@@ -1,0 +1,64 @@
+diff --git a/src/com/google/javascript/jscomp/CodeGenerator.java b/src/com/google/javascript/jscomp/CodeGenerator.java
+index 5b684191..f6ce0f08 100644
+--- a/src/com/google/javascript/jscomp/CodeGenerator.java
++++ b/src/com/google/javascript/jscomp/CodeGenerator.java
+@@ -1022,7 +1022,7 @@ class CodeGenerator {
+         case '>':                       // Break --> into --\> or ]]> into ]]\>
+           if (i >= 2 &&
+               ((s.charAt(i - 1) == '-' && s.charAt(i - 2) == '-') ||
+-               (s.charAt(i - 1) == ']' && s.charAt(i - 2) == ']'))) {
++                  (s.charAt(i - 1) == ']' && s.charAt(i - 2) == ']'))) {
+             sb.append("\\>");
+           } else {
+             sb.append(c);
+@@ -1031,15 +1031,13 @@ class CodeGenerator {
+         case '<':
+           // Break </script into <\/script
+           final String END_SCRIPT = "/script";
+-
+           // Break <!-- into <\!--
+           final String START_COMMENT = "!--";
+-
+           if (s.regionMatches(true, i + 1, END_SCRIPT, 0,
+-                              END_SCRIPT.length())) {
++                  END_SCRIPT.length())) {
+             sb.append("<\\");
+           } else if (s.regionMatches(false, i + 1, START_COMMENT, 0,
+-                                     START_COMMENT.length())) {
++                  START_COMMENT.length())) {
+             sb.append("<\\");
+           } else {
+             sb.append(c);
+@@ -1073,7 +1071,31 @@ class CodeGenerator {
+     sb.append(quote);
+     return sb.toString();
+   }
+-
++  /**
++   * Appends the escaped representation of a character to sb.
++   *
++   * <p>We use the following (somewhat nonstandard) format: \\xHHH.. for characters
++   * in the BMP and \\uHHHH\\uHHHH for characters outside the BMP. This is because
++   * the \\uHHHH representation is particularly inefficient for encoding astral
++   * characters in UTF-16.
++   *
++   * @param sb the StringBuilder to append the escaped representation to.
++   * @param c the character to append.
++   */
++  private static void appendHexJavaScriptRepresentation(
++      StringBuilder sb, char c) {
++    if (c < '\u0100') {
++      sb.append("\\x");
++      sb.append(HEX_CHARS[c >> 4]);
++      sb.append(HEX_CHARS[c & 0xF]);
++    } else {
++      sb.append("\\u");
++      sb.append(HEX_CHARS[(c >> 12) & 0xF]);
++      sb.append(HEX_CHARS[(c >> 8) & 0xF]);
++      sb.append(HEX_CHARS[(c >> 4) & 0xF]);
++      sb.append(HEX_CHARS[c & 0xF]);
++    }
++  }
+   static String identifierEscape(String s) {
+     // First check if escaping is needed at all -- in most cases it isn't.
+     if (NodeUtil.isLatin(s)) {

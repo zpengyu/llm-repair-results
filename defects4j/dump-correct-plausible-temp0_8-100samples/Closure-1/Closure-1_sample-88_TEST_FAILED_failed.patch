@@ -1,0 +1,24 @@
+diff --git a/src/com/google/javascript/jscomp/RemoveUnusedVars.java b/src/com/google/javascript/jscomp/RemoveUnusedVars.java
+index 41175cf3..a925dbc1 100644
+--- a/src/com/google/javascript/jscomp/RemoveUnusedVars.java
++++ b/src/com/google/javascript/jscomp/RemoveUnusedVars.java
+@@ -388,7 +385,9 @@ class RemoveUnusedVars
+     Node argList = getFunctionArgList(function);
+     boolean modifyCallers = modifyCallSites
+         && callSiteOptimizer.canModifyCallers(function);
+-    if (!modifyCallers) {
++    if (modifyCallers) {
++      callSiteOptimizer.optimize(fnScope, referenced);
++    } else {
+       // Strip unreferenced args off the end of the function declaration.
+       Node lastArg;
+       while ((lastArg = argList.getLastChild()) != null) {
+@@ -400,8 +399,6 @@ class RemoveUnusedVars
+           break;
+         }
+       }
+-    } else {
+-      callSiteOptimizer.optimize(fnScope, referenced);
+     }
+   }
+ 

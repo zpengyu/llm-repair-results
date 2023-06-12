@@ -1,0 +1,37 @@
+diff --git a/src/main/java/org/jsoup/helper/DataUtil.java b/src/main/java/org/jsoup/helper/DataUtil.java
+index 4bdf4fe..c282296 100644
+--- a/src/main/java/org/jsoup/helper/DataUtil.java
++++ b/src/main/java/org/jsoup/helper/DataUtil.java
+@@ -87,21 +87,23 @@ public class DataUtil {
+                     doc = null;
+                 }
+             }
++            if (doc == null) {
++                // there are times where there is a spurious byte-order-mark at the start of the text. Shouldn't be present
++                // in utf-8. If after decoding, there is a BOM, strip it; otherwise will cause the parser to go straight
++                // into head mode
++                int bomChars = StringUtil.countChar(docData, StringUtil.BOM);
++                if (bomChars > 0) {
++                    docData = docData.substring(bomChars, docData.length());
++                }
++                doc = parser.parseInput(docData, baseUri);
++            }
+         } else { // specified by content type header (or by user on file load)
+             Validate.notEmpty(charsetName, "Must set charset arg to character set of file to parse. Set to null to attempt to detect from HTML");
+             docData = Charset.forName(charsetName).decode(byteData).toString();
+         }
+-        if (doc == null) {
+-            // there are times where there is a spurious byte-order-mark at the start of the text. Shouldn't be present
+-            // in utf-8. If after decoding, there is a BOM, strip it; otherwise will cause the parser to go straight
+-            // into head mode
+-
+-            doc = parser.parseInput(docData, baseUri);
+-            doc.outputSettings().charset(charsetName);
+-        }
++        doc.outputSettings().charset(charsetName);
+         return doc;
+     }
+-
+     static ByteBuffer readToByteBuffer(InputStream inStream) throws IOException {
+         byte[] buffer = new byte[bufferSize];
+         ByteArrayOutputStream outStream = new ByteArrayOutputStream(bufferSize);

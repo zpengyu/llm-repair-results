@@ -1,0 +1,29 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/jsontype/impl/ClassNameIdResolver.java b/src/main/java/com/fasterxml/jackson/databind/jsontype/impl/ClassNameIdResolver.java
+index 112c00b5c..9b2233302 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/jsontype/impl/ClassNameIdResolver.java
++++ b/src/main/java/com/fasterxml/jackson/databind/jsontype/impl/ClassNameIdResolver.java
+@@ -60,7 +60,7 @@ public class ClassNameIdResolver
+         }
+         Class<?> cls;
+         try {
+-            cls =  tf.findClass(id);
++            cls = tf.findClass(id);
+         } catch (ClassNotFoundException e) {
+             // 24-May-2016, tatu: Ok, this is pretty ugly, but we should always get
+             //   DeserializationContext, just playing it safe
+@@ -74,9 +74,14 @@ public class ClassNameIdResolver
+         } catch (Exception e) {
+             throw new IllegalArgumentException("Invalid type id '"+id+"' (for id type 'Id.class'): "+e.getMessage(), e);
+         }
++        // 17-Aug-2017, tatu: As per [databind#1735] need to ensure assignment
++        //    compatibility -- needed later anyway, and not doing so may open
++        //    security issues.
++        if (!_baseType.getRawClass().isAssignableFrom(cls)) {
++            throw new IllegalArgumentException("Class "+cls.getName()+" not subtype of "+_baseType);
++        }
+         return tf.constructSpecializedType(_baseType, cls);
+     }    
+-    
+     /*
+     /**********************************************************
+     /* Internal methods

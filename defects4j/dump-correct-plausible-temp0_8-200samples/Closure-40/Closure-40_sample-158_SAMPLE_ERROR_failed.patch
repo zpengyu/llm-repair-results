@@ -1,0 +1,28 @@
+diff --git a/src/com/google/javascript/jscomp/NameAnalyzer.java b/src/com/google/javascript/jscomp/NameAnalyzer.java
+index 25e2b5d4..db2505ba 100644
+--- a/src/com/google/javascript/jscomp/NameAnalyzer.java
++++ b/src/com/google/javascript/jscomp/NameAnalyzer.java
+@@ -916,15 +905,20 @@ final class NameAnalyzer implements CompilerPass {
+         // or assignment with a complex lhs.  In those cases,
+         // protect this node by creating a reference to WINDOW.
+         for (Node ancestor : n.getAncestors()) {
+-          if (NodeUtil.isAssignmentOp(ancestor) ||
+-              ancestor.isFunction()) {
++          if (NodeUtil.isAssignmentOp(ancestor)) {
++            if (NodeUtil.isLhs(ancestor, n)) {
++              recordReference(WINDOW, name, RefType.REGULAR);
++              break;
++            }
++          }
++          else if (ancestor.isFunction()) {
+             recordReference(WINDOW, name, RefType.REGULAR);
+             break;
+           }
+         }
+       }
+     }
+-
++  }
+     /**
+      * A value whose result is the return value of a function call
+      * can be an alias to global object. The dependency on the call target will

@@ -1,0 +1,53 @@
+diff --git a/src/main/java/org/apache/commons/compress/archivers/ar/ArArchiveInputStream.java b/src/main/java/org/apache/commons/compress/archivers/ar/ArArchiveInputStream.java
+index 9112fa85..0399f7bc 100644
+--- a/src/main/java/org/apache/commons/compress/archivers/ar/ArArchiveInputStream.java
++++ b/src/main/java/org/apache/commons/compress/archivers/ar/ArArchiveInputStream.java
+@@ -57,10 +54,11 @@ public class ArArchiveInputStream extends ArchiveInputStream {
+      *             if the entry could not be read
+      */
+     public ArArchiveEntry getNextArEntry() throws IOException {
+-                    // hit EOF before previous entry was complete
+-                    // TODO: throw an exception instead?
+-
+-        if (offset == 0) {
++        /*
++         * The archive consists of a series of file entries terminated by an
++         * end-of-archive entry, which consists of two 512 blocks of zero bytes.
++         */
++        if (offset % ArArchiveEntry.HEADER_LENGTH == 0) {
+             final byte[] expected = ArArchiveEntry.HEADER.getBytes();
+             final byte[] realized = new byte[expected.length]; 
+             final int read = read(realized);
+@@ -73,16 +71,10 @@ public class ArArchiveInputStream extends ArchiveInputStream {
+                 }
+             }
+         }
+-
+-                // hit eof
+-
++        // hit eof
+         if (input.available() == 0) {
+             return null;
+         }
+-
+-        if (offset % 2 != 0) {
+-            read();
+-        }
+         final byte[] name = new byte[16];
+         final byte[] lastmodified = new byte[12];
+         final byte[] userid = new byte[6];
+@@ -110,13 +100,10 @@ public class ArArchiveInputStream extends ArchiveInputStream {
+                 }
+             }
+         }
+-
+         return new ArArchiveEntry(new String(name).trim(),
+-                                          Long.parseLong(new String(length)
++                 offset Long.parseLong(new String(length)
+                                                          .trim()));
+     }
+-
+-
+     public ArchiveEntry getNextEntry() throws IOException {
+         return getNextArEntry();
+     }

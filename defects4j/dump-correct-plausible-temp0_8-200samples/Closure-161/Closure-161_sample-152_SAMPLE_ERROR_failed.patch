@@ -1,0 +1,24 @@
+diff --git a/src/com/google/javascript/jscomp/PeepholeFoldConstants.java b/src/com/google/javascript/jscomp/PeepholeFoldConstants.java
+index 42875ffc..c9435b28 100644
+--- a/src/com/google/javascript/jscomp/PeepholeFoldConstants.java
++++ b/src/com/google/javascript/jscomp/PeepholeFoldConstants.java
+@@ -1314,13 +1308,15 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
+     } else {
+       left.removeChild(elem);
+     }
+-
+     // Replace the entire GETELEM with the value
+-    n.getParent().replaceChild(n, elem);
++    Node replacement = NodeUtil.newQName(
++        compiler, NodeUtil.getBestLValueName(elem));
++    replacement.copyInformationFrom(n);
++    NodeUtil.copyNameAnnotations(replacement, elem);
++    n.getParent().replaceChild(n, replacement);
+     reportCodeChange();
+-    return elem;
++    return replacement;
+   }
+-
+   private Node tryFoldObjectPropAccess(Node n, Node left, Node right) {
+     Preconditions.checkArgument(NodeUtil.isGet(n));
+ 

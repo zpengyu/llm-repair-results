@@ -1,0 +1,29 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/jsontype/impl/TypeDeserializerBase.java b/src/main/java/com/fasterxml/jackson/databind/jsontype/impl/TypeDeserializerBase.java
+index 339362e1e..4acf70731 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/jsontype/impl/TypeDeserializerBase.java
++++ b/src/main/java/com/fasterxml/jackson/databind/jsontype/impl/TypeDeserializerBase.java
+@@ -155,6 +155,12 @@ public abstract class TypeDeserializerBase
+                     // 10-May-2016, tatu: We may get some help...
+                     JavaType actual = _handleUnknownTypeId(ctxt, typeId, _idResolver, _baseType);
+                     if (actual == null) { // what should this be taken to mean?
++                        /* 10-May-2016, tatu: This is surprisingly common case, so let's add
++                         *   a proper error message.
++                         */
++                        ctxt.reportBadTypeDefinition(_baseType,
++                                String.format("Could not resolve type id '%s' into a subtype of %s",
++                                        typeId, _baseType));
+                         // TODO: try to figure out something better
+                         return null;
+                     }
+@@ -181,7 +187,11 @@ public abstract class TypeDeserializerBase
+                     //   generic type with custom type resolvers. If so, should try to retain them.
+                     //  Whether this is sufficient to avoid problems remains to be seen, but for
+                     //  now it should improve things.
++                    if (type.hasGenericTypes() && _baseType.hasGenericTypes()) {
+                         type = ctxt.getTypeFactory().constructSpecializedType(_baseType, type.getRawClass());
++                    } else {
++                        type = ctxt.getTypeFactory().constructType(type.getRawClass(), type.getBindings());
++                    }
+                 }
+                 deser = ctxt.findContextualValueDeserializer(type, _property);
+             }

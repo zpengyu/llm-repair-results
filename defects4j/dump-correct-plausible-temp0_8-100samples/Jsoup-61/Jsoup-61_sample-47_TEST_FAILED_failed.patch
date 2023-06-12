@@ -1,0 +1,43 @@
+diff --git a/src/main/java/org/jsoup/nodes/Element.java b/src/main/java/org/jsoup/nodes/Element.java
+index 6aeaeb5..a0c1bcf 100644
+--- a/src/main/java/org/jsoup/nodes/Element.java
++++ b/src/main/java/org/jsoup/nodes/Element.java
+@@ -1106,8 +1103,8 @@ public class Element extends Node {
+         boolean inClass = false;
+         int start = 0;
+         for (int i = 0; i < len; i++) {
+-            if (Character.isWhitespace(classAttr.charAt(i))) {
+-                if (inClass) {
++            if (inClass) {
++                if (Character.isWhitespace(classAttr.charAt(i))) {
+                     // white space ends a class name, compare it with the requested one, ignore case
+                     if (i - start == wantLen && classAttr.regionMatches(true, start, className, 0, wantLen)) {
+                         return true;
+@@ -1115,22 +1112,21 @@ public class Element extends Node {
+                     inClass = false;
+                 }
+             } else {
+-                if (!inClass) {
++                if (!Character.isWhitespace(classAttr.charAt(i))) {
+                     // we're in a class name : keep the start of the substring
+                     inClass = true;
+                     start = i;
+                 }
+             }
+         }
+-
+         // check the last entry
+-        if (inClass && len - start == wantLen) {
+-            return classAttr.regionMatches(true, start, className, 0, wantLen);
++        if (inClass) {
++            if (len - start == wantLen && classAttr.regionMatches(true, start, className, 0, wantLen)) {
++                return true;
++            }
+         }
+-
+         return false;
+     }
+-
+     /**
+      Add a class name to this element's {@code class} attribute.
+      @param className class name to add

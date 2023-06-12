@@ -1,0 +1,38 @@
+diff --git a/src/main/java/org/apache/commons/compress/archivers/tar/TarUtils.java b/src/main/java/org/apache/commons/compress/archivers/tar/TarUtils.java
+index cfa8f73c..8ab765ba 100644
+--- a/src/main/java/org/apache/commons/compress/archivers/tar/TarUtils.java
++++ b/src/main/java/org/apache/commons/compress/archivers/tar/TarUtils.java
+@@ -59,25 +58,22 @@ public class TarUtils {
+             if (currentByte == 0) {
+                 break;
+             }
+-
+-        // Skip leading spaces
+             if (currentByte == (byte) ' ' || currentByte == '0') {
+                 if (stillPadding) {
+-                   continue;
+-            }
++                    continue;
++                }
+                 if (currentByte == (byte) ' ') {
+-                break;
++                    break;
+                 }
+             }
+-
+-        // Must have trailing NUL or space
+-        // May have additional NUL or space
+-
+             stillPadding = false;
+             // CheckStyle:MagicNumber OFF
+             if (currentByte < '0' || currentByte > '7'){
+-                throw new IllegalArgumentException(
+-                        exceptionMessage(buffer, offset, length, start, currentByte));
++                if (currentByte == '8' || currentByte == '9') {
++                    throw new IllegalArgumentException(
++                            exceptionMessage(buffer, offset, length, start, currentByte));
++                }
++                break;
+             }
+             result = (result << 3) + (currentByte - '0'); // convert from ASCII
+             // CheckStyle:MagicNumber ON

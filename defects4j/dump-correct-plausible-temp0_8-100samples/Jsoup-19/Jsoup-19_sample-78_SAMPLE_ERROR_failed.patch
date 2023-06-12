@@ -1,0 +1,30 @@
+diff --git a/src/main/java/org/jsoup/safety/Whitelist.java b/src/main/java/org/jsoup/safety/Whitelist.java
+index 23a215d..3cab3d0 100644
+--- a/src/main/java/org/jsoup/safety/Whitelist.java
++++ b/src/main/java/org/jsoup/safety/Whitelist.java
+@@ -348,9 +347,24 @@ public class Whitelist {
+                 return true;
+             }
+         }
++        if (protocols.contains(Protocol.rel)) {
++            return isRelativeUri(value);
++        }
+         return false;
+     }
+-
++    private boolean isRelativeUri(String uri) {
++        if (uri.startsWith("//")) {
++            return false;
++        }
++        int pos = uri.indexOf(':');
++        if (pos >= 0) {
++            String scheme = uri.substring(0, pos);
++            if (scheme.matches("^[a-zA-Z][a-zA-Z0-9+-.]*$")) {
++                return false;
++            }
++        }
++        return true;
++    }
+     Attributes getEnforcedAttributes(String tagName) {
+         Attributes attrs = new Attributes();
+         TagName tag = TagName.valueOf(tagName);

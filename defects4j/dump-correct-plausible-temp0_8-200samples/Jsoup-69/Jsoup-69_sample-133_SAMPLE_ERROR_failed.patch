@@ -1,0 +1,40 @@
+diff --git a/src/main/java/org/jsoup/nodes/FormElement.java b/src/main/java/org/jsoup/nodes/FormElement.java
+index baffcf1..80e86d4 100644
+--- a/src/main/java/org/jsoup/nodes/FormElement.java
++++ b/src/main/java/org/jsoup/nodes/FormElement.java
+@@ -45,8 +42,16 @@ public class FormElement extends Element {
+         elements.add(element);
+         return this;
+     }
+-
+-
++    private static boolean isFile(Element el) {
++        return el.tag().toString().equals("input") && el.attr("type").toLowerCase().equals("file");
++    }
++    private static boolean isFile(List<KeyVal> values) {
++        for (KeyVal value : values) {
++            if (!value.hasInputStream())
++                return false;
++        }
++        return true;
++    }
+     /**
+      * Prepare to submit this form. A Connection object is created with the request set up from the form values. You
+      * can then set up other options (like user-agent, timeout, cookies), then execute it.
+@@ -59,12 +64,11 @@ public class FormElement extends Element {
+         Validate.notEmpty(action, "Could not determine a form action URL for submit. Ensure you set a base URI when parsing.");
+         Connection.Method method = attr("method").toUpperCase().equals("POST") ?
+                 Connection.Method.POST : Connection.Method.GET;
+-
+-        return Jsoup.connect(action)
+-                .data(formData())
+-                .method(method);
++        List<KeyVal> data = formData();
++        Request request = new Request(method, action);
++        request.data().addAll(data);
++        return Jsoup.connect(request);
+     }
+-
+     /**
+      * Get the data that this form submits. The returned list is a copy of the data, and changes to the contents of the
+      * list will not be reflected in the DOM.

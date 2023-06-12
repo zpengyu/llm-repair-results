@@ -1,0 +1,115 @@
+diff --git a/src/main/java/com/fasterxml/jackson/core/json/JsonGeneratorImpl.java b/src/main/java/com/fasterxml/jackson/core/json/JsonGeneratorImpl.java
+index 81b90fed..e37f1cf8 100644
+--- a/src/main/java/com/fasterxml/jackson/core/json/JsonGeneratorImpl.java
++++ b/src/main/java/com/fasterxml/jackson/core/json/JsonGeneratorImpl.java
+@@ -194,4 +168,109 @@ public abstract class JsonGeneratorImpl extends GeneratorBase
+         writeFieldName(fieldName);
+         writeString(value);
+     }
++    @Override
++    public void writeStringField(String fieldName, char[] text, int offset,
++            int len) throws IOException, JsonGenerationException {
++        writeFieldName(fieldName);
++        writeString(text, offset, len);
++    }
++    @Override
++    public final void writeBooleanField(String fieldName, boolean value) throws IOException
++    {
++        writeFieldName(fieldName);
++        writeBoolean(value);
++    }
++    @Override
++    public final void writeNullField(String fieldName) throws IOException
++    {
++        writeFieldName(fieldName);
++        writeNull();
++    }
++    @Override
++    public final void writeNumberField(String fieldName, int value)
++        throws IOException
++    {
++        writeFieldName(fieldName);
++        writeNumber(value);
++    }
++    @Override
++    public final void writeNumberField(String fieldName, long value)
++        throws IOException
++    {
++        writeFieldName(fieldName);
++        writeNumber(value);
++    }
++    @Override
++    public final void writeNumberField(String fieldName, double value)
++        throws IOException
++    {
++        writeFieldName(fieldName);
++        writeNumber(value);
++    }
++    @Override
++    public final void writeNumberField(String fieldName, float value)
++        throws IOException
++    {
++        writeFieldName(fieldName);
++        writeNumber(value);
++    }
++    @Override
++    public final void writeNumberField(String fieldName, BigDecimal value)
++        throws IOException
++    {
++        writeFieldName(fieldName);
++        writeNumber(value);
++    }
++    @Override
++    public final void writeBinaryField(String fieldName, byte[] data)
++        throws IOException, JsonGenerationException
++    {
++        writeFieldName(fieldName);
++        writeBinary(data);
++    }
++    @Override
++    public final void writeArrayFieldStart(String fieldName)
++        throws IOException, JsonGenerationException
++    {
++        writeFieldName(fieldName);
++        writeStartArray();
++    }
++    @Override
++    public final void writeObjectFieldStart(String fieldName)
++        throws IOException, JsonGenerationException
++    {
++        writeFieldName(fieldName);
++        writeStartObject();
++    }
++    @Override
++    public final void writeObjectField(String fieldName, Object pojo)
++        throws IOException, JsonProcessingException
++    {
++        writeFieldName(fieldName);
++        writeObject(pojo);
++    }
++    // // Overrides that add quoting capability
++    @Override
++    public void writeString(String text) throws IOException,JsonGenerationException {
++        _verifyValueWrite("write text value");
++        if (text == null) {
++            _writeNull();
++            return;
++        }
++        if (_cfgUnqNames) {
++            _writeString(text);
++            return;
++        }
++        final int len = text.length();
++        if (len > _charBufferLength) {
++            _writeLongString(text);
++            return;
++        }
++        text.getChars(0, len, _charBuffer, 0);
++        if (isEnabled(Feature.ESCAPE_NON_ASCII)) {
++            _writeStringASCII(len, _maximumNonEscapedChar);
++            return;
++        }
++        _writeString2(len);
++    }
+ }
+\ No newline at end of file

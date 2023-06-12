@@ -1,0 +1,19 @@
+diff --git a/src/main/java/org/jsoup/nodes/Document.java b/src/main/java/org/jsoup/nodes/Document.java
+index 7022584..f1321fc 100644
+--- a/src/main/java/org/jsoup/nodes/Document.java
++++ b/src/main/java/org/jsoup/nodes/Document.java
+@@ -118,8 +118,13 @@ public class Document extends Element {
+                 if (!tn.isBlank())
+                     toMove.add(tn);
+             }
++            else if (element.childNodes.size() == 1 && 
++                     node instanceof Element &&
++                     ((Element)node).tag().getName().equals("head")) {
++                element.html(node.outerHtml()); // the only child is head; replace element with head and its contents
++                return;
++            }
+         }
+-
+         for (Node node: toMove) {
+             element.removeChild(node);
+             body().appendChild(new TextNode(" ", ""));

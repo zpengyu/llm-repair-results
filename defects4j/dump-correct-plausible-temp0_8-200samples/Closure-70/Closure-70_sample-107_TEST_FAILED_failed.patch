@@ -1,0 +1,54 @@
+diff --git a/src/com/google/javascript/jscomp/TypedScopeCreator.java b/src/com/google/javascript/jscomp/TypedScopeCreator.java
+index a067f341..2abeb332 100644
+--- a/src/com/google/javascript/jscomp/TypedScopeCreator.java
++++ b/src/com/google/javascript/jscomp/TypedScopeCreator.java
+@@ -1731,27 +1731,31 @@ final class TypedScopeCreator implements ScopeCreator {
+     /**
+      * Declares all of a function's arguments.
+      */
+-    private void declareArguments(Node functionNode) {
+-      Node astParameters = functionNode.getFirstChild().getNext();
+-      Node body = astParameters.getNext();
+-      FunctionType functionType = (FunctionType) functionNode.getJSType();
+-      if (functionType != null) {
+-        Node jsDocParameters = functionType.getParametersNode();
+-        if (jsDocParameters != null) {
+-          Node jsDocParameter = jsDocParameters.getFirstChild();
+-          for (Node astParameter : astParameters.children()) {
+-            if (jsDocParameter != null) {
+-              defineSlot(astParameter, functionNode,
+-                  jsDocParameter.getJSType(), true);
+-              jsDocParameter = jsDocParameter.getNext();
+-            } else {
+-              defineSlot(astParameter, functionNode, null, true);
+-            }
++  private void declareArguments(Node functionNode) {
++    Node astParameters = functionNode.getFirstChild().getNext();
++    Node body = astParameters.getNext();
++    FunctionType functionType = (FunctionType) functionNode.getJSType();
++    if (functionType != null) {
++      Node jsDocParameters = functionType.getParametersNode();
++      if (jsDocParameters != null) {
++        Node jsDocParameter = jsDocParameters.getFirstChild();
++        for (Node astParameter : astParameters.children()) {
++          if (jsDocParameter != null) {
++            defineSlot(astParameter, functionNode,
++                jsDocParameter.getJSType(), true);
++            jsDocParameter = jsDocParameter.getNext();
++          } else {
++            defineSlot(astParameter, functionNode, null, true);
+           }
+         }
+       }
+-    } // end declareArguments
+-  } // end LocalScopeBuilder
++    }
++    defineSlot(
++        body.getFirstChild().getNext(),
++        functionNode,
++        getNativeType(UNKNOWN_TYPE),
++        true);
++  }  } // end LocalScopeBuilder
+ 
+ 
+   /** Find the best JSDoc for the given node. */

@@ -1,0 +1,23 @@
+diff --git a/src/com/google/javascript/jscomp/InlineCostEstimator.java b/src/com/google/javascript/jscomp/InlineCostEstimator.java
+index 17dc677f..aa1e807a 100644
+--- a/src/com/google/javascript/jscomp/InlineCostEstimator.java
++++ b/src/com/google/javascript/jscomp/InlineCostEstimator.java
+@@ -99,5 +91,16 @@ class InlineCostEstimator {
+      * Constants (true, false, null) are considered basically free,
+      * because it's likely that they will get folded when we're done.
+      */
+-  }
+-}
++    @Override
++    void addConstant(Object constant) {
++      if (constant == null || constant == Boolean.TRUE || constant == Boolean.FALSE) {
++        cost += 0;
++      } else if (constant instanceof String) {
++        add(constant.toString());
++      } else if (constant instanceof Number) {
++        cost += (1 + constant.toString().length());
++      } else {
++        throw new RuntimeException("unexpected constant type");
++      }
++    }
++  }}

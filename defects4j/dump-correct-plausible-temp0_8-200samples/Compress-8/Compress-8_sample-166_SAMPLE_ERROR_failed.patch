@@ -1,0 +1,40 @@
+diff --git a/src/main/java/org/apache/commons/compress/archivers/tar/TarUtils.java b/src/main/java/org/apache/commons/compress/archivers/tar/TarUtils.java
+index cfa8f73c..fbd5f392 100644
+--- a/src/main/java/org/apache/commons/compress/archivers/tar/TarUtils.java
++++ b/src/main/java/org/apache/commons/compress/archivers/tar/TarUtils.java
+@@ -53,14 +53,19 @@ public class TarUtils {
+         boolean stillPadding = true;
+         int     end = offset + length;
+         int     start = offset;
+-
++        if (length == 0) {
++            throw new IllegalArgumentException("empty string");
++        }
++        if (length > MAX_OCTAL_BYTES) {
++            throw new IllegalArgumentException(
++                    "String too long (max " + MAX_OCTAL_BYTES + " bytes): " + length);
++        }
+         for (int i = start; i < end; i++){
+             final byte currentByte = buffer[i];
+             if (currentByte == 0) {
+                 break;
+             }
+-
+-        // Skip leading spaces
++            // Skip leading spaces
+             if (currentByte == (byte) ' ' || currentByte == '0') {
+                 if (stillPadding) {
+                    continue;
+@@ -69,10 +74,8 @@ public class TarUtils {
+                 break;
+                 }
+             }
+-
+-        // Must have trailing NUL or space
+-        // May have additional NUL or space
+-
++            // Must have trailing NUL or space
++            // May have additional NUL or space
+             stillPadding = false;
+             // CheckStyle:MagicNumber OFF
+             if (currentByte < '0' || currentByte > '7'){

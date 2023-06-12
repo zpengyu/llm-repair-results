@@ -1,0 +1,19 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/jsontype/impl/ClassNameIdResolver.java b/src/main/java/com/fasterxml/jackson/databind/jsontype/impl/ClassNameIdResolver.java
+index 112c00b5c..44e32dc25 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/jsontype/impl/ClassNameIdResolver.java
++++ b/src/main/java/com/fasterxml/jackson/databind/jsontype/impl/ClassNameIdResolver.java
+@@ -74,9 +74,12 @@ public class ClassNameIdResolver
+         } catch (Exception e) {
+             throw new IllegalArgumentException("Invalid type id '"+id+"' (for id type 'Id.class'): "+e.getMessage(), e);
+         }
+-        return tf.constructSpecializedType(_baseType, cls);
++        JavaType t = _baseType.narrowBy(cls);
++        if (!t.isTypeOrSubTypeOf(_baseType.getRawClass())) {
++            throw new IllegalArgumentException("Class "+cls.getName()+" not subtype of "+_baseType);
++        }
++        return t;
+     }    
+-    
+     /*
+     /**********************************************************
+     /* Internal methods

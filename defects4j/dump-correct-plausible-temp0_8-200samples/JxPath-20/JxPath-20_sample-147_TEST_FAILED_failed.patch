@@ -1,0 +1,39 @@
+diff --git a/src/java/org/apache/commons/jxpath/ri/compiler/CoreOperationRelationalExpression.java b/src/java/org/apache/commons/jxpath/ri/compiler/CoreOperationRelationalExpression.java
+index cd4ceac..3daf420 100644
+--- a/src/java/org/apache/commons/jxpath/ri/compiler/CoreOperationRelationalExpression.java
++++ b/src/java/org/apache/commons/jxpath/ri/compiler/CoreOperationRelationalExpression.java
+@@ -78,6 +71,9 @@ public abstract class CoreOperationRelationalExpression extends CoreOperation {
+         if (right instanceof InitialContext) {
+             ((InitialContext) right).reset();
+         }
++        if (left instanceof Collection && right instanceof Collection) {
++            return findMatch((Collection) left, (Collection) right);
++        }
+         if (left instanceof Iterator && right instanceof Iterator) {
+             return findMatch((Iterator) left, (Iterator) right);
+         }
+@@ -154,5 +146,22 @@ public abstract class CoreOperationRelationalExpression extends CoreOperation {
+         }
+         return false;
+     }
+-
++    /**
++     * Learn whether there is an intersection between two Iterators.
++     * @param left left operand
++     * @param right right operand
++     * @return whether a match was found
++     */
++    private boolean findMatch(Collection left, Collection right) {
++        HashSet leftSet = new HashSet();
++        for (Object element : left) {
++            leftSet.add(element);
++        }
++        for (Object element : right) {
++            if (containsMatch(leftSet.iterator(), element)) {
++                return true;
++            }
++        }
++        return false;
++    }
+ }
+\ No newline at end of file

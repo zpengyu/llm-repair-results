@@ -1,0 +1,39 @@
+diff --git a/src/com/google/javascript/jscomp/CodeGenerator.java b/src/com/google/javascript/jscomp/CodeGenerator.java
+index b58df9b3..3f4dffed 100644
+--- a/src/com/google/javascript/jscomp/CodeGenerator.java
++++ b/src/com/google/javascript/jscomp/CodeGenerator.java
+@@ -1011,13 +1011,10 @@ class CodeGenerator {
+             sb.append(c);
+           }
+           break;
+-        case '<':
+-          // Break </script into <\/script
++        case '<':                       // Break </script into <\/script
+           final String END_SCRIPT = "/script";
+-
+           // Break <!-- into <\!--
+           final String START_COMMENT = "!--";
+-
+           if (s.regionMatches(true, i + 1, END_SCRIPT, 0,
+                               END_SCRIPT.length())) {
+             sb.append("<\\");
+@@ -1056,7 +1053,18 @@ class CodeGenerator {
+     sb.append(quote);
+     return sb.toString();
+   }
+-
++  /**
++   * Appends the hexadecimal representation of the given Unicode code point
++   * to sb.
++   */
++  static void appendHexJavaScriptRepresentation(StringBuilder sb, int c) {
++    sb.append("\\u");
++    String hexString = Integer.toHexString(c);
++    for (int j = hexString.length(); j < 4; j++) {
++      sb.append('0');
++    }
++    sb.append(hexString);
++  }
+   static String identifierEscape(String s) {
+     // First check if escaping is needed at all -- in most cases it isn't.
+     if (NodeUtil.isLatin(s)) {

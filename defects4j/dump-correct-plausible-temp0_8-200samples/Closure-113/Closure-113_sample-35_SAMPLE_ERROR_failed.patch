@@ -1,0 +1,30 @@
+diff --git a/src/com/google/javascript/jscomp/ProcessClosurePrimitives.java b/src/com/google/javascript/jscomp/ProcessClosurePrimitives.java
+index 385e8b07..3f58e750 100644
+--- a/src/com/google/javascript/jscomp/ProcessClosurePrimitives.java
++++ b/src/com/google/javascript/jscomp/ProcessClosurePrimitives.java
+@@ -311,16 +309,19 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback
+         if (moduleGraph != null &&
+             module != providedModule &&
+             !moduleGraph.dependsOn(module, providedModule)) {
+-          compiler.report(
+-              t.makeError(n, XMODULE_REQUIRE_ERROR, ns,
+-                  providedModule.getName(),
+-                  module.getName()));
++          if (providedModule == module.getParentModule()) {
++            // Don't report the error if the parent module is the only module
++            // that provides the required namespace.
++          } else {
++            compiler.report(
++                t.makeError(n, XMODULE_REQUIRE_ERROR, ns,
++                    providedModule.getName(),
++                    module.getName()));
++          }
+         }
+       }
+-
+       maybeAddToSymbolTable(left);
+       maybeAddStringNodeToSymbolTable(arg);
+-
+       // Requires should be removed before further processing.
+       // Some clients run closure pass multiple times, first with
+       // the checks for broken requires turned off. In these cases, we

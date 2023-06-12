@@ -1,0 +1,38 @@
+diff --git a/src/main/java/org/apache/commons/cli/TypeHandler.java b/src/main/java/org/apache/commons/cli/TypeHandler.java
+index 4f23011..51539f5 100644
+--- a/src/main/java/org/apache/commons/cli/TypeHandler.java
++++ b/src/main/java/org/apache/commons/cli/TypeHandler.java
+@@ -98,12 +98,32 @@ public class TypeHandler
+         {
+             return (T) createURL(str);
+         }
++        else if (PatternOptionBuilder.LOCALE_VALUE == clazz)
++        {
++            return (T) createLocale(str);
++        }
+         else
+         {
+             return null;
+         }
+     }
+-
++    private static Locale createLocale(final String str) throws ParseException
++    {
++        String[] parts = str.split("_");
++        if (parts.length == 1)
++        {
++            return new Locale(parts[0]);
++        }
++        else if (parts.length == 2)
++        {
++            return new Locale(parts[0], parts[1]);
++        }
++        else if (parts.length == 3)
++        {
++            return new Locale(parts[0], parts[1], parts[3]);
++        }
++        throw new ParseException("Unable to parse the locale: " + str);
++    }
+     /**
+       * Create an Object from the classname and empty constructor.
+       *

@@ -1,0 +1,22 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/deser/std/StdKeyDeserializer.java b/src/main/java/com/fasterxml/jackson/databind/deser/std/StdKeyDeserializer.java
+index d4417f6ad..f20ff5963 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/deser/std/StdKeyDeserializer.java
++++ b/src/main/java/com/fasterxml/jackson/databind/deser/std/StdKeyDeserializer.java
+@@ -308,12 +308,13 @@ public class StdKeyDeserializer extends KeyDeserializer
+         public final Object deserializeKey(String key, DeserializationContext ctxt)
+             throws IOException
+         {
+-            if (key == null) { // is this even legal call?
+-                return null;
++            if (key == null) {
++                key = "null";
+             }
+             try {
+-                // Ugh... should not have to give parser which may or may not be correct one...
+-                Object result = _delegate.deserialize(ctxt.getParser(), ctxt);
++                final TokenBuffer tb = new TokenBuffer(ctxt, false);
++                tb.writeFieldName(key);
++                Object result = _delegate.deserialize(tb.asParser(), ctxt);
+                 if (result != null) {
+                     return result;
+                 }

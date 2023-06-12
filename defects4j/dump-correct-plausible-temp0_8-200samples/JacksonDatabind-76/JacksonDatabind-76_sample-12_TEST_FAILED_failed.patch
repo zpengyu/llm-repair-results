@@ -1,0 +1,18 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/deser/BuilderBasedDeserializer.java b/src/main/java/com/fasterxml/jackson/databind/deser/BuilderBasedDeserializer.java
+index 316efa3a9..f3b39a398 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/deser/BuilderBasedDeserializer.java
++++ b/src/main/java/com/fasterxml/jackson/databind/deser/BuilderBasedDeserializer.java
+@@ -633,9 +630,12 @@ public class BuilderBasedDeserializer
+         } catch (Exception e) {
+             return wrapInstantiationProblem(e, ctxt);
+         }
++        if (bean.getClass() != _beanType.getRawClass()) {
++            ctxt.reportMappingException("Can not create polymorphic instances with unwrapped values");
++            return null;
++        }
+         return _unwrappedPropertyHandler.processUnwrapped(p, ctxt, bean, tokens);
+     }
+-
+     /*
+     /**********************************************************
+     /* Handling for cases where we have property/-ies with

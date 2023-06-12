@@ -1,0 +1,32 @@
+    public Iterator iteratePointers(EvalContext context) {
+        Object result = compute(context);
+        if (result == null) {
+            return Collections.EMPTY_LIST.iterator();
+        }
+        if (result instanceof EvalContext) {
+            return (EvalContext) result;
+        }
+        return new PointerIterator(ValueUtils.iterate(result),
+                new QName(null, "value"),
+                context.getRootContext().getCurrentNodePointer().getLocale());
+    }
+    public static class PointerIterator implements Iterator {
+        private Iterator iterator;
+        private QName qname;
+        private Locale locale;
+        public PointerIterator(Iterator it, QName qname, Locale locale) {
+            this.iterator = it;
+            this.qname = qname;
+            this.locale = locale;
+        }
+        public boolean hasNext() {
+            return iterator.hasNext();
+        }
+        public Object next() {
+            Object o = iterator.next();
+            return o instanceof Pointer ? o : NodePointer.newNodePointer(qname, o, locale);
+        }
+        public void remove() {
+            throw new UnsupportedOperationException();
+        }
+    }

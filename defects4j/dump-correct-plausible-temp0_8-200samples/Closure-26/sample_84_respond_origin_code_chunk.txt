@@ -1,0 +1,71 @@
+import com.google.javascript.rhino.Node;
+import com.google.javascript.rhino.Token;
+import com.google.javascript.rhino.jstype.JSTypeNative;
+import com.google.javascript.rhino.jstype.JSTypeRegistry;
+import com.google.javascript.rhino.jstype.ObjectType;
+
+/**
+ * Ensures that a constructor can be called as a function.
+ *
+ */
+class ConvertToDartConstructorVisitor extends AbstractPostOrderCallback {
+  private final JSTypeRegistry typeRegistry;
+  private final boolean hasExterns;
+
+  ConvertToDartConstructorVisitor(JSTypeRegistry typeRegistry,
+      boolean hasExterns) {
+    this.typeRegistry = typeRegistry;
+    this.hasExterns = hasExterns;
+  }
+
+  @Override
+  public void visit(NodeTraversal t, Node n, Node parent) {
+    if (n.isFunction()) {
+      // Try to get the type of the constructor.
+      JSDocInfo info = n.getJSDocInfo();
+      if (info == null) {
+        return;
+      }
+
+      // TODO(nicksantos): Support @extends.
+      if (info.getBaseType() != null) {
+        return;
+      }
+
+      if (info.isConstructor() || info.isInterface()) {
+        // TODO(nicksantos): Support @template.
+        if (!info.getTemplateTypeNames().isEmpty()) {
+          return;
+        }
+        n.putBooleanProp(Node.IS_CONSTRUCTOR, true);
+        Node thisName = NodeUtil.newQName(t.getCompiler(), "this");
+        Node superName = NodeUtil.newQName(t.getCompiler(), "super");
+        ObjectType ownerType = null;
+        if (hasExterns) {
+          ownerType = typeRegistry.getNativeObjectType(JSTypeNative.GLOBAL_THIS);
+        } else {
+          ownerType = typeRegistry.getNativeObjectType(
+              JSTypeNative.GLOBAL_LEXICAL_SCOPE);
+        }
+        thisName.setTypeI(ownerType.getPropertyType("this"));
+        superName.setTypeI(ownerType.getPropertyType("super"));
+        Node body = n.getLastChild();
+        body.addChildrenToFront(
+            IR.exprResult(IR.assign(thisName.cloneTree(), IR.thisNode()))
+                .srcrefTree(n));
+        body.addChildrenToFront(
+            IR.exprResult(IR.assign(superName.cloneTree(), IR.superNode()))
+                .srcrefTree(n));
+        body.addChildrenToFront(IR.var(thisName, null));
+        body.addChildrenToFront(IR.var(superName, null));
+        n.getFirstChild().setTypeI(
+            typeRegistry.createFunctionType(
+                typeRegistry.createFunctionType(
+                    typeRegistry.getNativeType(JSTypeNative.OBJECT_TYPE),
+                    ownerType,
+                    null)));
+        t.getCompiler().reportCodeChange();
+      }
+    }
+  }
+}

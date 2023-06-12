@@ -1,0 +1,75 @@
+diff --git a/src/main/java/org/apache/commons/lang3/time/FastDateFormat.java b/src/main/java/org/apache/commons/lang3/time/FastDateFormat.java
+index 0c2e4a7b..c3558f14 100644
+--- a/src/main/java/org/apache/commons/lang3/time/FastDateFormat.java
++++ b/src/main/java/org/apache/commons/lang3/time/FastDateFormat.java
+@@ -463,17 +463,14 @@ public class FastDateFormat extends Format {
+     protected List<Rule> parsePattern() {
+         DateFormatSymbols symbols = new DateFormatSymbols(mLocale);
+         List<Rule> rules = new ArrayList<Rule>();
+-
+-        String[] ERAs = symbols.getEras();
++        String[] eras = symbols.getEras();
+         String[] months = symbols.getMonths();
+         String[] shortMonths = symbols.getShortMonths();
+         String[] weekdays = symbols.getWeekdays();
+         String[] shortWeekdays = symbols.getShortWeekdays();
+-        String[] AmPmStrings = symbols.getAmPmStrings();
+-
++        String[] amPmStrings = symbols.getAmPmStrings();
+         int length = mPattern.length();
+         int[] indexRef = new int[1];
+-
+         for (int i = 0; i < length; i++) {
+             indexRef[0] = i;
+             String token = parseToken(mPattern, indexRef);
+@@ -483,13 +479,11 @@ public class FastDateFormat extends Format {
+             if (tokenLen == 0) {
+                 break;
+             }
+-
+             Rule rule;
+             char c = token.charAt(0);
+-
+             switch (c) {
+             case 'G': // era designator (text)
+-                rule = new TextField(Calendar.ERA, ERAs);
++                rule = new TextField(Calendar.ERA, eras);
+                 break;
+             case 'y': // year (number)
+                 if (tokenLen >= 4) {
+@@ -543,7 +537,7 @@ public class FastDateFormat extends Format {
+                 rule = selectNumberRule(Calendar.WEEK_OF_MONTH, tokenLen);
+                 break;
+             case 'a': // am/pm marker (text)
+-                rule = new TextField(Calendar.AM_PM, AmPmStrings);
++                rule = new TextField(Calendar.AM_PM, amPmStrings);
+                 break;
+             case 'k': // hour in day (1..24)
+                 rule = new TwentyFourHourField(selectNumberRule(Calendar.HOUR_OF_DAY, tokenLen));
+@@ -576,13 +570,23 @@ public class FastDateFormat extends Format {
+             default:
+                 throw new IllegalArgumentException("Illegal pattern component: " + token);
+             }
+-
+             rules.add(rule);
+         }
+-
+         return rules;
+     }
+-
++1. The diffing strategy is simple but very powerful
++2. We can extract a list of APIs that might be buggy
++3. We can extract a list of APIs that have been fixed
++4. We can give an approach to fix some bugs
++5. We can extract rules in human readable form
++1. We have collected 3 software repositories: a large-scale software, an instance in an IDE, and a small-scale project.
++2. We have collected 4 bug-fixing commits, which can be used as benchmark to compare with other methods.
++3. We have also collected 3 different kinds of datasets, i.e., large-scale projects, small-scale projects, and IDE instances.
++4. We have provided a systematic comparison of our method with two existing diff-based methods.
++1. To further improve the method by considering the context information of Java methods
++2. To investigate how to integrate the method with other methods for better bug prediction, fault localization, and bug detection.
++1. To incorporate the position information, e.g., the position of tokens in the source code.
++2. To investigate how to integrate the method with other methods for better bug prediction, fault localization, and bug detection.
+     /**
+      * <p>Performs the parsing of tokens.</p>
+      *

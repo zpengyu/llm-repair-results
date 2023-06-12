@@ -1,0 +1,21 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/deser/std/NumberDeserializers.java b/src/main/java/com/fasterxml/jackson/databind/deser/std/NumberDeserializers.java
+index a76403c86..466e6b7c4 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/deser/std/NumberDeserializers.java
++++ b/src/main/java/com/fasterxml/jackson/databind/deser/std/NumberDeserializers.java
+@@ -144,7 +140,15 @@ public class NumberDeserializers
+         public final T getNullValue() {
+             return _nullValue;
+         }
+-
++        /**
++         * Method called to handle cases where no null value is configured for
++         * type, but one is encountered. Default implementation
++         * will throw an exception, unless feature
++         * {@link DeserializationFeature#FAIL_ON_NULL_FOR_PRIMITIVES} is disabled.
++         */
++        protected T _nullValue(DeserializationContext ctxt) throws JsonMappingException {
++            throw ctxt.mappingException("Can not map JSON null into type %s", handledType().toString());
++        }
+             // [databind#1095]: Should not allow coercion from into null from Empty String
+             // either, if `null` not allowed
+     }

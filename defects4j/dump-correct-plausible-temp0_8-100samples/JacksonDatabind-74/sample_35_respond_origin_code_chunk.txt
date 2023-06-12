@@ -1,0 +1,21 @@
+    protected Object _deserializeTypedUsingDefaultImpl(JsonParser p, DeserializationContext ctxt,
+            TokenBuffer tb) throws IOException
+    {
+        // As per [JACKSON-614], may have default implementation to use
+        JsonDeserializer<Object> deser = _findDefaultImplDeserializer(ctxt);
+        if (deser != null) {
+            if (tb != null) {
+                tb.writeEndObject();
+                p = tb.asParser(p);
+                // must move to point to the first token:
+                p.nextToken();
+            }
+            return deser.deserialize(p, ctxt);
+        }
+        if (ctxt.isEnabled(DeserializationFeature.FAIL_ON_INVALID_SUBTYPE)) {
+            ctxt.reportWrongTokenException(p, JsonToken.FIELD_NAME,
+                    "missing property '"+_typePropertyName+"' that is to contain type id  (for class "+baseTypeName()+")");
+        }
+        return null;
+    }
+

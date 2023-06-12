@@ -1,0 +1,17 @@
+diff --git a/src/org/mockito/internal/invocation/Invocation.java b/src/org/mockito/internal/invocation/Invocation.java
+index abfec1178..8fa794099 100644
+--- a/src/org/mockito/internal/invocation/Invocation.java
++++ b/src/org/mockito/internal/invocation/Invocation.java
+@@ -199,9 +199,11 @@ public class Invocation implements PrintableInvocation, InvocationOnMock, Printi
+     }
+ 
+     public Object callRealMethod() throws Throwable {
++        if (realMethod.getDeclaringClass().isInterface()) {
++            throw new IllegalStateException("calling real methods on interface is not supported");
++        }
+         return realMethod.invoke(mock, rawArguments);
+     }
+-
+     public String toString(PrintSettings printSettings) {
+         return toString(argumentsToMatchers(), printSettings);
+     }

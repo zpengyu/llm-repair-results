@@ -1,0 +1,42 @@
+diff --git a/src/com/google/javascript/jscomp/TypeCheck.java b/src/com/google/javascript/jscomp/TypeCheck.java
+index 6030d48d..1c3f1411 100644
+--- a/src/com/google/javascript/jscomp/TypeCheck.java
++++ b/src/com/google/javascript/jscomp/TypeCheck.java
+@@ -1555,29 +1553,23 @@ public class TypeCheck implements NodeTraversal.Callback, CompilerPass {
+     // If it is a function type, then validate parameters.
+     if (childType instanceof FunctionType) {
+       FunctionType functionType = (FunctionType) childType;
+-
+-      boolean isExtern = false;
+-      JSDocInfo functionJSDocInfo = functionType.getJSDocInfo();
+-      if(functionJSDocInfo != null) {
+-        String sourceName = functionJSDocInfo.getSourceName();
+-        CompilerInput functionSource = compiler.getInput(sourceName);
+-        isExtern = functionSource.isExtern();
+-      }
+-
+       // Non-native constructors should not be called directly
+       // unless they specify a return type and are defined
+       // in an extern.
+       if (functionType.isConstructor() &&
+           !functionType.isNativeObjectType() &&
+-          (functionType.getReturnType().isUnknownType() ||
+-           functionType.getReturnType().isVoidType() ||
+-           !isExtern)) {
++          functionType.getReturnType().isUnknownType() &&
++          (!functionType.getJSDocInfo().isExtern())) {
+         report(t, n, CONSTRUCTOR_NOT_CALLABLE, childType.toString());
+       }
+-
+       // Functions with explcit 'this' types must be called in a GETPROP
+       // or GETELEM.
+-
++      if (functionType.isConstructor() &&
++          !functionType.getJSDocInfo().isConstructor() &&
++          (functionType.getThisType() != null) &&
++          (n.getType() != Token.CALL)) {
++        report(t, n, CONSTRUCTOR_REQUIRES_NEW, childType.toString());
++      }
+       visitParameterList(t, n, functionType);
+       ensureTyped(t, n, functionType.getReturnType());
+     } else {

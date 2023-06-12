@@ -1,0 +1,49 @@
+diff --git a/src/main/java/org/apache/commons/compress/archivers/ar/ArArchiveInputStream.java b/src/main/java/org/apache/commons/compress/archivers/ar/ArArchiveInputStream.java
+index 9112fa85..1e752d85 100644
+--- a/src/main/java/org/apache/commons/compress/archivers/ar/ArArchiveInputStream.java
++++ b/src/main/java/org/apache/commons/compress/archivers/ar/ArArchiveInputStream.java
+@@ -110,13 +101,10 @@ public class ArArchiveInputStream extends ArchiveInputStream {
+                 }
+             }
+         }
+-
+         return new ArArchiveEntry(new String(name).trim(),
+-                                          Long.parseLong(new String(length)
++                             Long.parseLong(new String(length)
+                                                          .trim()));
+     }
+-
+-
+     public ArchiveEntry getNextEntry() throws IOException {
+         return getNextArEntry();
+     }
+@@ -137,17 +122,23 @@ public class ArArchiveInputStream extends ArchiveInputStream {
+     public int read(byte[] b) throws IOException {
+         return read(b, 0, b.length);
+     }
+-
+     public int read(byte[] b, final int off, final int len) throws IOException {
+         int toRead = len;
+-        final int ret = this.input.read(b, off, toRead);
+-        offset += (ret > 0 ? ret : 0);
+-        return ret;
++        int ret;
++        do {
++            ret = this.input.read(b, off + (len - toRead), toRead);
++            if (ret != -1) {
++                toRead -= ret;
++                offset += ret;
++            }
++        } while (toRead > 0 && ret != -1);
++        if (ret == -1) {
++            return ret;
++        }
++        return len - toRead;
+     }
+-
+     public static boolean matches(byte[] signature, int length) {
+         // 3c21 7261 6863 0a3e
+-
+         if (length < 8) {
+             return false;
+         }

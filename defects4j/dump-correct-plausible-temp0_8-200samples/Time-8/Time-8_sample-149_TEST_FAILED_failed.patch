@@ -1,0 +1,28 @@
+diff --git a/src/main/java/org/joda/time/DateTimeZone.java b/src/main/java/org/joda/time/DateTimeZone.java
+index 6c2eec91..c4413dc0 100644
+--- a/src/main/java/org/joda/time/DateTimeZone.java
++++ b/src/main/java/org/joda/time/DateTimeZone.java
+@@ -269,7 +269,7 @@ public abstract class DateTimeZone implements Serializable {
+      * @throws IllegalArgumentException if any value is out of range, the minutes are negative
+      *  when the hours are positive, or the resulting offset exceeds +/- 23:59:59.000
+      */
+-    public static DateTimeZone forOffsetHoursMinutes(int hoursOffset, int minutesOffset) throws IllegalArgumentException {
++     public static DateTimeZone forOffsetHoursMinutes(int hoursOffset, int minutesOffset) throws IllegalArgumentException {
+         if (hoursOffset == 0 && minutesOffset == 0) {
+             return DateTimeZone.UTC;
+         }
+@@ -281,11 +281,11 @@ public abstract class DateTimeZone implements Serializable {
+         }
+         int offset = 0;
+         try {
+-            int hoursInMinutes = hoursOffset * 60;
++            int hoursInMinutes = FieldUtils.safeMultiply(hoursOffset, 60);
+             if (hoursInMinutes < 0) {
+-                minutesOffset = hoursInMinutes - minutesOffset;
++                minutesOffset = FieldUtils.safeAdd(hoursInMinutes, minutesOffset);
+             } else {
+-                minutesOffset = hoursInMinutes + minutesOffset;
++                minutesOffset = FieldUtils.safeAdd(hoursInMinutes, minutesOffset);
+             }
+             offset = FieldUtils.safeMultiply(minutesOffset, DateTimeConstants.MILLIS_PER_MINUTE);
+         } catch (ArithmeticException ex) {

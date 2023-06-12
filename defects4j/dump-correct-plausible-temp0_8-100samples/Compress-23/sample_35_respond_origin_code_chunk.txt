@@ -1,0 +1,22 @@
+        InputStream decode(final InputStream in, final Coder coder,
+                byte[] password) throws IOException {
+            byte propsByte = coder.properties[0];
+            long dictSize = coder.properties[1];
+            for (int i = 1; i < 4; i++) {
+                dictSize |= (coder.properties[i + 1] << (8 * i));
+            }
+            if (dictSize > LZMAInputStream.DICT_SIZE_MAX) {
+                throw new IOException("Dictionary larger than 4GiB maximum size");
+            }
+            long length = -1;
+            long bytesRead = 0;
+            if ((coder.properties[4] & 0x80) != 0) {
+                length = 0;
+                for (int i = 0; i < 8; i++) {
+                    length |= (((long) coder.properties[i + 8]) << (8 * i));
+                }
+                bytesRead += 8;
+            }
+            return new LZMAInputStream(in, length, propsByte, (int) dictSize);
+        }
+

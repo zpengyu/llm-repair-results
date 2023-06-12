@@ -1,0 +1,23 @@
+diff --git a/src/main/java/org/apache/commons/compress/archivers/zip/Zip64ExtendedInformationExtraField.java b/src/main/java/org/apache/commons/compress/archivers/zip/Zip64ExtendedInformationExtraField.java
+index 430232a7..5dc79bd3 100644
+--- a/src/main/java/org/apache/commons/compress/archivers/zip/Zip64ExtendedInformationExtraField.java
++++ b/src/main/java/org/apache/commons/compress/archivers/zip/Zip64ExtendedInformationExtraField.java
+@@ -283,9 +283,17 @@ public class Zip64ExtendedInformationExtraField implements ZipExtraField {
+                 diskStart = new ZipLong(rawCentralDirectoryData, offset);
+                 offset += WORD;
+             }
++            if (hasUncompressedSize && size.getLongValue() == 0xffffffffL
++                || hasCompressedSize && compressedSize.getLongValue() == 0xffffffffL
++                || hasRelativeHeaderOffset && relativeHeaderOffset.getLongValue() == 0xffffffffL
++                || hasDiskStart && diskStart.getValue() == 0xffffL) {
++                throw new ZipException("at least one of the values for "
++                                       + "uncompressed size, compressed size,"
++                                       + "relative header offset or disk start"
++                                       + " is too large to fit into 32 bits");
++            }
+         }
+     }
+-
+     /**
+      * The uncompressed size stored in this extra field.
+      */

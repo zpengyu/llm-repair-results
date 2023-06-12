@@ -1,0 +1,45 @@
+diff --git a/src/main/java/org/jsoup/parser/Parser.java b/src/main/java/org/jsoup/parser/Parser.java
+index 8cc01d2..8c917ec 100644
+--- a/src/main/java/org/jsoup/parser/Parser.java
++++ b/src/main/java/org/jsoup/parser/Parser.java
+@@ -140,12 +136,10 @@ public class Parser {
+             tq.matchChomp(">");
+         }
+         addChildToParent(child, isEmptyElement);
+-
+         // pc data only tags (textarea, script): chomp to end tag, add content as text node
+         if (tag.isData()) {
+-            String data = tq.chompTo("</" + tagName);
++            String data = tq.chompTo("</" + tagName, isEmptyElement);
+             tq.chompTo(">");
+-
+             Node dataNode;
+             if (tag.equals(titleTag) || tag.equals(textareaTag)) // want to show as text, but not contain inside tags (so not a data tag?)
+                 dataNode = TextNode.createFromEncoded(data, baseUri);
+@@ -163,7 +156,25 @@ public class Parser {
+             }
+         }
+     }
+-
++    private String chompTo(String s, boolean checkStart) {
++        String seq = seq(s, checkStart);
++        String data = tq.consumeTo(seq);
++        tq.consume(seq);
++        return data;
++    }
++    private String seq(String s, boolean checkStart) {
++        StringBuilder accum = new StringBuilder();
++        for (int i = 0; i < s.length(); i++) {
++            if (!checkStart || i == 0)
++                accum.append(s.charAt(i));
++            else
++                accum.append('[')
++                        .append(Character.toLowerCase(s.charAt(i)))
++                        .append(Character.toUpperCase(s.charAt(i)))
++                        .append(']');
++        }
++        return accum.toString();
++    }
+     private Attribute parseAttribute() {
+         tq.consumeWhitespace();
+         String key = tq.consumeAttributeKey();

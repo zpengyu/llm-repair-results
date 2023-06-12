@@ -1,0 +1,92 @@
+    private void applyPaxHeadersToCurrentEntry(Map<String, String> headers) {
+        /*
+         * The following headers are defined for Pax.
+         * atime, ctime, charset: cannot use these without changing TarArchiveEntry fields
+         * mtime
+         * comment
+         * gid, gname
+         * linkpath
+         * size
+         * uid,uname
+         * SCHILY.devminor, SCHILY.devmajor: don't have setters/getters for those
+         */
+        for (Entry<String, String> ent : headers.entrySet()){
+            String key = ent.getKey();
+            String val = ent.getValue();
+            if ("path".equals(key)){
+                setPath(currEntry, val);
+            } else if ("linkpath".equals(key)){
+                setLinkPath(currEntry, val);
+            } else if ("gid".equals(key)){
+                setGroupId(currEntry, val);
+            } else if ("gname".equals(key)){
+                setGroupName(currEntry, val);
+            } else if ("uid".equals(key)){
+                setUserId(currEntry, val);
+            } else if ("uname".equals(key)){
+                setUserName(currEntry, val);
+            } else if ("size".equals(key)){
+                setSize(currEntry, val);
+            } else if ("mtime".equals(key)){
+                setModTime(currEntry, val);
+            } else if ("SCHILY.devminor".equals(key)){
+                setDevMinor(currEntry, val);
+            } else if ("SCHILY.devmajor".equals(key)){
+                setDevMajor(currEntry, val);
+            }
+        }
+    }
+    private void setPath(TarArchiveEntry currEntry, String path) {
+        currEntry.setName(path);
+    }
+    private void setLinkPath(TarArchiveEntry currEntry, String linkPath) {
+        currEntry.setLinkName(linkPath);
+    }
+    private void setGroupId(TarArchiveEntry currEntry, String groupId) {
+        try {
+            currEntry.setGroupId(Integer.parseInt(groupId));
+        } catch (NumberFormatException e) {
+            // ignore
+        }
+    }
+    private void setGroupName(TarArchiveEntry currEntry, String groupName) {
+        currEntry.setGroupName(groupName);
+    }
+    private void setUserId(TarArchiveEntry currEntry, String userId) {
+        try {
+            currEntry.setUserId(Integer.parseInt(userId));
+        } catch (NumberFormatException e) {
+            // ignore
+        }
+    }
+    private void setUserName(TarArchiveEntry currEntry, String userName) {
+        currEntry.setUserName(userName);
+    }
+    private void setSize(TarArchiveEntry currEntry, String size) {
+        try {
+            currEntry.setSize(Long.parseLong(size));
+        } catch (NumberFormatException e) {
+            // ignore
+        }
+    }
+    private void setModTime(TarArchiveEntry currEntry, String modTime) {
+        try {
+            currEntry.setModTime((long) (Double.parseDouble(modTime) * 1000));
+        } catch (NumberFormatException e) {
+            // ignore
+        }
+    }
+    private void setDevMinor(TarArchiveEntry currEntry, String devMinor) {
+        try {
+            currEntry.setDevMinor(Integer.parseInt(devMinor));
+        } catch (NumberFormatException e) {
+            // ignore
+        }
+    }
+    private void setDevMajor(TarArchiveEntry currEntry, String devMajor) {
+        try {
+            currEntry.setDevMajor(Integer.parseInt(devMajor));
+        } catch (NumberFormatException e) {
+            // ignore
+        }
+    }

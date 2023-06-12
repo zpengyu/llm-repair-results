@@ -1,0 +1,87 @@
+diff --git a/src/main/java/org/jsoup/nodes/Entities.java b/src/main/java/org/jsoup/nodes/Entities.java
+index 32cc3af..b395822 100644
+--- a/src/main/java/org/jsoup/nodes/Entities.java
++++ b/src/main/java/org/jsoup/nodes/Entities.java
+@@ -138,21 +135,77 @@ public class Entities {
+                     default:
+                         if (canEncode(coreCharset, c, encoder))
+                             accum.append(c);
+-                        else if (map.containsKey(c))
+-                            accum.append('&').append(map.get(c)).append(';');
+                         else
+-                            accum.append("&#x").append(Integer.toHexString(codePoint)).append(';');
++                            escapeUnencodables(c, accum);
+                 }
+             } else {
+                 final String c = new String(Character.toChars(codePoint));
+                 if (encoder.canEncode(c)) // uses fallback encoder for simplicity
+                     accum.append(c);
+                 else
+-                    accum.append("&#x").append(Integer.toHexString(codePoint)).append(';');
++                    escapeUnencodables(c, accum);
+             }
+         }
+     }
+-
++    /**
++     * Escape a string to a byte stream using the specified output settings.
++     * @param string string to escape
++     * @param os output stream to write to
++     * @param charset character set to escape to
++     * @param escapeMode escape mode to use
++     * @throws IOException on error
++     */
++    static void escape(String string, OutputStream os, Charset charset, EscapeMode escapeMode) throws IOException {
++        if (charset == null) charset = Charset.forName("UTF-8");
++        Writer writer = new BufferedWriter(new OutputStreamWriter(os, charset));
++        escape(writer, string, escapeMode, false, false, false);
++        writer.flush();
++    }
++    /**
++     * Check if the string can be safely encoded in the specified encoding.
++     * @param charset charset to test
++     * @param string string to test
++     * @param fallback fallback to use if charset is not supported by this VM
++     * @return if string is supported by the encoding
++     */
++    static boolean canEncode(CoreCharset charset, String string, CharsetEncoder fallback) {
++        if (fallback != null) {
++            try {
++                return fallback.canEncode(string);
++            } catch (Exception e) {
++                return false;
++            }
++        }
++        return charset.canEncode(string);
++    }
++    /**
++     * Check if the character can be safely encoded in the specified encoding.
++     * @param charset charset to test
++     * @param c character to test
++     * @param fallback fallback to use if charset is not supported by this VM
++     * @return if c is supported by the encoding
++     */
++    static boolean canEncode(CoreCharset charset, char c, CharsetEncoder fallback) {
++        if (fallback != null) {
++            try {
++                return fallback.canEncode(c);
++            } catch (Exception e) {
++                return false;
++            }
++        }
++        return charset.canEncode(c);
++    }
++    static void escapeUnencodables(String string, StringBuilder accum) {
++        for (final char c : string.toCharArray()) {
++            escapeUnencodables(c, accum);
++        }
++    }
++    static void escapeUnencodables(char c, StringBuilder accum) {
++        if (c >= 128)
++            accum.append("&#x").append(Integer.toHexString(c).toUpperCase()).append(';');
++        else
++            accum.append("&#").append((int) c).append(';');
++    }
+     static String unescape(String string) {
+         return unescape(string, false);
+     }

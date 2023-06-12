@@ -1,0 +1,25 @@
+diff --git a/gson/src/main/java/com/google/gson/TypeInfoFactory.java b/gson/src/main/java/com/google/gson/TypeInfoFactory.java
+index 0aa1455a..a15ff112 100644
+--- a/gson/src/main/java/com/google/gson/TypeInfoFactory.java
++++ b/gson/src/main/java/com/google/gson/TypeInfoFactory.java
+@@ -114,10 +102,18 @@ final class TypeInfoFactory {
+   private static Type[] extractRealTypes(
+       Type[] actualTypeArguments, Type parentType, Class<?> rawParentClass) {
+     Preconditions.checkNotNull(actualTypeArguments);
+-
+     Type[] retTypes = new Type[actualTypeArguments.length];
+     for (int i = 0; i < actualTypeArguments.length; ++i) {
+-      retTypes[i] = getActualType(actualTypeArguments[i], parentType, rawParentClass);
++      if (actualTypeArguments[i] instanceof TypeVariable<?>){
++        for (int j = 0; j < rawParentClass.getTypeParameters().length; j++){
++          if (rawParentClass.getTypeParameters()[j].getName().equals(((TypeVariable<?>) actualTypeArguments[i]).getName())){
++            retTypes[i] = actualTypeArguments[j];
++            break;
++          }
++        }
++      }
++      else
++        retTypes[i] = getActualType(actualTypeArguments[i], parentType, rawParentClass);
+     }
+     return retTypes;
+   }

@@ -1,0 +1,25 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/deser/std/StringCollectionDeserializer.java b/src/main/java/com/fasterxml/jackson/databind/deser/std/StringCollectionDeserializer.java
+index 42c6f0491..bd5288b82 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/deser/std/StringCollectionDeserializer.java
++++ b/src/main/java/com/fasterxml/jackson/databind/deser/std/StringCollectionDeserializer.java
+@@ -107,6 +107,11 @@ public final class StringCollectionDeserializer
+             AnnotatedWithParams delegateCreator = _valueInstantiator.getDelegateCreator();
+             if (delegateCreator != null) {
+                 JavaType delegateType = _valueInstantiator.getDelegateType(ctxt.getConfig());
++                if (delegateType == null) {
++                    throw new IllegalArgumentException("Invalid delegate-creator definition for "+_containerType
++                            +": value instantiator ("+_valueInstantiator.getClass().getName()
++                            +") returned true for 'canCreateUsingDelegate()', but null for 'getDelegateType()'");
++                }
+                 delegate = findDeserializer(ctxt, delegateType, property);
+             }
+         }
+@@ -116,7 +121,7 @@ public final class StringCollectionDeserializer
+             // [databind#125]: May have a content converter
+             valueDeser = findConvertingContentDeserializer(ctxt, property, valueDeser);
+             if (valueDeser == null) {
+-            // And we may also need to get deserializer for String
++                // And we may also need to get deserializer for String
+                 valueDeser = ctxt.findContextualValueDeserializer(valueType, property);
+             }
+         } else { // if directly assigned, probably not yet contextual, so:

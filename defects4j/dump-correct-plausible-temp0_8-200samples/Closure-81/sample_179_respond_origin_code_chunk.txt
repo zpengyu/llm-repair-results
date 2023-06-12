@@ -1,0 +1,23 @@
+    Node processFunctionNode(FunctionNode functionNode) {
+      Node node = newNode(Token.FUNCTION);
+
+      if (functionNode.getFunctionName() != null) {
+        Name name = functionNode.getFunctionName();
+        Node newName = transform(name);
+        node.addChildToBack(newName);
+      }
+
+      Node lp = newNode(Token.LP);
+      node.addChildToBack(lp);
+
+      for (AstNode param : functionNode.getParams()) {
+        lp.addChildToBack(transform(param));
+      }
+
+      Node bodyNode = transform(functionNode.getBody());
+      parseDirectives(bodyNode);
+      node.addChildToBack(bodyNode);
+
+      return node;
+    }
+

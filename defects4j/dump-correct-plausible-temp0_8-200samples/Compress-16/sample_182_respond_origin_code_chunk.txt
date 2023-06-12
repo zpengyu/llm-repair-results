@@ -1,0 +1,24 @@
+    public ArchiveInputStream createArchiveInputStream(final InputStream in)
+            throws ArchiveException {
+        if (in == null) {
+            throw new IllegalArgumentException("Stream must not be null.");
+        }
+        if (!in.markSupported()) {
+            in = new BufferedInputStream(in);
+        }
+
+        ArchiveInputStream i = null;
+        try {
+            in.mark(12);
+            i = createArchiveInputStream(in, ArchiveStreamFactory.detect(in));
+        } catch (IOException e) {
+            throw new ArchiveException("Could not determine stream type", e);
+        } finally {
+            if (i == null) {
+                IOUtils.closeQuietly(in);
+            }
+        }
+        return i;
+    }
+    
+    

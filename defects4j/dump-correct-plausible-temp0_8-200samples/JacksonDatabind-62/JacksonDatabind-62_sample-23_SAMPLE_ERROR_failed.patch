@@ -1,0 +1,37 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/deser/std/CollectionDeserializer.java b/src/main/java/com/fasterxml/jackson/databind/deser/std/CollectionDeserializer.java
+index af4270610..08831b52b 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/deser/std/CollectionDeserializer.java
++++ b/src/main/java/com/fasterxml/jackson/databind/deser/std/CollectionDeserializer.java
+@@ -190,14 +190,27 @@ public class CollectionDeserializer
+                 JsonFormat.Feature.ACCEPT_SINGLE_VALUE_AS_ARRAY);
+         // also, often value deserializer is resolved here:
+         JsonDeserializer<?> valueDeser = _valueDeserializer;
+-        
+         // May have a content converter
+         valueDeser = findConvertingContentDeserializer(ctxt, property, valueDeser);
+-        final JavaType vt = _collectionType.getContentType();
+-        if (valueDeser == null) {
+-            valueDeser = ctxt.findContextualValueDeserializer(vt, property);
+-        } else { // if directly assigned, probably not yet contextual, so:
++        JavaType vt = _collectionType.getContentType();
++        // 05-Dec-2015, tatu: This is actually wrong: we are NOT allowed to expose
++        //    private types of the container, so should try to use
++        //    TypeDeserializer.refineDeserializationType() instead
++        //final JavaType vt = _collectionType.getContentType();
++        //if (valueDeser == null) {
++        //    valueDeser = ctxt.findContextualValueDeserializer(vt, property);
++        //} else { // if directly assigned, probably not yet contextual, so:
++        //    valueDeser = ctxt.handleSecondaryContextualization(valueDeser, property, vt);
++        //}
++        if (property != null) {
++            // IMPORTANT: do NOT pass actual property, to avoid exposing its type!
++            vt = TypeDeserializer.refineDeserializationType(ctxt, null, vt);
++        }
++        if (valueDeser != null) {
++            // also: minor optimization, to avoid double-wrapping
+             valueDeser = ctxt.handleSecondaryContextualization(valueDeser, property, vt);
++        } else {
++            valueDeser = ctxt.findContextualValueDeserializer(vt, property);
+         }
+         // and finally, type deserializer needs context as well
+         TypeDeserializer valueTypeDeser = _valueTypeDeserializer;

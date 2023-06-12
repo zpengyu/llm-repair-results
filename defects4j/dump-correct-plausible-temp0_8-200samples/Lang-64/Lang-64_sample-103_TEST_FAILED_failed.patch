@@ -1,0 +1,63 @@
+diff --git a/src/java/org/apache/commons/lang/enums/ValuedEnum.java b/src/java/org/apache/commons/lang/enums/ValuedEnum.java
+index 0823e77d..1cfeb36a 100644
+--- a/src/java/org/apache/commons/lang/enums/ValuedEnum.java
++++ b/src/java/org/apache/commons/lang/enums/ValuedEnum.java
+@@ -139,7 +135,7 @@ public abstract class ValuedEnum extends Enum {
+      * @return the enum object, or null if the enum does not exist
+      * @throws IllegalArgumentException if the enum class is <code>null</code>
+      */
+-    protected static Enum getEnum(Class enumClass, int value) {
++    protected static ValuedEnum getEnum(Class enumClass, int value) {
+         if (enumClass == null) {
+             throw new IllegalArgumentException("The Enum Class must not be null");
+         }
+@@ -189,10 +182,45 @@ public abstract class ValuedEnum extends Enum {
+      * @param other  the object to determine the value for
+      * @return the value
+      */
+-            // ignore - should never happen
+-            // ignore - should never happen
+-            // ignore - should never happen
+-
++    private static int getValue(Class enumClass, String enumName) {
++        try {
++            Method method = enumClass.getMethod("getValue", new Class[0]);
++            Integer value = (Integer) method.invoke(Enum.getEnum(enumClass, enumName), new Object[0]);
++            return value.intValue();
++        } catch (Exception ex) {
++            return -1;  // this should never happen
++        }
++    }
++    /**
++     * <p>Use reflection to return an objects value.</p>
++     *
++     * @param other  the object to determine the value for
++     * @return the value
++     */
++    private static int getValue(Object other) {
++        try {
++            Method method = other.getClass().getMethod("getValue", new Class[0]);
++            Integer value = (Integer) method.invoke(other, new Object[0]);
++            return value.intValue();
++        } catch (Exception ex) {
++            return -1;  // this should never happen
++        }
++    }
++    /**
++     * <p>Use reflection to return an objects value.</p>
++     *
++     * @param other  the object to determine the value for
++     * @return the value
++     */
++    private static int getValueInSameClassLoader(ValuedEnum other) {
++        try {
++            Method method = other.getClass().getMethod("getValue", new Class[0]);
++            Integer value = (Integer) method.invoke(other, new Object[0]);
++            return value.intValue();
++        } catch (Exception ex) {
++            return -1;  // this should never happen
++        }
++    }
+     /**
+      * <p>Human readable description of this <code>Enum</code> item.</p>
+      *

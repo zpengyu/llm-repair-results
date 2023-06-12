@@ -1,0 +1,25 @@
+diff --git a/src/com/google/javascript/jscomp/TypeInference.java b/src/com/google/javascript/jscomp/TypeInference.java
+index 6c9c7846..08a6b852 100644
+--- a/src/com/google/javascript/jscomp/TypeInference.java
++++ b/src/com/google/javascript/jscomp/TypeInference.java
+@@ -1202,13 +1198,16 @@ class TypeInference
+     FunctionType replacementFnType = fnType.visit(replacer)
+         .toMaybeFunctionType();
+     Preconditions.checkNotNull(replacementFnType);
+-
+-    callTarget.setJSType(replacementFnType);
++    // Avoid replacing the type of the call target if it's a GETPROP.
++    // Inferring on a GETPROP (or any expression, really) should change the
++    // type of the expression, not the type of the base node.
++    JSType replacementCallTargetType = (callTarget.isGetProp())
++        ? replacementFnType
++        : replacementFnType.getReturnType();
++    callTarget.setJSType(replacementCallTargetType);
+     n.setJSType(replacementFnType.getReturnType());
+-
+     return replacer.madeChanges;
+   }
+-
+   private FlowScope traverseNew(Node n, FlowScope scope) {
+     scope = traverseChildren(n, scope);
+ 

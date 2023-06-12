@@ -1,0 +1,82 @@
+diff --git a/src/main/java/org/jsoup/helper/DataUtil.java b/src/main/java/org/jsoup/helper/DataUtil.java
+index 6de0c40..fb67f6d 100644
+--- a/src/main/java/org/jsoup/helper/DataUtil.java
++++ b/src/main/java/org/jsoup/helper/DataUtil.java
+@@ -88,9 +88,61 @@ public final class DataUtil {
+     static Document parseByteData(ByteBuffer byteData, String charsetName, String baseUri, Parser parser) {
+         String docData;
+         Document doc = null;
+-
+         // look for BOM - overrides any other header or input
+-
++        if (byteData.hasArray() && byteData.arrayOffset() == 0) { // only do this if the bytebuffer is backing an array
++            byte[] bytes = byteData.array();
++            int length = bytes.length;
++            // look for BOM - overrides any other header or input
++            if (length > 3 &&
++                    bytes[0] == (byte) 0xEF &&
++                    bytes[1] == (byte) 0xBB &&
++                    bytes[2] == (byte) 0xBF) {
++                charsetName = defaultCharset;
++                byteData = ByteBuffer.wrap(bytes, 3, length - 3);
++            } else if (length > 2 &&
++                    bytes[0] == (byte) 0xFE &&
++                    bytes[1] == (byte) 0xFF) {
++                charsetName = "utf-16be";
++                byteData = ByteBuffer.wrap(bytes, 2, length - 2);
++            } else if (length > 2 &&
++                    bytes[0] == (byte) 0xFF &&
++                    bytes[1] == (byte) 0xFE) {
++                charsetName = "utf-16le";
++                byteData = ByteBuffer.wrap(bytes, 2, length - 2);
++            } else if (length > 2 &&
++                    bytes[0] == (byte) 0x00 &&
++                    bytes[1] == (byte) 0x3C &&
++                    bytes[2] == (byte) 0x00 &&
++                    bytes[3] == (byte) 0x3F) {
++                charsetName = "utf-16be";
++                byteData = ByteBuffer.wrap(bytes, 2, length - 2);
++            } else if (length > 2 &&
++                    bytes[0] == (byte) 0x3C &&
++                    bytes[1] == (byte) 0x00 &&
++                    bytes[2] == (byte) 0x3F &&
++                    bytes[3] == (byte) 0x00) {
++                charsetName = "utf-16le";
++                byteData = ByteBuffer.wrap(bytes, 2, length - 2);
++            } else if (length > 5 &&
++                    bytes[0] == (byte) 0x00 &&
++                    bytes[1] == (byte) 0x3C &&
++                    bytes[2] == (byte) 0x00 &&
++                    bytes[3] == (byte) 0x3F &&
++                    bytes[4] == (byte) 0x00 &&
++                    bytes[5] == (byte) 0x78) {
++                charsetName = "utf-16be";
++                byteData = ByteBuffer.wrap(bytes, 2, length - 2);
++            } else if (length > 5 &&
++                    bytes[0] == (byte) 0x00 &&
++                    bytes[1] == (byte) 0x3C &&
++                    bytes[2] == (byte) 0x00 &&
++                    bytes[3] == (byte) 0x3F &&
++                    bytes[4] == (byte) 0x00 &&
++                    bytes[5] == (byte) 0x78) {
++                charsetName = "utf-16le";
++                byteData = ByteBuffer.wrap(bytes, 2, length - 2);
++            }
++        }
+         if (charsetName == null) { // determine from meta. safe parse as UTF-8
+             // look for <meta http-equiv="Content-Type" content="text/html;charset=gb2312"> or HTML5 <meta charset="gb2312">
+             docData = Charset.forName(defaultCharset).decode(byteData).toString();
+@@ -123,13 +174,6 @@ public final class DataUtil {
+             Validate.notEmpty(charsetName, "Must set charset arg to character set of file to parse. Set to null to attempt to detect from HTML");
+             docData = Charset.forName(charsetName).decode(byteData).toString();
+         }
+-        if (docData.length() > 0 && docData.charAt(0) == UNICODE_BOM) {
+-            byteData.rewind();
+-            docData = Charset.forName(defaultCharset).decode(byteData).toString();
+-            docData = docData.substring(1);
+-            charsetName = defaultCharset;
+-            doc = null;
+-        }
+         if (doc == null) {
+             doc = parser.parseInput(docData, baseUri);
+             doc.outputSettings().charset(charsetName);

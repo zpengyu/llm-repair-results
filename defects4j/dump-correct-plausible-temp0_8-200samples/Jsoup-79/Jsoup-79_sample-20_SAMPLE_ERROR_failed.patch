@@ -1,0 +1,84 @@
+diff --git a/src/main/java/org/jsoup/nodes/LeafNode.java b/src/main/java/org/jsoup/nodes/LeafNode.java
+index 0e068b5..6ff5db3 100644
+--- a/src/main/java/org/jsoup/nodes/LeafNode.java
++++ b/src/main/java/org/jsoup/nodes/LeafNode.java
+@@ -5,37 +5,22 @@ import org.jsoup.helper.Validate;
+ import java.util.List;
+ 
+ abstract class LeafNode extends Node {
+-
+     Object value; // either a string value, or an attribute map (in the rare case multiple attributes are set)
+-
+-    protected final boolean hasAttributes() {
+-        return value instanceof Attributes;
+-    }
+-
+     @Override
+     public final Attributes attributes() {
+-        ensureAttributes();
+-        return (Attributes) value;
++        return hasAttributes() ? (Attributes) value : Attributes.empty();
+     }
+-
+-    private void ensureAttributes() {
+-        if (!hasAttributes()) {
+-            Object coreValue = value;
+-            Attributes attributes = new Attributes();
+-            value = attributes;
+-            if (coreValue != null)
+-                attributes.put(nodeName(), (String) coreValue);
+-        }
++    @Override
++    public boolean hasAttributes() {
++        return value instanceof Attributes;
+     }
+-
+     String coreValue() {
+         return attr(nodeName());
+     }
+-
+     void coreValue(String value) {
++        Validate.notNull(value);
+         attr(nodeName(), value);
+     }
+-
+     @Override
+     public String attr(String key) {
+         Validate.notNull(key);
+@@ -44,18 +29,13 @@ abstract class LeafNode extends Node {
+         }
+         return super.attr(key);
+     }
+-
+     @Override
+     public Node attr(String key, String value) {
+-        if (!hasAttributes() && key.equals(nodeName())) {
+-            this.value = value;
+-        } else {
+-            ensureAttributes();
+-            super.attr(key, value);
+-        }
++        Validate.notNull(value);
++        ensureAttributes();
++        super.attr(key, value);
+         return this;
+     }
+-
+     @Override
+     public boolean hasAttr(String key) {
+         ensureAttributes();
+@@ -93,4 +67,13 @@ abstract class LeafNode extends Node {
+     protected List<Node> ensureChildNodes() {
+         throw new UnsupportedOperationException("Leaf Nodes do not have child nodes.");
+     }
++    private void ensureAttributes() {
++        if (!hasAttributes()) {
++            Object coreValue = value;
++            Attributes attributes = new Attributes();
++            value = attributes;
++            if (coreValue != null)
++                attributes.put(nodeName(), (String) coreValue);
++        }
++    }
+ }
+\ No newline at end of file

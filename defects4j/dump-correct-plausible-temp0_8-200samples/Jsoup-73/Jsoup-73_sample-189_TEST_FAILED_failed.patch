@@ -1,0 +1,30 @@
+diff --git a/src/main/java/org/jsoup/helper/W3CDom.java b/src/main/java/org/jsoup/helper/W3CDom.java
+index fb864f5..40dfa14 100644
+--- a/src/main/java/org/jsoup/helper/W3CDom.java
++++ b/src/main/java/org/jsoup/helper/W3CDom.java
+@@ -80,10 +77,22 @@ public class W3CDom {
+         public void head(org.jsoup.nodes.Node source, int depth) {
+             if (source instanceof org.jsoup.nodes.Element) {
+                 org.jsoup.nodes.Element sourceEl = (org.jsoup.nodes.Element) source;
+-
+-                String prefix = updateNamespaces(sourceEl);
++                // get the element prefix if any
++                int pos = sourceEl.tagName().indexOf(":");
++                String prefix = pos > 0 ? sourceEl.tagName().substring(0, pos) : "";
++                // find the namespace for the prefix
+                 String namespace = namespaces.get(prefix);
+-
++                // if no prefix, try for default namespace if any
++                if (namespace == null) {
++                    namespace = namespaces.get("");
++                }
++                // check for xml prefix
++                if ("xml".equals(prefix)) {
++                    namespace = "http://www.w3.org/XML/1998/namespace";
++                }
++                // if no namespace found, skip the element
++                if (namespace == null)
++                    return;
+                 Element el = doc.createElementNS(namespace, sourceEl.tagName());
+                 copyAttributes(sourceEl, el);
+                 if (dest == null) { // sets up the root

@@ -1,0 +1,44 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/jsontype/impl/TypeDeserializerBase.java b/src/main/java/com/fasterxml/jackson/databind/jsontype/impl/TypeDeserializerBase.java
+index 339362e1e..cbfb8cef2 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/jsontype/impl/TypeDeserializerBase.java
++++ b/src/main/java/com/fasterxml/jackson/databind/jsontype/impl/TypeDeserializerBase.java
+@@ -177,11 +177,35 @@ public abstract class TypeDeserializerBase
+                      *   important for some reason?
+                      *   Disabling the check will break 2 Enum-related tests.
+                      */
+-                    // 19-Jun-2016, tatu: As per [databind#1270] we may actually get full
+-                    //   generic type with custom type resolvers. If so, should try to retain them.
+-                    //  Whether this is sufficient to avoid problems remains to be seen, but for
+-                    //  now it should improve things.
++                    if (type.isContainerType()) { // Container types are ok, since we retain type params
+                         type = ctxt.getTypeFactory().constructSpecializedType(_baseType, type.getRawClass());
++                    }
++                    if (type.isReferenceType() && _baseType.isReferenceType()) {
++                        // for reference types, we can always narrow. Check if there are type params to preserve.
++                        //  Whether this is sufficient to avoid problems remains to be seen, but for
++                        //  now it should improve things.
++                        TypeBindings newBindings = type.getBindings();
++                        if (newBindings.isEmpty()) {
++                            // No type params, just use the base type as is
++                            type = _baseType;
++                        } else {
++                            TypeBindings baseBindings = _baseType.getBindings();
++                            if (baseBindings.isEmpty()) {
++                                // base type has no bindings, but we do. Need to use those
++                                type = ctxt.getTypeFactory().constructSpecializedType(_baseType, type.getRawClass());
++                            } else {
++                                // both have bindings: need to merge
++                                // TODO: improve method for merging...
++                                Iterator<JavaType> btIter = baseBindings.iterator();
++                                Iterator<JavaType> ntIter = newBindings.iterator();
++                                TypeBindings b = TypeBindings.emptyBindings();
++                                while (btIter.hasNext() && ntIter.hasNext()) {
++                                    b = b.withBinding(btIter.next(), ntIter.next());
++                                }
++                                type = ctxt.constructType(_baseType.getRawClass(), b);
++                            }
++                        }
++                    }
+                 }
+                 deser = ctxt.findContextualValueDeserializer(type, _property);
+             }

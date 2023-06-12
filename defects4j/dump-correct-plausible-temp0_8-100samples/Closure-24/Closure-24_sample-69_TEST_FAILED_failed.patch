@@ -1,0 +1,25 @@
+diff --git a/src/com/google/javascript/jscomp/ScopedAliases.java b/src/com/google/javascript/jscomp/ScopedAliases.java
+index 0470cda2..df60d98b 100644
+--- a/src/com/google/javascript/jscomp/ScopedAliases.java
++++ b/src/com/google/javascript/jscomp/ScopedAliases.java
+@@ -275,8 +275,7 @@ class ScopedAliases implements HotSwapCompilerPass {
+         Node n = v.getNode();
+         int type = n.getType();
+         Node parent = n.getParent();
+-        if (parent.isVar()) {
+-          if (n.hasChildren() && n.getFirstChild().isQualifiedName()) {
++        if (parent.isVar() && !n.hasChildren() && n.isName()) {
+           String name = n.getString();
+           Var aliasVar = scope.getVar(name);
+           aliases.put(name, aliasVar);
+@@ -292,10 +290,8 @@ class ScopedAliases implements HotSwapCompilerPass {
+           // TODO(robbyw): Support using locals for private variables.
+           report(t, n, GOOG_SCOPE_NON_ALIAS_LOCAL, n.getString());
+         }
+-        }
+       }
+     }
+-
+     private void validateScopeCall(NodeTraversal t, Node n, Node parent) {
+       if (preprocessorSymbolTable != null) {
+         preprocessorSymbolTable.addReference(n.getFirstChild());

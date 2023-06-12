@@ -1,0 +1,25 @@
+diff --git a/src/com/google/javascript/jscomp/TypedScopeCreator.java b/src/com/google/javascript/jscomp/TypedScopeCreator.java
+index 5e7bfa3f..322228f9 100644
+--- a/src/com/google/javascript/jscomp/TypedScopeCreator.java
++++ b/src/com/google/javascript/jscomp/TypedScopeCreator.java
+@@ -2004,7 +2002,9 @@ final class TypedScopeCreator implements ScopeCreator {
+         // no reason to do this extra computation for them.
+         return;
+       }
+-
++      if (n.isName() && n.getParent() != null && n.getParent().isFunction()) {
++        return;
++      }
+       if (n.isName() && NodeUtil.isLValue(n) &&
+           // Be careful of bleeding functions, which create variables
+           // in the inner scope, not the scope where the name appears.
+@@ -2035,8 +2034,7 @@ final class TypedScopeCreator implements ScopeCreator {
+           }
+         }
+       }
+-    }
+-  }
++    }  }
+ 
+   private AstFunctionContents getFunctionAnalysisResults(@Nullable Node n) {
+     if (n == null) {

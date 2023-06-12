@@ -1,0 +1,24 @@
+diff --git a/src/com/google/javascript/jscomp/parsing/IRFactory.java b/src/com/google/javascript/jscomp/parsing/IRFactory.java
+index ddcf73c8..1ef245e8 100644
+--- a/src/com/google/javascript/jscomp/parsing/IRFactory.java
++++ b/src/com/google/javascript/jscomp/parsing/IRFactory.java
+@@ -249,14 +249,16 @@ class IRFactory {
+    * Check to see if the given block comment looks like it should be JSDoc.
+    */
+   private void handleBlockComment(Comment comment) {
+-    if (comment.getValue().indexOf("/* @") != -1 || comment.getValue().indexOf("\n * @") != -1) {
++    String value = comment.getValue();
++    int warningOffset = value.indexOf("/* @");
++    if (warningOffset != -1 || value.indexOf("\n * @") != -1) {
++      warningOffset += "/* @".length();
+       errorReporter.warning(
+           SUSPICIOUS_COMMENT_WARNING,
+           sourceName,
+-          comment.getLineno(), "", 0);
++          comment.getLineno(), "", warningOffset);
+     }
+   }
+-
+   /**
+    * @return true if the jsDocParser represents a fileoverview.
+    */

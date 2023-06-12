@@ -1,0 +1,22 @@
+diff --git a/src/com/google/javascript/jscomp/GlobalNamespace.java b/src/com/google/javascript/jscomp/GlobalNamespace.java
+index a00893b3..9c930d82 100644
+--- a/src/com/google/javascript/jscomp/GlobalNamespace.java
++++ b/src/com/google/javascript/jscomp/GlobalNamespace.java
+@@ -354,6 +352,17 @@ class GlobalNamespace
+                 }
+                 break;
+               case Token.GETPROP:
++                // Look at the parent of getprop to see if the getprop is
++                // the target of an assignment.
++                Node gramps = parent.getParent();
++                if (gramps == null) {
++                  return;
++                }
++                if (gramps.isAssign() && gramps.getFirstChild() == parent) {
++                  isSet = true;
++                  type = getValueType(parent.getNext());
++                  isPropAssign = true;
++                }
+                 return;
+               case Token.FUNCTION:
+                 Node gramps = parent.getParent();

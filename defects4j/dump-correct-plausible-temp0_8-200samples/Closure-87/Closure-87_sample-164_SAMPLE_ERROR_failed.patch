@@ -1,0 +1,25 @@
+diff --git a/src/com/google/javascript/jscomp/PeepholeSubstituteAlternateSyntax.java b/src/com/google/javascript/jscomp/PeepholeSubstituteAlternateSyntax.java
+index 17a02960..5ff9ab97 100644
+--- a/src/com/google/javascript/jscomp/PeepholeSubstituteAlternateSyntax.java
++++ b/src/com/google/javascript/jscomp/PeepholeSubstituteAlternateSyntax.java
+@@ -526,10 +526,18 @@ public class PeepholeSubstituteAlternateSyntax
+           // http://code.google.com/p/closure-compiler/issues/detail?id=291
+           // We try to detect this case, and not fold EXPR_RESULTs
+           // into other expressions.
+-
++          if (maybeExpr.getType() == Token.EXPR_RESULT &&
++              NodeUtil.isFunctionExpression(maybeExpr.getFirstChild())) {
+             // We only have to worry about methods with an implicit 'this'
+             // param, or this doesn't happen.
+-
++            Node fnNode = maybeExpr.getFirstChild();
++            Preconditions.checkState(
++                !NodeUtil.functionHasInlineJsdocs(fnNode));
++            Node fnNameNode = fnNode.getFirstChild();
++            return fnNameNode.getType() == Token.NAME &&
++                fnNameNode.getString().equals("") &&
++                fnNode.getChildAtIndex(1).hasChildren();
++          }
+           return NodeUtil.isExpressionNode(maybeExpr);
+       }
+     }

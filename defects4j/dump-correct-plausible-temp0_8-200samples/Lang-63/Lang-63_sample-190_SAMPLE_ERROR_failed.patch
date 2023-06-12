@@ -1,0 +1,27 @@
+diff --git a/src/java/org/apache/commons/lang/time/DurationFormatUtils.java b/src/java/org/apache/commons/lang/time/DurationFormatUtils.java
+index 8ced282e..4c466e86 100644
+--- a/src/java/org/apache/commons/lang/time/DurationFormatUtils.java
++++ b/src/java/org/apache/commons/lang/time/DurationFormatUtils.java
+@@ -356,10 +350,20 @@ public class DurationFormatUtils {
+             milliseconds += 1000 * seconds;
+             seconds = 0;
+         }
+-
+         return format(tokens, years, months, days, hours, minutes, seconds, milliseconds, padWithZeros);
+     }
+-
++    private static int reduceAndCorrect(Calendar start, Calendar end, int field, int difference) {
++        end.add(field, -difference);
++        int endValue = end.get(field);
++        int startValue = start.get(field);
++        if (endValue < startValue) {
++            end.add(field, difference);
++            return difference - 1;
++        } else {
++            end.add(field, difference);
++            return difference;
++        }
++    }
+     //-----------------------------------------------------------------------
+     /**
+      * <p>The internal method to do the formatting.</p>

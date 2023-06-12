@@ -1,0 +1,22 @@
+diff --git a/src/org/mockito/internal/configuration/SpyAnnotationEngine.java b/src/org/mockito/internal/configuration/SpyAnnotationEngine.java
+index e292e1300..1f88304b4 100644
+--- a/src/org/mockito/internal/configuration/SpyAnnotationEngine.java
++++ b/src/org/mockito/internal/configuration/SpyAnnotationEngine.java
+@@ -56,7 +55,16 @@ public class SpyAnnotationEngine implements AnnotationEngine {
+             }
+         }
+     }
+-    
++    //This is for the initialisation of Mockito.spy(Object)
++    private static class GloballyConfiguredAnswer implements Answer<Object> {
++        public Object answer(InvocationOnMock invocation) {
++            if (invocation.getMethod().getReturnType().equals(void.class)) {
++                return null;
++            } else {
++                throw new MockitoException(invocation.getMethod().getName() + "() should not be called on a mock outside of verification");
++            }
++        }
++    }    
+     //TODO duplicated elsewhere
+     void assertNoAnnotations(Class annotation, Field field, Class ... undesiredAnnotations) {
+         for (Class u : undesiredAnnotations) {

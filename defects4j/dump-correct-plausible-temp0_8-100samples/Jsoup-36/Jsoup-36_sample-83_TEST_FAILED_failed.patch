@@ -1,0 +1,31 @@
+diff --git a/src/main/java/org/jsoup/helper/DataUtil.java b/src/main/java/org/jsoup/helper/DataUtil.java
+index 3626928..e2b96a0 100644
+--- a/src/main/java/org/jsoup/helper/DataUtil.java
++++ b/src/main/java/org/jsoup/helper/DataUtil.java
+@@ -165,6 +153,23 @@ public class DataUtil {
+         }
+         return null;
+     }
+-    
+-    
++    /**
++     * Parse out a charset from a content type header. If the charset is not supported, returns defaultCharset.
++     * @param contentType e.g. "text/html; charset=EUC-JP"
++     * @param defaultCharset default charset to return if not found in contentType
++     * @return "EUC-JP", or default if not found. Charset is trimmed and uppercased.
++     */
++    static String getCharsetFromContentType(String contentType, String defaultCharset) {
++        if (defaultCharset == null) defaultCharset = "UTF-8";
++        if (contentType == null) return defaultCharset;
++        Matcher m = charsetPattern.matcher(contentType);
++        if (m.find()) {
++            String charset = m.group(1).trim();
++                if (Charset.isSupported(charset)) return charset;
++                charset = charset.toUpperCase(Locale.ENGLISH);
++                if (Charset.isSupported(charset)) return charset;
++                // if our advanced charset matching fails.... we just take the default
++        }
++        return defaultCharset;
++    }
+ }
+\ No newline at end of file

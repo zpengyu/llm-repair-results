@@ -1,0 +1,65 @@
+diff --git a/src/main/java/org/apache/commons/math/util/MultidimensionalCounter.java b/src/main/java/org/apache/commons/math/util/MultidimensionalCounter.java
+index 3272848ab..2a60acbe5 100644
+--- a/src/main/java/org/apache/commons/math/util/MultidimensionalCounter.java
++++ b/src/main/java/org/apache/commons/math/util/MultidimensionalCounter.java
+@@ -213,38 +213,33 @@ public class MultidimensionalCounter implements Iterable<Integer> {
+      * @throws OutOfRangeException if {@code index} is not between
+      * {@code 0} and the value returned by {@link #getSize()} (excluded).
+      */
+-    public int[] getCounts(int index) {
+-        if (index < 0 ||
+-            index >= totalSize) {
+-            throw new OutOfRangeException(index, 0, totalSize);
+-        }
+-
+-        final int[] indices = new int[dimension];
+-
+-        int count = 0;
+-        for (int i = 0; i < last; i++) {
+-            int idx = 0;
+-            final int offset = uniCounterOffset[i];
+-            while (count <= index) {
+-                count += offset;
+-                ++idx;
+-            }
+-            --idx;
+-            count -= offset;
+-            indices[i] = idx;
+-        }
+-
+-        int idx = 1;
++public int[] getCounts(int index) {
++    if (index < 0 ||
++        index >= totalSize) {
++        throw new OutOfRangeException(index, 0, totalSize);
++    }
++    final int[] indices = new int[dimension];
++    int count = 0;
++    for (int i = 0; i < last; i++) {
++        int idx = 0;
++        final int offset = uniCounterOffset[i];
+         while (count < index) {
+-            count += idx;
++            count += offset;
+             ++idx;
+         }
+         --idx;
+-        indices[last] = idx;
+-
+-        return indices;
++        count -= offset;
++        indices[i] = idx;
+     }
+-
++    int idx = 1;
++    while (count <= index) {
++        count += idx;
++        ++idx;
++    }
++    --idx;
++    indices[last] = idx;
++    return indices;
++}
+     /**
+      * Convert to unidimensional counter.
+      *

@@ -1,0 +1,16 @@
+diff --git a/src/org/mockito/internal/stubbing/defaultanswers/ReturnsEmptyValues.java b/src/org/mockito/internal/stubbing/defaultanswers/ReturnsEmptyValues.java
+index 820c09ceb..b44a46a42 100644
+--- a/src/org/mockito/internal/stubbing/defaultanswers/ReturnsEmptyValues.java
++++ b/src/org/mockito/internal/stubbing/defaultanswers/ReturnsEmptyValues.java
+@@ -69,6 +69,11 @@ public class ReturnsEmptyValues implements Answer<Object>, Serializable {
+             } else {
+                 return name.toString();
+             }
++        } else if (methodsGuru.isEqualsMethod(invocation.getMethod())) {
++            Object parameter = invocation.getArguments()[0];
++            return parameter == null || !isMock(parameter) ? Boolean.FALSE : mockUtil.areEqualIncludingProxyTarget(invocation.getMock(), parameter);
++        } else if (methodsGuru.isHashCodeMethod(invocation.getMethod())) {
++            return System.identityHashCode(invocation.getMock());
+         } else if (methodsGuru.isCompareToMethod(invocation.getMethod())) {
+             //see issue 184.
+             //mocks by default should return 0 if references are the same, otherwise some other value because they are not the same. Hence we return 1 (anything but 0 is good).

@@ -1,0 +1,31 @@
+diff --git a/src/main/java/org/apache/commons/math3/optimization/univariate/BrentOptimizer.java b/src/main/java/org/apache/commons/math3/optimization/univariate/BrentOptimizer.java
+index 6905f1ac9..5056e6979 100644
+--- a/src/main/java/org/apache/commons/math3/optimization/univariate/BrentOptimizer.java
++++ b/src/main/java/org/apache/commons/math3/optimization/univariate/BrentOptimizer.java
+@@ -108,10 +108,8 @@ public class BrentOptimizer extends BaseAbstractUnivariateOptimizer {
+     @Override
+     protected UnivariatePointValuePair doOptimize() {
+         final boolean isMinim = getGoalType() == GoalType.MINIMIZE;
+-        final double lo = getMin();
+-        final double mid = getStartValue();
+-        final double hi = getMax();
+-
++        double lo = getMin();
++        double hi = getMax();
+         // Optional additional convergence criteria.
+         final ConvergenceChecker<UnivariatePointValuePair> checker
+             = getConvergenceChecker();
+@@ -125,8 +122,11 @@ public class BrentOptimizer extends BaseAbstractUnivariateOptimizer {
+             a = hi;
+             b = lo;
+         }
+-
+-        double x = mid;
++        double x = getStartValue();
++        if (x < a ||
++            x > b) {
++            x = a + 0.5 * (b - a);
++        }
+         double v = x;
+         double w = x;
+         double d = 0;

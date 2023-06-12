@@ -1,0 +1,34 @@
+diff --git a/src/com/google/javascript/jscomp/parsing/IRFactory.java b/src/com/google/javascript/jscomp/parsing/IRFactory.java
+index 32a15610..6cd2a1c6 100644
+--- a/src/com/google/javascript/jscomp/parsing/IRFactory.java
++++ b/src/com/google/javascript/jscomp/parsing/IRFactory.java
+@@ -524,14 +524,7 @@ public class IRFactory {
+         // Old Rhino tagged the empty name node with the line number of the
+         // declaration.
+         newName.setLineno(functionNode.getLineno());
+-        // TODO(bowdidge) Mark line number of paren correctly.
+-        // Same problem as below - the left paren might not be on the
+-        // same line as the function keyword.
+-        int lpColumn = functionNode.getAbsolutePosition() +
+-            functionNode.getLp();
+-        newName.setCharno(position2charno(lpColumn));
+       }
+-
+       node.addChildToBack(newName);
+       Node lp = newNode(Token.LP);
+       // The left paren's complicated because it's not represented by an
+@@ -546,10 +539,10 @@ public class IRFactory {
+       } else {
+         lp.setLineno(functionNode.getLineno());
+       }
+-      int lparenCharno = functionNode.getLp() +
+-          functionNode.getAbsolutePosition();
+-
+-      lp.setCharno(position2charno(lparenCharno));
++      int lpColumn = functionNode.getAbsolutePosition() +
++          functionNode.getLp();
++      int lpCharno = position2charno(lpColumn);
++      lp.setCharno(lpCharno);
+       for (AstNode param : functionNode.getParams()) {
+         lp.addChildToBack(transform(param));
+       }

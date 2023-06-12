@@ -1,0 +1,29 @@
+diff --git a/src/com/google/javascript/jscomp/ReferenceCollectingCallback.java b/src/com/google/javascript/jscomp/ReferenceCollectingCallback.java
+index fefd3926..a7931fe8 100644
+--- a/src/com/google/javascript/jscomp/ReferenceCollectingCallback.java
++++ b/src/com/google/javascript/jscomp/ReferenceCollectingCallback.java
+@@ -433,10 +432,21 @@ class ReferenceCollectingCallback implements ScopedCallback,
+           return false;
+         }
+       }
+-
+-      return true;
++      // Check if the reference is a declaration
++      if (ref.isDeclaration()) {
++        return true;
++      }
++      // Check if the reference is a direct write to a property.
++      Node refParent = ref.getParent();
++      if (refParent.isGetProp() || refParent.isGetElem()) {
++        return true;
++      }
++      // Check if the reference is the top-level of an assignment expression
++      if (refParent.isAssign() && refParent.getFirstChild() == ref) {
++        return true;
++      }
++      return false;
+     }
+-
+     /**
+      * @return The one and only assignment. Returns if there are 0 or 2+
+      *    assignments.

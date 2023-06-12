@@ -1,0 +1,85 @@
+diff --git a/src/main/java/org/jsoup/helper/DataUtil.java b/src/main/java/org/jsoup/helper/DataUtil.java
+index 3626928..b9932e4 100644
+--- a/src/main/java/org/jsoup/helper/DataUtil.java
++++ b/src/main/java/org/jsoup/helper/DataUtil.java
+@@ -158,10 +146,80 @@ public class DataUtil {
+         Matcher m = charsetPattern.matcher(contentType);
+         if (m.find()) {
+             String charset = m.group(1).trim();
++            if (Charset.isSupported(charset)) return charset;
++            charset = charset.toUpperCase(Locale.ENGLISH);
++            if (Charset.isSupported(charset)) return charset;
++            // if our advanced charset matching fails.... we just take the default
++        }
++        return null;
++    }
++    private static final Pattern xmlCharsetPattern = Pattern.compile("^<\\?xml.*encoding=\"([^\"]+)\"");
++    private static final Pattern fCharsetPattern = Pattern.compile("charset=([^;\"]+)");
++    private static final Pattern cCharsetPattern = Pattern.compile("charset=\"?([^\"\\s]+)");
++    public static String getCharsetFromContentType2(String contentType) {
++        if (contentType == null) return null;
++        // UTF-8, ISO-8859-1;q=0.5
++        Matcher m = fCharsetPattern.matcher(contentType);
++        if (m.find()) {
++            String charset = m.group(1).trim();
++            if (Charset.isSupported(charset)) return charset;
++            charset = charset.toUpperCase(Locale.ENGLISH);
++            if (Charset.isSupported(charset)) return charset;
++            // if our advanced charset matching fails.... we just take the default
++        }
++        // charset=UTF-8
++        m = cCharsetPattern.matcher(contentType);
++        if (m.find()) {
++            String charset = m.group(1).trim();
++            if (Charset.isSupported(charset)) return charset;
++            charset = charset.toUpperCase(Locale.ENGLISH);
++            if (Charset.isSupported(charset)) return charset;
++            // if our advanced charset matching fails.... we just take the default
++        }
++        return null;
++    }
++    public static String getCharsetFromContentType3(String contentType) {
++        if (contentType == null) return null;
++        // UTF-8, ISO-8859-1;q=0.5
++        String charset = null;
++        String[] parts = contentType.split(";");
++        for (String part : parts) {
++            if (part.trim().startsWith("charset=")) {
++                charset = part.split("=")[1];
++                break;
++            }
++        }
++        if (charset != null) {
++            charset = charset.trim();
++            if (Charset.isSupported(charset)) return charset;
++            charset = charset.toUpperCase(Locale.ENGLISH);
++            if (Charset.isSupported(charset)) return charset;
++            // if our advanced charset matching fails.... we just take the default
++        }
++        return null;
++    }
++    public static String getCharsetFromContentType4(String contentType) {
++        if (contentType == null) return null;
++        // UTF-8, ISO-8859-1;q=0.5
++        String charset = null;
++        if (contentType.startsWith("text/html")) {
++            Matcher m = cCharsetPattern.matcher(contentType);
++            if (m.find()) {
++                charset = m.group(1).trim();
+                 if (Charset.isSupported(charset)) return charset;
+                 charset = charset.toUpperCase(Locale.ENGLISH);
+                 if (Charset.isSupported(charset)) return charset;
+                 // if our advanced charset matching fails.... we just take the default
++            }
++        } else if (contentType.startsWith("text/xml") || contentType.startsWith("application/xml")) {
++            Matcher m = xmlCharsetPattern.matcher(contentType);
++            if (m.find()) {
++                charset = m.group(1).trim();
++                if (Charset.isSupported(charset)) return charset;
++                charset = charset.toUpperCase(Locale.ENGLISH);
++                if (Charset.isSupported(charset)) return charset;
++                // if our advanced charset matching fails.... we just take the default
++            }
+         }
+         return null;
+     }

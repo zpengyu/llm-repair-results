@@ -1,0 +1,76 @@
+###Provide a fix for the buggy function
+###Buggy Function
+class FibonacciExample {
+    public static void main(String args[]) {
+        int n1 = 0, n2 = 1, n3, i, count = 10;
+
+        System.out.print(n1 + " " + n2);
+
+        for (i = 2; i < count; ++i) {
+            n3 = n1 - n2;
+            System.out.print(" " + n3);
+            n1 = n2;
+            n2 = n3;
+        }
+    }
+}
+
+###Fixed Function
+class FibonacciExample {
+    public static void main(String args[]) {
+        int n1 = 0, n2 = 1, n3, i, count = 10;
+
+        System.out.print(n1 + " " + n2);
+
+        for (i = 2; i < count; ++i) {
+            n3 = n1 + n2;
+            System.out.print(" " + n3);
+            n1 = n2;
+            n2 = n3;
+        }
+    }
+}
+
+###Provide a fix for the buggy function
+###Buggy Function
+private static boolean isReduceableFunctionExpression(Node n) {
+  return NodeUtil.isFunctionExpression(n);
+}
+###Fixed Function
+private static boolean isReduceableFunctionExpression(Node n) {
+  return NodeUtil.isFunctionExpression(n)
+      && !NodeUtil.isGetOrSetKey(n.getParent());
+}
+###Provide a fix for the buggy function
+###Buggy Function
+  JSType resolveInternal(ErrorReporter t, StaticScope<JSType> enclosing) {
+    // TODO(user): Investigate whether it is really necessary to keep two
+    // different mechanisms for resolving named types, and if so, which order
+    // makes more sense. Now, resolution via registry is first in order to
+    // avoid triggering the warnings built into the resolution via properties.
+    boolean resolved = resolveViaRegistry(t, enclosing);
+    if (detectImplicitPrototypeCycle()) {
+      handleTypeCycle(t);
+    }
+
+    if (resolved) {
+      super.resolveInternal(t, enclosing);
+      finishPropertyContinuations();
+      return registry.isLastGeneration() ?
+          getReferencedType() : this;
+    }
+
+    resolveViaProperties(t, enclosing);
+    if (detectImplicitPrototypeCycle()) {
+      handleTypeCycle(t);
+    }
+
+    super.resolveInternal(t, enclosing);
+    if (isResolved()) {
+      finishPropertyContinuations();
+    }
+    return registry.isLastGeneration() ?
+        getReferencedType() : this;
+  }
+
+###Fixed Function

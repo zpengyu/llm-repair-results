@@ -1,0 +1,36 @@
+diff --git a/src/java/org/apache/commons/cli2/builder/PatternBuilder.java b/src/java/org/apache/commons/cli2/builder/PatternBuilder.java
+index f02601e..726e978 100644
+--- a/src/java/org/apache/commons/cli2/builder/PatternBuilder.java
++++ b/src/java/org/apache/commons/cli2/builder/PatternBuilder.java
+@@ -144,8 +128,10 @@ public class PatternBuilder {
+                 case '!' :
+                     required = true;
+                     break;
+-                case '@' :
+                 case ':' :
++                    type = ch;
++                    break;
++                case '@' :
+                 case '%' :
+                 case '+' :
+                 case '#' :
+@@ -170,9 +154,10 @@ public class PatternBuilder {
+             createOption(type, required, opt);
+         }
+     }
+-
+     private static Validator validator(final char c) {
+         switch (c) {
++            case ':' :
++                return StringValidator.getInstance();
+             case '@' :
+                 final ClassValidator classv = new ClassValidator();
+                 classv.setInstance(true);
+@@ -180,7 +165,6 @@ public class PatternBuilder {
+             case '+' :
+                 final ClassValidator instancev = new ClassValidator();
+                 return instancev;
+-                //case ':':// no validator needed for a string
+             case '%' :
+                 return NumberValidator.getNumberInstance();
+             case '#' :

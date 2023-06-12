@@ -1,0 +1,19 @@
+public static Document parseInputStream(InputStream input, String charsetName, String baseUri, Parser parser) throws IOException {
+    Validate.notNull(input, "Must provide an input stream");
+    if (charsetName == null) {
+        if (parser.settings.charset() == null) {
+            // parse with default charset
+            Document doc = parser.parseInput(input, baseUri);
+            charsetName = getCharsetFromContentType(doc.outputSettings().charset().displayName());
+            if (charsetName != null) {
+                // charset found in meta, re-parse
+                return parseInputStream(input, charsetName, baseUri, parser);
+            }
+            // no charset found in meta, use default
+            return doc;
+        }
+        charsetName = parser.settings.charset().displayName();
+    }
+    InputStreamReader reader = new InputStreamReader(input, charsetName);
+    return parser.parseInput(reader, baseUri);
+}

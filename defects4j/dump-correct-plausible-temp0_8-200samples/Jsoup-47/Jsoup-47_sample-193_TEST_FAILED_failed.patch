@@ -1,0 +1,152 @@
+diff --git a/src/main/java/org/jsoup/nodes/Entities.java b/src/main/java/org/jsoup/nodes/Entities.java
+index 5a2b368..25f1e97 100644
+--- a/src/main/java/org/jsoup/nodes/Entities.java
++++ b/src/main/java/org/jsoup/nodes/Entities.java
+@@ -86,16 +85,20 @@ public class Entities {
+         final CoreCharset coreCharset = CoreCharset.byName(encoder.charset().name());
+         final Map<Character, String> map = escapeMode.getMap();
+         final int length = string.length();
+-
+-        int codePoint;
+-        for (int offset = 0; offset < length; offset += Character.charCount(codePoint)) {
++        final int lastOffset = length - 2;
++        int codePoint, offset = 0;
++        // html specific and required escapes:
++        final char[] buffer = new char[length * 2 + 2]; // worst case;
++        final char a = '&', lt = '<', gt = '>', quot = '"', nbsp = 0xA0;
++        while (offset < length) {
+             codePoint = string.codePointAt(offset);
+-
+             if (normaliseWhite) {
+                 if (StringUtil.isWhitespace(codePoint)) {
+-                    if ((stripLeadingWhite && !reachedNonWhite) || lastWasWhite)
++                    if ((stripLeadingWhite && !reachedNonWhite) || lastWasWhite) {
++                        offset += Character.charCount(codePoint);
+                         continue;
+-                    accum.append(' ');
++                    }
++                    buffer[offset++] = ' ';
+                     lastWasWhite = true;
+                     continue;
+                 } else {
+@@ -106,54 +109,85 @@ public class Entities {
+             // surrogate pairs, split implementation for efficiency on single char common case (saves creating strings, char[]):
+             if (codePoint < Character.MIN_SUPPLEMENTARY_CODE_POINT) {
+                 final char c = (char) codePoint;
+-                // html specific and required escapes:
+                 switch (c) {
+-                    case '&':
+-                        accum.append("&amp;");
++                    case a: // amp
++                        buffer[offset++] = a;
++                        buffer[offset++] = 'm';
++                        buffer[offset++] = 'p';
+                         break;
+-                    case 0xA0:
+-                        if (escapeMode != EscapeMode.xhtml)
+-                            accum.append("&nbsp;");
+-                        else
+-                            accum.append("&#xa0;");
++                    case lt: // lt
++                        buffer[offset++] = a;
++                        buffer[offset++] = 'l';
++                        buffer[offset++] = 't';
+                         break;
+-                    case '<':
+-                        // escape when in character data or when in a xml attribue val; not needed in html attr val
+-                        if (!inAttribute)
+-                            accum.append("&lt;");
+-                        else
+-                            accum.append(c);
++                    case gt: // gt
++                        buffer[offset++] = a;
++                        buffer[offset++] = 'g';
++                        buffer[offset++] = 't';
+                         break;
+-                    case '>':
+-                        if (!inAttribute)
+-                            accum.append("&gt;");
+-                        else
+-                            accum.append(c);
++                    case quot: // quot
++                        buffer[offset++] = a;
++                        buffer[offset++] = 'q';
++                        buffer[offset++] = 'u';
++                        buffer[offset++] = 'o';
++                        buffer[offset++] = 't';
+                         break;
+-                    case '"':
+-                        if (inAttribute)
+-                            accum.append("&quot;");
+-                        else
+-                            accum.append(c);
++                    case nbsp: // nbsp
++                        if (escapeMode != EscapeMode.xhtml) {
++                            buffer[offset++] = a;
++                            buffer[offset++] = 'n';
++                            buffer[offset++] = 'b';
++                            buffer[offset++] = 's';
++                            buffer[offset++] = 'p';
++                        } else {
++                            buffer[offset++] = a;
++                            buffer[offset++] = '#';
++                            buffer[offset++] = 'x';
++                            buffer[offset++] = 'a';
++                            buffer[offset++] = '0';
++                        }
+                         break;
+                     default:
+-                        if (canEncode(coreCharset, c, encoder))
+-                            accum.append(c);
+-                        else if (map.containsKey(c))
+-                            accum.append('&').append(map.get(c)).append(';');
+-                        else
+-                            accum.append("&#x").append(Integer.toHexString(codePoint)).append(';');
++                        if (canEncode(coreCharset, c, encoder)) {
++                            buffer[offset++] = c;
++                        } else if (map.containsKey(c)) {
++                            String e = map.get(c);
++                            final int elen = e.length();
++                            e.getChars(0, elen, buffer, offset);
++                            offset += elen;
++                        } else {
++                            buffer[offset++] = a;
++                            buffer[offset++] = '#';
++                            buffer[offset++] = 'x';
++                            final int ch = codePoint; // don't use Character.forDigit, as it doesn't accept negative values
++                            buffer[offset + 2] = Character.forDigit((ch >> 12) & 0xf, 16);
++                            buffer[offset + 3] = Character.forDigit((ch >> 8) & 0xf, 16);
++                            buffer[offset + 4] = Character.forDigit((ch >> 4) & 0xf, 16);
++                            buffer[offset + 5] = Character.forDigit(ch & 0xf, 16);
++                            offset += 6;
++                        }
+                 }
+             } else {
+                 final String c = new String(Character.toChars(codePoint));
+-                if (encoder.canEncode(c)) // uses fallback encoder for simplicity
+-                    accum.append(c);
+-                else
+-                    accum.append("&#x").append(Integer.toHexString(codePoint)).append(';');
++                if (encoder.canEncode(c)) { // uses fallback encoder for simplicity
++                    int clen = c.length();
++                    c.getChars(0, clen, buffer, offset);
++                    offset += clen;
++                } else {
++                    buffer[offset++] = a;
++                    buffer[offset++] = '#';
++                    buffer[offset++] = 'x';
++                    final int ch = codePoint; // don't use Character.forDigit, as it doesn't accept negative values
++                    buffer[offset + 2] = Character.forDigit((ch >> 12) & 0xf, 16);
++                    buffer[offset + 3] = Character.forDigit((ch >> 8) & 0xf, 16);
++                    buffer[offset + 4] = Character.forDigit((ch >> 4) & 0xf, 16);
++                    buffer[offset + 5] = Character.forDigit(ch & 0xf, 16);
++                    offset += 6;
++                }
+             }
+         }
++        accum.append(buffer, 0, offset);
+     }
+-
+     static String unescape(String string) {
+         return unescape(string, false);
+     }

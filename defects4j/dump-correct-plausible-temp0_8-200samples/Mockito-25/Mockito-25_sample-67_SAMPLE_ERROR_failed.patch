@@ -1,0 +1,33 @@
+diff --git a/src/org/mockito/internal/stubbing/defaultanswers/ReturnsDeepStubs.java b/src/org/mockito/internal/stubbing/defaultanswers/ReturnsDeepStubs.java
+index 6fa773f53..58f27a11d 100644
+--- a/src/org/mockito/internal/stubbing/defaultanswers/ReturnsDeepStubs.java
++++ b/src/org/mockito/internal/stubbing/defaultanswers/ReturnsDeepStubs.java
+@@ -74,14 +65,22 @@ public class ReturnsDeepStubs implements Answer<Object>, Serializable {
+      * @param returnTypeGenericMetadata The metadata to use to create the new mock.
+      * @return The mock
+      */
+-
+-
+-
+-
+     private Object recordDeepStubMock(InvocationOnMock invocation, InvocationContainerImpl container) {
+         Class<?> clz = invocation.getMethod().getReturnType();
+-        final Object mock = org.mockito.Mockito.mock(clz, this);
+-
++        final Object mock = org.mockito.Mockito.mock(clz, new org.mockito.stubbing.Answer<Object>() {
++			public Object answer(InvocationOnMock invocation) throws Throwable {
++				if (InvocationUtils.isToString(invocation.getMethod())) {
++					return "Deep stub on " + invocation.getMock().getClass().getSimpleName();
++				}
++				if (InvocationUtils.isHashCode(invocation.getMethod())) {
++					return System.identityHashCode(invocation.getMock());
++				}
++				if (InvocationUtils.isEqualsMethod(invocation.getMethod())) {
++					return invocation.getMock() == invocation.getArguments()[0];
++				}
++				return ReturnsDeepStubs.this.answer(invocation);
++			}
++		});
+         container.addAnswer(new Answer<Object>() {
+             public Object answer(InvocationOnMock invocation) throws Throwable {
+                 return mock;

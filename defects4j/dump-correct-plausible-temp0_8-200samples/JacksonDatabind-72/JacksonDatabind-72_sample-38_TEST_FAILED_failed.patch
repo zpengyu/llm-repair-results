@@ -1,0 +1,32 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/deser/impl/InnerClassProperty.java b/src/main/java/com/fasterxml/jackson/databind/deser/impl/InnerClassProperty.java
+index 128a8346f..ace4dece8 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/deser/impl/InnerClassProperty.java
++++ b/src/main/java/com/fasterxml/jackson/databind/deser/impl/InnerClassProperty.java
+@@ -56,11 +51,7 @@ public final class InnerClassProperty
+         _delegate = src._delegate;
+         _annotated = ann;
+         _creator = (_annotated == null) ? null : _annotated.getAnnotated();
+-        if (_creator == null) {
+-            throw new IllegalArgumentException("Missing constructor (broken JDK (de)serialization?)");
+-        }
+     }
+-    
+     protected InnerClassProperty(InnerClassProperty src, JsonDeserializer<?> deser)
+     {
+         super(src, deser);
+@@ -151,12 +127,13 @@ public final class InnerClassProperty
+     /* JDK serialization handling
+     /**********************************************************
+      */
+-
+     // When reading things back, 
+     Object readResolve() {
++        if (_annotated == null) {
++            throw new IllegalArgumentException("Missing constructor (broken JDK (de)serialization?)");
++        }
+         return new InnerClassProperty(this, _annotated);
+     }
+-
+     Object writeReplace() {
+         // need to construct a fake instance to support serialization
+         if (_annotated != null) {

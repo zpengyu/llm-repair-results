@@ -1,0 +1,33 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/deser/std/StdKeyDeserializer.java b/src/main/java/com/fasterxml/jackson/databind/deser/std/StdKeyDeserializer.java
+index d4417f6ad..d6cd8ef9a 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/deser/std/StdKeyDeserializer.java
++++ b/src/main/java/com/fasterxml/jackson/databind/deser/std/StdKeyDeserializer.java
+@@ -308,7 +308,7 @@ public class StdKeyDeserializer extends KeyDeserializer
+         public final Object deserializeKey(String key, DeserializationContext ctxt)
+             throws IOException
+         {
+-            if (key == null) { // is this even legal call?
++            if (key == null) {
+                 return null;
+             }
+             try {
+@@ -317,12 +317,16 @@ public class StdKeyDeserializer extends KeyDeserializer
+                 if (result != null) {
+                     return result;
+                 }
+-                return ctxt.handleWeirdKey(_keyClass, key, "not a valid representation");
+             } catch (Exception re) {
+-                return ctxt.handleWeirdKey(_keyClass, key, "not a valid representation: %s", re.getMessage());
++                throw ctxt.weirdKeyException(_keyClass, key, "not a valid representation: %s", re.getMessage());
+             }
++            // !!! 06-Sep-2016, tatu: This is a very special case, and to be honest, I'm not
++            //   entirely sure what to do... on one hand, it is definitely not good to have
++            //   an empty String as a key. But on the other, it is a valid String, and it
++            //   is possible (albeit unusual) case. So for now, let's just consider it
++            //   an error...
++            return ctxt.handleWeirdKey(_keyClass, key, "not a valid representation, must be empty String");
+         }
+-
+         public Class<?> getKeyClass() { return _keyClass; }
+     }
+      

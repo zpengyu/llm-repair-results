@@ -1,0 +1,60 @@
+diff --git a/src/java/org/apache/commons/jxpath/ri/axes/UnionContext.java b/src/java/org/apache/commons/jxpath/ri/axes/UnionContext.java
+index 0ea5b51..d3a566b 100644
+--- a/src/java/org/apache/commons/jxpath/ri/axes/UnionContext.java
++++ b/src/java/org/apache/commons/jxpath/ri/axes/UnionContext.java
+@@ -31,35 +31,31 @@ import org.apache.commons.jxpath.ri.model.NodePointer;
+  */
+ public class UnionContext extends NodeSetContext {
+     private EvalContext contexts[];
+-    private boolean prepared;
+-
++    private int lastDocumentOrder;
+     public UnionContext(EvalContext parentContext, EvalContext contexts[]) {
+         super(parentContext, new BasicNodeSet());
+         this.contexts = contexts;
+     }
+-
+-    public int getDocumentOrder() {
+-        return contexts.length > 1 ? 1 : super.getDocumentOrder();
++    public boolean nextSet() {
++        while (nextNode()) {
++            return true;
++        }
++        return false;
+     }
+-
+-    public boolean setPosition(int position) {
+-        if (!prepared) {
+-            prepared = true;
+-            BasicNodeSet nodeSet = (BasicNodeSet) getNodeSet();
+-            ArrayList pointers = new ArrayList();
+-            for (int i = 0; i < contexts.length; i++) {
+-                EvalContext ctx = (EvalContext) contexts[i];
+-                while (ctx.nextSet()) {
+-                    while (ctx.nextNode()) {
+-                        NodePointer ptr = ctx.getCurrentNodePointer();
+-                        if (!pointers.contains(ptr)) {
+-                            nodeSet.add(ptr);
+-                            pointers.add(ptr);
+-                        }
+-                    }
+-                }
++    public boolean nextNode() {
++        if (contexts.length == 1) {
++            return contexts[0].nextNode();
++        }
++        while (lastDocumentOrder < contexts.length) {
++            if (contexts[lastDocumentOrder].nextNode()) {
++                setCurrentNodePointer(contexts[lastDocumentOrder].getCurrentNodePointer());
++                return true;
+             }
++            lastDocumentOrder++;
+         }
+-        return super.setPosition(position);
++        return false;
++    }
++    public int getDocumentOrder() {
++        return contexts.length > 1 ? 1 : super.getDocumentOrder();
+     }
+ }
+\ No newline at end of file

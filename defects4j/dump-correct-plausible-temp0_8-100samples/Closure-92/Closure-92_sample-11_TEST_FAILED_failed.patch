@@ -1,0 +1,33 @@
+diff --git a/src/com/google/javascript/jscomp/ProcessClosurePrimitives.java b/src/com/google/javascript/jscomp/ProcessClosurePrimitives.java
+index d1d12a3c..e4e884f4 100644
+--- a/src/com/google/javascript/jscomp/ProcessClosurePrimitives.java
++++ b/src/com/google/javascript/jscomp/ProcessClosurePrimitives.java
+@@ -756,28 +755,7 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback
+       if (candidateDefinition != null && explicitNode != null) {
+         explicitNode.detachFromParent();
+         compiler.reportCodeChange();
+-
+-        // Does this need a VAR keyword?
+         replacementNode = candidateDefinition;
+-        if (NodeUtil.isExpressionNode(candidateDefinition)) {
+-          candidateDefinition.putBooleanProp(Node.IS_NAMESPACE, true);
+-          Node assignNode = candidateDefinition.getFirstChild();
+-          Node nameNode = assignNode.getFirstChild();
+-          if (nameNode.getType() == Token.NAME) {
+-            // Need to convert this assign to a var declaration.
+-            Node valueNode = nameNode.getNext();
+-            assignNode.removeChild(nameNode);
+-            assignNode.removeChild(valueNode);
+-            nameNode.addChildToFront(valueNode);
+-            Node varNode = new Node(Token.VAR, nameNode);
+-            varNode.copyInformationFrom(candidateDefinition);
+-            candidateDefinition.getParent().replaceChild(
+-                candidateDefinition, varNode);
+-            nameNode.setJSDocInfo(assignNode.getJSDocInfo());
+-            compiler.reportCodeChange();
+-            replacementNode = varNode;
+-          }
+-        }
+       } else {
+         // Handle the case where there's not a duplicate definition.
+         replacementNode = createDeclarationNode();

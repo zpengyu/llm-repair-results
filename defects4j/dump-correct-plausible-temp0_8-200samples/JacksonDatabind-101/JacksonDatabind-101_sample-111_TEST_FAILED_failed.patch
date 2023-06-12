@@ -1,0 +1,32 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/deser/BeanDeserializer.java b/src/main/java/com/fasterxml/jackson/databind/deser/BeanDeserializer.java
+index 3c89dc109..10503d28a 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/deser/BeanDeserializer.java
++++ b/src/main/java/com/fasterxml/jackson/databind/deser/BeanDeserializer.java
+@@ -801,9 +798,6 @@ public class BeanDeserializer
+                 handleIgnoredProperty(p, ctxt, handledType(), propName);
+                 continue;
+             }
+-            // 29-Nov-2016, tatu: probably should try to avoid sending content
+-            //    both to any setter AND buffer... but, for now, the only thing
+-            //    we can do.
+             // how about any setter? We'll get copies but...
+             if (_anySetter == null) {
+                 // but... others should be passed to unwrapped property deserializers
+@@ -834,7 +827,16 @@ public class BeanDeserializer
+         }
+         return _unwrappedPropertyHandler.processUnwrapped(p, ctxt, bean, tokens);
+     }
+-
++    protected Object deserializeWithErrorWrapping(JsonParser p, DeserializationContext ctxt, SettableBeanProperty prop)
++        throws IOException
++    {
++        try {
++            return prop.deserialize(p, ctxt);
++        } catch (Exception e) {
++            wrapAndThrow(e, _beanType.getRawClass(), prop.getName(), ctxt);
++            return null;
++        }
++    }
+     /*
+     /**********************************************************
+     /* Handling for cases where we have property/-ies with

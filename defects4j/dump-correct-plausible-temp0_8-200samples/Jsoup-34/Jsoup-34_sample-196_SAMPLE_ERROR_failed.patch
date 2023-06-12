@@ -1,0 +1,63 @@
+diff --git a/src/main/java/org/jsoup/parser/CharacterReader.java b/src/main/java/org/jsoup/parser/CharacterReader.java
+index bcda218..a3d9bbd 100644
+--- a/src/main/java/org/jsoup/parser/CharacterReader.java
++++ b/src/main/java/org/jsoup/parser/CharacterReader.java
+@@ -79,24 +79,43 @@ class CharacterReader {
+      * @param seq scan target
+      * @return offset between current position and next instance of target. -1 if not found.
+      */
+-    int nextIndexOf(CharSequence seq) {
+-        // doesn't handle scanning for surrogates
+-        char startChar = seq.charAt(0);
+-        for (int offset = pos; offset < length; offset++) {
+-            // scan to first instance of startchar:
+-            if (startChar != input[offset])
+-                while(++offset < length && startChar != input[offset]);
+-            int i = offset + 1;
+-            int last = i + seq.length()-1;
+-            if (offset < length) {
+-                for (int j = 1; i < last && seq.charAt(j) == input[i]; i++, j++);
+-                if (i == last) // found full sequence
+-                    return offset - pos;
++int nextIndexOf(CharSequence seq) {
++    int start = pos;
++    int offset = 0;
++    while (start + offset < length) {
++        if (isEmpty())
++            return -1;
++        if (seq.length() == 1) {
++            char startChar = seq.charAt(0);
++            while (start + offset < length && startChar != input[start + offset]) {
++                offset++;
++            }
++        }
++        else {
++            while (start + offset < length) {
++                if (isMatch(input, start, seq, 0, offset)) {
++                    return offset;
++                }
++                offset++;
+             }
+         }
+-        return -1;
+     }
+-
++    return -1;
++}
++private boolean isMatch(char[] input, int inputIndex, CharSequence seq, int seqIndex, int len) {
++    int seqLen = seq.length();
++    int inputEnd = inputIndex + len;
++    while (inputIndex < inputEnd) {
++        if (seqIndex >= seqLen || input[inputIndex] != seq.charAt(seqIndex))
++            return false;
++        inputIndex++;
++        seqIndex++;
++    }
++    return true;
++}
++private boolean isEmpty() {
++    return length == 0;
++}
+     String consumeTo(char c) {
+         int offset = nextIndexOf(c);
+         if (offset != -1) {

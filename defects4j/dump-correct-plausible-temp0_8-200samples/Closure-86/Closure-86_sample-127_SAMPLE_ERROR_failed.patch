@@ -1,0 +1,35 @@
+diff --git a/src/com/google/javascript/jscomp/NodeUtil.java b/src/com/google/javascript/jscomp/NodeUtil.java
+index 933d4ffa..f22e7cf9 100644
+--- a/src/com/google/javascript/jscomp/NodeUtil.java
++++ b/src/com/google/javascript/jscomp/NodeUtil.java
+@@ -2435,10 +2435,10 @@ public final class NodeUtil {
+       case Token.AND:
+       case Token.OR:
+         return evaluatesToLocalValue(value.getFirstChild(), locals)
+-           && evaluatesToLocalValue(value.getLastChild(), locals);
++            && evaluatesToLocalValue(value.getLastChild(), locals);
+       case Token.HOOK:
+         return evaluatesToLocalValue(value.getFirstChild().getNext(), locals)
+-           && evaluatesToLocalValue(value.getLastChild(), locals);
++            && evaluatesToLocalValue(value.getLastChild(), locals);
+       case Token.INC:
+       case Token.DEC:
+         if (value.getBooleanProp(Node.INCRDECR_PROP)) {
+@@ -2487,7 +2486,16 @@ public final class NodeUtil {
+             "\n parent:" + value.getParent());
+     }
+   }
+-
++  static boolean isLhsByRef(Node n, Predicate<Node> locals) {
++    return isName(n) && locals.apply(n);
++  }
++  static boolean isVarArgsCall(Node n) {
++    if (n.getType() != Token.CALL) {
++      return false;
++    }
++    Node callTarget = n.getFirstChild();
++    return callTarget.isFunction();
++  }
+   /**
+    * Given the first sibling, this returns the nth
+    * sibling or null if no such sibling exists.

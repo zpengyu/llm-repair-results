@@ -1,0 +1,21 @@
+diff --git a/src/com/google/javascript/jscomp/ReferenceCollectingCallback.java b/src/com/google/javascript/jscomp/ReferenceCollectingCallback.java
+index fefd3926..b4bc924e 100644
+--- a/src/com/google/javascript/jscomp/ReferenceCollectingCallback.java
++++ b/src/com/google/javascript/jscomp/ReferenceCollectingCallback.java
+@@ -431,12 +430,14 @@ class ReferenceCollectingCallback implements ScopedCallback,
+           break;
+         } else if (block.isLoop) {
+           return false;
++        } else if (block.isFinally) {
++          // Treat try-finally as a loop, since we cannot change
++          // the value inside the finally block.
++          return false;
+         }
+       }
+-
+       return true;
+     }
+-
+     /**
+      * @return The one and only assignment. Returns if there are 0 or 2+
+      *    assignments.

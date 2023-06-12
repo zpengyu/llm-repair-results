@@ -1,0 +1,23 @@
+diff --git a/src/com/google/javascript/jscomp/TypedScopeCreator.java b/src/com/google/javascript/jscomp/TypedScopeCreator.java
+index 13d8808b..ee5fa755 100644
+--- a/src/com/google/javascript/jscomp/TypedScopeCreator.java
++++ b/src/com/google/javascript/jscomp/TypedScopeCreator.java
+@@ -1312,10 +1312,16 @@ final class TypedScopeCreator implements ScopeCreator {
+           }
+         }
+       }
+-
++      if (lValue != null && lValue.isName()) {
++        // If we're declaring a name node, use the JSDoc from the name
++        // node, if any.
++        JSDocInfo nameInfo = NodeUtil.getBestJSDocInfo(lValue);
++        if (nameInfo != null) {
++          return getDeclaredTypeInAnnotation(sourceName, lValue, nameInfo);
++        }
++      }
+       return getDeclaredTypeInAnnotation(sourceName, lValue, info);
+     }
+-
+     private FunctionType getFunctionType(@Nullable Var v) {
+       JSType t = v == null ? null : v.getType();
+       ObjectType o = t == null ? null : t.dereference();

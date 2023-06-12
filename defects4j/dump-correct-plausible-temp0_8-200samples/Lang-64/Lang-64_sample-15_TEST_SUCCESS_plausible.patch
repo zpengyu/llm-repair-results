@@ -1,0 +1,28 @@
+diff --git a/src/java/org/apache/commons/lang/enums/ValuedEnum.java b/src/java/org/apache/commons/lang/enums/ValuedEnum.java
+index 0823e77d..c03c4422 100644
+--- a/src/java/org/apache/commons/lang/enums/ValuedEnum.java
++++ b/src/java/org/apache/commons/lang/enums/ValuedEnum.java
+@@ -180,9 +174,21 @@ public abstract class ValuedEnum extends Enum {
+      * @throws NullPointerException if other is <code>null</code>
+      */
+     public int compareTo(Object other) {
+-        return iValue - ((ValuedEnum) other).iValue;
++        if (other.getClass().isInstance(this)) {
++            return iValue - ((ValuedEnum) other).iValue;
++        } else if (other.getClass().getName().equals(this.getClass().getName())) {
++            int result = 0;
++            try {
++                Method otherValueMethod = other.getClass().getMethod(this.getClass().getMethod("getValue", null).getName(), null);
++                Method thisValueMethod = this.getClass().getMethod(other.getClass().getMethod("getValue", null).getName(), null);
++                result = ((Integer)thisValueMethod.invoke(this, null)).compareTo((Integer)otherValueMethod.invoke(other, null));
++            } catch (Exception e) {
++                result = 0;
++            }
++            return result;
++        }
++        throw new ClassCastException("Different enum class '" + ClassUtils.getShortClassName(other.getClass()) + "'");
+     }
+-
+     /**
+      * <p>Use reflection to return an objects value.</p>
+      *

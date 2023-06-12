@@ -1,0 +1,30 @@
+    public XYDataItem addOrUpdate(Number x, Number y) {
+        if (x == null) {
+            throw new IllegalArgumentException("Null 'x' argument.");
+        }
+        if (this.allowDuplicateXValues || indexOf(x) < 0) {
+            // if the series is sorted, the negative index is a result from
+            // Collections.binarySearch() and tells us where to insert the
+            // new item...otherwise it will be just -1 and we should just
+            // append the value to the list...
+            XYDataItem item = new XYDataItem(x, y);
+            int index = Collections.binarySearch(this.data, item);
+            if (index < 0) {
+                this.data.add(-index - 1, item);
+                item = null;
+            }
+            else {
+                XYDataItem overwritten = (XYDataItem) this.data.get(index);
+                overwritten.setY(y);
+            }
+            // check if this addition will exceed the maximum item count...
+            if (getItemCount() > this.maximumItemCount) {
+                this.data.remove(0);
+            }
+            fireSeriesChanged();
+            return item;
+        } else {
+            return null;
+        }
+    }
+

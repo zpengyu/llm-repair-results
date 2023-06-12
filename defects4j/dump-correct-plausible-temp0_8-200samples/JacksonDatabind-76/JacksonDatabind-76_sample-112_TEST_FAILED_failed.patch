@@ -1,0 +1,25 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/deser/BuilderBasedDeserializer.java b/src/main/java/com/fasterxml/jackson/databind/deser/BuilderBasedDeserializer.java
+index 316efa3a9..17c5e36de 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/deser/BuilderBasedDeserializer.java
++++ b/src/main/java/com/fasterxml/jackson/databind/deser/BuilderBasedDeserializer.java
+@@ -587,8 +585,10 @@ public class BuilderBasedDeserializer
+                         bean = creator.build(ctxt, buffer);
+                     } catch (Exception e) {
+                         wrapAndThrow(e, _beanType.getRawClass(), propName, ctxt);
+-                        continue;
++                        continue; // never gets here
+                     }
++                    // Need to assign current value, to be accessible by custom serializers
++                    p.setCurrentValue(bean);
+                     while (t == JsonToken.FIELD_NAME) {
+                         p.nextToken();
+                         tokens.copyCurrentStructure(p);
+@@ -596,6 +596,8 @@ public class BuilderBasedDeserializer
+                     }
+                     tokens.writeEndObject();
+                     if (bean.getClass() != _beanType.getRawClass()) {
++                        // !!! 08-Jul-2011, tatu: Could probably support; but for now
++                        //   it's too complicated, so bail out
+                         ctxt.reportMappingException("Can not create polymorphic instances with unwrapped values");
+                         return null;
+                     }

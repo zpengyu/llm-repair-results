@@ -1,0 +1,46 @@
+diff --git a/src/main/java/org/apache/commons/math/optimization/direct/MultiDirectional.java b/src/main/java/org/apache/commons/math/optimization/direct/MultiDirectional.java
+index 2fa8c34bf..1e802f2b7 100644
+--- a/src/main/java/org/apache/commons/math/optimization/direct/MultiDirectional.java
++++ b/src/main/java/org/apache/commons/math/optimization/direct/MultiDirectional.java
+@@ -79,25 +74,32 @@ public class MultiDirectional extends DirectSearchOptimizer {
+                 if (comparator.compare(reflected, expanded) <= 0) {
+                     // accept the reflected simplex
+                     simplex = reflectedSimplex;
++                } else {
++                    // accept the expanded simplex
++                    simplex = simplex;
+                 }
+-
++                // check convergence
+                 return;
+-
+             }
+-
+             // compute the contracted simplex
+             final RealPointValuePair contracted = evaluateNewSimplex(original, gamma, comparator);
+             if (comparator.compare(contracted, best) < 0) {
+                 // accept the contracted simplex
+-
+-            // check convergence
+-                return;
++                simplex = simplex;
++            } else {
++                // perform a reduction step
++                for (int i = 1; i < simplex.length; ++i) {
++                    final double[] xi = simplex[i].getPoint();
++                    final double[] bi = original[i].getPoint();
++                    for (int j = 0; j < xi.length; ++j) {
++                        xi[j] = sigma * bi[j] + (1 - sigma) * best.getPoint()[j];
++                    }
++                }
+             }
+-
++            // check convergence
++            return;
+         }
+-
+     }
+-
+     /** Compute and evaluate a new simplex.
+      * @param original original simplex (to be preserved)
+      * @param coeff linear coefficient

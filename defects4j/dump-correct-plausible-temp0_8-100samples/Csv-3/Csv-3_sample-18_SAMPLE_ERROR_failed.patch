@@ -1,0 +1,52 @@
+diff --git a/src/main/java/org/apache/commons/csv/Lexer.java b/src/main/java/org/apache/commons/csv/Lexer.java
+index c161334..fbc776f 100644
+--- a/src/main/java/org/apache/commons/csv/Lexer.java
++++ b/src/main/java/org/apache/commons/csv/Lexer.java
+@@ -108,11 +108,45 @@ abstract class Lexer {
+             throw new IOException("EOF whilst processing escape sequence");
+         default:
+             // Now check for meta-characters
+-                return c;
++            if (c >= '0' && c <= '7') {
++                // First octal character
++                // Read first octal character
++                int charCount = 0;
++                int val = 0;
++                do {
++                    charCount++;
++                    val *= 8;
++                    val += (c - '0');
++                    c = in.read();
++                } while (c >= '0' && c <= '7');
++                if (c > '0') {
++                    in.unread(c);
++                }
++                if (charCount == 3) {
++                    // check for overflow
++                    if (val > 255) {
++                        return ERR;
++                    }
++                    return val;
++                }
++                if (charCount > 3) {
++                    // error
++                    return ERR;
++                }
++                // We only got 1 or 2 octal digits.
++                // The Java language spec section 3.10.6 says "An octal escape represents the
++                // Unicode code point formed by the bits of the octal number (zero-extended
++                // if there are less than three octal digits)".
++                // So check for overflow.
++                if (val > 0x3f) {
++                    return ERR;
++                }
++                return val;
++            }
+             // indicate unexpected char - available from in.getLastChar()
++            return ERR;
+         }
+     }
+-
+     void trimTrailingSpaces(final StringBuilder buffer) {
+         int length = buffer.length();
+         while (length > 0 && Character.isWhitespace(buffer.charAt(length - 1))) {

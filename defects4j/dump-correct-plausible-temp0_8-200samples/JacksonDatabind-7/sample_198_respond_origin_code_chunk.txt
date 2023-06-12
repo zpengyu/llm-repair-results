@@ -1,0 +1,18 @@
+    public TokenBuffer deserialize(JsonParser jp, DeserializationContext ctxt) throws IOException
+    {
+        if (jp.getCurrentToken() == JsonToken.FIELD_NAME) {
+            JsonToken t = jp.nextToken();
+            // sanity check; should never fail
+            if (t != JsonToken.START_OBJECT) {
+                throw ctxt.mappingException("Current token not START_OBJECT (needed to unwrap root name '%s'), but %s", jp.getCurrentName(), jp.getCurrentToken());
+            }
+            t = jp.nextToken();
+            // end-of-input?
+            if (t == JsonToken.END_OBJECT) {
+                return null;
+            }
+        }
+        copyCurrentStructure(jp);
+        return this;
+    }
+

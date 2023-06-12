@@ -1,0 +1,35 @@
+diff --git a/src/com/google/javascript/jscomp/TypeInference.java b/src/com/google/javascript/jscomp/TypeInference.java
+index 53e8cb48..d126f870 100644
+--- a/src/com/google/javascript/jscomp/TypeInference.java
++++ b/src/com/google/javascript/jscomp/TypeInference.java
+@@ -544,10 +543,9 @@ class TypeInference
+         // is as narrow as it can possibly be, but we need to make
+         // sure we back-infer the <string> element constraint on
+         // the left hand side, so we use the left hand side.
+-
+-        boolean isVarTypeBetter = !isVarDeclaration || var == null || var.isTypeInferred();
++        boolean isVarTypeBetter =
++            !isVarDeclaration || var == null || var.isTypeInferred();
+             // Makes it easier to check for NPEs.
+-
+         // TODO(nicksantos): This might be a better check once we have
+         // back-inference of object/array constraints.  It will probably
+         // introduce more type warnings.  It uses the result type iff it's
+@@ -561,9 +557,14 @@ class TypeInference
+         if (isVarTypeBetter) {
+           redeclareSimpleVar(scope, left, resultType);
+         }
+-        left.setJSType(isVarDeclaration || leftType == null ?
+-            resultType : null);
+-
++        // TODO(blickly): This is a workaround to prevent assigning JSTypes to
++        // nodes which already have types (including the case of declared VARs).
++        // The better fix would be to not assign the resultType to left in the
++        // redeclareSimpleVar method.
++        if (left.getJSType() == null) {
++          left.setJSType(isVarDeclaration || leftType == null ?
++              resultType : null);
++        }
+         if (var != null && var.isTypeInferred()) {
+           JSType oldType = var.getType();
+           var.setType(oldType == null ?

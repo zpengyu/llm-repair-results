@@ -1,0 +1,28 @@
+diff --git a/src/main/java/org/apache/commons/compress/archivers/tar/TarArchiveOutputStream.java b/src/main/java/org/apache/commons/compress/archivers/tar/TarArchiveOutputStream.java
+index da6bbfde..80eeb1b8 100644
+--- a/src/main/java/org/apache/commons/compress/archivers/tar/TarArchiveOutputStream.java
++++ b/src/main/java/org/apache/commons/compress/archivers/tar/TarArchiveOutputStream.java
+@@ -488,8 +487,22 @@ public class TarArchiveOutputStream extends ArchiveOutputStream {
+         putArchiveEntry(pex);
+         write(data);
+         closeArchiveEntry();
++        final Set<String> invalidHeaders = new HashSet<String>(Arrays.asList(
++                "path", "linkpath", "atime", "ctime", "gid", "gname",
++                "linkpath", "mtime", "size", "uid", "uname"));
++        for (Map.Entry<String, String> h : headers.entrySet()) {
++            if (!invalidHeaders.contains(h.getKey())) {
++                String key = h.getKey();
++                String value = h.getValue();
++                String line = key + "=" + value + "\n";
++                byte[] data = line.getBytes(CharsetNames.UTF_8);
++                pex.setSize(data.length);
++                putArchiveEntry(pex);
++                write(data);
++                closeArchiveEntry();
++            }
++        }
+     }
+-
+     private String stripTo7Bits(String name) {
+         final int length = name.length();
+         StringBuffer result = new StringBuffer(length);

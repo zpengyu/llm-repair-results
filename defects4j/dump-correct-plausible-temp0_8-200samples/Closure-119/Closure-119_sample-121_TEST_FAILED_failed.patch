@@ -1,0 +1,58 @@
+diff --git a/src/com/google/javascript/jscomp/GlobalNamespace.java b/src/com/google/javascript/jscomp/GlobalNamespace.java
+index a00893b3..5c8d327a 100644
+--- a/src/com/google/javascript/jscomp/GlobalNamespace.java
++++ b/src/com/google/javascript/jscomp/GlobalNamespace.java
+@@ -305,15 +305,12 @@ class GlobalNamespace
+ 
+     public void collect(JSModule module, Scope scope, Node n) {
+       Node parent = n.getParent();
+-
++      Node gramps = parent != null ? parent.getParent() : null;
+       String name;
+       boolean isSet = false;
+       Name.Type type = Name.Type.OTHER;
+       boolean isPropAssign = false;
+-
+       switch (n.getType()) {
+-        case Token.GETTER_DEF:
+-        case Token.SETTER_DEF:
+         case Token.STRING_KEY:
+           // This may be a key in an object literal declaration.
+           name = null;
+@@ -324,19 +321,7 @@ class GlobalNamespace
+             return;
+           }
+           isSet = true;
+-          switch (n.getType()) {
+-            case Token.STRING_KEY:
+-              type = getValueType(n.getFirstChild());
+-              break;
+-            case Token.GETTER_DEF:
+-              type = Name.Type.GET;
+-              break;
+-            case Token.SETTER_DEF:
+-              type = Name.Type.SET;
+-              break;
+-            default:
+-              throw new IllegalStateException("unexpected:" + n);
+-          }
++          type = getValueType(n.getFirstChild());
+           break;
+         case Token.NAME:
+           // This may be a variable get or set.
+@@ -356,12 +341,10 @@ class GlobalNamespace
+               case Token.GETPROP:
+                 return;
+               case Token.FUNCTION:
+-                Node gramps = parent.getParent();
+-                if (gramps == null || NodeUtil.isFunctionExpression(parent)) {
+-                  return;
++                if (gramps != null && !NodeUtil.isFunctionExpression(parent)) {
++                  isSet = true;
++                  type = Name.Type.FUNCTION;
+                 }
+-                isSet = true;
+-                type = Name.Type.FUNCTION;
+                 break;
+               case Token.INC:
+               case Token.DEC:

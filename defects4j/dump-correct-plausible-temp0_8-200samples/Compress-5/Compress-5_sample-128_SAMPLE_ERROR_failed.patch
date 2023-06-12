@@ -1,0 +1,19 @@
+diff --git a/src/main/java/org/apache/commons/compress/archivers/zip/ZipArchiveInputStream.java b/src/main/java/org/apache/commons/compress/archivers/zip/ZipArchiveInputStream.java
+index fc7b80d5..f60923ca 100644
+--- a/src/main/java/org/apache/commons/compress/archivers/zip/ZipArchiveInputStream.java
++++ b/src/main/java/org/apache/commons/compress/archivers/zip/ZipArchiveInputStream.java
+@@ -237,7 +236,13 @@ public class ZipArchiveInputStream extends ArchiveInputStream {
+                 throw new ZipException(e.getMessage());
+             }
+             if (read == 0 && inf.finished()) {
+-                return -1;
++                if (inf.getBytesWritten() == current.getSize()) {
++                    return -1;
++                } else {
++                    throw new ZipException(String.format(
++                        "The stream is corrupted: written %d, expected %d",
++                        inf.getBytesWritten(), current.getSize()));
++                }
+             }
+             crc.update(buffer, start, read);
+             return read;

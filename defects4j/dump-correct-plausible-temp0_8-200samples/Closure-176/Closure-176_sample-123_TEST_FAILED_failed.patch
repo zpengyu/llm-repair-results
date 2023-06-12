@@ -1,0 +1,24 @@
+diff --git a/src/com/google/javascript/jscomp/TypeInference.java b/src/com/google/javascript/jscomp/TypeInference.java
+index 53e8cb48..d2026f6f 100644
+--- a/src/com/google/javascript/jscomp/TypeInference.java
++++ b/src/com/google/javascript/jscomp/TypeInference.java
+@@ -581,9 +574,18 @@ class TypeInference
+         left.setJSType(resultType);
+         ensurePropertyDefined(left, resultType);
+         break;
++        case Token.GETELEM:
++            String name = NodeUtil.getBestLValueName(left);
++            if (name != null) {
++                scope.inferQualifiedSlot(left, name,
++                    leftType == null ? unknownType : leftType,
++                    resultType);
++            }
++            left.setJSType(resultType);
++            ensurePropertyDefined(left, resultType);
++            break;
+     }
+   }
+-
+   /**
+    * Defines a property if the property has not been defined yet.
+    */

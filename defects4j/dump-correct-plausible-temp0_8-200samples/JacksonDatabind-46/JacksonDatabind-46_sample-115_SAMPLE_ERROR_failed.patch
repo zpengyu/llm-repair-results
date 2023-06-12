@@ -1,0 +1,22 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/type/ReferenceType.java b/src/main/java/com/fasterxml/jackson/databind/type/ReferenceType.java
+index 1f21190da..5cdfbc6b3 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/type/ReferenceType.java
++++ b/src/main/java/com/fasterxml/jackson/databind/type/ReferenceType.java
+@@ -152,11 +152,14 @@ public class ReferenceType extends SimpleType
+     {
+         _classSignature(_class, sb, false);
+         sb.append('<');
+-        sb = _referencedType.getGenericSignature(sb);
+-        sb.append(';');
++        Iterator<ResolvedType> it = _referencedType.directSupertypes();
++        while (it.hasNext()) {
++            ResolvedType st = it.next();
++            sb = st.getGenericSignature(sb);
++            sb.append(';');
++        }
+         return sb;
+     }
+-
+     /*
+     /**********************************************************
+     /* Standard methods

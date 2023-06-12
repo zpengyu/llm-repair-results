@@ -1,0 +1,52 @@
+diff --git a/src/com/google/javascript/jscomp/FunctionInjector.java b/src/com/google/javascript/jscomp/FunctionInjector.java
+index c17b3cb3..692dfd29 100644
+--- a/src/com/google/javascript/jscomp/FunctionInjector.java
++++ b/src/com/google/javascript/jscomp/FunctionInjector.java
+@@ -691,13 +691,8 @@ class FunctionInjector {
+     if (!isDirectCallNodeReplacementPossible(fnNode)) {
+       return CanInlineResult.NO;
+     }
+-
+     Node block = fnNode.getLastChild();
+-
+-
+-    // CALL NODE: [ NAME, ARG1, ARG2, ... ]
+     Node cArg = callNode.getFirstChild().getNext();
+-
+     // Functions called via 'call' and 'apply' have a this-object as
+     // the first parameter, but this is not part of the called function's
+     // parameter list.
+@@ -717,10 +711,10 @@ class FunctionInjector {
+     // FUNCTION NODE -> LP NODE: [ ARG1, ARG2, ... ]
+     Node fnParam = NodeUtil.getFunctionParameters(fnNode).getFirstChild();
+     while (cArg != null || fnParam != null) {
+-      // For each named parameter check if a mutable argument use more than one.
+-      if (fnParam != null) {
+-        if (cArg != null) {
+-
++      if (cArg != null) {
++        // For each named parameter check if a mutable argument use more than
++        // one.
++        if (fnParam != null) {
+           // Check for arguments that are evaluated more than once.
+           // Note: Unlike block inlining, there it is not possible that a
+           // parameter reference will be in a loop.
+@@ -729,15 +723,10 @@ class FunctionInjector {
+                   block, fnParam.getString()) > 1) {
+             return CanInlineResult.NO;
+           }
++          fnParam = fnParam.getNext();
+         }
+-
+-        // Move to the next name.
+-        fnParam = fnParam.getNext();
+-      }
+-
+-      // For every call argument check for side-effects, even if there
+-      // isn't a named parameter to match.
+-      if (cArg != null) {
++        // For every call argument check for side-effects, even if there
++        // isn't a named parameter to match.
+         if (NodeUtil.mayHaveSideEffects(cArg, compiler)) {
+           return CanInlineResult.NO;
+         }

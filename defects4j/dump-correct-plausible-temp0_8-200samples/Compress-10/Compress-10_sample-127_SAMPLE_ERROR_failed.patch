@@ -1,0 +1,21 @@
+diff --git a/src/main/java/org/apache/commons/compress/archivers/zip/ZipFile.java b/src/main/java/org/apache/commons/compress/archivers/zip/ZipFile.java
+index fd5d1894..f554445a 100644
+--- a/src/main/java/org/apache/commons/compress/archivers/zip/ZipFile.java
++++ b/src/main/java/org/apache/commons/compress/archivers/zip/ZipFile.java
+@@ -840,8 +839,15 @@ public class ZipFile {
+                 }
+             }
+         }
++        if (!entries.isEmpty()) {
++            // see COMPRESS-160
++            ZipArchiveEntry ze = entries.values().iterator().next().zipArchiveEntry;
++            boolean hasEncryptedEntries = ze.getGeneralPurposeBit().isEncrypted();
++            if (hasEncryptedEntries && !isEncodingSet) {
++                setEncoding(Cp437Utf8ZipEncoding.INSTANCE);
++            }
++        }
+     }
+-
+     /**
+      * Checks whether the archive starts with a LFH.  If it doesn't,
+      * it may be an empty archive.

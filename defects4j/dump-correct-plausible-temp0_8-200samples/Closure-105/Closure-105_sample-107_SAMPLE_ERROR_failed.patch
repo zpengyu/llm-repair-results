@@ -1,0 +1,59 @@
+diff --git a/src/com/google/javascript/jscomp/FoldConstants.java b/src/com/google/javascript/jscomp/FoldConstants.java
+index 003743b3..bd47d9fe 100644
+--- a/src/com/google/javascript/jscomp/FoldConstants.java
++++ b/src/com/google/javascript/jscomp/FoldConstants.java
+@@ -1459,19 +1459,16 @@ class FoldConstants extends AbstractPostOrderCallback
+    * Try to fold an array join: ['a', 'b', 'c'].join('') -> 'abc';
+    */
+   void tryFoldStringJoin(NodeTraversal t, Node n, Node left, Node right,
+-                         Node parent) {
++      Node parent) {
+     if (!NodeUtil.isGetProp(left) || !NodeUtil.isImmutableValue(right)) {
+       return;
+     }
+-
+     Node arrayNode = left.getFirstChild();
+     Node functionName = arrayNode.getNext();
+-
+-    if ((arrayNode.getType() != Token.ARRAYLIT) ||
+-        !functionName.getString().equals("join")) {
++    if ((arrayNode.getType() != Token.ARRAYLIT)
++        || !functionName.getString().equals("join")) {
+       return;
+     }
+-
+     String joinString = NodeUtil.getStringValue(right);
+     List<Node> arrayFoldedChildren = Lists.newLinkedList();
+     StringBuilder sb = new StringBuilder();
+@@ -1509,9 +1504,12 @@ class FoldConstants extends AbstractPostOrderCallback
+     switch (arrayFoldedChildren.size()) {
+       case 0:
+         Node emptyStringNode = Node.newString("");
+-        parent.replaceChild(n, emptyStringNode);
++        if (NodeUtil.isExpressionNode(parent)) {
++          parent.replaceChild(n, emptyStringNode);
++        } else {
++          parent.replaceChild(n, IR.comma(emptyStringNode, IR.number(0)).srcref(n));
++        }
+         break;
+-
+       case 1:
+         Node foldedStringNode = arrayFoldedChildren.remove(0);
+         if (foldedSize > originalSize) {
+@@ -1525,9 +1523,14 @@ class FoldConstants extends AbstractPostOrderCallback
+               Node.newString(""), foldedStringNode);
+           foldedStringNode = replacement;
+         }
+-        parent.replaceChild(n, foldedStringNode);
++        if (NodeUtil.isExpressionNode(parent)) {
++          parent.replaceChild(n, foldedStringNode);
++        } else {
++          Node newNode = NodeUtil.newExpr(
++              IR.comma(foldedStringNode, IR.number(0)).srcref(n));
++          parent.replaceChild(n, newNode);
++        }
+         break;
+-
+       default:
+         // No folding could actually be performed.
+         if (arrayFoldedChildren.size() == arrayNode.getChildCount()) {

@@ -1,0 +1,21 @@
+diff --git a/src/main/java/org/jsoup/nodes/FormElement.java b/src/main/java/org/jsoup/nodes/FormElement.java
+index 3949f22..d69385a 100644
+--- a/src/main/java/org/jsoup/nodes/FormElement.java
++++ b/src/main/java/org/jsoup/nodes/FormElement.java
+@@ -106,9 +103,13 @@ public class FormElement extends Element {
+                     data.add(HttpConnection.KeyVal.create(name, val));
+                 }
+             } else {
+-                data.add(HttpConnection.KeyVal.create(name, el.val()));
++                if (el.parent() != null && "option".equalsIgnoreCase(el.parent().tagName())) {
++                    if (el.parent().hasAttr("selected"))
++                        data.add(HttpConnection.KeyVal.create(name, el.val()));
++                } else {
++                    data.add(HttpConnection.KeyVal.create(name, el.val()));
++                }
+             }
+         }
+         return data;
+-    }
+-}
++    }}

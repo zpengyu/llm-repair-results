@@ -1,0 +1,132 @@
+diff --git a/src/com/google/javascript/jscomp/InlineObjectLiterals.java b/src/com/google/javascript/jscomp/InlineObjectLiterals.java
+index a26b500d..b5960bb3 100644
+--- a/src/com/google/javascript/jscomp/InlineObjectLiterals.java
++++ b/src/com/google/javascript/jscomp/InlineObjectLiterals.java
+@@ -152,93 +152,43 @@ class InlineObjectLiterals implements CompilerPass {
+      *   x.fn();
+      * </pre>
+      */
+-    private boolean isInlinableObject(List<Reference> refs) {
+-      boolean ret = false;
+-      for (Reference ref : refs) {
+-        Node name = ref.getNode();
+-        Node parent = ref.getParent();
+-        Node gramps = ref.getGrandparent();
+-
+-        // Ignore indirect references, like x.y (except x.y(), since
+-        // the function referenced by y might reference 'this').
+-        //
+-        if (parent.isGetProp()) {
+-          Preconditions.checkState(parent.getFirstChild() == name);
+-          // A call target maybe using the object as a 'this' value.
+-          if (gramps.isCall()
+-              && gramps.getFirstChild() == parent) {
+-            return false;
+-          }
+-
+-          // NOTE(nicksantos): This pass's object-splitting algorithm has
+-          // a blind spot. It assumes that if a property isn't defined on an
+-          // object, then the value is undefined. This is not true, because
+-          // Object.prototype can have arbitrary properties on it.
+-          //
+-          // We short-circuit this problem by bailing out if we see a reference
+-          // to a property that isn't defined on the object literal. This
+-          // isn't a perfect algorithm, but it should catch most cases.
+-          continue;
+-        }
+-
+-        // Only rewrite VAR declarations or simple assignment statements
+-        if (!isVarOrAssignExprLhs(name)) {
+-           return false;
+-        }
+-
+-        Node val = ref.getAssignedValue();
+-        if (val == null) {
+-          // A var with no assignment.
+-          continue;
+-        }
+-
+-        // We're looking for object literal assignments only.
+-        if (!val.isObjectLit()) {
+-          return false;
+-        }
+-
+-        // Make sure that the value is not self-refential. IOW,
+-        // disallow things like x = {b: x.a}.
+-        //
+-        // TODO: Only exclude unorderable self-referential
+-        // assignments. i.e. x = {a: x.b, b: x.a} is not orderable,
+-        // but x = {a: 1, b: x.a} is.
+-        //
+-        // Also, ES5 getters/setters aren't handled by this pass.
+-        for (Node child = val.getFirstChild(); child != null;
+-             child = child.getNext()) {
+-          if (child.isGetterDef() ||
+-              child.isSetterDef()) {
+-            // ES5 get/set not supported.
+-            return false;
+-          }
+-
+-
+-          Node childVal = child.getFirstChild();
+-          // Check if childVal is the parent of any of the passed in
+-          // references, as that is how self-referential assignments
+-          // will happen.
+-          for (Reference t : refs) {
+-            Node refNode = t.getParent();
+-            while (!NodeUtil.isStatementBlock(refNode)) {
+-              if (refNode == childVal) {
+-                // There's a self-referential assignment
+-                return false;
+-              }
+-              refNode = refNode.getParent();
+-            }
+-          }
++  /**
++   * Given a variable, returns the list of variable references.
++   */
++  private List<Reference> getReferencesForVar(Var v) {
++    List<Reference> refs = new ArrayList<Reference>();
++    for (Reference ref : refMap.values()) {
++      if (ref.getVar() == v) {
++        refs.add(ref);
++      }
++    }
++    return refs;
++  }
++  /**
++   * Rewrites object literals that are assigned to local variables only once.
++   */
++  void tryRewriteObjectLiteral() {
++    for (Var v : compiler.getSymbolTable().getAllSymbols()) {
++      if (!v.isLocal()) {
++        continue;
++      }
++      List<Reference> refs = getReferencesForVar(v);
++      if (refs.size() != 1) {
++        continue;
++      }
++      Reference ref = refs.get(0);
++      Node value = ref.getAssignedValue();
++      if (value != null && value.isObjectLit()) {
++        // In order for an object literal to be inlinable, it must
++        // be only referenced once, and all of the references to it
++        // must be simple VAR declarations.
++        if (isInlinableObject(refs)) {
++          // This references to the object is a simple declaration.
++          tryInlineObject(refs);
+         }
+-
+-
+-        // We have found an acceptable object literal assignment. As
+-        // long as there are no other assignments that mess things up,
+-        // we can inline.
+-        ret = true;
+       }
+-      return ret;
+     }
+-
++  }
+     private boolean isVarOrAssignExprLhs(Node n) {
+       Node parent = n.getParent();
+       return parent.isVar() ||

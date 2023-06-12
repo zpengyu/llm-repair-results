@@ -1,0 +1,25 @@
+    public int read(byte[] buf, int offset, int numToRead) throws IOException {
+        int totalRead = 0;
+
+        if (hasHitEOF) {
+            return -1;
+        }
+
+        if (entryOffset >= entrySize) {
+            setEntry(readNextEntry());
+            if (currEntry == null) { // No more entries
+                hasHitEOF = true;
+            }
+        }
+
+        if (currEntry != null) {
+            numToRead = Math.min(numToRead, available());
+            totalRead = is.read(buf, offset, numToRead);
+            count(totalRead);
+            if (totalRead > 0) {
+                entryOffset += totalRead;
+            }
+        }
+        return totalRead;
+    }
+ 

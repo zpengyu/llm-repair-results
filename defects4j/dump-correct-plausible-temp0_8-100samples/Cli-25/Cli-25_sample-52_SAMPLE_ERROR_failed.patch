@@ -1,0 +1,38 @@
+diff --git a/src/java/org/apache/commons/cli/HelpFormatter.java b/src/java/org/apache/commons/cli/HelpFormatter.java
+index da89f9d..2d76feb 100644
+--- a/src/java/org/apache/commons/cli/HelpFormatter.java
++++ b/src/java/org/apache/commons/cli/HelpFormatter.java
+@@ -849,7 +840,32 @@ public class HelpFormatter
+             sb.append(rtrim(text.substring(0, pos))).append(defaultNewLine);
+         }
+     }
+-
++    public static int findWrapPos(String text, int startPos, int max) 
++    {
++        int spaceToWrapAt = -1;
++        char space = ' ';
++        for (int i = startPos; i < text.length(); i++) 
++        {
++            if (text.charAt(i) == space) 
++            {
++                spaceToWrapAt = i;
++            }
++            else if (i >= max) 
++            {
++                // look for the first previous space, to avoid breaking words
++                for (int j = i; j >= 0; j--) 
++                {
++                    if (text.charAt(j) == space) 
++                    {
++                        spaceToWrapAt = j;
++                        break;
++                    }
++                }
++                break;
++            }
++        }
++        return spaceToWrapAt;
++    }
+     /**
+      * Finds the next text wrap position after <code>startPos</code> for the
+      * text in <code>text</code> with the column width <code>width</code>.

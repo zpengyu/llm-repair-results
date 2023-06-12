@@ -1,0 +1,22 @@
+import com.google.javascript.jscomp.parsing.parser.util.SourcePosition;
+import java.io.IOException;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.rules.TemporaryFolder;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
+/** Tests for {@link ErrorUtils}. */
+@RunWith(JUnit4.class)
+public class ErrorUtilsTest {
+  @Rule public TemporaryFolder temporaryFolder = new TemporaryFolder();
+  @Test
+  public void testFormatPosition() throws IOException {
+    temporaryFolder.newFile("foo.js");
+    SourcePosition pos =
+        new SourcePosition("foo.js", 10, 10, temporaryFolder.getRoot().toPath());
+    assertThat(ErrorUtils.formatPosition(pos)).isEqualTo("foo.js:10:10");
+    assertThat(ErrorUtils.formatPosition(pos, false)).isEqualTo("foo.js:10");
+    assertThat(ErrorUtils.formatPosition(pos, true, 2)).isEqualTo("foo.js:10:11");
+    assertThat(ErrorUtils.formatPosition(pos, false, 2)).isEqualTo("foo.js:10");
+  }
+}

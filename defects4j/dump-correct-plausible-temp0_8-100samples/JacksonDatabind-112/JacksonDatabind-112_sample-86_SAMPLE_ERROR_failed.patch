@@ -1,0 +1,33 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/deser/std/StringCollectionDeserializer.java b/src/main/java/com/fasterxml/jackson/databind/deser/std/StringCollectionDeserializer.java
+index 42c6f0491..cf43154e0 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/deser/std/StringCollectionDeserializer.java
++++ b/src/main/java/com/fasterxml/jackson/databind/deser/std/StringCollectionDeserializer.java
+@@ -116,7 +116,7 @@ public final class StringCollectionDeserializer
+             // [databind#125]: May have a content converter
+             valueDeser = findConvertingContentDeserializer(ctxt, property, valueDeser);
+             if (valueDeser == null) {
+-            // And we may also need to get deserializer for String
++                // And we may also need to get deserializer for String
+                 valueDeser = ctxt.findContextualValueDeserializer(valueType, property);
+             }
+         } else { // if directly assigned, probably not yet contextual, so:
+@@ -130,9 +130,17 @@ public final class StringCollectionDeserializer
+         if (isDefaultDeserializer(valueDeser)) {
+             valueDeser = null;
+         }
+-        return withResolved(delegate, valueDeser, nuller, unwrapSingle);
++        JsonDeserializer<?> deser = withResolved(delegate, valueDeser, nuller, unwrapSingle);
++        TypeDeserializer typeDeser = _valueTypeDeserializer;
++        if (typeDeser != null) {
++            typeDeser = typeDeser.forProperty(property);
++        }
++        if (delegate == null && valueDeser == _valueDeserializer && nuller == _nullProvider
++                && unwrapSingle == _unwrapSingle && typeDeser == _valueTypeDeserializer) {
++            return this;
++        }
++        return withResolved(delegate, valueDeser, typeDeser, nuller, unwrapSingle);
+     }    
+-    
+     /*
+     /**********************************************************
+     /* ContainerDeserializerBase API

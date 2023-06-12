@@ -1,0 +1,25 @@
+diff --git a/src/main/java/org/jsoup/nodes/Attribute.java b/src/main/java/org/jsoup/nodes/Attribute.java
+index 4ff695d..8fc2b02 100644
+--- a/src/main/java/org/jsoup/nodes/Attribute.java
++++ b/src/main/java/org/jsoup/nodes/Attribute.java
+@@ -88,8 +88,18 @@ public class Attribute implements Map.Entry<String, String>, Cloneable  {
+         String oldVal = parent.get(this.key);
+         if (parent != null) {
+             int i = parent.indexOfKey(this.key);
+-            if (i != Attributes.NotFound)
+-                parent.vals[i] = val;
++            if (i != Attributes.NotFound) {
++                String[] oldVals = parent.vals;
++                String[] newVals = new String[oldVals.length];
++                for (int j = 0; j < oldVals.length; j++) {
++                    if (j != i) {
++                        newVals[j] = oldVals[j];
++                    } else {
++                        newVals[j] = val;
++                    }
++                }
++                parent.vals = newVals;
++            }
+         }
+         this.val = val;
+         return Attributes.checkNotNull(oldVal);

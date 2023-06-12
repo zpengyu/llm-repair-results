@@ -1,0 +1,25 @@
+diff --git a/src/main/java/org/jsoup/parser/Parser.java b/src/main/java/org/jsoup/parser/Parser.java
+index 5f71aaf..0e094fe 100644
+--- a/src/main/java/org/jsoup/parser/Parser.java
++++ b/src/main/java/org/jsoup/parser/Parser.java
+@@ -178,7 +178,7 @@ public class Parser {
+         }
+     }
+ 
+-    private Attribute parseAttribute() {
++private Attribute parseAttribute() {
+         tq.consumeWhitespace();
+         String key = tq.consumeAttributeKey();
+         String value = "";
+@@ -194,7 +193,10 @@ public class Parser {
+                 StringBuilder valueAccum = new StringBuilder();
+                 // no ' or " to look for, so scan to end tag or space (or end of stream)
+                 while (!tq.matchesAny("<", "/>", ">") && !tq.matchesWhitespace() && !tq.isEmpty()) {
+-                    valueAccum.append(tq.consume());
++                    if (tq.matchChomp("&")) {
++                        valueAccum.append(tq.consumeEntity());
++                    }
++                    else valueAccum.append(tq.consume());
+                 }
+                 value = valueAccum.toString();
+             }

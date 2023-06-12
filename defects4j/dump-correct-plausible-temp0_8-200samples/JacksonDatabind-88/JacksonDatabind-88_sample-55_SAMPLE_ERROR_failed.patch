@@ -1,0 +1,36 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/jsontype/impl/ClassNameIdResolver.java b/src/main/java/com/fasterxml/jackson/databind/jsontype/impl/ClassNameIdResolver.java
+index 112c00b5c..07e592696 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/jsontype/impl/ClassNameIdResolver.java
++++ b/src/main/java/com/fasterxml/jackson/databind/jsontype/impl/ClassNameIdResolver.java
+@@ -56,6 +56,10 @@ public class ClassNameIdResolver
+             //    security issues.
+             JavaType t = tf.constructFromCanonical(id);
+                 // Probably cleaner to have a method in `TypeFactory` but can't add in patch
++            // 17-Aug-2017, tatu: As per [databind#1735] need to ensure assignment
++            //    compatibility; but not sure if we really want to do this at this point.
++            //    Seems like bit of a false positive?
++            //_verifyAssignable(_baseType, t);
+             return t;
+         }
+         Class<?> cls;
+@@ -74,9 +78,18 @@ public class ClassNameIdResolver
+         } catch (Exception e) {
+             throw new IllegalArgumentException("Invalid type id '"+id+"' (for id type 'Id.class'): "+e.getMessage(), e);
+         }
+-        return tf.constructSpecializedType(_baseType, cls);
++        JavaType t = tf.constructSpecializedType(_baseType, cls);
++        _verifyAssignable(_baseType, t);
++        return t;
++    }
++    protected final void _verifyAssignable(JavaType valueType, JavaType superType) throws IllegalArgumentException
++    {
++        if (!superType.isAssignableFrom(valueType)) {
++            throw new IllegalArgumentException(String.format(
++"Class %s not subtype of %s", valueType.getRawClass().getName(), superType.getRawClass().getName()
++            ));
++        }
+     }    
+-    
+     /*
+     /**********************************************************
+     /* Internal methods

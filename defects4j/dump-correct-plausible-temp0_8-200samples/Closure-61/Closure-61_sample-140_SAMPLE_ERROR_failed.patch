@@ -1,0 +1,25 @@
+diff --git a/src/com/google/javascript/jscomp/NodeUtil.java b/src/com/google/javascript/jscomp/NodeUtil.java
+index 53389622..0a49abb2 100644
+--- a/src/com/google/javascript/jscomp/NodeUtil.java
++++ b/src/com/google/javascript/jscomp/NodeUtil.java
+@@ -970,11 +964,18 @@ public final class NodeUtil {
+           return false;
+         }
+       }
++    } else if (nameNode.getType() == Token.GETELEM) {
++      // We do not know if the object referenced by the GETELEM has the
++      // function, so we assume it does.
++      return true;
++    } else if (nameNode.getType() == Token.BIND) {
++      // Function.bind() creates a function with a bound this object.
++      // We don't know what the this object is, so we conservatively
++      // assume it does have side-effects.
++      return true;
+     }
+-
+     return true;
+   }
+-
+   /**
+    * @return Whether the call has a local result.
+    */

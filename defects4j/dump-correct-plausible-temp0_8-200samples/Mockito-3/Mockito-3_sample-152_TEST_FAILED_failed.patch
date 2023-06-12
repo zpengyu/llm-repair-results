@@ -1,0 +1,56 @@
+diff --git a/src/org/mockito/internal/invocation/InvocationMatcher.java b/src/org/mockito/internal/invocation/InvocationMatcher.java
+index a3a7c08df..7e4063959 100644
+--- a/src/org/mockito/internal/invocation/InvocationMatcher.java
++++ b/src/org/mockito/internal/invocation/InvocationMatcher.java
+@@ -24,7 +23,7 @@ public class InvocationMatcher implements DescribedInvocation, CapturesArgumensF
+     private static final long serialVersionUID = -3047126096857467610L;
+     private final Invocation invocation;
+     private final List<Matcher> matchers;
+-
++    private final List<Matcher> argumentMatchers;
+     public InvocationMatcher(Invocation invocation, List<Matcher> matchers) {
+         this.invocation = invocation;
+         if (matchers.isEmpty()) {
+@@ -32,8 +31,17 @@ public class InvocationMatcher implements DescribedInvocation, CapturesArgumensF
+         } else {
+             this.matchers = matchers;
+         }
++        argumentMatchers = null;
++    }
++    public InvocationMatcher(Invocation invocation, List<Matcher> matchers, List<Matcher> argumentMatchers) {
++        this.invocation = invocation;
++        if (matchers.isEmpty()) {
++            this.matchers = ArgumentsProcessor.argumentsToMatchers(invocation.getArguments());
++        } else {
++            this.matchers = matchers;
++        }
++        this.argumentMatchers = argumentMatchers;
+     }
+-    
+     public InvocationMatcher(Invocation invocation) {
+         this(invocation, Collections.<Matcher>emptyList());
+     }
+@@ -49,7 +54,9 @@ public class InvocationMatcher implements DescribedInvocation, CapturesArgumensF
+     public List<Matcher> getMatchers() {
+         return this.matchers;
+     }
+-    
++    public List<Matcher> getArgumentMatchers() {
++        return this.argumentMatchers;
++    }
+     public String toString() {
+         return new PrintSettings().print(matchers, invocation);
+     }
+@@ -148,4 +142,11 @@ public class InvocationMatcher implements DescribedInvocation, CapturesArgumensF
+         }
+         return out;
+     }
++    public static List<InvocationMatcher> createFrom(List<Invocation> invocations, List<Matcher> matchers) {
++        LinkedList<InvocationMatcher> out = new LinkedList<InvocationMatcher>();
++        for (Invocation i : invocations) {
++            out.add(new InvocationMatcher(i, matchers));
++        }
++        return out;
++    }
+ }
+\ No newline at end of file

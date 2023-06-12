@@ -1,0 +1,22 @@
+diff --git a/src/org/mockito/internal/creation/instance/ConstructorInstantiator.java b/src/org/mockito/internal/creation/instance/ConstructorInstantiator.java
+index 972e1a282..8184603d1 100644
+--- a/src/org/mockito/internal/creation/instance/ConstructorInstantiator.java
++++ b/src/org/mockito/internal/creation/instance/ConstructorInstantiator.java
+@@ -42,4 +35,16 @@ public class ConstructorInstantiator implements Instantiator {
+                     + cls.getSimpleName() + "'.\nPlease ensure it has parameter-less constructor.", e);
+         }
+     }
++    private static <T> T noArgConstructor2(Class<T> cls) {
++        try {
++            Constructor<T> c = cls.getDeclaredConstructor(outerClassInstance.getClass());
++            c.setAccessible(true);
++            T instance = c.newInstance(outerClassInstance);
++            c.setAccessible(false);
++            return instance;
++        } catch (Exception e) {
++            throw new InstantationException("Unable to create mock instance of '"
++                    + cls.getSimpleName() + "'.\nPlease ensure it has parameter-less constructor.", e);
++        }
++    }
+ }
+\ No newline at end of file

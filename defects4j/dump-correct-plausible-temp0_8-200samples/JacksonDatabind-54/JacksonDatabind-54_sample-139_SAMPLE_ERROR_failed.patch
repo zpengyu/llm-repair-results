@@ -1,0 +1,39 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/ser/PropertyBuilder.java b/src/main/java/com/fasterxml/jackson/databind/ser/PropertyBuilder.java
+index 9a9d91ebf..4214f8a1c 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/ser/PropertyBuilder.java
++++ b/src/main/java/com/fasterxml/jackson/databind/ser/PropertyBuilder.java
+@@ -92,11 +91,32 @@ public class PropertyBuilder
+             }
+             serializationType = serializationType.withContentTypeHandler(contentTypeSer);
+             ct = serializationType.getContentType();
++            // also: may need to resolve final type
++            if (ct.getRawClass() == Object.class) {
++                ct = _config.getTypeFactory().constructType(am.getGenericType(), _beanDesc.getType());
++                serializationType = serializationType.withContentType(ct);
++            }
++        }
++        /* 04-Feb-2010, tatu: we may want to allow explicit content-type serializer
++         *   annotation for containers; for now this is not done though
++         */
++        if (ser == null) {
++            Class<?> serType = propDef.getRawSerializationType();
++            if (serType == null) {
++                serType = propDef.getRawType();
++            }
++            ser = prov.findValueSerializer(serType, propDef);
++        }
++        // and then, type serializer:
++        if (typeSer == null) {
++            typeSer = findPropertyTypeSerializer(declaredType, _config, am);
++        }
++        // Maybe type serializer needs to be annotated too?
++        if (typeSer != null) {
++            typeSer = typeSer.forProperty(am);
+         }
+-        
+         Object valueToSuppress = null;
+         boolean suppressNulls = false;
+-
+         JsonInclude.Value inclV = _defaultInclusion.withOverrides(propDef.findInclusion());
+         JsonInclude.Include inclusion = inclV.getValueInclusion();
+         if (inclusion == JsonInclude.Include.USE_DEFAULTS) { // should not occur but...

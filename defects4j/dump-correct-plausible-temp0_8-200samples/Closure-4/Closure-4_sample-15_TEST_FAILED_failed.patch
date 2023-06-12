@@ -1,0 +1,39 @@
+diff --git a/src/com/google/javascript/rhino/jstype/NamedType.java b/src/com/google/javascript/rhino/jstype/NamedType.java
+index cddc8a88..f26a3bfa 100644
+--- a/src/com/google/javascript/rhino/jstype/NamedType.java
++++ b/src/com/google/javascript/rhino/jstype/NamedType.java
+@@ -181,7 +181,7 @@ class NamedType extends ProxyObjectType {
+    * Resolve the referenced type within the enclosing scope.
+    */
+   @Override
+-  JSType resolveInternal(ErrorReporter t, StaticScope<JSType> enclosing) {
++   JSType resolveInternal(ErrorReporter t, StaticScope<JSType> enclosing) {
+     // TODO(user): Investigate whether it is really necessary to keep two
+     // different mechanisms for resolving named types, and if so, which order
+     // makes more sense. Now, resolution via registry is first in order to
+@@ -189,8 +189,11 @@ class NamedType extends ProxyObjectType {
+     boolean resolved = resolveViaRegistry(t, enclosing);
+     if (detectImplicitPrototypeCycle()) {
+       handleTypeCycle(t);
++      if (!resolved) {
++        return registry.isLastGeneration() ?
++            getReferencedType() : this;
++      }
+     }
+-
+     if (resolved) {
+       super.resolveInternal(t, enclosing);
+       finishPropertyContinuations();
+@@ -201,8 +203,11 @@ class NamedType extends ProxyObjectType {
+     resolveViaProperties(t, enclosing);
+     if (detectImplicitPrototypeCycle()) {
+       handleTypeCycle(t);
++      if (!resolved) {
++        return registry.isLastGeneration() ?
++            getReferencedType() : this;
++      }
+     }
+-
+     super.resolveInternal(t, enclosing);
+     if (isResolved()) {
+       finishPropertyContinuations();

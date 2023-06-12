@@ -1,0 +1,50 @@
+diff --git a/src/java/org/apache/commons/cli/PosixParser.java b/src/java/org/apache/commons/cli/PosixParser.java
+index 8c84520..3b4c7d5 100644
+--- a/src/java/org/apache/commons/cli/PosixParser.java
++++ b/src/java/org/apache/commons/cli/PosixParser.java
+@@ -289,11 +288,22 @@ public class PosixParser extends Parser {
+             {
+                 tokens.add("-" + ch);
+                 currentOption = options.getOption(ch);
+-
+-                if (currentOption.hasArg() && (token.length() != (i + 1)))
++                if (currentOption.hasArg() && (i == token.length() - 1))
+                 {
+-                    tokens.add(token.substring(i + 1));
+-
++                    handleOptionToken(currentOption, null);
++                }
++                else if (currentOption.hasArg() && (i != token.length() - 1))
++                {
++                    handleOptionToken(currentOption, token.substring(i + 1));
++                    break;
++                }
++                else if (!currentOption.hasArg())
++                {
++                    handleOptionToken(currentOption, null);
++                }
++                else
++                {
++                    tokens.add(token);
+                     break;
+                 }
+             }
+@@ -308,4 +318,17 @@ public class PosixParser extends Parser {
+             }
+         }
+     }
+-}
++    private void handleOptionToken(Option opt, String optToken)
++    {
++        if (opt.hasArg())
++        {
++            if (optToken != null)
++            {
++                tokens.add(optToken);
++            }
++            else if (opt.getValues() == null || opt.getValues().length == 0)
++            {
++                tokens.add("");
++            }
++        }
++    }}

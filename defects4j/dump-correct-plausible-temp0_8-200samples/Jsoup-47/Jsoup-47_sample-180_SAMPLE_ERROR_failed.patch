@@ -1,0 +1,31 @@
+diff --git a/src/main/java/org/jsoup/nodes/Entities.java b/src/main/java/org/jsoup/nodes/Entities.java
+index 5a2b368..2c016ca 100644
+--- a/src/main/java/org/jsoup/nodes/Entities.java
++++ b/src/main/java/org/jsoup/nodes/Entities.java
+@@ -83,10 +82,8 @@ public class Entities {
+         boolean reachedNonWhite = false;
+         final EscapeMode escapeMode = out.escapeMode();
+         final CharsetEncoder encoder = out.encoder();
+-        final CoreCharset coreCharset = CoreCharset.byName(encoder.charset().name());
+         final Map<Character, String> map = escapeMode.getMap();
+         final int length = string.length();
+-
+         int codePoint;
+         for (int offset = 0; offset < length; offset += Character.charCount(codePoint)) {
+             codePoint = string.codePointAt(offset);
+@@ -137,9 +133,12 @@ public class Entities {
+                             accum.append(c);
+                         break;
+                     default:
+-                        if (canEncode(coreCharset, c, encoder))
+-                            accum.append(c);
+-                        else if (map.containsKey(c))
++                        if (escapeMode != EscapeMode.extended) {
++                            if (canEncode(coreCharset, c, encoder))
++                                accum.append(c);
++                            else
++                                accum.append("&#x").append(Integer.toHexString(codePoint)).append(';');
++                        } else if (map.containsKey(c))
+                             accum.append('&').append(map.get(c)).append(';');
+                         else
+                             accum.append("&#x").append(Integer.toHexString(codePoint)).append(';');

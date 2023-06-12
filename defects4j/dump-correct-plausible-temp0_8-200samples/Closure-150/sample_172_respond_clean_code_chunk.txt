@@ -1,0 +1,17 @@
+private void defineDeclaredFunction(Node n, Node parent) {
+    String fnName = n.getFirstChild().getString();
+    if (NodeUtil.isFunctionExpression(n)) {
+      if (parent.getType() == Token.NAME) {
+        maybeAssignType(fnName,
+            registry.createNamedType(parent.getString()));
+      } else if (parent.getType() == Token.ASSIGN) {
+        Node left = parent.getFirstChild();
+        if (left.isName()) {
+          maybeAssignType(left.getString(),
+              registry.createNamedType(fnName));
+        }
+      }
+    } else {
+      maybeAssignType(fnName, registry.createFunctionType(n));
+    }
+  }

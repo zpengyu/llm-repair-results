@@ -1,0 +1,32 @@
+    public static long parseOctal(final byte[] buffer, final int offset, final int length) {
+        long result = 0;
+        int end = offset + length;
+        int start = offset;
+        boolean stillPadding = true;
+        if (length < 1) {
+            return 0;
+        }
+        while (buffer[start] == 0) {
+            start++;
+        }
+        for (int i = start; i < end; i++) {
+            if (stillPadding && buffer[i] == 0) {
+                break;
+            }
+            if (buffer[i] == (byte) ' ' || buffer[i] == '0') {
+                if (stillPadding) {
+                    if (buffer[i] == (byte) ' ') {
+                        break;
+                    }
+                    continue;
+                }
+            }
+            stillPadding = false;
+            if (buffer[i] < '0' || buffer[i] > '7') {
+                throw new IllegalArgumentException(
+                        exceptionMessage(buffer, offset, length, start, buffer[i]));
+            }
+            result = (result << 3) + (buffer[i] - '0');
+        }
+        return result;
+    }

@@ -1,0 +1,23 @@
+diff --git a/src/com/google/javascript/jscomp/TypedScopeCreator.java b/src/com/google/javascript/jscomp/TypedScopeCreator.java
+index 9489dc30..9227dee4 100644
+--- a/src/com/google/javascript/jscomp/TypedScopeCreator.java
++++ b/src/com/google/javascript/jscomp/TypedScopeCreator.java
+@@ -1543,8 +1535,7 @@ final class TypedScopeCreator implements ScopeCreator {
+         // If the property is already declared, the error will be
+         // caught when we try to declare it in the current scope.
+         defineSlot(n, parent, valueType, inferred);
+-      } else if (rhsValue != null && rhsValue.isTrue()) {
+-        // We declare these for delegate proxy method properties.
++      } else if (rhsValue != null && rhsValue.isFunction()) {
+         FunctionType ownerType =
+             JSType.toMaybeFunctionType(getObjectSlot(ownerName));
+         if (ownerType != null) {
+@@ -1554,7 +1545,7 @@ final class TypedScopeCreator implements ScopeCreator {
+               null : typeRegistry.getType(delegateName);
+           if (delegateType != null &&
+               ownerTypeOfThis.isSubtype(delegateType)) {
+-            defineSlot(n, parent, getNativeType(BOOLEAN_TYPE), true);
++            defineSlot(n, parent, rhsValue.getJSType(), true);
+           }
+         }
+       }

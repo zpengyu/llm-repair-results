@@ -1,0 +1,27 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/jsontype/impl/TypeDeserializerBase.java b/src/main/java/com/fasterxml/jackson/databind/jsontype/impl/TypeDeserializerBase.java
+index 339362e1e..9d26e5266 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/jsontype/impl/TypeDeserializerBase.java
++++ b/src/main/java/com/fasterxml/jackson/databind/jsontype/impl/TypeDeserializerBase.java
+@@ -155,11 +155,18 @@ public abstract class TypeDeserializerBase
+                     // 10-May-2016, tatu: We may get some help...
+                     JavaType actual = _handleUnknownTypeId(ctxt, typeId, _idResolver, _baseType);
+                     if (actual == null) { // what should this be taken to mean?
+-                        // TODO: try to figure out something better
+-                        return null;
++                        // try to figure out something better
++                        JavaType type = _config.getTypeFactory().constructType(Map.class);
++                        JavaType[] typeParams = new JavaType[2];
++                        typeParams[0] = TypeFactory.defaultInstance().constructType(String.class);
++                        typeParams[1] = TypeFactory.defaultInstance().constructType(Object.class);
++                        type = ((MapType) type).narrowContentsBy(typeParams[1]);
++                        type = type.narrowKey(typeParams[0]);
++                        deser = ctxt.findContextualValueDeserializer(type, _property);
++                    } else {
++                        // ... would this actually work?
++                        deser = ctxt.findContextualValueDeserializer(actual, _property);
+                     }
+-                    // ... would this actually work?
+-                    deser = ctxt.findContextualValueDeserializer(actual, _property);
+                 }
+             } else {
+                 /* 16-Dec-2010, tatu: Since nominal type we get here has no (generic) type parameters,

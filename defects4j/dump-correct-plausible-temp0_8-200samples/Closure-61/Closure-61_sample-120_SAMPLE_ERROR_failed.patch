@@ -1,0 +1,26 @@
+diff --git a/src/com/google/javascript/jscomp/NodeUtil.java b/src/com/google/javascript/jscomp/NodeUtil.java
+index 53389622..c909b9ca 100644
+--- a/src/com/google/javascript/jscomp/NodeUtil.java
++++ b/src/com/google/javascript/jscomp/NodeUtil.java
+@@ -971,10 +965,19 @@ public final class NodeUtil {
+         }
+       }
+     }
+-
++    if (nameNode.isGetProp()) {
++      if (callNode.hasOneChild()
++          && OBJECT_METHODS_WITHOUT_SIDEEFFECTS.contains(
++                nameNode.getLastChild().getString())) {
++        return false;
++      }
++      if (callNode.isOnlyModifiesThisCall()
++          && evaluatesToLocalValue(nameNode.getFirstChild())) {
++        return false;
++      }
++    }
+     return true;
+   }
+-
+   /**
+    * @return Whether the call has a local result.
+    */

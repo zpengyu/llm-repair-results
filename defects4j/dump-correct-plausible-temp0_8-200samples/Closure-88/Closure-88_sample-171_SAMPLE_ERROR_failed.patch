@@ -1,0 +1,20 @@
+diff --git a/src/com/google/javascript/jscomp/DeadAssignmentsElimination.java b/src/com/google/javascript/jscomp/DeadAssignmentsElimination.java
+index 19b8b6bd..31ced4c1 100644
+--- a/src/com/google/javascript/jscomp/DeadAssignmentsElimination.java
++++ b/src/com/google/javascript/jscomp/DeadAssignmentsElimination.java
+@@ -341,8 +340,13 @@ class DeadAssignmentsElimination extends AbstractPostOrderCallback implements
+         if (state != VariableLiveness.MAYBE_LIVE) {
+           return state;
+         }
++      } else if (state == VariableLiveness.READ) {
++        // When we see a function, we need to stop looking at the children
++        // and see if we are definitely reading or killing the variable.
++        // If we see a kill we need to stop looking at any children at this
++        // level in the tree.
++        return VariableLiveness.MAYBE_LIVE;
+       }
+     }
+     return VariableLiveness.MAYBE_LIVE;
+-  }
+-}
++  }}

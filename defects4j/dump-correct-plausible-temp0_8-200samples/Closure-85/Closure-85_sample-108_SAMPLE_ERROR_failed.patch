@@ -1,0 +1,149 @@
+diff --git a/src/com/google/javascript/jscomp/UnreachableCodeElimination.java b/src/com/google/javascript/jscomp/UnreachableCodeElimination.java
+index 60bfd244..3bcf694a 100644
+--- a/src/com/google/javascript/jscomp/UnreachableCodeElimination.java
++++ b/src/com/google/javascript/jscomp/UnreachableCodeElimination.java
+@@ -48,45 +48,17 @@ class UnreachableCodeElimination extends AbstractPostOrderCallback
+     implements CompilerPass, ScopedCallback  {
+   private static final Logger logger =
+     Logger.getLogger(UnreachableCodeElimination.class.getName());
+-
+   private final AbstractCompiler compiler;
+   private final boolean removeNoOpStatements;
+-
+-  Deque<ControlFlowGraph<Node>> cfgStack =
+-      new LinkedList<ControlFlowGraph<Node>>();
+-
+-  ControlFlowGraph<Node> curCfg = null;
+-
+   UnreachableCodeElimination(AbstractCompiler compiler,
+       boolean removeNoOpStatements) {
+     this.compiler = compiler;
+     this.removeNoOpStatements = removeNoOpStatements;
+   }
+-
+-  @Override
+-  public void enterScope(NodeTraversal t) {
+-    Scope scope = t.getScope();
+-
+-    // Computes the control flow graph.
+-    ControlFlowAnalysis cfa = new ControlFlowAnalysis(compiler, false, false);
+-    cfa.process(null, scope.getRootNode());
+-    cfgStack.push(curCfg);
+-    curCfg = cfa.getCfg();
+-
+-    new GraphReachability<Node, ControlFlowGraph.Branch>(curCfg)
+-        .compute(curCfg.getEntry().getValue());
+-  }
+-
+-  @Override
+-  public void exitScope(NodeTraversal t) {
+-    curCfg = cfgStack.pop();
+-  }
+-
+   @Override
+   public void process(Node externs, Node root) {
+-    NodeTraversal.traverse(compiler, root, this);
++    NodeTraversal.traverseRoots(compiler, this, externs, root);
+   }
+-
+   @Override
+   public void visit(NodeTraversal t, Node n, Node parent) {
+     if (parent == null) {
+@@ -95,13 +67,11 @@ class UnreachableCodeElimination extends AbstractPostOrderCallback
+     if (n.getType() == Token.FUNCTION || n.getType() == Token.SCRIPT) {
+       return;
+     }
+-
+-    DiGraphNode<Node, Branch> gNode = curCfg.getDirectedGraphNode(n);
+-    if (gNode == null) { // Not in CFG.
+-      return;
+-    }
+-    if (gNode.getAnnotation() != GraphReachability.REACHABLE ||
+-        (removeNoOpStatements && !NodeUtil.mayHaveSideEffects(n))) {
++    ControlFlowAnalysis cfa = new ControlFlowAnalysis(compiler, false, false);
++    cfa.process(null, t.getScope().getRootNode());
++    if (cfa.getCfg().getDirectedGraphNode(n).getAnnotation() !=
++      GraphReachability.REACHABLE ||
++      (removeNoOpStatements && !NodeUtil.mayHaveSideEffects(n))) {
+       removeDeadExprStatementSafely(n);
+       return;
+     }
+@@ -128,7 +96,7 @@ class UnreachableCodeElimination extends AbstractPostOrderCallback
+    *     the target of that useless jump recursively.
+    */
+   @SuppressWarnings("fallthrough")
+-  private Node tryRemoveUnconditionalBranching(Node n) {
++  private void tryRemoveUnconditionalBranching(Node n) {
+     /*
+      * For each of the unconditional branching control flow node, check to see
+      * if the ControlFlowAnalysis.computeFollowNode of that node is same as
+@@ -138,32 +106,30 @@ class UnreachableCodeElimination extends AbstractPostOrderCallback
+      * if-else conversion but it handles more complicated switch statements
+      * much nicer.
+      */
+-
+     // If n is null the target is the end of the function, nothing to do.
+     if (n == null) {
+-       return n;
++       return;
+     }
+-
+-    DiGraphNode<Node, Branch> gNode = curCfg.getDirectedGraphNode(n);
+-
+-    if (gNode == null) {
+-      return n;
++    ControlFlowAnalysis cfa = new ControlFlowAnalysis(compiler, false, false);
++    cfa.process(null, n.getEnclosingFunction());
++    if (cfa.getCfg().getDirectedGraphNode(n) == null) {
++      return;
+     }
+-
+     if (n.getParent() == null) {
+-      List<DiGraphEdge<Node,Branch>> outEdges = gNode.getOutEdges();
++      List<DiGraphEdge<Node,Branch>> outEdges = cfa.getCfg().getDirectedGraphNode(n).getOutEdges();
+       if (outEdges.size() == 1) {
+-        return tryRemoveUnconditionalBranching(outEdges.get(0).getDestination().getValue());
++        tryRemoveUnconditionalBranching(outEdges.get(0).getDestination().getValue());
+       }
+     }
+     switch (n.getType()) {
+       case Token.BLOCK:
+         if (n.hasChildren()) {
+           Node first = n.getFirstChild();
+-          return tryRemoveUnconditionalBranching(first);
++          tryRemoveUnconditionalBranching(first);
+         } else {
+-          return tryRemoveUnconditionalBranching(ControlFlowAnalysis.computeFollowNode(n));
++          tryRemoveUnconditionalBranching(ControlFlowAnalysis.computeFollowNode(n));
+         }
++        return;
+       case Token.RETURN:
+         if (n.hasChildren()) {
+           break;
+@@ -174,23 +139,20 @@ class UnreachableCodeElimination extends AbstractPostOrderCallback
+         // We are looking for a control flow changing statement that always
+         // branches to the same node. If removing it the control flow still
+         // branches to that same node. It is safe to remove it.
+-        List<DiGraphEdge<Node,Branch>> outEdges = gNode.getOutEdges();
++        List<DiGraphEdge<Node,Branch>> outEdges = cfa.getCfg().getDirectedGraphNode(n).getOutEdges();
+         if (outEdges.size() == 1 &&
+             // If there is a next node, there is no chance this jump is useless.
+             (n.getNext() == null || n.getNext().getType() == Token.FUNCTION)) {
+-
+           Preconditions.checkState(outEdges.get(0).getValue() == Branch.UNCOND);
+-          Node fallThrough = tryRemoveUnconditionalBranching(computeFollowing(n));
++          Node fallThrough = computeFollowing(n);
+           Node nextCfgNode = outEdges.get(0).getDestination().getValue();
+           if (nextCfgNode == fallThrough) {
+             removeDeadExprStatementSafely(n);
+-            return fallThrough;
++            return;
+           }
+         }
+     }
+-    return n;
+   }
+-
+   private Node computeFollowing(Node n) {
+     Node next = ControlFlowAnalysis.computeFollowNode(n);
+     return next;

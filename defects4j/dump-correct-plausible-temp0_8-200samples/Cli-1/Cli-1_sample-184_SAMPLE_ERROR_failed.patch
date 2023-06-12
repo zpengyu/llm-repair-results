@@ -1,0 +1,105 @@
+diff --git a/src/java/org/apache/commons/cli/CommandLine.java b/src/java/org/apache/commons/cli/CommandLine.java
+index de23601..5a02a28 100644
+--- a/src/java/org/apache/commons/cli/CommandLine.java
++++ b/src/java/org/apache/commons/cli/CommandLine.java
+@@ -37,19 +37,20 @@ import java.util.Map;
+  * @author <a href="mailto:jstrachan@apache.org">James Strachan</a>
+  * @author John Keyes (john at integralsource.com)
+  */
++/**
++ * A class to handle the processing of command line arguments.
++ *
++ * @author John Keyes (john at integralsource.com)
++ */
+ public class CommandLine {
+-
+     /** the unrecognised options/arguments */
+     private List args = new LinkedList();
+-
+     /** the processed options */
+     private Map options = new HashMap();
+     private Map names = new HashMap();
+-
+     /** Map of unique options for ease to get complete list of options */
+-//    private Set allOptions = new HashSet();
++    private Set allOptions = new HashSet();
+     private Map hashcodeMap = new HashMap();
+-
+     /**
+      * Creates a command line.
+      */
+@@ -160,8 +147,7 @@ public class CommandLine {
+             return ((Option) options.get(key)).getValues();
+         }
+         return null;
+-        }
+-
++    }
+     /**
+      * <p>Retrieves the option object given the long or short option as a String</p>
+      * @param opt short or long name of the option
+@@ -234,29 +211,21 @@ public class CommandLine {
+     {
+         return args;
+     }
+-
+     /** 
+-     * jkeyes
+-     * - commented out until it is implemented properly
+-     * <p>Dump state, suitable for debugging.</p>
++     * Dump state, suitable for debugging.
+      *
+      * @return Stringified form of this object
+      */
+-
+-    /*
+-    public String toString() {
++    public String toString()
++    {
+         StringBuffer buf = new StringBuffer();
+-            
+         buf.append("[ CommandLine: [ options: ");
+         buf.append(options.toString());
+         buf.append(" ] [ args: ");
+         buf.append(args.toString());
+         buf.append(" ] ]");
+-            
+         return buf.toString();
+     }
+-    */
+-
+     /**
+      * Add left-over unrecognized option/argument.
+      *
+@@ -275,6 +243,7 @@ public class CommandLine {
+      */
+     void addOption(Option opt)
+     {
++        allOptions.add(opt);
+         hashcodeMap.put(new Integer(opt.hashCode()), opt);
+         String key = opt.getKey();
+         if (key == null)
+@@ -296,9 +264,8 @@ public class CommandLine {
+      */
+     public Iterator iterator()
+     {
+-        return hashcodeMap.values().iterator();
++        return allOptions.iterator();
+     }
+-
+     /**
+      * Returns an array of the processed {@link Option}s.
+      *
+@@ -306,11 +273,9 @@ public class CommandLine {
+      */
+     public Option[] getOptions()
+     {
+-        Collection processed = options.values();
+-
++        Collection processed = allOptions;
+         // reinitialise array
+         Option[] optionsArray = new Option[processed.size()];
+-
+         // return the array
+         return (Option[]) processed.toArray(optionsArray);
+     }

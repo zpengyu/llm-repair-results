@@ -1,0 +1,29 @@
+diff --git a/src/main/java/org/jsoup/nodes/Node.java b/src/main/java/org/jsoup/nodes/Node.java
+index 0d0f9d4..2ca4155 100644
+--- a/src/main/java/org/jsoup/nodes/Node.java
++++ b/src/main/java/org/jsoup/nodes/Node.java
+@@ -159,6 +158,8 @@ public abstract class Node implements Cloneable {
+         String relUrl = attr(attributeKey);
+         if (!hasAttr(attributeKey)) {
+             return ""; // nothing to make absolute with
++        } else if (!hasBaseUri()) {
++            return relUrl;
+         } else {
+             URL base;
+             try {
+@@ -170,7 +171,14 @@ public abstract class Node implements Cloneable {
+                     return abs.toExternalForm();
+                 }
+                 // workaround: java resolves '//path/file + ?foo' to '//path/?foo', not '//path/file?foo' as desired
+-                URL abs = new URL(base, relUrl);
++                String path = StringUtil.isBlank(base.getPath()) && relUrl.startsWith("/") ? "" : base.getPath();
++                if (!path.endsWith("/")) {
++                    int lastSlash = path.lastIndexOf('/');
++                    if (lastSlash != -1) {
++                        path = path.substring(0, lastSlash + 1);
++                    }
++                }
++                URL abs = new URL(base, path + relUrl);
+                 return abs.toExternalForm();
+             } catch (MalformedURLException e) {
+                 return "";

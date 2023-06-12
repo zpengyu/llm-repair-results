@@ -1,0 +1,36 @@
+diff --git a/src/main/java/org/joda/time/chrono/BasicMonthOfYearDateTimeField.java b/src/main/java/org/joda/time/chrono/BasicMonthOfYearDateTimeField.java
+index 98e6912c..ede83aa7 100644
+--- a/src/main/java/org/joda/time/chrono/BasicMonthOfYearDateTimeField.java
++++ b/src/main/java/org/joda/time/chrono/BasicMonthOfYearDateTimeField.java
+@@ -214,11 +214,29 @@ class BasicMonthOfYearDateTimeField extends ImpreciseDateTimeField {
+             }
+             instant = add(instant, valueToAdd);
+             return iChronology.get(partial, instant);
++        }
++        if (partial.size() == 2 && partial.getFieldType(0) == DateTimeFieldType.monthOfYear() && partial.getFieldType(1) == DateTimeFieldType.dayOfMonth()) {
++            int month = values[0];
++            int day = values[1];
++            int[] daysInMonth = iChronology.getDaysInMonth(DateTimeUtils.getBaseYear(iBase));
++            int max = daysInMonth[month - 1];
++            if (valueToAdd != 0) {
++                // TODO: Handle add across a leap year boundary
++                day += valueToAdd;
++                if (day > max) {
++                    day -= max;
++                    month++;
++                } else if (day < 1) {
++                    day += daysInMonth[month - 2];
++                    month--;
++                }
++            }
++            values = new int[] {month, day};
+         } else {
+-            return super.add(partial, fieldIndex, values, valueToAdd);
++            values = super.add(partial, fieldIndex, values, valueToAdd);
+         }
++        return values;
+     }
+-
+     //-----------------------------------------------------------------------
+     /**
+      * Add to the Month component of the specified time instant

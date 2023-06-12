@@ -1,0 +1,17 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/type/TypeFactory.java b/src/main/java/com/fasterxml/jackson/databind/type/TypeFactory.java
+index 87b165830..ac719c476 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/type/TypeFactory.java
++++ b/src/main/java/com/fasterxml/jackson/databind/type/TypeFactory.java
+@@ -904,7 +904,11 @@ public final class TypeFactory
+                 return actualType;
+             }
+         }
+-
++        // Here's where we may have to check what's the parent type, to check:
++        if (context.hasUnboundTypeParameter(name)) {
++            // 09-Jun-2015, tatu: Avoid infinite loops with recursion; [databind#977]
++            return _unknownType();
++        }
+         /* 29-Jan-2010, tatu: We used to throw exception here, if type was
+          *   bound: but the problem is that this can occur for generic "base"
+          *   method, overridden by sub-class. If so, we will want to ignore

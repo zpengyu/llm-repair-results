@@ -1,0 +1,17 @@
+diff --git a/src/com/google/javascript/jscomp/NodeUtil.java b/src/com/google/javascript/jscomp/NodeUtil.java
+index 933d4ffa..e8c27dab 100644
+--- a/src/com/google/javascript/jscomp/NodeUtil.java
++++ b/src/com/google/javascript/jscomp/NodeUtil.java
+@@ -2472,6 +2472,12 @@ public final class NodeUtil {
+       case Token.IN:
+         // TODO(johnlenz): should IN operator be included in #isSimpleOperator?
+         return true;
++      case Token.ADD:
++        // Strings and numbers are local values, even when added together.
++        return (value.getFirstChild().isString()
++            && value.getLastChild().isString())
++            || (value.getFirstChild().isNumber()
++            && value.getLastChild().isNumber());
+       default:
+         // Other op force a local value:
+         //  x = '' + g (x is now an local string)

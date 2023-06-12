@@ -1,0 +1,31 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/deser/BeanDeserializerFactory.java b/src/main/java/com/fasterxml/jackson/databind/deser/BeanDeserializerFactory.java
+index bc8e6736f..e6dee5c40 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/deser/BeanDeserializerFactory.java
++++ b/src/main/java/com/fasterxml/jackson/databind/deser/BeanDeserializerFactory.java
+@@ -707,12 +707,14 @@ public class BeanDeserializerFactory
+     {
+         // need to ensure method is callable (for non-public)
+         AnnotatedMember mutator = propDef.getNonConstructorMutator();
+-
++        if (mutator == null) {
++            mutator = propDef.getInjectableConstructorArgument(ctxt.getConfig());
++        }
+         if (ctxt.canOverrideAccessModifiers()) {
+             // [databind#877]: explicitly prevent forced access to `cause` of `Throwable`;
+             // never needed and attempts may cause problems on some platforms.
+             // !!! NOTE: should be handled better for 2.8 and later
+-                mutator.fixAccess(ctxt.isEnabled(MapperFeature.OVERRIDE_PUBLIC_ACCESS_MODIFIERS));
++            mutator.fixAccess(ctxt.isEnabled(MapperFeature.OVERRIDE_PUBLIC_ACCESS_MODIFIERS));
+         }
+         // note: this works since we know there's exactly one argument for methods
+         BeanProperty.Std property = new BeanProperty.Std(propDef.getFullName(),
+@@ -732,6 +733,9 @@ public class BeanDeserializerFactory
+         if (mutator instanceof AnnotatedMethod) {
+             prop = new MethodProperty(propDef, type, typeDeser,
+                     beanDesc.getClassAnnotations(), (AnnotatedMethod) mutator);
++        } else if (mutator instanceof AnnotatedParameter) {
++            prop = new CreatorProperty.Vanilla(propDef, type, typeDeser,
++                    beanDesc.getClassAnnotations(), (AnnotatedParameter) mutator);
+         } else {
+             prop = new FieldProperty(propDef, type, typeDeser,
+                     beanDesc.getClassAnnotations(), (AnnotatedField) mutator);

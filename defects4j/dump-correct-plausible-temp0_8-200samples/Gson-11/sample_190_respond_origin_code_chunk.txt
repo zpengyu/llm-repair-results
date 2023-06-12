@@ -1,0 +1,15 @@
+          @Override public T1 read(JsonReader in) throws IOException {
+            JsonToken token = in.peek();
+            if (token == JsonToken.NULL) {
+              in.nextNull();
+              return null;
+            }
+
+            T1 result = typeAdapter.read(in);
+            if (result != null && !requestedType.isInstance(result)) {
+              throw new JsonSyntaxException("Expected a " + requestedType.getName()
+                  + " but was " + result.getClass().getName());
+            }
+            return result;
+          }
+

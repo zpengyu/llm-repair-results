@@ -1,0 +1,25 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/deser/std/NumberDeserializers.java b/src/main/java/com/fasterxml/jackson/databind/deser/std/NumberDeserializers.java
+index a76403c86..08e394eed 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/deser/std/NumberDeserializers.java
++++ b/src/main/java/com/fasterxml/jackson/databind/deser/std/NumberDeserializers.java
+@@ -144,11 +140,18 @@ public class NumberDeserializers
+         public final T getNullValue() {
+             return _nullValue;
+         }
+-
+             // [databind#1095]: Should not allow coercion from into null from Empty String
+             // either, if `null` not allowed
++            @Override
++            public boolean isEmpty(DeserializationContext ctxt, JsonParser p, T instance)
++                throws IOException
++            {
++                if (_primitive && ctxt.isEnabled(DeserializationFeature.ACCEPT_EMPTY_STRING_AS_NULL_OBJECT)) {
++                    return true;
++                }
++                return super.isEmpty(ctxt, p, instance);
++            }
+     }
+-
+     /*
+     /**********************************************************
+     /* Then primitive/wrapper types

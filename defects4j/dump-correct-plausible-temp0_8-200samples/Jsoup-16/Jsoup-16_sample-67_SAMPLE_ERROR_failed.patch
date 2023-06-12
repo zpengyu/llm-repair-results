@@ -1,0 +1,33 @@
+diff --git a/src/main/java/org/jsoup/nodes/DocumentType.java b/src/main/java/org/jsoup/nodes/DocumentType.java
+index 6c22dc3..028f35f 100644
+--- a/src/main/java/org/jsoup/nodes/DocumentType.java
++++ b/src/main/java/org/jsoup/nodes/DocumentType.java
+@@ -27,17 +24,21 @@ public class DocumentType extends Node {
+     public String nodeName() {
+         return "#doctype";
+     }
+-
+     @Override
+     void outerHtmlHead(StringBuilder accum, int depth, Document.OutputSettings out) {
+-        accum.append("<!DOCTYPE html");
+-        if (!StringUtil.isBlank(attr("publicId")))
+-            accum.append(" PUBLIC \"").append(attr("publicId")).append("\"");
+-        if (!StringUtil.isBlank(attr("systemId")))
+-            accum.append(' ').append(attr("systemId")).append("\"");
++        if (out.syntax() == Document.OutputSettings.Syntax.html && !has(Attribute.PUBLIC_ID) && !has(Attribute.SYSTEM_ID)) {
++            accum.append("<!DOCTYPE html>"); // looks like a html doctype, go for short form
++            return;
++        }
++        accum.append("<!DOCTYPE");
++        if (!StringUtil.isBlank(name()))
++            accum.append(" ").append(name());
++        if (!StringUtil.isBlank(publicIdentifier()))
++            accum.append(" PUBLIC \"").append(publicIdentifier()).append("\"");
++        if (!StringUtil.isBlank(systemIdentifier()))
++            accum.append(" \"").append(systemIdentifier()).append("\"");
+         accum.append('>');
+     }
+-
+     @Override
+     void outerHtmlTail(StringBuilder accum, int depth, Document.OutputSettings out) {
+     }

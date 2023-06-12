@@ -1,0 +1,28 @@
+diff --git a/gson/src/main/java/com/google/gson/internal/$Gson$Types.java b/gson/src/main/java/com/google/gson/internal/$Gson$Types.java
+index 173598a1..581e804c 100644
+--- a/gson/src/main/java/com/google/gson/internal/$Gson$Types.java
++++ b/gson/src/main/java/com/google/gson/internal/$Gson$Types.java
+@@ -400,7 +393,22 @@ public final class $Gson$Types {
+           }
+         }
+         return original;
+-
++      } else if (toResolve instanceof WildcardType) {
++        WildcardType original = (WildcardType) toResolve;
++        Type[] lowerBounds = original.getLowerBounds();
++        Type[] upperBounds = original.getUpperBounds();
++        if (lowerBounds.length == 1) {
++          Type lowerBound = resolve(context, contextRawType, lowerBounds[0], visitedTypeVariables);
++          if (lowerBound != lowerBounds[0]) {
++            return supertypeOf(lowerBound);
++          }
++        } else if (upperBounds.length == 1) {
++          Type upperBound = resolve(context, contextRawType, upperBounds[0], visitedTypeVariables);
++          if (upperBound != upperBounds[0]) {
++            return subtypeOf(upperBound);
++          }
++        }
++        return original;
+       } else {
+         return toResolve;
+       }

@@ -1,0 +1,19 @@
+diff --git a/src/com/google/javascript/jscomp/InlineVariables.java b/src/com/google/javascript/jscomp/InlineVariables.java
+index 03f4fcf3..707ab6a7 100644
+--- a/src/com/google/javascript/jscomp/InlineVariables.java
++++ b/src/com/google/javascript/jscomp/InlineVariables.java
+@@ -292,8 +291,13 @@ class InlineVariables implements CompilerPass {
+           inlineWellDefinedVariable(v, value, referenceInfo.references);
+           staleVars.add(v);
+         }
++      } else if (declaration != init && refCount == 3) {
++        Reference reference = referenceInfo.references.get(2);
++        if (canInline(declaration, init, reference)) {
++          inline(v, declaration, init, reference);
++          staleVars.add(v);
++        }
+       }
+-
+       // If this variable was not inlined normally, check if we can
+       // inline an alias of it. (If the variable was inlined, then the
+       // reference data is out of sync. We're better off just waiting for

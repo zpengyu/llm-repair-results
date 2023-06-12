@@ -1,0 +1,64 @@
+diff --git a/src/org/mockito/internal/stubbing/defaultanswers/ReturnsDeepStubs.java b/src/org/mockito/internal/stubbing/defaultanswers/ReturnsDeepStubs.java
+index 6fa773f53..56c507d79 100644
+--- a/src/org/mockito/internal/stubbing/defaultanswers/ReturnsDeepStubs.java
++++ b/src/org/mockito/internal/stubbing/defaultanswers/ReturnsDeepStubs.java
+@@ -49,39 +45,44 @@ public class ReturnsDeepStubs implements Answer<Object>, Serializable {
+         if (!new MockCreationValidator().isTypeMockable(rawType)) {
+             return delegate.returnValueFor(rawType);
+         }
+-
+-        return getMock(invocation);
++        return getMock(invocation, returnTypeGenericMetadata);
+     }
+-
+-    private Object getMock(InvocationOnMock invocation) throws Throwable {
++    private Object getMock(InvocationOnMock invocation, GenericMetadataSupport returnTypeGenericMetadata) throws Throwable {
+     	InternalMockHandler<Object> handler = new MockUtil().getMockHandler(invocation.getMock());
+     	InvocationContainerImpl container = (InvocationContainerImpl) handler.getInvocationContainer();
+-
+         // matches invocation for verification
+         for (StubbedInvocationMatcher stubbedInvocationMatcher : container.getStubbedInvocations()) {
+     		if(container.getInvocationForStubbing().matches(stubbedInvocationMatcher.getInvocation())) {
+     			return stubbedInvocationMatcher.answer(invocation);
+     		}
+ 		}
+-
+         // deep stub
+-        return recordDeepStubMock(invocation, container);
++        return recordDeepStubMock(invocation, returnTypeGenericMetadata, container);
+     }
+-
+     /**
+      * Creates a mock using the Generics Metadata.
+      *
+      * @param returnTypeGenericMetadata The metadata to use to create the new mock.
+      * @return The mock
+      */
+-
+-
+-
+-
+-    private Object recordDeepStubMock(InvocationOnMock invocation, InvocationContainerImpl container) {
++    @SuppressWarnings("unchecked")
++    protected <T> T createMock(GenericMetadataSupport returnTypeGenericMetadata, Class<T> clz) {
++        GenericMetadataSupport resolvedGenerics = returnTypeGenericMetadata.deepResolve();
++        Type targetType = resolvedGenerics.rawType();
++        final CreationSettings settings = new SettingsImpl(targetType)
++                .defaultAnswer(this)
++                .name(createNewMockName());
++        if (clz != null) {
++            settings.extraInterfaces((Class) clz);
++        }
++        final MockHandlerFactory<Object> handlerFactory = new MockHandlerFactory<Object>(settings);
++        Object mock = new MockMaker().createMock(settings, handlerFactory);
++        handlerFactory.getHandler().setAnswersForStubbing(this);
++        return (T) mock;
++    }
++    private Object recordDeepStubMock(InvocationOnMock invocation, GenericMetadataSupport returnTypeGenericMetadata, InvocationContainerImpl container) {
+         Class<?> clz = invocation.getMethod().getReturnType();
+-        final Object mock = org.mockito.Mockito.mock(clz, this);
+-
++        final Object mock = createMock(returnTypeGenericMetadata, clz);
+         container.addAnswer(new Answer<Object>() {
+             public Object answer(InvocationOnMock invocation) throws Throwable {
+                 return mock;

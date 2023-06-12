@@ -1,0 +1,22 @@
+diff --git a/src/main/java/com/fasterxml/jackson/core/util/JsonParserSequence.java b/src/main/java/com/fasterxml/jackson/core/util/JsonParserSequence.java
+index bed27f2b..a6bd45a9 100644
+--- a/src/main/java/com/fasterxml/jackson/core/util/JsonParserSequence.java
++++ b/src/main/java/com/fasterxml/jackson/core/util/JsonParserSequence.java
+@@ -111,7 +102,16 @@ public class JsonParserSequence extends JsonParserDelegate
+         }
+         return null;
+     }
+-
++    @Override
++    public void setCodec(ObjectCodec c) {
++        // 25-Nov-2016, tatu: Looks like this can be problematic on all JDK7 and earlier
++        //   since they don't support per-instance `super` calls. Should be harmless to
++        //   remove from JDK8+
++        //super.setCodec(c);
++        for (JsonParser p : _parsers) {
++            p.setCodec(c);
++        }
++    }
+     /*
+     /*******************************************************
+     /* Additional extended API

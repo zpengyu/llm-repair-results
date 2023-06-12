@@ -1,0 +1,43 @@
+diff --git a/src/com/google/javascript/jscomp/TypedScopeCreator.java b/src/com/google/javascript/jscomp/TypedScopeCreator.java
+index 9489dc30..37e5af0e 100644
+--- a/src/com/google/javascript/jscomp/TypedScopeCreator.java
++++ b/src/com/google/javascript/jscomp/TypedScopeCreator.java
+@@ -1413,6 +1413,14 @@ final class TypedScopeCreator implements ScopeCreator {
+      * @param rhsValue The node that {@code n} is being initialized to,
+      *     or {@code null} if this is a stub declaration.
+      */
++    /**
++     * Declares qualified names (e.g. goog.Foo.bar) in the global scope.
++     * @param t The traversal.
++     * @param info The jsdoc info.
++     * @param n The node being declared.
++     * @param parent The parent of {@code n}.
++     * @param rhsValue The value of the node being declared.
++     */
+     void maybeDeclareQualifiedName(NodeTraversal t, JSDocInfo info,
+         Node n, Node parent, Node rhsValue) {
+       Node ownerNode = n.getFirstChild();
+@@ -1557,9 +1557,22 @@ final class TypedScopeCreator implements ScopeCreator {
+             defineSlot(n, parent, getNativeType(BOOLEAN_TYPE), true);
+           }
+         }
++      } else if (rhsValue != null && rhsValue.isFalse()) {
++        // We declare these for delegate proxy method properties.
++        FunctionType ownerType =
++            JSType.toMaybeFunctionType(getObjectSlot(ownerName));
++        if (ownerType != null) {
++          JSType ownerTypeOfThis = ownerType.getTypeOfThis();
++          String delegateName = codingConvention.getDelegateSuperclassName();
++          JSType delegateType = delegateName == null ?
++              null : typeRegistry.getType(delegateName);
++          if (delegateType != null &&
++              ownerTypeOfThis.isSubtype(delegateType)) {
++            defineSlot(n, parent, getNativeType(BOOLEAN_TYPE), true);
++          }
++        }
+       }
+     }
+-
+     /**
+      * Find the ObjectType associated with the given slot.
+      * @param slotName The name of the slot to find the type in.

@@ -1,0 +1,103 @@
+    public JavaType refineSerializationType(final MapperConfig<?> config,
+            final Annotated a, JavaType baseType) throws JsonMappingException
+    {
+        // First: if we have a class annotation, may need to use that as base type
+        final Class<?> serClass = findSerializationType(a);
+        final TypeFactory tf = config.getTypeFactory();
+        // 10-Oct-2015, tatu: For 2.7, we'll need to delegate back to
+        //    now-deprecated secondary methods; this because while
+        //    direct sub-class not yet retrofitted may only override
+        //    those methods. With 2.8 or later we may consider removal
+        //    of these methods
+        if (serClass != null) {
+            try {
+                // 18-Jan-2016, tatu: Should try to keep existing type if possible
+                JavaType newType = baseType.hasRawClass(serClass) ? baseType.withStaticTyping()
+                        : tf.constructSpecializedType(baseType, serClass);
+                baseType = newType;
+            } catch (IllegalArgumentException iae) {
+                throw new JsonMappingException(null,
+                        String.format("Failed to narrow type %s with annotation (value %s), from '%s': %s",
+                                baseType, serClass.getName(), a.getName(), iae.getMessage()),
+                                iae);
+            }
+        }
+        // Then further processing for container types
+        // First, key type (for Maps, Map-like types):
+        JavaType keyType = baseType.getKeyType();
+        Class<?> keyClass = findSerializationKeyType(a, keyType);
+        if (keyClass != null) {
+            // 18-Jan-2016, tatu: try to keep type if possible
+            if (keyType.hasRawClass(keyClass)) {
+                keyType = keyType.withStaticTyping();
+            } else {
+                keyType = _mapKeyType(baseType, keyClass, tf);
+            }
+            baseType = ((MapLikeType) baseType).withKeyType(keyType);
+        }
+        // And then value types for all containers:
+        JavaType contentType = baseType.getContentType();
+        if (contentType != null) { // collection[like], map[like], array, reference
+           Class<?> contentClass = findSerializationContentType(a, contentType);
+           if (contentClass != null) {
+               // 18-Jan-2016, tatu: try to keep type if possible
+               if (contentType.hasRawClass(contentClass)) {
+                   contentType = contentType.withStaticTyping();
+               } else {
+                   contentType = _mapContentType(baseType, contentClass, tf);
+               }
+               baseType = baseType.withContentType(contentType);
+           }
+        }
+        return baseType;
+    }
+    private JavaType _mapKeyType(JavaType type, Class<?> keyClass, TypeFactory tf)
+            throws JsonMappingException
+    {
+        // 18-Jan-2016, tatu: As per [databind#1231], [databind#1178] may need to actually
+        //   specialize (narrow) type sometimes, even if more commonly opposite
+        //   is needed.
+        JavaType keyType = type.getKeyType();
+        Class<?> currRaw = keyType.getRawClass();
+        try {
+            if (keyClass.isAssignableFrom(currRaw)) { // common case
+                return tf.constructGeneralizedType(keyType, keyClass);
+            }
+            if (currRaw.isAssignableFrom(keyClass)) { // specialization, ok as well
+                return tf.constructSpecializedType(keyType, keyClass);
+            }
+            throw new JsonMappingException(null,
+                    String.format("Can not refine serialization key type %s into %s; types not related",
+                            keyType, keyClass.getName()));
+        } catch (IllegalArgumentException iae) {
+            throw new JsonMappingException(null,
+                    String.format("Failed to widen key type of %s with concrete-type annotation (value %s), from '%s': %s",
+                            type, keyClass.getName(), type.getKeyType(), iae.getMessage()),
+                            iae);
+        }
+    }
+    private JavaType _mapContentType(JavaType type, Class<?> contentClass, TypeFactory tf)
+            throws JsonMappingException
+    {
+        // 18-Jan-2016, tatu: As per [databind#1178], may need to actually
+        //   specialize (narrow) type sometimes, even if more commonly opposite
+        //   is needed.
+        JavaType contentType = type.getContentType();
+        Class<?> currRaw = contentType.getRawClass();
+        try {
+            if (contentClass.isAssignableFrom(currRaw)) { // common case
+                return tf.constructGeneralizedType(contentType, contentClass);
+            }
+            if (currRaw.isAssignableFrom(contentClass)) { // specialization, ok as well
+                return tf.constructSpecializedType(contentType, contentClass);
+            }
+            throw new JsonMappingException(null,
+                    String.format("Can not refine serialization content type %s into %s; types not related",
+                            contentType, contentClass.getName()));
+        } catch (IllegalArgumentException iae) { // shouldn't really happen
+            throw new JsonMappingException(null,
+                    String.format("Internal error: failed to refine value type of %s with concrete-type annotation (value %s), from '%s': %s",
+                            type, contentClass.getName(), contentType, iae.getMessage()),
+                            iae);
+        }
+    }

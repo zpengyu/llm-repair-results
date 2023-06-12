@@ -1,0 +1,78 @@
+abstract class LeafNode extends Node {
+
+    Attributes attributes; // either null, or an Attributes collection.
+
+    protected final boolean hasAttributes() {
+        return attributes != null;
+    }
+
+    @Override
+    public final Attributes attributes() {
+        if (!hasAttributes())
+            attributes = new Attributes();
+        return attributes;
+    }
+
+    @Override
+    public String attr(String key) {
+        Validate.notNull(key);
+        if (!hasAttributes())
+            return "";
+
+        return attributes.hasKey(key) ? attributes.getIgnoreCase(key) : "";
+    }
+
+    @Override
+    public Node attr(String key, String value) {
+        ensureAttributes();
+        attributes.putIgnoreCase(key, value);
+        return this;
+    }
+
+    @Override
+    public boolean hasAttr(String key) {
+        ensureAttributes();
+        return attributes.hasKeyIgnoreCase(key);
+    }
+
+    @Override
+    public Node removeAttr(String key) {
+        ensureAttributes();
+        attributes.removeIgnoreCase(key);
+        return this;
+    }
+
+    @Override
+    public String absUrl(String key) {
+        ensureAttributes();
+        Validate.notEmpty(key);
+
+        if (!hasAttributes()) return "";
+        if (!attributes.hasKeyIgnoreCase(key)) return "";
+
+        String relUrl = attributes.getIgnoreCase(key);
+        if (relUrl.startsWith("http://") || relUrl.startsWith("https://"))
+            return relUrl;
+        return StringUtil.resolve(baseUri(), relUrl);
+    }
+
+    @Override
+    public String baseUri() {
+        return hasParent() ? parent().baseUri() : "";
+    }
+
+    @Override
+    protected void doSetBaseUri(String baseUri) {
+        // noop
+    }
+
+    @Override
+    public int childNodeSize() {
+        return 0;
+    }
+
+    @Override
+    protected List<Node> ensureChildNodes() {
+        throw new UnsupportedOperationException("Leaf Nodes do not have child nodes.");
+    }
+}

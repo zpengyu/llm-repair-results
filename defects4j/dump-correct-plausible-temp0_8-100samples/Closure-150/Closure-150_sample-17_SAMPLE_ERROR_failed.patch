@@ -1,0 +1,32 @@
+diff --git a/src/com/google/javascript/jscomp/TypedScopeCreator.java b/src/com/google/javascript/jscomp/TypedScopeCreator.java
+index 051f5c8e..244045ab 100644
+--- a/src/com/google/javascript/jscomp/TypedScopeCreator.java
++++ b/src/com/google/javascript/jscomp/TypedScopeCreator.java
+@@ -1442,7 +1442,7 @@ final class TypedScopeCreator implements ScopeCreator {
+      */
+     @Override public void visit(NodeTraversal t, Node n, Node parent) {
+       if (n == scope.getRootNode()) return;
+-
++      if (isFunctionDeclaration(n)) return;
+       if (n.getType() == Token.LP && parent == scope.getRootNode()) {
+         handleFunctionInputs(parent);
+         return;
+@@ -1464,7 +1463,17 @@ final class TypedScopeCreator implements ScopeCreator {
+           break;
+       }
+     }
+-
++    private static boolean isFunctionDeclaration(Node n) {
++      if (n.getType() != Token.FUNCTION) {
++        return false;
++      }
++      Node name = n.getFirstChild();
++      Node parent = n.getParent();
++      return (name.getString().isEmpty() || parent.isBlock()) && !isFunctionExpression(n);
++    }
++    private static boolean isFunctionExpression(Node n) {
++      return n.getBooleanProp(Node.FUNCTION_EXPRESSION);
++    }
+     /** Handle bleeding functions and function parameters. */
+     private void handleFunctionInputs(Node fnNode) {
+       // Handle bleeding functions.

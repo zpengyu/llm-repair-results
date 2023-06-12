@@ -1,0 +1,51 @@
+        public int parseInto(DateTimeParserBucket bucket, String text, int position) {
+            DateTimeParser[] parsers = iParsers;
+            int length = parsers.length;
+            final Object originalState = bucket.saveState();
+            boolean isOptional = false;
+            int bestValidPos = position;
+            Object bestValidState = null;
+            int bestInvalidPos = position;
+            for (int i=0; i<length; i++) {
+                DateTimeParser parser = parsers[i];
+                if (parser == null) {
+                    // The empty parser wins only if nothing is better.
+                    if (bestValidPos <= position) {
+                        return position;
+                    }
+                    isOptional = true;
+                    break;
+                }
+                int parsePos = parser.parseInto(bucket, text, position);
+                if (parsePos >= position) {
+                    if (parsePos > bestValidPos) {
+                        if (parsePos >= text.length() ||
+                            (i + 1) >= length || parsers[i + 1] == null) {
+                            // Completely parsed text or no more parsers to
+                            // check. Skip the rest.
+                            return parsePos;
+                        }
+                        bestValidPos = parsePos;
+                        bestValidState = bucket.saveState();
+                    }
+                } else {
+                    if (parsePos < 0) {
+                        parsePos = ~parsePos;
+                        if (parsePos > bestInvalidPos) {
+                            bestInvalidPos = parsePos;
+                        }
+                    }
+                }
+                bucket.restoreState(originalState);
+            }
+            if (bestValidPos > position || (bestValidPos == position && isOptional)) {
+                // Restore the state to the best valid parse.
+                if (bestValidState != null) {
+                    bucket.restoreState(bestValidState);
+                }
+                return bestValidPos;
+            }
+            //Restore the state to the best invalid parse.
+            bucket.restoreState(originalState);
+            return ~bestInvalidPos;
+        }

@@ -1,0 +1,32 @@
+diff --git a/src/com/google/javascript/jscomp/CodeConsumer.java b/src/com/google/javascript/jscomp/CodeConsumer.java
+index 74978330..f7991790 100644
+--- a/src/com/google/javascript/jscomp/CodeConsumer.java
++++ b/src/com/google/javascript/jscomp/CodeConsumer.java
+@@ -184,9 +183,8 @@ abstract class CodeConsumer {
+     if (newcode.length() == 0) {
+       return;
+     }
+-
+     char c = newcode.charAt(0);
+-    if ((isWordChar(c) || c == '\\') &&
++    if (c == '\\' &&
+         isWordChar(getLastChar())) {
+       // need space to separate. This is not pretty printing.
+       // For example: "return foo;"
+@@ -197,10 +195,14 @@ abstract class CodeConsumer {
+       // is valid and should print like
+       // / // / /
+     }
+-
++    else if ((isWordChar(c) || c == '\\') &&
++        isWordChar(getLastChar())) {
++      // need space to separate. This is not pretty printing.
++      // For example: "return foo;"
++      append(" ");
++    }
+     append(newcode);
+   }
+-
+   void appendOp(String op, boolean binOp) {
+     append(op);
+   }

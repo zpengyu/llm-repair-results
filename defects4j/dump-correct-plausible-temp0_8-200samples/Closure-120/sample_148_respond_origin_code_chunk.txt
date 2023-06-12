@@ -1,0 +1,34 @@
+    boolean isAssignedOnceInLifetime() {
+      Reference ref = getOneAndOnlyAssignment();
+      if (ref == null) {
+        return false;
+      }
+
+      // Make sure this assignment is not in a loop.
+      for (BasicBlock block = ref.getBasicBlock();
+           block != null; block = block.getParent()) {
+        if (block.isFunction) {
+          break;
+        } else if (block.isLoop) {
+          return false;
+        }
+      }
+
+      // Check if the reference is a declaration
+      if (ref.isDeclaration()) {
+        return true;
+      }
+
+      // Check if the reference is a direct write to a property.
+      Node refParent = ref.getParent();
+      if (refParent.isGetProp() || refParent.isGetElem()) {
+        return true;
+      }
+
+      // Check if the reference is the top-level of an assignment expression
+      if (refParent.isAssign() && refParent.getFirstChild() == ref) {
+        return true;
+      }
+
+      return false;
+    }

@@ -1,0 +1,27 @@
+    public static String getNamespaceURI(Node node) {
+        if (node instanceof Document) {
+            node = ((Document) node).getDocumentElement();
+        }
+        Element element = (Element) node;
+        String uri = element.getNamespaceURI();
+        if (uri == null) {
+            String prefix = getPrefix(node);
+            if (prefix != null) {
+                uri = node.lookupNamespaceURI(prefix);
+            }
+            if (uri == null) {
+                Node aNode = node;
+                while (aNode != null) {
+                    if (aNode.getNodeType() == Node.ELEMENT_NODE) {
+                        uri = aNode.lookupNamespaceURI(null);
+                        if (uri != null) {
+                            return uri;
+                        }
+                    }
+                    aNode = aNode.getParentNode();
+                }
+                return null;
+            }
+        }
+        return uri;
+    }

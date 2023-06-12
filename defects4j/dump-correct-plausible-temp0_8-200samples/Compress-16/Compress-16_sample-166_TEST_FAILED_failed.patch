@@ -1,0 +1,27 @@
+diff --git a/src/main/java/org/apache/commons/compress/archivers/ArchiveStreamFactory.java b/src/main/java/org/apache/commons/compress/archivers/ArchiveStreamFactory.java
+index 57b411d0..2f70614e 100644
+--- a/src/main/java/org/apache/commons/compress/archivers/ArchiveStreamFactory.java
++++ b/src/main/java/org/apache/commons/compress/archivers/ArchiveStreamFactory.java
+@@ -242,8 +238,12 @@ public class ArchiveStreamFactory {
+                     TarArchiveInputStream tais = new TarArchiveInputStream(new ByteArrayInputStream(tarheader));
+                     // COMPRESS-191 - verify the header checksum
+                     tais.getNextEntry();
++                    if (tais.getNextEntry() == null) { // tar is empty
+                         return new TarArchiveInputStream(in);
+-                } catch (Exception e) { // NOPMD
++                    } else {
++                        throw new IOException(); // tar contains at least 1 file
++                    }
++                } catch (IOException e) { // NOPMD
+                     // can generate IllegalArgumentException as well
+                     // as IOException
+                     // autodetection, simply not a TAR
+@@ -253,7 +253,5 @@ public class ArchiveStreamFactory {
+         } catch (IOException e) {
+             throw new ArchiveException("Could not use reset and mark operations.", e);
+         }
+-
+         throw new ArchiveException("No Archiver found for the stream signature");
+-    }
+-}
++    }}

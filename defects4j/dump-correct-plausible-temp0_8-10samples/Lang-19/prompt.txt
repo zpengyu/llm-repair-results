@@ -1,0 +1,97 @@
+###Provide a fix for the buggy function
+###Buggy Function
+class FibonacciExample {
+    public static void main(String args[]) {
+        int n1 = 0, n2 = 1, n3, i, count = 10;
+
+        System.out.print(n1 + " " + n2);
+
+        for (i = 2; i < count; ++i) {
+            n3 = n1 - n2;
+            System.out.print(" " + n3);
+            n1 = n2;
+            n2 = n3;
+        }
+    }
+}
+
+###Fixed Function
+class FibonacciExample {
+    public static void main(String args[]) {
+        int n1 = 0, n2 = 1, n3, i, count = 10;
+
+        System.out.print(n1 + " " + n2);
+
+        for (i = 2; i < count; ++i) {
+            n3 = n1 + n2;
+            System.out.print(" " + n3);
+            n1 = n2;
+            n2 = n3;
+        }
+    }
+}
+
+###Provide a fix for the buggy function
+###Buggy Function
+public String format(Date date) {
+    Calendar c = new GregorianCalendar(mTimeZone);
+    c.setTime(date);
+    return applyRules(c, new StringBuffer(mMaxLengthEstimate)).toString();
+}
+###Fixed Function
+public String format(Date date) {
+    Calendar c = new GregorianCalendar(mTimeZone, mLocale);
+    c.setTime(date);
+    return applyRules(c, new StringBuffer(mMaxLengthEstimate)).toString();
+}
+###Provide a fix for the buggy function
+###Buggy Function
+    public int translate(CharSequence input, int index, Writer out) throws IOException {
+        int seqEnd = input.length();
+        // Uses -2 to ensure there is something after the &#
+        if(input.charAt(index) == '&' && index < seqEnd - 1 && input.charAt(index + 1) == '#') {
+            int start = index + 2;
+            boolean isHex = false;
+
+            char firstChar = input.charAt(start);
+            if(firstChar == 'x' || firstChar == 'X') {
+                start++;
+                isHex = true;
+
+                // Check there's more than just an x after the &#
+            }
+
+            int end = start;
+            // Note that this supports character codes without a ; on the end
+            while(input.charAt(end) != ';')
+            {
+                end++;
+            }
+
+            int entityValue;
+            try {
+                if(isHex) {
+                    entityValue = Integer.parseInt(input.subSequence(start, end).toString(), 16);
+                } else {
+                    entityValue = Integer.parseInt(input.subSequence(start, end).toString(), 10);
+                }
+            } catch(NumberFormatException nfe) {
+            System.err.println("FAIL: " + input.subSequence(start, end) + "[" + start +"]["+ end +"]");
+                return 0;
+            }
+
+            if(entityValue > 0xFFFF) {
+                char[] chrs = Character.toChars(entityValue);
+                out.write(chrs[0]);
+                out.write(chrs[1]);
+            } else {
+                out.write(entityValue);
+            }
+
+
+            return 2 + (end - start) + (isHex ? 1 : 0) + 1;
+        }
+        return 0;
+    }
+
+###Fixed Function

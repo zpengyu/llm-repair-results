@@ -1,0 +1,30 @@
+diff --git a/src/java/org/apache/commons/cli2/option/GroupImpl.java b/src/java/org/apache/commons/cli2/option/GroupImpl.java
+index 27640c1..57326a8 100644
+--- a/src/java/org/apache/commons/cli2/option/GroupImpl.java
++++ b/src/java/org/apache/commons/cli2/option/GroupImpl.java
+@@ -279,8 +270,24 @@ public class GroupImpl
+             final Option option = (Option) i.next();
+             option.validate(commandLine);
+         }
++        // if we have enough options...
++        if (present >= minimum) {
++            // ...ensure the long option is specified at least once
++            if (options.size() > 0) {
++                final Iterator i = options.iterator();
++                while (i.hasNext()) {
++                    final Option option = (Option) i.next();
++                    // long option must be present
++                    if (option instanceof Argument) {
++                        if (!commandLine.hasOption(option)) {
++                            throw new OptionException(this, ResourceConstants.MISSING_OPTION,
++                                                      option.getPreferredName());
++                        }
++                    }
++                }
++            }
++        }
+     }
+-
+     public String getPreferredName() {
+         return name;
+     }

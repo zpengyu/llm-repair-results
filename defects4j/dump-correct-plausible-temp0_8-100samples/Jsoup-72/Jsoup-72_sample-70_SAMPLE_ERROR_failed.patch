@@ -1,0 +1,18 @@
+diff --git a/src/main/java/org/jsoup/parser/CharacterReader.java b/src/main/java/org/jsoup/parser/CharacterReader.java
+index c5d91e0..6e9ab56 100644
+--- a/src/main/java/org/jsoup/parser/CharacterReader.java
++++ b/src/main/java/org/jsoup/parser/CharacterReader.java
+@@ -443,8 +440,11 @@ public final class CharacterReader {
+             if (rangeEquals(charBuf, start, count, cached)) { // hit
+                 return cached;
+             } else { // hashcode conflict
+-                cached = new String(charBuf, start, count);
+-                stringCache[index] = cached; // update the cache, as recently used strings are more likely to show up again
++                // hashcode hit, but equals failed. Two strings with different content but same hashcodes.
++                // because of the high frequency of hashcode conflicts, a special case of intern() is done here,
++                // where the string is only interned (and no new string created) if it is already in the hash table.
++                // this saves a new string object being created, and with it, field storage in Entities and Attributes.
++                return cached.equals(charBuf, start, count) ? cached.intern() : new String(charBuf, start, count);
+             }
+         }
+         return cached;

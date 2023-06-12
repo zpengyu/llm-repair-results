@@ -1,0 +1,44 @@
+diff --git a/src/main/java/org/joda/time/format/DateTimeFormatterBuilder.java b/src/main/java/org/joda/time/format/DateTimeFormatterBuilder.java
+index 1ff78bfe..c3dfe886 100644
+--- a/src/main/java/org/joda/time/format/DateTimeFormatterBuilder.java
++++ b/src/main/java/org/joda/time/format/DateTimeFormatterBuilder.java
+@@ -2765,16 +2765,13 @@ public class DateTimeFormatterBuilder {
+         public int parseInto(DateTimeParserBucket bucket, String text, int position) {
+             DateTimeParser[] parsers = iParsers;
+             int length = parsers.length;
+-
+             final Object originalState = bucket.saveState();
+             boolean isOptional = false;
+-
+             int bestValidPos = position;
+             Object bestValidState = null;
+-
+             int bestInvalidPos = position;
+-
+-            for (int i=0; i<length; i++) {
++            int i = 0;
++            while (i < length && bestValidPos <= position) {
+                 DateTimeParser parser = parsers[i];
+                 if (parser == null) {
+                     // The empty parser wins only if nothing is better.
+@@ -2806,8 +2802,8 @@ public class DateTimeFormatterBuilder {
+                     }
+                 }
+                 bucket.restoreState(originalState);
++                i++;
+             }
+-
+             if (bestValidPos > position || (bestValidPos == position && isOptional)) {
+                 // Restore the state to the best valid parse.
+                 if (bestValidState != null) {
+@@ -2815,9 +2811,7 @@ public class DateTimeFormatterBuilder {
+                 }
+                 return bestValidPos;
+             }
+-
+             return ~bestInvalidPos;
+-        }
+-    }
++        }    }
+ 
+ }

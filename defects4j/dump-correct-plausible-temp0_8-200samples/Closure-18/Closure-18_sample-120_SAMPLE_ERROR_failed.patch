@@ -1,0 +1,53 @@
+diff --git a/src/com/google/javascript/jscomp/Compiler.java b/src/com/google/javascript/jscomp/Compiler.java
+index e0dc0d38..66ab9a95 100644
+--- a/src/com/google/javascript/jscomp/Compiler.java
++++ b/src/com/google/javascript/jscomp/Compiler.java
+@@ -1237,9 +1237,8 @@ public class Compiler extends AbstractCompiler {
+    * @return A synthetic root node whose two children are the externs root
+    *     and the main root
+    */
+-  Node parseInputs() {
++  private Node parseInputs() {
+     boolean devMode = options.devMode != DevMode.OFF;
+-
+     // If old roots exist (we are parsing a second time), detach each of the
+     // individual file parse trees.
+     if (externsRoot != null) {
+@@ -1293,20 +1283,8 @@ public class Compiler extends AbstractCompiler {
+             getTypeRegistry().forwardDeclareType(provide);
+           }
+         }
+-
+         try {
+-          inputs =
+-              (moduleGraph == null ? new JSModuleGraph(modules) : moduleGraph)
+-              .manageDependencies(options.dependencyOptions, inputs);
+-          staleInputs = true;
+-        } catch (CircularDependencyException e) {
+-          report(JSError.make(
+-              JSModule.CIRCULAR_DEPENDENCY_ERROR, e.getMessage()));
+-
+-          // If in IDE mode, we ignore the error and keep going.
+-          if (hasErrors()) {
+-            return null;
+-          }
++          staleInputs = processDependencies();
+         } catch (MissingProvideException e) {
+           report(JSError.make(
+               MISSING_ENTRY_ERROR, e.getMessage()));
+@@ -1360,7 +1329,14 @@ public class Compiler extends AbstractCompiler {
+       stopTracer(tracer, "parseInputs");
+     }
+   }
+-
++  private boolean processDependencies()
++      throws CircularDependencyException, MissingProvideException {
++    checkNotNull(moduleGraph);
++    checkNotNull(modules);
++    inputs = moduleGraph.manageDependencies(
++        options.dependencyOptions, inputs);
++    return true;
++  }
+   /**
+    * Hoists inputs with the @externs annotation into the externs list.
+    */

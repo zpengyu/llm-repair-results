@@ -1,0 +1,82 @@
+    protected String[] flatten(Options options, String[] arguments, boolean stopAtNonOption)
+    {
+        init();
+        this.options = options;
+        // an iterator for the command line tokens
+        Iterator iter = Arrays.asList(arguments).iterator();
+        // process each command line token
+        while (iter.hasNext())
+        {
+            // get the next command line token
+            String token = (String) iter.next();
+            // handle long option --foo or --foo=bar
+            if (token.startsWith("--"))
+            {
+                String longOpt = token;
+                String longOptValue = null;
+                int idx = token.indexOf('=');
+                if (idx != -1)
+                {
+                    longOpt = token.substring(0, idx);
+                    longOptValue = token.substring(idx + 1, token.length());
+                }
+                tokens.add(longOpt);
+                if (longOptValue != null)
+                {
+                    tokens.add(longOptValue);
+                }
+            }
+            // single hyphen
+            else if ("-".equals(token))
+            {
+                tokens.add(token);
+            }
+            else if (token.startsWith("-"))
+            {
+                String opt = token;
+                String optValue = null;
+                int idx = token.indexOf('=');
+                if (idx != -1)
+                {
+                    opt = token.substring(0, idx);
+                    optValue = token.substring(idx + 1, token.length());
+                }
+                if (options.hasOption(opt))
+                {
+                    tokens.add(opt);
+                    if (optValue != null)
+                    {
+                        tokens.add(optValue);
+                    }
+                }
+                else
+                {
+                    if (opt.length() > 2)
+                    {
+                        for (int i = 1; i < opt.length(); i++)
+                        {
+                            tokens.add("-" + opt.charAt(i));
+                        }
+                        if (optValue != null)
+                        {
+                            tokens.add(optValue);
+                        }
+                    }
+                    else
+                    {
+                        tokens.add(token);
+                    }
+                }
+            }
+            else if (stopAtNonOption)
+            {
+                process(token);
+            }
+            else
+            {
+                tokens.add(token);
+            }
+            gobble(iter);
+        }
+        return (String[]) tokens.toArray(new String[tokens.size()]);
+    }

@@ -1,0 +1,56 @@
+diff --git a/src/java/org/apache/commons/cli/CommandLine.java b/src/java/org/apache/commons/cli/CommandLine.java
+index de23601..6656d99 100644
+--- a/src/java/org/apache/commons/cli/CommandLine.java
++++ b/src/java/org/apache/commons/cli/CommandLine.java
+@@ -160,15 +142,47 @@ public class CommandLine {
+             return ((Option) options.get(key)).getValues();
+         }
+         return null;
+-        }
+-
++    }
+     /**
+      * <p>Retrieves the option object given the long or short option as a String</p>
+      * @param opt short or long name of the option
+      * @return Canonicalized option
+      */
+-
+-
++    Option getOption(String opt)
++    {
++        opt = Util.stripLeadingHyphens(opt);
++        if (opt.startsWith("--"))
++        {
++            return getOptionByLongName(opt);
++        }
++        else
++        {
++            return getOptionByShortName(opt);
++        }
++    }
++    /**
++     * Retrieves an Option using its long name, i.e. --foo
++     * @param opt short or long name of the option
++     * @return the option represented by opt or null if opt is not a valid long name
++     */
++    private Option getOptionByLongName(String opt)
++    {
++        String key = (String) names.get(opt);
++        if (key == null)
++        {
++            return null;
++        }
++        return (Option) options.get(key);
++    }
++    /**
++     * <p>Retrieves an Option using its short name, i.e. -f</p>
++     * @param opt short or long name of the option
++     * @return the option represented by opt or null if opt is not a valid short name
++     */
++    private Option getOptionByShortName(String opt)
++    {
++        return (Option) options.get(opt);
++    }
+     /** 
+      * Retrieves the array of values, if any, of an option.
+      *

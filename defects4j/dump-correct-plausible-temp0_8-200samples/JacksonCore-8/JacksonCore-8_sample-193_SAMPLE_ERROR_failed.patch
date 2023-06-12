@@ -1,0 +1,25 @@
+diff --git a/src/main/java/com/fasterxml/jackson/core/util/TextBuffer.java b/src/main/java/com/fasterxml/jackson/core/util/TextBuffer.java
+index 74f7b4ce..5dcfb802 100644
+--- a/src/main/java/com/fasterxml/jackson/core/util/TextBuffer.java
++++ b/src/main/java/com/fasterxml/jackson/core/util/TextBuffer.java
+@@ -303,12 +303,16 @@ public final class TextBuffer
+         if (_resultString != null) {
+             return (_resultArray = _resultString.toCharArray());
+         }
++        if (_hasSegments) {
++            // Nope, need to have/create a non-segmented array and return it
++            return contentsAsArray();
++        }
+         // Nope; but does it fit in just one segment?
+-        if (!_hasSegments)  return _currentSegment;
+-        // Nope, need to have/create a non-segmented array and return it
+-        return contentsAsArray();
++        if (_currentSegment == null) {
++            _currentSegment = buf(DEFAULT_BUFFER_SIZE);
++        }
++        return _currentSegment;
+     }
+-
+     /*
+     /**********************************************************
+     /* Other accessors:

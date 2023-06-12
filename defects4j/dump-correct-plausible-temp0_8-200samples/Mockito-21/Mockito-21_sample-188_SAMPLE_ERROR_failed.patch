@@ -1,0 +1,36 @@
+diff --git a/src/org/mockito/internal/creation/instance/ConstructorInstantiator.java b/src/org/mockito/internal/creation/instance/ConstructorInstantiator.java
+index 972e1a282..371af4fd4 100644
+--- a/src/org/mockito/internal/creation/instance/ConstructorInstantiator.java
++++ b/src/org/mockito/internal/creation/instance/ConstructorInstantiator.java
+@@ -3,9 +3,6 @@ package org.mockito.internal.creation.instance;
+ import java.lang.reflect.Constructor;
+ 
+ public class ConstructorInstantiator implements Instantiator {
+-
+-    private final Object outerClassInstance;
+-
+     public ConstructorInstantiator(Object outerClassInstance) {
+         this.outerClassInstance = outerClassInstance;
+     }
+@@ -16,13 +12,16 @@ public class ConstructorInstantiator implements Instantiator {
+         }
+         return withOuterClass(cls);
+     }
+-
+     private <T> T withOuterClass(Class<T> cls) {
+         try {
+-            //this is kind of overengineered because we don't need to support more params
+-            //however, I know we will be needing it :)
+-            Constructor<T> c = cls.getDeclaredConstructor(outerClassInstance.getClass());
+-            return c.newInstance(outerClassInstance);
++            Constructor<?>[] constructors = cls.getDeclaredConstructors();
++            for (Constructor<?> constructor : constructors) {
++                if (Modifier.isPrivate(constructor.getModifiers())) {
++                    constructor.setAccessible(true);
++                    return constructor.newInstance(outerClassInstance);
++                }
++            }
++            throw paramsException(cls);
+         } catch (Exception e) {
+             throw paramsException(cls, e);
+         }

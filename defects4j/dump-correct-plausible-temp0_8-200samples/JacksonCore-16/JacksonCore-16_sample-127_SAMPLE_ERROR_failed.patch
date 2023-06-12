@@ -1,0 +1,55 @@
+diff --git a/src/main/java/com/fasterxml/jackson/core/util/JsonParserSequence.java b/src/main/java/com/fasterxml/jackson/core/util/JsonParserSequence.java
+index bed27f2b..6d61855b 100644
+--- a/src/main/java/com/fasterxml/jackson/core/util/JsonParserSequence.java
++++ b/src/main/java/com/fasterxml/jackson/core/util/JsonParserSequence.java
+@@ -32,7 +30,7 @@ public class JsonParserSequence extends JsonParserDelegate
+      *
+      * @since 2.8
+      */
+-
++    protected boolean _hasToken;
+     /*
+      *******************************************************
+      * Construction
+@@ -103,6 +95,10 @@ public class JsonParserSequence extends JsonParserDelegate
+     @Override
+     public JsonToken nextToken() throws IOException, JsonParseException
+     {
++        if (_hasToken) {
++            _hasToken = false;
++            return delegate.currentToken();
++        }
+         JsonToken t = delegate.nextToken();
+         if (t != null) return t;
+         while (switchToNext()) {
+@@ -111,7 +107,29 @@ public class JsonParserSequence extends JsonParserDelegate
+         }
+         return null;
+     }
+-
++    @Override
++    public JsonParser skipChildren() throws IOException, JsonParseException
++    {
++        if (delegate.currentToken() != JsonToken.START_OBJECT
++                && delegate.currentToken() != JsonToken.START_ARRAY) {
++            return delegate;
++        }
++        int open = 1;
++        // Since we do not get matching END_XYZ, need to keep track ourselves:
++        while (true) {
++            JsonToken t = nextToken();
++            if (t == null) throw delegate.getCurrentLocation().createJsonParseException("Unexpected end-of-input when skipping children",
++                    JsonParser.JsonParserException.class);
++            if (t.isStructStart()) {
++                ++open;
++            } else if (t.isStructEnd()) {
++                if (--open == 0) {
++                    _hasToken = false;
++                    return delegate;
++                }
++            }
++        }
++    }
+     /*
+     /*******************************************************
+     /* Additional extended API

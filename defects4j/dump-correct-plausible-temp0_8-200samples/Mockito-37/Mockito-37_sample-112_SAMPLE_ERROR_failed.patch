@@ -1,0 +1,40 @@
+diff --git a/src/org/mockito/internal/stubbing/answers/AnswersValidator.java b/src/org/mockito/internal/stubbing/answers/AnswersValidator.java
+index 5d8057846..4c0f44fdb 100644
+--- a/src/org/mockito/internal/stubbing/answers/AnswersValidator.java
++++ b/src/org/mockito/internal/stubbing/answers/AnswersValidator.java
+@@ -24,10 +20,32 @@ public class AnswersValidator {
+         if (answer instanceof DoesNothing) {
+             validateDoNothing((DoesNothing) answer, invocation);
+         }
+-        
++        if (answer instanceof ReturnsArgumentAt) {
++            ReturnsArgumentAt returnsArgumentAt = (ReturnsArgumentAt) answer;
++            int wantedArgumentIndex = returnsArgumentAt.getIndex();
++            int totalNumberOfArguments = invocation.getArguments().length;
++            if (wantedArgumentIndex >= totalNumberOfArguments) {
++                reporter.invalidArgumentIndex(wantedArgumentIndex, totalNumberOfArguments, invocation);
++            }
++        }
++        if (answer instanceof ForwardsInvocations) {
++            ForwardsInvocations forwardsInvocations = (ForwardsInvocations) answer;
++            Object mock = forwardsInvocations.getMock();
++            if (!invocation.isMockInvocation()) {
++                reporter.cannotForwardInvocationsToRealObject();
++            } else if (!MockUtil.isMock(mock)) {
++                reporter.notAMockPassedToVerifyNoMoreInteractions();
++            } else if (MockUtil.getInvocationContainer(mock).hasInvocations()) {
++                reporter.noMoreInteractionsWanted();
++            }
++        }
++        if (answer instanceof ReturnsMoreEmptyValues) {
++            ReturnsMoreEmptyValues returnsMoreEmptyValues = (ReturnsMoreEmptyValues) answer;
++            if (!invocation.isValidReturnType(returnsMoreEmptyValues.getTypeToReturn())) {
++                reporter.wrongTypeOfReturnValue(invocation.printMethodReturnType(), returnsMoreEmptyValues.getTypeToReturn().getCanonicalName(), invocation.getMethodName());
++            }
++        }
+     }
+-
+-
+     private void validateDoNothing(DoesNothing answer, Invocation invocation) {
+         if (!invocation.isVoid()) {
+             reporter.onlyVoidMethodsCanBeSetToDoNothing();

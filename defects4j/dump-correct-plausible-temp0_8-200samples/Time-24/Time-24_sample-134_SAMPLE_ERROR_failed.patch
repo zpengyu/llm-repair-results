@@ -1,0 +1,33 @@
+diff --git a/src/main/java/org/joda/time/format/DateTimeParserBucket.java b/src/main/java/org/joda/time/format/DateTimeParserBucket.java
+index 2accc16d..895ff1d5 100644
+--- a/src/main/java/org/joda/time/format/DateTimeParserBucket.java
++++ b/src/main/java/org/joda/time/format/DateTimeParserBucket.java
+@@ -362,21 +360,16 @@ public class DateTimeParserBucket {
+         if (iZone == null) {
+             millis -= iOffset;
+         } else {
+-            int offset = iZone.getOffsetFromLocal(millis);
+-            millis -= offset;
+-            if (offset != iZone.getOffset(millis)) {
+-                String message =
+-                    "Illegal instant due to time zone offset transition (" + iZone + ')';
+-                if (text != null) {
+-                    message = "Cannot parse \"" + text + "\": " + message;
+-                }
+-                throw new IllegalArgumentException(message);
+-            }
++            // iOffset is the difference between local wall millis and UTC millis.
++            // iZone.convertLocalToUTC expects wall millis.
++            millis -= iOffset;
++            millis = iZone.convertLocalToUTC(millis, true, text);
++            // iZone.convertLocalToUTC returns UTC millis.
++            // iOffset is the difference between local wall millis and UTC millis.
++            millis += iOffset;
+         }
+-        
+         return millis;
+     }    
+-    
+     /**
+      * Sorts elements [0,high). Calling java.util.Arrays isn't always the right
+      * choice since it always creates an internal copy of the array, even if it

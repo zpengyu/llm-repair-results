@@ -1,0 +1,28 @@
+diff --git a/src/com/google/javascript/jscomp/UnreachableCodeElimination.java b/src/com/google/javascript/jscomp/UnreachableCodeElimination.java
+index 3b323395..23180e34 100644
+--- a/src/com/google/javascript/jscomp/UnreachableCodeElimination.java
++++ b/src/com/google/javascript/jscomp/UnreachableCodeElimination.java
+@@ -214,13 +201,13 @@ class UnreachableCodeElimination implements CompilerPass {
+             return;
+           }
+           break;
+-
+         case Token.CATCH:
+           Node tryNode = parent.getParent();
+-          NodeUtil.maybeAddFinally(tryNode);
++          if (NodeUtil.hasFinally(tryNode)) {
++            return;
++          }
+           break;
+       }
+-
+       if (n.isVar() && !n.getFirstChild().hasChildren()) {
+         // Very unlikely case, Consider this:
+         // File 1: {throw 1}
+@@ -246,5 +231,4 @@ class UnreachableCodeElimination implements CompilerPass {
+       }
+       NodeUtil.removeChild(n.getParent(), n);
+     }
+-  }
+-}
++  }}

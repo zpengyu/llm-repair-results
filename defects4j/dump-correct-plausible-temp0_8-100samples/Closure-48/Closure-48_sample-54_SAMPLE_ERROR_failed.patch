@@ -1,0 +1,57 @@
+diff --git a/src/com/google/javascript/jscomp/TypedScopeCreator.java b/src/com/google/javascript/jscomp/TypedScopeCreator.java
+index 9489dc30..be37c521 100644
+--- a/src/com/google/javascript/jscomp/TypedScopeCreator.java
++++ b/src/com/google/javascript/jscomp/TypedScopeCreator.java
+@@ -1524,8 +1518,26 @@ final class TypedScopeCreator implements ScopeCreator {
+             rhsValue.isFunction() &&
+             (info != null || !scope.isDeclared(qName, false)));
+       }
+-
+-      if (!inferred) {
++      if (inferred) {
++        // Inferred names don't get added to the global scope.
++        // We could make a special exception for inferred names in externs,
++        // but that would complicate the code a lot.
++        JSType maybeGlobalType =
++            globalScope.getRootNode().getJSType();
++        if (maybeGlobalType != null && maybeGlobalType.isFunctionType() &&
++            !((FunctionType) maybeGlobalType).isConstructor()) {
++          maybeGlobalType = null;
++        }
++        ObjectType ownerType = maybeGlobalType == null ?
++            getObjectSlot(ownerName) :
++            ObjectType.cast(maybeGlobalType);
++        if (ownerType != null &&
++            (!ownerType.hasOwnProperty(propName) ||
++             ownerType.isPropertyTypeInferred(propName))) {
++          // If the property is undeclared or inferred, declare it now.
++          ownerType.defineInferredProperty(propName, valueType, n);
++        }
++      } else {
+         ObjectType ownerType = getObjectSlot(ownerName);
+         if (ownerType != null) {
+           // Only declare this as an official property if it has not been
+@@ -1543,23 +1554,8 @@ final class TypedScopeCreator implements ScopeCreator {
+         // If the property is already declared, the error will be
+         // caught when we try to declare it in the current scope.
+         defineSlot(n, parent, valueType, inferred);
+-      } else if (rhsValue != null && rhsValue.isTrue()) {
+-        // We declare these for delegate proxy method properties.
+-        FunctionType ownerType =
+-            JSType.toMaybeFunctionType(getObjectSlot(ownerName));
+-        if (ownerType != null) {
+-          JSType ownerTypeOfThis = ownerType.getTypeOfThis();
+-          String delegateName = codingConvention.getDelegateSuperclassName();
+-          JSType delegateType = delegateName == null ?
+-              null : typeRegistry.getType(delegateName);
+-          if (delegateType != null &&
+-              ownerTypeOfThis.isSubtype(delegateType)) {
+-            defineSlot(n, parent, getNativeType(BOOLEAN_TYPE), true);
+-          }
+-        }
+       }
+     }
+-
+     /**
+      * Find the ObjectType associated with the given slot.
+      * @param slotName The name of the slot to find the type in.

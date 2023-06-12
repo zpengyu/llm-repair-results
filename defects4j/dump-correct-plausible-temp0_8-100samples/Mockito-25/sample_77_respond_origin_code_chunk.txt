@@ -1,0 +1,44 @@
+
+public class ReturnsDeepStubs implements Answer<Object>, Serializable {
+
+    private static final long serialVersionUID = -7105341425736035847L;
+
+    private ReturnsEmptyValues delegate = new ReturnsEmptyValues();
+
+    public Object answer(InvocationOnMock invocation) throws Throwable {
+        GenericMetadataSupport returnTypeGenericMetadata =
+                actualParameterizedType(invocation.getMock()).resolveGenericReturnType(invocation.getMethod());
+
+        Class<?> rawType = returnTypeGenericMetadata.rawType();
+        if (!new MockCreationValidator().isTypeMockable(rawType)) {
+            return delegate.returnValueFor(rawType);
+        }
+
+        Object mock = getMock(invocation);
+        recordDeepStubMock(invocation, mock);
+        return mock;
+    }
+
+    private void recordDeepStubMock(InvocationOnMock invocation, Object mock) {
+        InternalMockHandler<Object> handler = new MockUtil().getMockHandler(invocation.getMock());
+        InvocationContainerImpl container = (InvocationContainerImpl) handler.getInvocationContainer();
+
+        // deep stub
+        container.addAnswer(new Answer<Object>() {
+            public Object answer(InvocationOnMock invocation) throws Throwable {
+                return mock;
+            }
+        }, false);
+    }
+
+    private Object getMock(InvocationOnMock invocation) {
+        Class<?> clz = invocation.getMethod().getReturnType();
+        return org.mockito.Mockito.mock(clz, this);
+    }
+
+    protected GenericMetadataSupport actualParameterizedType(Object mock) {
+        CreationSettings mockSettings = (CreationSettings) new MockUtil().getMockHandler(mock).getMockSettings();
+        return GenericMetadataSupport.inferFrom(mockSettings.getTypeToMock());
+    }
+}
+

@@ -1,0 +1,28 @@
+diff --git a/src/org/mockito/internal/configuration/SpyAnnotationEngine.java b/src/org/mockito/internal/configuration/SpyAnnotationEngine.java
+index e292e1300..a1d728a70 100644
+--- a/src/org/mockito/internal/configuration/SpyAnnotationEngine.java
++++ b/src/org/mockito/internal/configuration/SpyAnnotationEngine.java
+@@ -53,6 +52,23 @@ public class SpyAnnotationEngine implements AnnotationEngine {
+                 } finally {
+                     field.setAccessible(wasAccessible);
+                 }
++            } else if (field.isAnnotationPresent(Mock.class)) {
++                boolean wasAccessible = field.isAccessible();
++                field.setAccessible(true);
++                try {
++                    Object instance = field.get(testClass);
++                    if (instance != null) {
++                        throw new MockitoException("Cannot initialize @Mock field '" + field.getName() +
++                                "'. You haven't provided the instance.\n" +
++                                "@Mock fields cannot have initial values.");
++                    }
++                    Object mock = mockMaker.createMock(field.getType(), mockSettings(field));
++                    field.set(testClass, mock);
++                } catch (IllegalAccessException e) {
++                    throw new MockitoException("Problems initiating mock field " + field.getName(), e);
++                } finally {
++                    field.setAccessible(wasAccessible);
++                }
+             }
+         }
+     }    

@@ -1,0 +1,91 @@
+diff --git a/src/main/java/org/apache/commons/math/optimization/direct/MultiDirectional.java b/src/main/java/org/apache/commons/math/optimization/direct/MultiDirectional.java
+index 2fa8c34bf..0e70e9658 100644
+--- a/src/main/java/org/apache/commons/math/optimization/direct/MultiDirectional.java
++++ b/src/main/java/org/apache/commons/math/optimization/direct/MultiDirectional.java
+@@ -58,46 +58,52 @@ public class MultiDirectional extends DirectSearchOptimizer {
+ 
+     /** {@inheritDoc} */
+     @Override
+-    protected void iterateSimplex(final Comparator<RealPointValuePair> comparator)
+-        throws FunctionEvaluationException, OptimizationException, IllegalArgumentException {
+-
+-        while (true) {
+-
+-            incrementIterationsCounter();
+-
+-            // save the original vertex
+-            final RealPointValuePair[] original = simplex;
+-            final RealPointValuePair best = original[0];
+-
+-            // perform a reflection step
+-            final RealPointValuePair reflected = evaluateNewSimplex(original, 1.0, comparator);
+-            if (comparator.compare(reflected, best) < 0) {
+-
+-                // compute the expanded simplex
+-                final RealPointValuePair[] reflectedSimplex = simplex;
+-                final RealPointValuePair expanded = evaluateNewSimplex(original, khi, comparator);
+-                if (comparator.compare(reflected, expanded) <= 0) {
+-                    // accept the reflected simplex
+-                    simplex = reflectedSimplex;
+-                }
+-
+-                return;
+-
++protected void iterateSimplex(final Comparator<RealPointValuePair> comparator)
++    throws FunctionEvaluationException, OptimizationException, IllegalArgumentException {
++    while (true) {
++        incrementIterationsCounter();
++        // save the original vertex
++        final RealPointValuePair[] original = simplex;
++        final RealPointValuePair best = original[0];
++        // perform a reflection step
++        final RealPointValuePair reflected = evaluateNewSimplex(original, 1.0, comparator);
++        if (comparator.compare(reflected, best) < 0) {
++            // compute the expanded simplex
++            final RealPointValuePair[] reflectedSimplex = simplex;
++            final RealPointValuePair expanded = evaluateNewSimplex(original, khi, comparator);
++            if (comparator.compare(reflected, expanded) <= 0) {
++                // accept the reflected simplex
++                simplex = reflectedSimplex;
++            } else {
++                // accept the expanded simplex
++                simplex = new PointValuePair[original.length];
++                simplex[0] = reflected;
++                System.arraycopy(original, 1, simplex, 1, original.length - 1);
+             }
+-
+-            // compute the contracted simplex
++        } else {
++            // perform a contraction step
+             final RealPointValuePair contracted = evaluateNewSimplex(original, gamma, comparator);
+-            if (comparator.compare(contracted, best) < 0) {
++            if (comparator.compare(contracted, best) <= 0) {
+                 // accept the contracted simplex
+-
+-            // check convergence
+-                return;
++                simplex = new PointValuePair[original.length];
++                simplex[0] = contracted;
++                System.arraycopy(original, 1, simplex, 1, original.length - 1);
++            } else {
++                // perform a shrink step
++                final RealPointValuePair[] shrunkSimplex = new PointValuePair[original.length];
++                shrunkSimplex[0] = best;
++                for (int i = 1; i < original.length; ++i) {
++                    shrunkSimplex[i] = evaluateNewSimplex(original, sigma, comparator)[0];
++                }
++                simplex = shrunkSimplex;
+             }
+-
+         }
+-
++        // check convergence
++        if (isConverged(comparator)) {
++            return;
++        }
+     }
+-
++}
+     /** Compute and evaluate a new simplex.
+      * @param original original simplex (to be preserved)
+      * @param coeff linear coefficient

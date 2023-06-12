@@ -1,0 +1,24 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/jsontype/impl/TypeDeserializerBase.java b/src/main/java/com/fasterxml/jackson/databind/jsontype/impl/TypeDeserializerBase.java
+index 339362e1e..17cca04e4 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/jsontype/impl/TypeDeserializerBase.java
++++ b/src/main/java/com/fasterxml/jackson/databind/jsontype/impl/TypeDeserializerBase.java
+@@ -177,11 +177,19 @@ public abstract class TypeDeserializerBase
+                      *   important for some reason?
+                      *   Disabling the check will break 2 Enum-related tests.
+                      */
++                    if (_baseType.getClass() == type.getClass()) {
++                        /* !!! 18-Dec-2010, tatu: This is really just a safeguard; should never
++                         *   happen but let's do a sanity check anyway
++                         */
++                        throw ctxt.mappingException("Can not narrow subtype of "+_baseType+" with type-id '"+typeId+"'");
++                    }
+                     // 19-Jun-2016, tatu: As per [databind#1270] we may actually get full
+                     //   generic type with custom type resolvers. If so, should try to retain them.
+                     //  Whether this is sufficient to avoid problems remains to be seen, but for
+                     //  now it should improve things.
++                    if (!_baseType.isContainerType()) {
+                         type = ctxt.getTypeFactory().constructSpecializedType(_baseType, type.getRawClass());
++                    }
+                 }
+                 deser = ctxt.findContextualValueDeserializer(type, _property);
+             }

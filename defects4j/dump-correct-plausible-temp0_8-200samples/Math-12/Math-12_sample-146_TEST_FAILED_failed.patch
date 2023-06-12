@@ -1,0 +1,45 @@
+diff --git a/src/main/java/org/apache/commons/math3/random/BitsStreamGenerator.java b/src/main/java/org/apache/commons/math3/random/BitsStreamGenerator.java
+index 33d350cb1..04c5bce13 100644
+--- a/src/main/java/org/apache/commons/math3/random/BitsStreamGenerator.java
++++ b/src/main/java/org/apache/commons/math3/random/BitsStreamGenerator.java
+@@ -25,6 +25,7 @@ import org.apache.commons.math3.util.FastMath;
+  * @version $Id$
+  * @since 2.0
+  */
++import java.util.Random;
+ public abstract class BitsStreamGenerator
+     implements RandomGenerator {
+     /** Serializable version identifier */
+@@ -93,29 +85,14 @@ public abstract class BitsStreamGenerator
+     public float nextFloat() {
+         return next(23) * 0x1.0p-23f;
+     }
+-
+     /** {@inheritDoc} */
+     public double nextGaussian() {
+-
+-        final double random;
+         if (Double.isNaN(nextGaussian)) {
+-            // generate a new pair of gaussian numbers
+-            final double x = nextDouble();
+-            final double y = nextDouble();
+-            final double alpha = 2 * FastMath.PI * x;
+-            final double r      = FastMath.sqrt(-2 * FastMath.log(y));
+-            random       = r * FastMath.cos(alpha);
+-            nextGaussian = r * FastMath.sin(alpha);
+-        } else {
+-            // use the second element of the pair already generated
+-            random = nextGaussian;
+-            nextGaussian = Double.NaN;
++            Random random = new Random();
++            nextGaussian = random.nextGaussian();
+         }
+-
+-        return random;
+-
++        return nextGaussian;
+     }
+-
+     /** {@inheritDoc} */
+     public int nextInt() {
+         return next(32);

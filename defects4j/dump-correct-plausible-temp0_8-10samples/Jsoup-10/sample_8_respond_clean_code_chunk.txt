@@ -1,0 +1,26 @@
+    public String absUrl(String attributeKey) {
+        Validate.notEmpty(attributeKey);
+        if (!hasAttr(attributeKey))
+            return ""; // nothing to make absolute with
+        return absUrl(attr(attributeKey));
+    }
+    /**
+     * Make a URL absolute based on the baseUri.
+     * <p>
+     * E.g.: <code>String abs = URL.makeAbsolute( "/foo", "http://base.com/" );</code> with output <code>http://base.com/foo</code>
+     *
+     * @param url   potentially relative URL
+     * @param base  base URI
+     * @return
+     */
+    public String absUrl( String url ) {
+        Validate.notNull(url);
+        try {
+            // workaround: java resolves '//path/file + ?foo' to '//path/?foo', not '//path/file?foo' as desired
+            URI base = new URI(baseUri);
+            URI abs = base.resolve(url);
+            return abs.toASCIIString();
+        } catch (Exception e) {
+            return url;
+        }
+    }

@@ -1,0 +1,50 @@
+protected boolean equal(EvalContext context, Expression left, Expression right) {
+        Object l = left.compute(context);
+        Object r = right.compute(context);
+        if (l instanceof InitialContext || l instanceof SelfContext) {
+            l = ((EvalContext) l).getSingleNodePointer();
+        }
+        if (r instanceof InitialContext || r instanceof SelfContext) {
+            r = ((EvalContext) r).getSingleNodePointer();
+        }
+        if (l instanceof Collection) {
+            l = ((Collection) l).iterator();
+        }
+        if (r instanceof Collection) {
+            r = ((Collection) r).iterator();
+        }
+        if ((l instanceof Iterator) && !(r instanceof Iterator)) {
+            return contains((Iterator) l, r);
+        }
+        if (!(l instanceof Iterator) && (r instanceof Iterator)) {
+            return contains((Iterator) r, l);
+        }
+        if (l instanceof Iterator && r instanceof Iterator) {
+            return findMatch((Iterator) l, (Iterator) r);
+        }
+        if (((l != null) && (l.getClass().isArray())) ||
+                ((r != null) && (r.getClass().isArray()))) {
+            if (l == null) {
+                return r.getClass().getComponentType().isInstance(new Object[0]);
+            }
+            if (r == null) {
+                return l.getClass().getComponentType().isInstance(new Object[0]);
+            }
+            if (!l.getClass().isAssignableFrom(r.getClass()) && !r.getClass().isAssignableFrom(l.getClass())) {
+                throw new JXPathException("Can't compare arrays of different types: " +
+                        l.getClass().getName() + " and " + r.getClass().getName());
+            }
+            Object[] array1 = (Object[]) l;
+            Object[] array2 = (Object[]) r;
+            if (array1.length != array2.length) {
+                return false;
+            }
+            for (int i = 0; i < array1.length; i++) {
+                if (!equal(array1[i], array2[i])) {
+                    return false;
+                }
+            }
+            return true;
+        }
+        return equal(l, r);
+    }

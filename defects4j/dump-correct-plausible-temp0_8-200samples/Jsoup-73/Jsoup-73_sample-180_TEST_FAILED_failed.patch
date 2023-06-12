@@ -1,0 +1,20 @@
+diff --git a/src/main/java/org/jsoup/helper/W3CDom.java b/src/main/java/org/jsoup/helper/W3CDom.java
+index fb864f5..eb9d291 100644
+--- a/src/main/java/org/jsoup/helper/W3CDom.java
++++ b/src/main/java/org/jsoup/helper/W3CDom.java
+@@ -119,11 +112,12 @@ public class W3CDom {
+             for (Attribute attribute : source.attributes()) {
+                 // valid xml attribute names are: ^[a-zA-Z_:][-a-zA-Z0-9_:.]
+                 String key = attribute.getKey().replaceAll("[^-a-zA-Z0-9_:.]", "");
+-                if (key.matches("[a-zA-Z_:][-a-zA-Z0-9_:.]*"))
+-                    el.setAttribute(key, attribute.getValue());
++                if (key.matches("[a-zA-Z_:][-a-zA-Z0-9_:.]*")) {
++                    // Jsoup escapes all values, so unescape to allow attrs like "http://example.com?foo=1&bar=2"
++                    el.setAttribute(key, attribute.getValue().replaceAll("&#([0-9]{1,7});", "$1"));
++                }
+             }
+         }
+-
+         /**
+          * Finds any namespaces defined in this element. Returns any tag prefix.
+          */

@@ -1,0 +1,44 @@
+diff --git a/src/com/google/javascript/jscomp/ClosureCodingConvention.java b/src/com/google/javascript/jscomp/ClosureCodingConvention.java
+index 2a4fed72..e22e5bf0 100644
+--- a/src/com/google/javascript/jscomp/ClosureCodingConvention.java
++++ b/src/com/google/javascript/jscomp/ClosureCodingConvention.java
+@@ -186,23 +186,24 @@ public class ClosureCodingConvention extends DefaultCodingConvention {
+   }
+ 
+   private static String extractClassNameIfGoog(Node node, Node parent,
+-      String functionName){
+-    String className = null;
+-    if (NodeUtil.isExprCall(parent)) {
+-      Node callee = node.getFirstChild();
+-      if (callee != null && callee.getType() == Token.GETPROP) {
+-        String qualifiedName = callee.getQualifiedName();
+-        if (functionName.equals(qualifiedName)) {
+-          Node target = callee.getNext();
+-          if (target != null) {
+-            className = target.getString();
+-          }
+-        }
+-      }
++      String functionName) {
++    if (!NodeUtil.isExprCall(parent)) {
++      return null;
++    }
++    Node callee = node.getFirstChild();
++    if (callee == null || callee.getType() != Token.GETPROP) {
++      return null;
+     }
+-    return className;
++    String qualifiedName = callee.getQualifiedName();
++    if (!functionName.equals(qualifiedName)) {
++      return null;
++    }
++    Node target = callee.getNext();
++    if (target == null) {
++      return null;
++    }
++    return target.getString();
+   }
+-
+   /**
+    * Use closure's implementation.
+    * @return closure's function name for exporting properties.

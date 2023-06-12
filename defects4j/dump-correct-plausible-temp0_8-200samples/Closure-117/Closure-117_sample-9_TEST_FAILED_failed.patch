@@ -1,0 +1,24 @@
+diff --git a/src/com/google/javascript/jscomp/TypeValidator.java b/src/com/google/javascript/jscomp/TypeValidator.java
+index c6d25483..b140a893 100644
+--- a/src/com/google/javascript/jscomp/TypeValidator.java
++++ b/src/com/google/javascript/jscomp/TypeValidator.java
+@@ -772,10 +768,17 @@ class TypeValidator {
+       // Don't show complex function names.
+       return "function";
+     } else {
+-      return type.toString();
++      if (type.equals(typeRegistry.getNativeType(JSTypeNative.ALL_TYPE)) ||
++          type.equals(typeRegistry.getNativeType(JSTypeNative.NO_TYPE)) ||
++          type.equals(typeRegistry.getNativeType(JSTypeNative.CHECKED_UNKNOWN_TYPE))) {
++        return typeRegistry.getNativeType(JSTypeNative.NO_TYPE).toString();
++      } else if (type.equals(typeRegistry.getNativeType(JSTypeNative.BOOLEAN_TYPE))) {
++        return typeRegistry.getNativeType(JSTypeNative.BOOLEAN_TYPE).toString();
++      } else {
++        return type.toString();
++      }
+     }
+   }
+-
+   /**
+    * This method gets the JSType from the Node argument and verifies that it is
+    * present.

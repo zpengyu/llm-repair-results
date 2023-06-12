@@ -1,0 +1,23 @@
+diff --git a/src/main/java/org/jsoup/parser/HtmlTreeBuilderState.java b/src/main/java/org/jsoup/parser/HtmlTreeBuilderState.java
+index 20d0b78..45de196 100644
+--- a/src/main/java/org/jsoup/parser/HtmlTreeBuilderState.java
++++ b/src/main/java/org/jsoup/parser/HtmlTreeBuilderState.java
+@@ -1436,10 +1436,15 @@ enum HtmlTreeBuilderState {
+     },
+     ForeignContent {
+         boolean process(Token t, HtmlTreeBuilder tb) {
+-            return true;
+-            // todo: implement. Also; how do we get here?
++            return process(t, tb, false);
+         }
+-    };
++        boolean process(Token t, HtmlTreeBuilder tb, boolean inForeign) {
++            if (!inForeign && t.isStartTag() && t.asStartTag().name().equals("svg")) {
++                return tb.process(t, true);
++            } else {
++                return true;
++            }
++        }    };
+ 
+     private static String nullString = String.valueOf('\u0000');
+ 

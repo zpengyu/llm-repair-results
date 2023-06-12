@@ -1,0 +1,35 @@
+diff --git a/src/com/google/javascript/jscomp/TypedScopeCreator.java b/src/com/google/javascript/jscomp/TypedScopeCreator.java
+index 13d8808b..074508ec 100644
+--- a/src/com/google/javascript/jscomp/TypedScopeCreator.java
++++ b/src/com/google/javascript/jscomp/TypedScopeCreator.java
+@@ -1292,7 +1292,7 @@ final class TypedScopeCreator implements ScopeCreator {
+                 // If rValue has a type-cast, we use the type in the type-cast.
+                 // If rValue's type was already computed during scope creation,
+                 // then we can safely use that.
+-                return rValue.getJSType();
++                knownType = rValue.getJSType();
+               } else if (rValue.isOr()) {
+                 // Check for a very specific JS idiom:
+                 // var x = x || TYPE;
+@@ -1305,17 +1305,18 @@ final class TypedScopeCreator implements ScopeCreator {
+                     && firstClause.getString().equals(lValue.getString());
+                 if (namesMatch && secondClause.getJSType() != null
+                     && !secondClause.getJSType().isUnknownType()) {
+-                  return secondClause.getJSType();
++                  knownType = secondClause.getJSType();
+                 }
+               }
+             }
+           }
+         }
+       }
+-
++      if (knownType != null) {
++        return knownType;
++      }
+       return getDeclaredTypeInAnnotation(sourceName, lValue, info);
+     }
+-
+     private FunctionType getFunctionType(@Nullable Var v) {
+       JSType t = v == null ? null : v.getType();
+       ObjectType o = t == null ? null : t.dereference();

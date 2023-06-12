@@ -1,0 +1,75 @@
+diff --git a/src/java/org/apache/commons/cli/Parser.java b/src/java/org/apache/commons/cli/Parser.java
+index 7bef0c6..490e26c 100644
+--- a/src/java/org/apache/commons/cli/Parser.java
++++ b/src/java/org/apache/commons/cli/Parser.java
+@@ -259,42 +258,42 @@ public abstract class Parser implements CommandLineParser
+         for (Enumeration e = properties.propertyNames(); e.hasMoreElements();)
+         {
+             String option = e.nextElement().toString();
+-
+-            if (!cmd.hasOption(option))
++            if (cmd.hasOption(option))
+             {
+-                Option opt = getOptions().getOption(option);
+-
+-                // get the value from the properties instance
+-                String value = properties.getProperty(option);
+-
+-                if (opt.hasArg())
++                continue;
++            }
++            Option opt = getOptions().getOption(option);
++            if (opt == null)
++            {
++                continue;
++            }
++            // get the value from the properties instance
++            String value = properties.getProperty(option);
++            if (opt.hasArg())
++            {
++                if (opt.getValues() == null || opt.getValues().length == 0)
+                 {
+-                    if (opt.getValues() == null || opt.getValues().length == 0)
++                    try
+                     {
+-                        try
+-                        {
+-                            opt.addValueForProcessing(value);
+-                        }
+-                        catch (RuntimeException exp)
+-                        {
+-                            // if we cannot add the value don't worry about it
+-                        }
++                        opt.addValueForProcessing(value);
++                    }
++                    catch (RuntimeException exp)
++                    {
++                        // if we cannot add the value don't worry about it
+                     }
+                 }
+-                else if (!("yes".equalsIgnoreCase(value)
+-                        || "true".equalsIgnoreCase(value)
+-                        || "1".equalsIgnoreCase(value)))
+-                {
+-                    // if the value is not yes, true or 1 then don't add the
+-                    // option to the CommandLine
+-                    break;
+-                }
+-
+-                cmd.addOption(opt);
+             }
++            else if (!("yes".equalsIgnoreCase(value)
++                    || "true".equalsIgnoreCase(value)
++                    || "1".equalsIgnoreCase(value)))
++            {
++                // if the value is not yes, true or 1 then don't add the
++                // option to the CommandLine
++                break;
++            }
++            cmd.addOption(opt);
+         }
+     }
+-
+     /**
+      * Throws a {@link MissingOptionException} if all of the required options
+      * are not present.

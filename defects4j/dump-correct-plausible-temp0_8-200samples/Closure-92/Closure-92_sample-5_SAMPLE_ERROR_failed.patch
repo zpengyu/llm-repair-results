@@ -1,0 +1,31 @@
+diff --git a/src/com/google/javascript/jscomp/ProcessClosurePrimitives.java b/src/com/google/javascript/jscomp/ProcessClosurePrimitives.java
+index d1d12a3c..45e482c9 100644
+--- a/src/com/google/javascript/jscomp/ProcessClosurePrimitives.java
++++ b/src/com/google/javascript/jscomp/ProcessClosurePrimitives.java
+@@ -806,8 +804,25 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback
+         }
+         compiler.reportCodeChange();
+       }
++      if (firstModule == minimumModule && firstNode.getParent().isVar()) {
++        Node prev = null;
++        for (Node c = firstNode; c != null; c = c.getNext()) {
++          if (c.getType() == Token.NAME) {
++            if (prev != null) {
++              c.getParent().addChildBefore(
++                  new Node(Token.COMMA), c);
++              compiler.reportCodeChange();
++            }
++            prev = c;
++          } else if (c.getType() == Token.COMMA) {
++            prev = c;
++          } else {
++            // Stop if we hit something unusual.
++            break;
++          }
++        }
++      }
+     }
+-
+     /**
+      * Create the declaration node for this name, without inserting it
+      * into the AST.

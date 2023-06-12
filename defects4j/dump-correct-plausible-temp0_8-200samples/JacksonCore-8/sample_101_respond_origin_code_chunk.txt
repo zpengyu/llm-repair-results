@@ -1,0 +1,23 @@
+    public char[] getTextBuffer()
+    {
+        // Are we just using shared input buffer?
+        if (_inputStart >= 0) return _inputBuffer;
+        if (_resultArray != null)  return _resultArray;
+        if (_resultString != null) {
+            return (_resultArray = _resultString.toCharArray());
+        }
+        // Nope; but does it fit in just one segment?
+        if (!_hasSegments)  return _currentSegment;
+        // Nope, need to have/create a non-segmented array and return it
+        int segLen = _segmentSize;
+        int currLen = _currentSize;
+        if ((currLen < 1) || (segLen < 1)) { // sanity check
+            return NO_CHARS;
+        }
+        char[] result = new char[currLen + (segLen << 1)];
+        System.arraycopy(_currentSegment, 0, result, 0, currLen);
+        // Let's also mark that we have a result array now...
+        _resultArray = result;
+        return result;
+    }
+

@@ -1,0 +1,30 @@
+  String getReadableJSTypeName(Node n, boolean dereference) {
+    JSType type = getJSType(n);
+    if (dereference) {
+      type = type.dereference();
+    }
+
+    ObjectType objectType = type.toObjectType();
+    if (objectType != null) {
+      ObjectType constructor = objectType.getConstructor();
+      if (constructor != null) {
+        if (constructor.isInterface()) {
+          return "interface " + constructor.getReferenceName();
+        } else {
+          return "class " + constructor.getReferenceName();
+        }
+      } else if (objectType.isFunctionPrototypeType()) {
+        return "function " + objectType.getReferenceName();
+      }
+    }
+
+    String qualifiedName = n.getQualifiedName();
+    if (qualifiedName != null) {
+      return qualifiedName;
+    } else if (type.isFunctionType()) {
+      // Don't show complex function names.
+      return "function";
+    } else {
+      return type.toString();
+    }
+  }

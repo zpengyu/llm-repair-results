@@ -1,0 +1,41 @@
+diff --git a/src/com/google/javascript/jscomp/CheckGlobalThis.java b/src/com/google/javascript/jscomp/CheckGlobalThis.java
+index 961b964c..0946cd95 100644
+--- a/src/com/google/javascript/jscomp/CheckGlobalThis.java
++++ b/src/com/google/javascript/jscomp/CheckGlobalThis.java
+@@ -103,7 +101,8 @@ final class CheckGlobalThis implements Callback {
+       if (!(pType == Token.BLOCK ||
+             pType == Token.SCRIPT ||
+             pType == Token.NAME ||
+-            pType == Token.ASSIGN)) {
++            pType == Token.ASSIGN ||
++            pType == Token.EXPR_RESULT)) {
+         return false;
+       }
+     }
+@@ -122,19 +119,17 @@ final class CheckGlobalThis implements Callback {
+       } else {
+         // Only traverse the right side if it's not an assignment to a prototype
+         // property or subproperty.
+-          if (lhs.getType() == Token.GETPROP &&
+-              lhs.getLastChild().getString().equals("prototype")) {
+-            return false;
+-          }
+-          if (lhs.getQualifiedName() != null && lhs.getQualifiedName().contains(".prototype.")) {
+-            return false;
+-          }
++        if (lhs.getType() == Token.GETPROP &&
++            lhs.getLastChild().getString().equals("prototype")) {
++          return false;
++        }
++        if (lhs.getQualifiedName() != null && lhs.getQualifiedName().contains(".prototype.")) {
++          return false;
++        }
+       }
+     }
+-
+     return true;
+   }
+-
+   public void visit(NodeTraversal t, Node n, Node parent) {
+     if (n.getType() == Token.THIS && shouldReportThis(n, parent)) {
+       compiler.report(t.makeError(n, level, GLOBAL_THIS));

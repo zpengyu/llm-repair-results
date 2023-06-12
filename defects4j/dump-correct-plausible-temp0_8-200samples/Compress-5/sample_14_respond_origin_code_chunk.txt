@@ -1,0 +1,20 @@
+     public int read(byte[] b, int off, int len) throws IOException {
+         if (eos) {
+             return -1;
+         }
+         if (inf.needsInput()) {
+             fill();
+         }
+         try {
+             int result = inf.inflate(b, off, len);
+             if (result == 0 && inf.finished()) {
+                 eos = true;
+             } else {
+                 crc.update(b, off, result);
+             }
+             return result;
+         } catch (DataFormatException ex) {
+             String s = ex.getMessage();
+             throw new ZipException(s != null ? s : "Invalid ZLIB data format");
+         }
+     }

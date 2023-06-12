@@ -1,0 +1,47 @@
+diff --git a/src/com/google/javascript/jscomp/Compiler.java b/src/com/google/javascript/jscomp/Compiler.java
+index e0dc0d38..a533e0d8 100644
+--- a/src/com/google/javascript/jscomp/Compiler.java
++++ b/src/com/google/javascript/jscomp/Compiler.java
+@@ -1348,10 +1329,12 @@ public class Compiler extends AbstractCompiler {
+                   input.getName(), options.devMode != DevMode.OFF);
+           NodeTraversal.traverse(this, n, sia);
+         }
+-
++        if(!devMode){
++          //In debug mode, don't fold constants.
++          NodeTraversal.traverse(this, n, new ConstantFoldingCallback());
++        }
+         jsRoot.addChildToBack(n);
+       }
+-
+       if (hasErrors()) {
+         return null;
+       }
+@@ -1360,7 +1343,26 @@ public class Compiler extends AbstractCompiler {
+       stopTracer(tracer, "parseInputs");
+     }
+   }
+-
++  class ConstantFoldingCallback extends AbstractPostOrderCallback {
++    @Override
++    public void visit(NodeTraversal t, Node n, Node parent) {
++      if (parent == null || !NodeUtil.isAssignmentOp(parent) || !n.isName()) {
++        return;
++      }
++      String name = n.getString();
++      Scope.Var var = t.getScope().getVar(name);
++      if (var == null || !var.isGlobal()) {
++        return;
++      }
++      Node rhs = NodeUtil.getRValueOfLValue(parent);
++      if (!NodeUtil.isImmutableValue(rhs)) {
++        return;
++      }
++      Node replacement = rhs.cloneTree();
++      parent.getParent().replaceChild(parent, replacement);
++      compiler.reportCodeChange();
++    }
++  }
+   /**
+    * Hoists inputs with the @externs annotation into the externs list.
+    */

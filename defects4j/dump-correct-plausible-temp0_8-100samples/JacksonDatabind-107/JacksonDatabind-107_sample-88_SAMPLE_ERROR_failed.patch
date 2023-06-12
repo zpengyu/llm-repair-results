@@ -1,0 +1,37 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/jsontype/impl/TypeDeserializerBase.java b/src/main/java/com/fasterxml/jackson/databind/jsontype/impl/TypeDeserializerBase.java
+index e8942ba4b..faf2ea247 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/jsontype/impl/TypeDeserializerBase.java
++++ b/src/main/java/com/fasterxml/jackson/databind/jsontype/impl/TypeDeserializerBase.java
+@@ -161,7 +161,6 @@ public abstract class TypeDeserializerBase
+                     // 10-May-2016, tatu: We may get some help...
+                     JavaType actual = _handleUnknownTypeId(ctxt, typeId);
+                     if (actual == null) { // what should this be taken to mean?
+-                        // 17-Jan-2019, tatu: As per [databind#2221], better NOT return `null` but...
+                         return null;
+                     }
+                     // ... would this actually work?
+@@ -197,7 +196,23 @@ public abstract class TypeDeserializerBase
+         }
+         return deser;
+     }
+-
++    /**
++     * Alternate method that can be used when the default implementation is known,
++     * and hence can be specified.
++     *
++     * @param ctxt Context used for accessing information
++     * @param typeId Type id used for locating deserializer
++     * @param defaultImpl Default implementation to use, if not found
++     * @return Deserializer for the type id
++     * 
++     * @since 2.8
++     */
++    public final JsonDeserializer<Object> findDeserializer(DeserializationContext ctxt,
++            String typeId, JsonDeserializer<?> defaultImpl) throws IOException
++    {
++        JsonDeserializer<Object> deser = _findDeserializer(ctxt, typeId);
++        return (deser == null) ? defaultImpl : deser;
++    }
+     protected final JsonDeserializer<Object> _findDefaultImplDeserializer(DeserializationContext ctxt) throws IOException
+     {
+         /* 06-Feb-2013, tatu: As per [databind#148], consider default implementation value of

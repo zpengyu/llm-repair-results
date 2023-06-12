@@ -1,0 +1,30 @@
+diff --git a/src/com/google/javascript/jscomp/RemoveUnusedVars.java b/src/com/google/javascript/jscomp/RemoveUnusedVars.java
+index 41175cf3..20d60362 100644
+--- a/src/com/google/javascript/jscomp/RemoveUnusedVars.java
++++ b/src/com/google/javascript/jscomp/RemoveUnusedVars.java
+@@ -384,10 +382,13 @@ class RemoveUnusedVars
+       // The parameters object literal setters can not be removed.
+       return;
+     }
+-
+     Node argList = getFunctionArgList(function);
+-    boolean modifyCallers = modifyCallSites
+-        && callSiteOptimizer.canModifyCallers(function);
++    boolean modifyCallers = false;
++    if (modifyCallSites
++        && callSiteOptimizer.canModifyCallers(function)) {
++      callSiteOptimizer.optimize(fnScope, referenced);
++      modifyCallers = true;
++    }
+     if (!modifyCallers) {
+       // Strip unreferenced args off the end of the function declaration.
+       Node lastArg;
+@@ -400,8 +401,6 @@ class RemoveUnusedVars
+           break;
+         }
+       }
+-    } else {
+-      callSiteOptimizer.optimize(fnScope, referenced);
+     }
+   }
+ 

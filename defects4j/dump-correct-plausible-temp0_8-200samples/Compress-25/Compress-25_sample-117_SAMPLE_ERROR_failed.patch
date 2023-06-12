@@ -1,0 +1,35 @@
+diff --git a/src/main/java/org/apache/commons/compress/archivers/zip/ZipArchiveInputStream.java b/src/main/java/org/apache/commons/compress/archivers/zip/ZipArchiveInputStream.java
+index 84eb7403..2816b916 100644
+--- a/src/main/java/org/apache/commons/compress/archivers/zip/ZipArchiveInputStream.java
++++ b/src/main/java/org/apache/commons/compress/archivers/zip/ZipArchiveInputStream.java
+@@ -174,15 +174,25 @@ public class ZipArchiveInputStream extends ArchiveInputStream {
+     public ZipArchiveInputStream(InputStream inputStream,
+                                  String encoding,
+                                  boolean useUnicodeExtraFields,
+-                                 boolean allowStoredEntriesWithDataDescriptor) {
++                                 boolean allowStoredEntriesWithDataDescriptor) throws IOException {
++        this.allowStoredEntriesWithDataDescriptor =
++            allowStoredEntriesWithDataDescriptor;
+         zipEncoding = ZipEncodingHelper.getZipEncoding(encoding);
+         this.useUnicodeExtraFields = useUnicodeExtraFields;
+         in = new PushbackInputStream(inputStream, buf.capacity());
+-        this.allowStoredEntriesWithDataDescriptor =
+-            allowStoredEntriesWithDataDescriptor;
+-        // haven't read anything so far
++        byte[] signature = new byte[4];
++        IOUtils.readFully(in, signature);
++        if (ZipArchiveInputStream.isEOCD(signature)) {
++            readEOCD();
++            if (zipEncoding.canEncode(getComment())) {
++                this.comment = getComment();
++            } else {
++                this.unicodeComment = getComment();
++            }
++        } else {
++            in.unread(signature);
++        }
+     }
+-
+     public ZipArchiveEntry getNextZipEntry() throws IOException {
+         boolean firstEntry = true;
+         if (closed || hitCentralDirectory) {

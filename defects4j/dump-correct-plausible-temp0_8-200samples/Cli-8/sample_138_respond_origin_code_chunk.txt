@@ -1,0 +1,44 @@
+    protected StringBuffer renderWrappedText(StringBuffer sb, int width, 
+                                             int nextLineTabStop, String text)
+    {
+        int pos = findWrapPos(text, width, 0);
+
+        if (pos == -1)
+        {
+            sb.append(rtrim(text));
+
+            return sb;
+        }
+        sb.append(rtrim(text.substring(0, pos))).append(defaultNewLine);
+
+        // all following lines must be padded with nextLineTabStop space 
+        // characters
+        final String padding = createPadding(nextLineTabStop);
+        
+        String textToWrap = text.substring(pos).trim();
+        if(textToWrap.length()>width)
+        {
+        	pos = width;
+        }
+        else
+        {
+        	pos = findWrapPos(textToWrap, width, nextLineTabStop);
+        }
+        
+        while (true)
+        {
+            textToWrap = padding + textToWrap;
+            pos = findWrapPos(textToWrap, width, nextLineTabStop);
+            if (pos == -1)
+            {
+                sb.append(textToWrap);
+
+                return sb;
+            }
+            
+            sb.append(rtrim(textToWrap.substring(0, pos))).append(defaultNewLine);
+            textToWrap = textToWrap.substring(pos).trim();
+            pos = findWrapPos(textToWrap, width, nextLineTabStop);
+        }
+    }
+

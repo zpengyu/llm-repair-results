@@ -1,0 +1,26 @@
+diff --git a/src/main/java/org/apache/commons/compress/archivers/ArchiveStreamFactory.java b/src/main/java/org/apache/commons/compress/archivers/ArchiveStreamFactory.java
+index 57b411d0..9d8d3b65 100644
+--- a/src/main/java/org/apache/commons/compress/archivers/ArchiveStreamFactory.java
++++ b/src/main/java/org/apache/commons/compress/archivers/ArchiveStreamFactory.java
+@@ -217,8 +215,11 @@ public class ArchiveStreamFactory {
+                 return new ArArchiveInputStream(in);
+             } else if (CpioArchiveInputStream.matches(signature, signatureLength)) {
+                 return new CpioArchiveInputStream(in);
++            } else if (RarArchiveInputStream.matches(signature, signatureLength)) {
++                return new RarArchiveInputStream(in);
++            } else if (SevenZFile.matches(signature, signatureLength)) {
++                return new SevenZFile(in);
+             }
+-
+             // Dump needs a bigger buffer to check the signature;
+             final byte[] dumpsig = new byte[32];
+             in.mark(dumpsig.length);
+@@ -253,7 +253,5 @@ public class ArchiveStreamFactory {
+         } catch (IOException e) {
+             throw new ArchiveException("Could not use reset and mark operations.", e);
+         }
+-
+         throw new ArchiveException("No Archiver found for the stream signature");
+-    }
+-}
++    }}

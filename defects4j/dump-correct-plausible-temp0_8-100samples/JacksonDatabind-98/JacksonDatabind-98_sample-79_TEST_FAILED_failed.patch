@@ -1,0 +1,34 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/deser/impl/ExternalTypeHandler.java b/src/main/java/com/fasterxml/jackson/databind/deser/impl/ExternalTypeHandler.java
+index b0797059f..660416930 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/deser/impl/ExternalTypeHandler.java
++++ b/src/main/java/com/fasterxml/jackson/databind/deser/impl/ExternalTypeHandler.java
+@@ -252,7 +252,7 @@ public class ExternalTypeHandler
+      * Variant called when creation of the POJO involves buffering of creator properties
+      * as well as property-based creator.
+      */
+-    public Object complete(JsonParser p, DeserializationContext ctxt,
++public Object complete(JsonParser p, DeserializationContext ctxt,
+             PropertyValueBuffer buffer, PropertyBasedCreator creator)
+         throws IOException
+     {
+@@ -288,15 +287,11 @@ public class ExternalTypeHandler
+             // also: if it's creator prop, fill in
+             if (prop.getCreatorIndex() >= 0) {
+                 buffer.assignParameter(prop, values[i]);
+-
+-                // [databind#999] And maybe there's creator property for type id too?
+-                SettableBeanProperty typeProp = extProp.getTypeProperty();
+-                // for now, should only be needed for creator properties, too
+-                if ((typeProp != null) && (typeProp.getCreatorIndex() >= 0)) {
+-                    // 31-May-2018, tatu: [databind#1328] if id is NOT plain `String`, need to
+-                    //    apply deserializer... fun fun.
+-                    buffer.assignParameter(typeProp, typeId);
+-                }
++            }
++            // [databind#999] And maybe there's creator property for type id too?
++            SettableBeanProperty typeProp = extProp.getTypeProperty();
++            if ((typeProp != null) && (typeProp.getCreatorIndex() >= 0)) {
++                buffer.assignParameter(typeProp, typeId);
+             }
+         }
+         Object bean = creator.build(ctxt, buffer);

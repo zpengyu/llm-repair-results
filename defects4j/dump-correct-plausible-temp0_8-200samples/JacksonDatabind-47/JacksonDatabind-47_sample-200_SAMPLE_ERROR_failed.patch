@@ -1,0 +1,18 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/AnnotationIntrospector.java b/src/main/java/com/fasterxml/jackson/databind/AnnotationIntrospector.java
+index 624a1fd7e..22e61cfe7 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/AnnotationIntrospector.java
++++ b/src/main/java/com/fasterxml/jackson/databind/AnnotationIntrospector.java
+@@ -803,8 +802,11 @@ public abstract class AnnotationIntrospector
+         //    direct sub-class not yet retrofitted may only override
+         //    those methods. With 2.8 or later we may consider removal
+         //    of these methods
+-
+-        
++        if (_factoryConfig.hasDeserializerModifiers()) {
++            for (BeanDeserializerModifier mod : _factoryConfig.deserializerModifiers()) {
++                type = mod.modifyDeserializationType(config, a, type);
++            }
++        }
+         // Ok: start by refining the main type itself; common to all types
+         Class<?> serClass = findSerializationType(a);
+         if (serClass != null) {

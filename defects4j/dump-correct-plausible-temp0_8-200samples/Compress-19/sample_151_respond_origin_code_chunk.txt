@@ -1,0 +1,41 @@
+    public void reparseCentralDirectoryData(boolean hasUncompressedSize,
+                                            boolean hasCompressedSize,
+                                            boolean hasRelativeHeaderOffset,
+                                            boolean hasDiskStart)
+        throws ZipException {
+        if (rawCentralDirectoryData != null) {
+            int expectedLength = (hasUncompressedSize ? DWORD : 0)
+                + (hasCompressedSize ? DWORD : 0)
+                + (hasRelativeHeaderOffset ? DWORD : 0)
+                + (hasDiskStart ? WORD : 0);
+            if (rawCentralDirectoryData.length != expectedLength) {
+                throw new ZipException("central directory zip64 extended"
+                                       + " information extra field's length"
+                                       + " doesn't match central directory"
+                                       + " data.  Expected length "
+                                       + expectedLength + " but is "
+                                       + rawCentralDirectoryData.length);
+            }
+            int offset = 0;
+            if (hasUncompressedSize) {
+                long sz = new ZipEightByteInteger(rawCentralDirectoryData, offset).getLongValue();
+                size = new ZipEightByteInteger(sz);
+                offset += DWORD;
+            }
+            if (hasCompressedSize) {
+                long cpsz = new ZipEightByteInteger(rawCentralDirectoryData, offset).getLongValue();
+                compressedSize = new ZipEightByteInteger(cpsz);
+                offset += DWORD;
+            }
+            if (hasRelativeHeaderOffset) {
+                long rhoff = new ZipEightByteInteger(rawCentralDirectoryData, offset).getLongValue();
+                relativeHeaderOffset = new ZipEightByteInteger(rhoff);
+                offset += DWORD;
+            }
+            if (hasDiskStart) {
+                long ds = new ZipLong(rawCentralDirectoryData, offset).getValue();
+                diskStart = new ZipLong(ds);
+                offset += WORD;
+            }
+        }
+    }

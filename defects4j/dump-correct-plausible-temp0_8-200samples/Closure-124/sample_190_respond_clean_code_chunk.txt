@@ -1,0 +1,17 @@
+  private boolean isSafeReplacement(Node node, Node replacement) {
+    // No checks are needed for simple names.
+    if (node.isName()) {
+      return true;
+    }
+    Preconditions.checkArgument(node.isGetProp());
+    // Note: No need to worry about re-assignment to the object property
+    // because object properties can't be re-assigned (e.g. a.foo = b; a.foo =
+    // c;
+    // is not allowed).
+    // We only have to worry about whether the object is assigned a new value.
+    node = node.getFirstChild();
+    if (isNameAssignedTo(node.getString(), replacement)) {
+      return false;
+    }
+    return true;
+  }

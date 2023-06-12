@@ -1,0 +1,17 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/jsontype/impl/AsPropertyTypeDeserializer.java b/src/main/java/com/fasterxml/jackson/databind/jsontype/impl/AsPropertyTypeDeserializer.java
+index 8bad30e7c..5e49119de 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/jsontype/impl/AsPropertyTypeDeserializer.java
++++ b/src/main/java/com/fasterxml/jackson/databind/jsontype/impl/AsPropertyTypeDeserializer.java
+@@ -137,8 +137,12 @@ public class AsPropertyTypeDeserializer extends AsArrayTypeDeserializer
+         // As per [JACKSON-614], may have default implementation to use
+         JsonDeserializer<Object> deser = _findDefaultImplDeserializer(ctxt);
+         if (deser != null) {
++            // 21-Sep-2016, tatu: This is just terrible, but let's try it for now.
++            //   Big assumption is that we'll never use "wrapped" style, but that's
++            //   never been officially supported so let's try it.
+             if (tb != null) {
+                 tb.writeEndObject();
++                // !!! TODO: should probably use `p` as-is and skip token, but...
+                 p = tb.asParser(p);
+                 // must move to point to the first token:
+                 p.nextToken();

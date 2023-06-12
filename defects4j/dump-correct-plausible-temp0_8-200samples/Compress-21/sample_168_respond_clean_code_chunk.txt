@@ -1,0 +1,29 @@
+    private void writeBits(final DataOutput header, final BitSet bits, final int length) throws IOException {
+        int cache = 0;
+        int shift = 7;
+        int i = 0;
+        for (; i < length / 8; i++) {
+            for (int j = 0; j < 8; j++) {
+                cache |= ((bits.get(i * 8 + j) ? 1 : 0) << shift);
+                --shift;
+                if (shift == 0) {
+                    header.write(cache);
+                    shift = 7;
+                    cache = 0;
+                }
+            }
+        }
+        int remain = length % 8;
+        for (int j = 0; j < remain; j++) {
+            cache |= ((bits.get(i * 8 + j) ? 1 : 0) << shift);
+            --shift;
+            if (shift == 0) {
+                header.write(cache);
+                shift = 7;
+                cache = 0;
+            }
+        }
+        if (length > 0 && shift > 0) {
+            header.write(cache);
+        }
+    }

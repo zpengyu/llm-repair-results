@@ -1,0 +1,20 @@
+diff --git a/src/com/google/javascript/jscomp/TypeCheck.java b/src/com/google/javascript/jscomp/TypeCheck.java
+index 83a73c74..ae572fdf 100644
+--- a/src/com/google/javascript/jscomp/TypeCheck.java
++++ b/src/com/google/javascript/jscomp/TypeCheck.java
+@@ -1426,9 +1423,14 @@ public class TypeCheck implements NodeTraversal.Callback, CompilerPass {
+               String.valueOf(numArgs), String.valueOf(minArgs),
+               maxArgs != Integer.MAX_VALUE ?
+               " and no more than " + maxArgs + " argument(s)" : "");
++    } else if (maxArgs == Integer.MAX_VALUE) {
++      // Check if the function was passed an argument list directly.
++      Node lastArgument = call.getLastChild();
++      if (lastArgument != null && lastArgument.isArguments()) {
++        report(t, lastArgument, INVALID_ARGUMENTS_ELEMENT);
++      }
+     }
+   }
+-
+   /**
+    * Visits a RETURN node.
+    *

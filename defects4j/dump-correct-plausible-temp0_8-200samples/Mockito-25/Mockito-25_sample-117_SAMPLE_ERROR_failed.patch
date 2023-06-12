@@ -1,0 +1,35 @@
+diff --git a/src/org/mockito/internal/stubbing/defaultanswers/ReturnsDeepStubs.java b/src/org/mockito/internal/stubbing/defaultanswers/ReturnsDeepStubs.java
+index 6fa773f53..84e2757c6 100644
+--- a/src/org/mockito/internal/stubbing/defaultanswers/ReturnsDeepStubs.java
++++ b/src/org/mockito/internal/stubbing/defaultanswers/ReturnsDeepStubs.java
+@@ -81,16 +68,22 @@ public class ReturnsDeepStubs implements Answer<Object>, Serializable {
+     private Object recordDeepStubMock(InvocationOnMock invocation, InvocationContainerImpl container) {
+         Class<?> clz = invocation.getMethod().getReturnType();
+         final Object mock = org.mockito.Mockito.mock(clz, this);
+-
+-        container.addAnswer(new Answer<Object>() {
+-            public Object answer(InvocationOnMock invocation) throws Throwable {
+-                return mock;
+-            }
+-        }, false);
+-
++        if(container.getStubbedInvocations().size() > 1) {
++        	for (StubbedInvocationMatcher stubbedInvocationMatcher : container.getStubbedInvocations()) {
++        		if(!stubbedInvocationMatcher.getInvocation().isVerified() && 
++        				stubbedInvocationMatcher.getInvocation().getMethod().getReturnType().isInstance(mock)) {
++        			stubbedInvocationMatcher.answer(invocation);
++        		}
++        	}
++        } else {
++        	container.addAnswer(new Answer<Object>() {
++                public Object answer(InvocationOnMock invocation) throws Throwable {
++                    return mock;
++                }
++            }, false);
++        }
+         return mock;
+     }
+-
+     protected GenericMetadataSupport actualParameterizedType(Object mock) {
+         CreationSettings mockSettings = (CreationSettings) new MockUtil().getMockHandler(mock).getMockSettings();
+         return GenericMetadataSupport.inferFrom(mockSettings.getTypeToMock());

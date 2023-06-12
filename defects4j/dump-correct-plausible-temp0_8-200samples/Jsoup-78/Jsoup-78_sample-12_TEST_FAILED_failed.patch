@@ -1,0 +1,31 @@
+diff --git a/src/main/java/org/jsoup/helper/DataUtil.java b/src/main/java/org/jsoup/helper/DataUtil.java
+index bbbd8fb..61364a7 100644
+--- a/src/main/java/org/jsoup/helper/DataUtil.java
++++ b/src/main/java/org/jsoup/helper/DataUtil.java
+@@ -147,15 +141,21 @@ public final class DataUtil {
+         if (doc == null) {
+             if (charsetName == null)
+                 charsetName = defaultCharset;
+-            BufferedReader reader = new BufferedReader(new InputStreamReader(input, charsetName), bufferSize);
++            try {
++                BufferedReader reader = new BufferedReader(new InputStreamReader(input, charsetName), bufferSize);
+                 doc = parser.parseInput(reader, baseUri);
+-                // io exception when parsing (not seen before because reading the stream as we go)
+-            doc.outputSettings().charset(charsetName);
++            } catch (IOException e) {
++                doc = null;
++            } finally {
++                input.close();
++            }
++            // io exception when parsing (not seen before because reading the stream as we go)
++            if(doc != null) {
++                doc.outputSettings().charset(charsetName);
++            }
+         }
+-        input.close();
+         return doc;
+     }
+-
+     /**
+      * Read the input stream into a byte buffer. To deal with slow input streams, you may interrupt the thread this
+      * method is executing on. The data read until being interrupted will be available.

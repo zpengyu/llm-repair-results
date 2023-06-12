@@ -1,0 +1,76 @@
+diff --git a/src/main/java/org/apache/commons/compress/archivers/tar/TarUtils.java b/src/main/java/org/apache/commons/compress/archivers/tar/TarUtils.java
+index 34ecc5ac..569cbd9e 100644
+--- a/src/main/java/org/apache/commons/compress/archivers/tar/TarUtils.java
++++ b/src/main/java/org/apache/commons/compress/archivers/tar/TarUtils.java
+@@ -100,56 +100,34 @@ public class TarUtils {
+      * @throws IllegalArgumentException if the trailing space/NUL is missing or if a invalid byte is detected.
+      */
+     public static long parseOctal(final byte[] buffer, final int offset, final int length) {
+-        long    result = 0;
+-        int     end = offset + length;
+-        int     start = offset;
+-
+-        if (length < 2){
+-            throw new IllegalArgumentException("Length "+length+" must be at least 2");
++        long result = 0;
++        int i = offset;
++        int end = offset + length;
++        if (length < 2 || buffer[offset] == 0) {
++            return 0;
+         }
+-
+-        if (buffer[start] == 0) {
+-            return 0L;
++        while (i < end - 1 && buffer[i] == ' ') {
++            i++;
+         }
+-
+-        // Skip leading spaces
+-        while (start < end){
+-            if (buffer[start] == ' '){
+-                start++;
+-            } else {
+-                break;
+-            }
++        while (i < end - 1 && buffer[end - 1] == ' ') {
++            end--;
+         }
+-
+-        // Must have trailing NUL or space
+-        byte trailer;
+-        trailer = buffer[end-1];
+-        if (trailer == 0 || trailer == ' '){
++        if (buffer[end - 1] == ' ' || buffer[end - 1] == 0) {
+             end--;
+-        } else {
+-            throw new IllegalArgumentException(
+-                    exceptionMessage(buffer, offset, length, end-1, trailer));
+         }
+-        // May have additional NULs or spaces
+-        trailer = buffer[end - 1];
+-        if (trailer == 0 || trailer == ' '){
++        if (buffer[end - 1] == ' ' || buffer[end - 1] == 0) {
+             end--;
+         }
+-
+-        for ( ;start < end; start++) {
+-            final byte currentByte = buffer[start];
+-            // CheckStyle:MagicNumber OFF
+-            if (currentByte < '0' || currentByte > '7'){
++        for (; i < end; i++) {
++            byte currentByte = buffer[i];
++            if (currentByte < '0' || currentByte > '7') {
+                 throw new IllegalArgumentException(
+-                        exceptionMessage(buffer, offset, length, start, currentByte));
++                        exceptionMessage(buffer, offset, length, i, currentByte));
+             }
+             result = (result << 3) + (currentByte - '0'); // convert from ASCII
+-            // CheckStyle:MagicNumber ON
+         }
+-
+         return result;
+     }
+-
+     /** 
+      * Compute the value contained in a byte buffer.  If the most
+      * significant bit of the first byte in the buffer is set, this

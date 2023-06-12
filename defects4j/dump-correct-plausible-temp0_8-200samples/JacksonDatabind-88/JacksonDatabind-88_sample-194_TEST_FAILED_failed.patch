@@ -1,0 +1,45 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/jsontype/impl/ClassNameIdResolver.java b/src/main/java/com/fasterxml/jackson/databind/jsontype/impl/ClassNameIdResolver.java
+index 112c00b5c..7a8979815 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/jsontype/impl/ClassNameIdResolver.java
++++ b/src/main/java/com/fasterxml/jackson/databind/jsontype/impl/ClassNameIdResolver.java
+@@ -44,19 +44,19 @@ public class ClassNameIdResolver
+ 
+     protected JavaType _typeFromId(String id, DatabindContext ctxt) throws IOException
+     {
+-        /* 30-Jan-2010, tatu: Most ids are basic class names; so let's first
+-         *    check if any generics info is added; and only then ask factory
+-         *    to do translation when necessary
+-         */
+         TypeFactory tf = ctxt.getTypeFactory();
+         if (id.indexOf('<') > 0) {
+-            // note: may want to try combining with specialization (esp for EnumMap)?
++            JavaType t = tf.constructFromCanonical(id);
+             // 17-Aug-2017, tatu: As per [databind#1735] need to ensure assignment
+             //    compatibility -- needed later anyway, and not doing so may open
+             //    security issues.
+-            JavaType t = tf.constructFromCanonical(id);
+-                // Probably cleaner to have a method in `TypeFactory` but can't add in patch
+-            return t;
++            if (t != null) {
++                // 23-Aug-2017, tatu: Possibly allow for some "fuzziness" here
++                //   (i.e. "maybe" assignability)?
++                if (t.isTypeOrSubTypeOf(_baseType.getRawClass())) {
++                    return t;
++                }
++            }
+         }
+         Class<?> cls;
+         try {
+@@ -74,9 +74,11 @@ public class ClassNameIdResolver
+         } catch (Exception e) {
+             throw new IllegalArgumentException("Invalid type id '"+id+"' (for id type 'Id.class'): "+e.getMessage(), e);
+         }
++        if (!_baseType.getRawClass().isAssignableFrom(cls)) {
++            throw new IllegalArgumentException("Class " + cls.getName() + " not subtype of " + _baseType);
++        }
+         return tf.constructSpecializedType(_baseType, cls);
+     }    
+-    
+     /*
+     /**********************************************************
+     /* Internal methods

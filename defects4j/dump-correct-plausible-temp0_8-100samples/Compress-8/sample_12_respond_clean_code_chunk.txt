@@ -1,0 +1,35 @@
+public static long parseOctal(final byte[] buffer, final int offset, final int length) {
+        long result = 0;
+        int end = offset + length;
+        int start = offset;
+        if (length < 1){
+            throw new IllegalArgumentException(
+                    "Length must be greater than zero");
+        }
+        boolean stillPadding = true;
+        for (int i = start; i < end; i++) {
+            final byte currentByte = buffer[i];
+            if (currentByte == 0) {
+                break;
+            }
+            // CheckStyle:MagicNumber OFF
+            if (currentByte < '0' || currentByte > '7') {
+                if (stillPadding) {
+                    if (currentByte == (byte) ' ') {
+                        continue;
+                    }
+                    throw new IllegalArgumentException(
+                            exceptionMessage(buffer, offset, length, start, currentByte));
+                }
+                if (currentByte != (byte) ' ') {
+                    throw new IllegalArgumentException(
+                            exceptionMessage(buffer, offset, length, start, currentByte));
+                }
+                break;
+            }
+            // CheckStyle:MagicNumber ON
+            stillPadding = false;
+            result = (result << 3) + (currentByte - '0'); // convert from ASCII
+        }
+        return result;
+    }

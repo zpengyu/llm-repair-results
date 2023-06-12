@@ -1,0 +1,66 @@
+    protected String[] flatten(Options options, String[] arguments, boolean stopAtNonOption)
+    {
+        init();
+        this.options = options;
+
+        // an iterator for the command line tokens
+        Iterator iter = Arrays.asList(arguments).iterator();
+
+        // process each command line token
+        while (iter.hasNext())
+        {
+            // get the next command line token
+            String token = (String) iter.next();
+
+            // handle long option --foo or --foo=bar
+            if (token.startsWith("--"))
+            {
+                // extract the value part if any
+                final int pos = token.indexOf('=');
+                final String value = pos == -1 ? null : token.substring(pos + 1);
+
+                // handle --foo=bar case
+                if (pos != -1)
+                {
+                    tokens.add(token.substring(0, pos));
+                    tokens.add(value);
+                }
+                // handle --foo case
+                else
+                {
+                    tokens.add(token);
+                }
+            }
+            // -abcde are treated as -a -b -c -d -e
+            else if (token.startsWith("-") && token.length() > 1)
+            {
+                final String value = options.hasOption(token) ? null : token.substring(2);
+                tokens.add("-" + token.charAt(1));
+                // burst token if value is not null
+                if (value != null)
+                {
+                    burstToken(value, stopAtNonOption);
+                }
+            }
+            // single hyphen
+            else if ("-".equals(token))
+            {
+                tokens.add(token);
+            }
+            // treat --foo the same as --foo=true
+            else if (token.startsWith("--"))
+            {
+                tokens.add(token);
+                tokens.add("true");
+            }
+            // handle token as an argument
+            else
+            {
+                tokens.add(token);
+            }
+
+            gobble(iter);
+        }
+
+        return (String[]) tokens.toArray(new String[tokens.size()]);
+    }

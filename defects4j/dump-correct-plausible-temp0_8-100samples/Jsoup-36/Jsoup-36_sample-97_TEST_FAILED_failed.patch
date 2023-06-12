@@ -1,0 +1,52 @@
+diff --git a/src/main/java/org/jsoup/helper/DataUtil.java b/src/main/java/org/jsoup/helper/DataUtil.java
+index 3626928..4c3daa8 100644
+--- a/src/main/java/org/jsoup/helper/DataUtil.java
++++ b/src/main/java/org/jsoup/helper/DataUtil.java
+@@ -34,7 +32,7 @@ public class DataUtil {
+         FileInputStream inStream = null;
+         try {
+             inStream = new FileInputStream(in);
+-            ByteBuffer byteData = readToByteBuffer(inStream);
++            ByteBuffer byteData = readToByteBuffer(inStream, bufferSize);
+             return parseByteData(byteData, charsetName, baseUri, Parser.htmlParser());
+         } finally {
+             if (inStream != null)
+@@ -51,10 +48,9 @@ public class DataUtil {
+      * @throws IOException on IO error
+      */
+     public static Document load(InputStream in, String charsetName, String baseUri) throws IOException {
+-        ByteBuffer byteData = readToByteBuffer(in);
++        ByteBuffer byteData = readToByteBuffer(in, bufferSize);
+         return parseByteData(byteData, charsetName, baseUri, Parser.htmlParser());
+     }
+-
+     /**
+      * Parses a Document from an input steam, using the provided Parser.
+      * @param in input stream to parse. You will need to close it.
+@@ -65,10 +61,9 @@ public class DataUtil {
+      * @throws IOException on IO error
+      */
+     public static Document load(InputStream in, String charsetName, String baseUri, Parser parser) throws IOException {
+-        ByteBuffer byteData = readToByteBuffer(in);
++        ByteBuffer byteData = readToByteBuffer(in, bufferSize);
+         return parseByteData(byteData, charsetName, baseUri, parser);
+     }
+-
+     // reads bytes first into a buffer, then decodes with the appropriate charset. done this way to support
+     // switching the chartset midstream when a meta http-equiv tag defines the charset.
+     static Document parseByteData(ByteBuffer byteData, String charsetName, String baseUri, Parser parser) {
+@@ -158,10 +146,10 @@ public class DataUtil {
+         Matcher m = charsetPattern.matcher(contentType);
+         if (m.find()) {
+             String charset = m.group(1).trim();
+-                if (Charset.isSupported(charset)) return charset;
+-                charset = charset.toUpperCase(Locale.ENGLISH);
+-                if (Charset.isSupported(charset)) return charset;
+-                // if our advanced charset matching fails.... we just take the default
++            if (Charset.isSupported(charset)) return charset;
++            charset = charset.toUpperCase(Locale.ENGLISH);
++            if (Charset.isSupported(charset)) return charset;
++            // if our advanced charset matching fails.... we just take the default
+         }
+         return null;
+     }

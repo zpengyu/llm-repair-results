@@ -1,0 +1,21 @@
+diff --git a/src/main/java/org/jsoup/helper/DataUtil.java b/src/main/java/org/jsoup/helper/DataUtil.java
+index bbbd8fb..540106b 100644
+--- a/src/main/java/org/jsoup/helper/DataUtil.java
++++ b/src/main/java/org/jsoup/helper/DataUtil.java
+@@ -148,8 +142,16 @@ public final class DataUtil {
+             if (charsetName == null)
+                 charsetName = defaultCharset;
+             BufferedReader reader = new BufferedReader(new InputStreamReader(input, charsetName), bufferSize);
++            if (fullyRead) {
++                doc = parser.parseInput(reader, baseUri);
++            } else {
++                reader.mark(bufferSize);
+                 doc = parser.parseInput(reader, baseUri);
+                 // io exception when parsing (not seen before because reading the stream as we go)
++                reader.reset();
++                Document doc2 = DataUtil.parseInputStream(reader, charsetName, baseUri, parser);
++                doc.body().appendChild(doc2.body()); // copy second doc into first
++            }
+             doc.outputSettings().charset(charsetName);
+         }
+         input.close();

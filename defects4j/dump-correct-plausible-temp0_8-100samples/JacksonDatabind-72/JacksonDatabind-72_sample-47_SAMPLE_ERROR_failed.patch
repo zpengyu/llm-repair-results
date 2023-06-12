@@ -1,0 +1,203 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/deser/impl/InnerClassProperty.java b/src/main/java/com/fasterxml/jackson/databind/deser/impl/InnerClassProperty.java
+index 128a8346f..47a88e57f 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/deser/impl/InnerClassProperty.java
++++ b/src/main/java/com/fasterxml/jackson/databind/deser/impl/InnerClassProperty.java
+@@ -16,126 +16,92 @@ import com.fasterxml.jackson.databind.util.ClassUtil;
+  * alternative for default constructor; but otherwise can delegate
+  * to regular implementation.
+  */
+-public final class InnerClassProperty
++/**
++ * This is used to handle "unwrapping" cases where Jackson property
++ * data format differs from data format of JSON property it is bound to.
++ * It is usually done by specifying a property annotation that indicates
++ * type of unwrapping to use; and if so, a converter (de)serializer is
++ * constructed to handle conversion between JSON and Jackson property
++ * data formats.
++ */
++public final class UnwrappingSettableBeanProperty
+     extends SettableBeanProperty
+ {
+     private static final long serialVersionUID = 1L;
+-
+-    /**
+-     * Actual property that we use after value construction.
+-     */
+     protected final SettableBeanProperty _delegate;
+-
+     /**
+-     * Constructor used when deserializing this property.
+-     * Transient since there is no need to persist; only needed during
+-     * construction of objects.
++     * @since 2.1
+      */
+-    final protected transient Constructor<?> _creator;
+-    
+-    /**
+-     * Serializable version of single-arg constructor we use for value instantiation.
++    protected final NameTransformer _unwrapper;
++    /*
++    /**********************************************************
++    /* Life-cycle: creation, configuration
++    /**********************************************************
+      */
+-    protected AnnotatedConstructor _annotated;
+-
+-    public InnerClassProperty(SettableBeanProperty delegate,
+-            Constructor<?> ctor)
++    public UnwrappingSettableBeanProperty(SettableBeanProperty delegate, NameTransformer unwrapper)
+     {
+         super(delegate);
+         _delegate = delegate;
+-        _creator = ctor;
++        _unwrapper = unwrapper;
+     }
+-
+-    /**
+-     * Constructor used with JDK Serialization; needed to handle transient
+-     * Constructor, wrap/unwrap in/out-of Annotated variant.
+-     */
+-    protected InnerClassProperty(InnerClassProperty src, AnnotatedConstructor ann)
+-    {
+-        super(src);
+-        _delegate = src._delegate;
+-        _annotated = ann;
+-        _creator = (_annotated == null) ? null : _annotated.getAnnotated();
+-        if (_creator == null) {
+-            throw new IllegalArgumentException("Missing constructor (broken JDK (de)serialization?)");
+-        }
+-    }
+-    
+-    protected InnerClassProperty(InnerClassProperty src, JsonDeserializer<?> deser)
++    protected UnwrappingSettableBeanProperty(UnwrappingSettableBeanProperty src, JsonDeserializer<?> deser)
+     {
+         super(src, deser);
+         _delegate = src._delegate.withValueDeserializer(deser);
+-        _creator = src._creator;
++        _unwrapper = src._unwrapper;
+     }
+-
+-    protected InnerClassProperty(InnerClassProperty src, PropertyName newName) {
++    protected UnwrappingSettableBeanProperty(UnwrappingSettableBeanProperty src, PropertyName newName) {
+         super(src, newName);
+         _delegate = src._delegate.withName(newName);
+-        _creator = src._creator;
++        _unwrapper = src._unwrapper;
+     }
+-
+     @Override
+-    public InnerClassProperty withName(PropertyName newName) {
+-        return new InnerClassProperty(this, newName);
++    public UnwrappingSettableBeanProperty withName(PropertyName newName)
++    {
++        return new UnwrappingSettableBeanProperty(this, newName);
+     }
+-
+     @Override
+-    public InnerClassProperty withValueDeserializer(JsonDeserializer<?> deser) {
+-        return new InnerClassProperty(this, deser);
++    public UnwrappingSettableBeanProperty withValueDeserializer(JsonDeserializer<?> deser) {
++        return new UnwrappingSettableBeanProperty(this, deser);
+     }
+-
+     @Override
+-    public void assignIndex(int index) { _delegate.assignIndex(index); }
+-
+-    @Override
+-    public int getPropertyIndex() { return _delegate.getPropertyIndex(); }
+-
+-
+-    // // // BeanProperty impl
+-
++    public void fixAccess(DeserializationConfig config) {
++        _delegate.fixAccess(config);
++    }
++    /*
++    /**********************************************************
++    /* BeanProperty impl
++    /**********************************************************
++     */
+     @Override
+     public <A extends Annotation> A getAnnotation(Class<A> acls) {
+         return _delegate.getAnnotation(acls);
+     }
+-
+-    @Override public AnnotatedMember getMember() {  return _delegate.getMember(); }
+-
++    @Override
++    public AnnotatedMember getMember() {  return _delegate.getMember(); }
+     /*
+     /**********************************************************
+-    /* Deserialization methods
++    /* Overridden methods
+     /**********************************************************
+      */
+-
+     @Override
+     public void deserializeAndSet(JsonParser jp, DeserializationContext ctxt, Object bean)
+         throws IOException
+     {
+-        JsonToken t = jp.getCurrentToken();
+-        Object value;
+-        if (t == JsonToken.VALUE_NULL) {
+-            value = _valueDeserializer.getNullValue(ctxt);
+-        } else if (_valueTypeDeserializer != null) {
+-            value = _valueDeserializer.deserializeWithType(jp, ctxt, _valueTypeDeserializer);
+-        } else  { // the usual case
+-            try {
+-                value = _creator.newInstance(bean);
+-            } catch (Exception e) {
+-                ClassUtil.unwrapAndThrowAsIAE(e, "Failed to instantiate class "+_creator.getDeclaringClass().getName()+", problem: "+e.getMessage());
+-                value = null;
+-            }
+-            _valueDeserializer.deserialize(jp, ctxt, value);
+-        }
+-        set(bean, value);
++        /* This may look like a no-op, but it is not, since it ensures
++         * 
++         */
++        jp = _unwrapper.processUnwrapped(jp, ctxt, bean);
++        _delegate.deserializeAndSet(jp, ctxt, bean);
+     }
+-
+     @Override
+     public Object deserializeSetAndReturn(JsonParser jp,
+     		DeserializationContext ctxt, Object instance)
+         throws IOException
+     {
+-        return setAndReturn(instance, deserialize(jp, ctxt));
++        // also note: no wrapping/unwrapping here:
++        return _delegate.deserializeSetAndReturn(jp, ctxt, instance);
+     }
+-    
+     @Override
+     public final void set(Object instance, Object value) throws IOException {
+         _delegate.set(instance, value);
+@@ -145,23 +110,11 @@ public final class InnerClassProperty
+     public Object setAndReturn(Object instance, Object value) throws IOException {
+         return _delegate.setAndReturn(instance, value);
+     }
+-
+     /*
+     /**********************************************************
+-    /* JDK serialization handling
++    /* Extended API
+     /**********************************************************
+      */
+-
+-    // When reading things back, 
+-    Object readResolve() {
+-        return new InnerClassProperty(this, _annotated);
+-    }
+-
+-    Object writeReplace() {
+-        // need to construct a fake instance to support serialization
+-        if (_annotated != null) {
+-            return this;
+-        }
+-        return new InnerClassProperty(this, new AnnotatedConstructor(null, _creator, null, null));
+-    }
++    public SettableBeanProperty getDelegate() { return _delegate; }
++    public NameTransformer getNameTransformer() { return _unwrapper; }
+ }
+\ No newline at end of file

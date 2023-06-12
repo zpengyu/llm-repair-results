@@ -1,0 +1,24 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/jsontype/impl/ClassNameIdResolver.java b/src/main/java/com/fasterxml/jackson/databind/jsontype/impl/ClassNameIdResolver.java
+index 112c00b5c..7db844440 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/jsontype/impl/ClassNameIdResolver.java
++++ b/src/main/java/com/fasterxml/jackson/databind/jsontype/impl/ClassNameIdResolver.java
+@@ -55,8 +55,17 @@ public class ClassNameIdResolver
+             //    compatibility -- needed later anyway, and not doing so may open
+             //    security issues.
+             JavaType t = tf.constructFromCanonical(id);
+-                // Probably cleaner to have a method in `TypeFactory` but can't add in patch
+-            return t;
++            TypeBindings b = t.getBindings();
++            JavaType superType = _baseType.getSuperClass();
++            TypeBindings superBindings = superType.getBindings();
++            for (int i = 0, len = superBindings.size(); i < len; ++i) {
++                String name = superBindings.getName(i);
++                if (!b.contains(name)) {
++                    // Probably cleaner to have a method in `TypeFactory` but can't add in patch
++                    b = b.withUnboundVariable(name);
++                }
++            }
++            return superType.narrowBy(b);
+         }
+         Class<?> cls;
+         try {

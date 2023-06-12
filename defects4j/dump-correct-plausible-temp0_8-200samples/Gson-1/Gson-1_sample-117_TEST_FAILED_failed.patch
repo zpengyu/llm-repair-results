@@ -1,0 +1,32 @@
+diff --git a/gson/src/main/java/com/google/gson/TypeInfoFactory.java b/gson/src/main/java/com/google/gson/TypeInfoFactory.java
+index 0aa1455a..54455205 100644
+--- a/gson/src/main/java/com/google/gson/TypeInfoFactory.java
++++ b/gson/src/main/java/com/google/gson/TypeInfoFactory.java
+@@ -105,19 +98,19 @@ final class TypeInfoFactory {
+           + "ParameterizedType, GenericArrayType or TypeVariable. Can't extract type.");
+     }
+   }
+-
+-
+-      // Evaluate type on this type
+-
+-
+-
++    // Evaluate type on this type
+   private static Type[] extractRealTypes(
+       Type[] actualTypeArguments, Type parentType, Class<?> rawParentClass) {
+     Preconditions.checkNotNull(actualTypeArguments);
+-
+     Type[] retTypes = new Type[actualTypeArguments.length];
+     for (int i = 0; i < actualTypeArguments.length; ++i) {
+-      retTypes[i] = getActualType(actualTypeArguments[i], parentType, rawParentClass);
++      if(actualTypeArguments[i] instanceof TypeVariable) {
++        // Use the value in the parent type instead
++        TypeVariable<?> typeVariable = (TypeVariable<?>) actualTypeArguments[i];
++        retTypes[i] = getActualType(typeVariable, parentType, rawParentClass);
++      } else {
++        retTypes[i] = getActualType(actualTypeArguments[i], parentType, rawParentClass);
++      }
+     }
+     return retTypes;
+   }

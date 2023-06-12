@@ -1,0 +1,25 @@
+    protected void _addMethodMixIns(Class<?> targetClass, AnnotatedMethodMap methods,
+            Class<?> mixInCls, AnnotatedMethodMap mixIns)
+    {
+        List<Class<?>> parents = new ArrayList<Class<?>>();
+        parents.add(mixInCls);
+        ClassUtil.findSuperTypes(mixInCls, targetClass, parents);
+        for (Class<?> mixin : parents) {
+            for (Method m : mixin.getDeclaredMethods()) {
+                if (!_isIncludableMemberMethod(m)) {
+                    continue;
+                }
+                AnnotatedMethod am = methods.find(m);
+                if (am != null) {
+                    _addMixUnders(m, am);
+                } else {
+                    // Well, or, as per [Issue#515], multi-level merge within mixins...
+                    // 22-Nov-2014, tatu: Even though there may be a method of same name,
+                    //   we can not assume that signature is same; it's possible to have
+                    //   overloaded methods; so instead, need to create separate "mix-in"
+                    //   method for each
+                    mixIns.add(_constructMethod(m));
+                }
+            }
+        }
+    }

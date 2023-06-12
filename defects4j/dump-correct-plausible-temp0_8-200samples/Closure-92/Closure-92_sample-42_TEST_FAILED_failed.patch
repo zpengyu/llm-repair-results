@@ -1,0 +1,27 @@
+diff --git a/src/com/google/javascript/jscomp/ProcessClosurePrimitives.java b/src/com/google/javascript/jscomp/ProcessClosurePrimitives.java
+index d1d12a3c..68670660 100644
+--- a/src/com/google/javascript/jscomp/ProcessClosurePrimitives.java
++++ b/src/com/google/javascript/jscomp/ProcessClosurePrimitives.java
+@@ -801,7 +799,21 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback
+                 replacementNode, parentName.replacementNode);
+           }
+         }
+-        if (explicitNode != null) {
++        if (candidateDefinition != null &&
++            NodeUtil.isFunctionExpression(candidateDefinition)) {
++          candidateDefinition.putBooleanProp(Node.IS_NAMESPACE, true);
++          Node assignNode = candidateDefinition.getFirstChild();
++          Node nameNode = assignNode.getFirstChild();
++          nameNode.setJSDocInfo(assignNode.getJSDocInfo());
++          Node valueNode = nameNode.getNext();
++          assignNode.removeChild(nameNode);
++          assignNode.removeChild(valueNode);
++          nameNode.addChildToFront(valueNode);
++          Node varNode = new Node(Token.VAR, nameNode);
++          varNode.copyInformationFrom(candidateDefinition);
++          candidateDefinition.getParent().replaceChild(
++              candidateDefinition, varNode);
++        } else if (explicitNode != null) {
+           explicitNode.detachFromParent();
+         }
+         compiler.reportCodeChange();

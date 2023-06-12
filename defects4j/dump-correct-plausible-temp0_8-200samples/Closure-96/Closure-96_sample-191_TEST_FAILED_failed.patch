@@ -1,0 +1,44 @@
+diff --git a/src/com/google/javascript/jscomp/TypeCheck.java b/src/com/google/javascript/jscomp/TypeCheck.java
+index 83a73c74..d5fe99b1 100644
+--- a/src/com/google/javascript/jscomp/TypeCheck.java
++++ b/src/com/google/javascript/jscomp/TypeCheck.java
+@@ -1398,9 +1398,18 @@ public class TypeCheck implements NodeTraversal.Callback, CompilerPass {
+    */
+   private void visitParameterList(NodeTraversal t, Node call,
+       FunctionType functionType) {
++    int numArgs = call.getChildCount() - 1;
++    int minArgs = functionType.getMinArguments();
++    int maxArgs = functionType.getMaxArguments();
++    if (minArgs > numArgs || maxArgs < numArgs) {
++      report(t, call, WRONG_ARGUMENT_COUNT,
++              validator.getReadableJSTypeName(call.getFirstChild(), false),
++              String.valueOf(numArgs), String.valueOf(minArgs),
++              maxArgs != Integer.MAX_VALUE ?
++              " and no more than " + maxArgs + " argument(s)" : "");
++    }
+     Iterator<Node> arguments = call.children().iterator();
+     arguments.next(); // skip the function name
+-
+     Iterator<Node> parameters = functionType.getParameters().iterator();
+     int ordinal = 0;
+     Node parameter = null;
+@@ -1416,19 +1424,7 @@ public class TypeCheck implements NodeTraversal.Callback, CompilerPass {
+       validator.expectArgumentMatchesParameter(t, argument,
+           getJSType(argument), getJSType(parameter), call, ordinal);
+     }
+-
+-    int numArgs = call.getChildCount() - 1;
+-    int minArgs = functionType.getMinArguments();
+-    int maxArgs = functionType.getMaxArguments();
+-    if (minArgs > numArgs || maxArgs < numArgs) {
+-      report(t, call, WRONG_ARGUMENT_COUNT,
+-              validator.getReadableJSTypeName(call.getFirstChild(), false),
+-              String.valueOf(numArgs), String.valueOf(minArgs),
+-              maxArgs != Integer.MAX_VALUE ?
+-              " and no more than " + maxArgs + " argument(s)" : "");
+-    }
+   }
+-
+   /**
+    * Visits a RETURN node.
+    *

@@ -1,0 +1,35 @@
+diff --git a/src/org/mockito/internal/MockHandler.java b/src/org/mockito/internal/MockHandler.java
+index 9452f1664..fa18e38cf 100644
+--- a/src/org/mockito/internal/MockHandler.java
++++ b/src/org/mockito/internal/MockHandler.java
+@@ -63,26 +63,13 @@ public class MockHandler<T> implements MockitoInvocationHandler, MockHandlerInte
+             invocationContainerImpl.setMethodForStubbing(invocationMatcher);
+             return null;
+         }
+-        VerificationMode verificationMode = mockingProgress.pullVerificationMode();
+-
+         InvocationMatcher invocationMatcher = matchersBinder.bindMatchers(mockingProgress.getArgumentMatcherStorage(),
+                         invocation);
+-
+         mockingProgress.validateState();
+-
+-        //if verificationMode is not null then someone is doing verify()        
+-        if (verificationMode != null) {
+-            //We need to check if verification was started on the correct mock 
+-            // - see VerifyingWithAnExtraCallToADifferentMockTest (bug 138)
+-            if (verificationMode instanceof MockAwareVerificationMode && ((MockAwareVerificationMode) verificationMode).getMock() == invocation.getMock()) {
+-                VerificationDataImpl data = new VerificationDataImpl(invocationContainerImpl, invocationMatcher);            
+-                verificationMode.verify(data);
+-                return null;
+-                // this means there is an invocation on a different mock. Re-adding verification mode 
+-                // - see VerifyingWithAnExtraCallToADifferentMockTest (bug 138)
+-            }
+-        }
+-        
++        //If verificationMode is not null then someone is doing verify()        
++        VerificationMode verificationMode = mockingProgress.maybeVerifyLazily(invocationMatcher);
++        //Adding verificationMode back to the queue
++        mockingProgress.verificationStarted(verificationMode);
+         invocationContainerImpl.setInvocationForPotentialStubbing(invocationMatcher);
+         OngoingStubbingImpl<T> ongoingStubbing = new OngoingStubbingImpl<T>(invocationContainerImpl);
+         mockingProgress.reportOngoingStubbing(ongoingStubbing);

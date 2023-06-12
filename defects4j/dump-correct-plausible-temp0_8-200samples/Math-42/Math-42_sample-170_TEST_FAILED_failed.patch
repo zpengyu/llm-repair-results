@@ -1,0 +1,30 @@
+diff --git a/src/main/java/org/apache/commons/math/optimization/linear/SimplexTableau.java b/src/main/java/org/apache/commons/math/optimization/linear/SimplexTableau.java
+index 3c21cb52c..da2f0a563 100644
+--- a/src/main/java/org/apache/commons/math/optimization/linear/SimplexTableau.java
++++ b/src/main/java/org/apache/commons/math/optimization/linear/SimplexTableau.java
+@@ -407,18 +406,13 @@ class SimplexTableau implements Serializable {
+             continue;
+           }
+           Integer basicRow = getBasicRow(colIndex);
+-              // if the basic row is found to be the objective function row
+-              // set the coefficient to 0 -> this case handles unconstrained
+-              // variables that are still part of the objective function
+-          if (basicRows.contains(basicRow)) {
+-              // if multiple variables can take a given value
+-              // then we choose the first and set the rest equal to 0
+-              coefficients[i] = 0 - (restrictToNonNegative ? 0 : mostNegative);
+-          } else {
+-              basicRows.add(basicRow);
+-              coefficients[i] =
+-                  (basicRow == null ? 0 : getEntry(basicRow, getRhsOffset())) -
+-                  (restrictToNonNegative ? 0 : mostNegative);
++          if (basicRow != null)
++          {
++              coefficients[i] = getEntry(basicRow, getRhsOffset()) - (restrictToNonNegative ? 0 : mostNegative);
++          }
++          else
++          {
++              coefficients[i] = 0;
+           }
+       }
+       return new RealPointValuePair(coefficients, f.getValue(coefficients));

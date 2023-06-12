@@ -1,0 +1,122 @@
+diff --git a/src/java/org/apache/commons/math/util/MathUtils.java b/src/java/org/apache/commons/math/util/MathUtils.java
+index 6ee916469..25597e04d 100644
+--- a/src/java/org/apache/commons/math/util/MathUtils.java
++++ b/src/java/org/apache/commons/math/util/MathUtils.java
+@@ -408,57 +408,69 @@ public final class MathUtils {
+      * @return the greatest common divisor, never zero
+      * @since 1.1
+      */
+-    public static int gcd(int u, int v) {
+-        if (u * v == 0) {
+-            return (Math.abs(u) + Math.abs(v));
+-        }
+-        // keep u and v negative, as negative integers range down to
+-        // -2^31, while positive numbers can only be as large as 2^31-1
+-        // (i.e. we can't necessarily negate a negative number without
+-        // overflow)
+-        /* assert u!=0 && v!=0; */
+-        if (u > 0) {
+-            u = -u;
+-        } // make u negative
+-        if (v > 0) {
+-            v = -v;
+-        } // make v negative
+-        // B1. [Find power of 2]
+-        int k = 0;
+-        while ((u & 1) == 0 && (v & 1) == 0 && k < 31) { // while u and v are
+-                                                            // both even...
+-            u /= 2;
+-            v /= 2;
+-            k++; // cast out twos.
+-        }
+-        if (k == 31) {
+-            throw new ArithmeticException("overflow: gcd is 2^31");
+-        }
+-        // B2. Initialize: u and v have been divided by 2^k and at least
+-        // one is odd.
+-        int t = ((u & 1) == 1) ? v : -(u / 2)/* B3 */;
+-        // t negative: u was odd, v may be even (t replaces v)
+-        // t positive: u was even, v is odd (t replaces u)
+-        do {
+-            /* assert u<0 && v<0; */
+-            // B4/B3: cast out twos from t.
+-            while ((t & 1) == 0) { // while t is even..
+-                t /= 2; // cast out twos
++/**
++ * Computes the greatest common divisor (GCD) of the absolute value of two
++ * numbers, using a modified binary GCD algorithm. See Knuth 4.5.2 algorithm
++ * B. This algorithm avoids overflow and attempts to find the GCD in O(log(max(a,
++ * b))) operations. Special cases:
++ * <ul>
++ * <li>The result of {@code gcd(a,b)} is the same as the result of
++ * {@code gcd(|a|,|b|)}.
++ * <li>If either {@code a} or {@code b} is 0, then the result is the non-zero
++ * argument.
++ * <li>If the result is 1, it means that both arguments are coprime.
++ * </ul>
++ *
++ * @param a
++ *            the first number to compute the greatest common divisor.
++ * @param b
++ *            the second number to compute the greatest common divisor.
++ * @return the greatest common divisor, never negative.
++ * @throws MathArithmeticException
++ *             if the result cannot be represented as a non-negative {@code int}
++ *             value.
++ */
++public static int gcd(int a, int b) throws MathArithmeticException {
++    MathUtils.checkNonNegative(a, "a");
++    MathUtils.checkNonNegative(b, "b");
++    if (a == 0) {
++        return b;
++    } else if (b == 0) {
++        return a;
++    }
++    final int al = a <= 0 ? Integer.numberOfLeadingZeros(-a) + 1 : Integer.numberOfLeadingZeros(a);
++    final int bl = b <= 0 ? Integer.numberOfLeadingZeros(-b) + 1 : Integer.numberOfLeadingZeros(b);
++    final int t = Math.min(al, bl);
++    int u = a << al - t;
++    int v = b << bl - t;
++    do {
++        if ((u & 1) == 0) {
++            while ((v & 1) == 0) {
++                v >>>= 1;
+             }
+-            // B5 [reset max(u,v)]
+-            if (t > 0) {
+-                u = -t;
++            if (u >= v) {
++                u -= v;
+             } else {
+-                v = t;
++                int tmp = u;
++                u = v - u;
++                v = tmp;
+             }
+-            // B6/B3. at this point both u and v should be odd.
+-            t = (v - u) / 2;
+-            // |u| larger: t positive (replace u)
+-            // |v| larger: t negative (replace v)
+-        } while (t != 0);
+-        return -u * (1 << k); // gcd is u*2^k
+-    }
+-
++            u >>>= 1;
++        } else if ((v & 1) == 0) {
++            v >>>= 1;
++        } else {
++            if (u >= v) {
++                u -= v;
++            } else {
++                int tmp = u;
++                u = v - u;
++                v = tmp;
++            }
++        }
++        v >>>= 1;
++    } while (u != 0);
++    return v << t;
++}
+     /**
+      * Returns an integer hash code representing the given double value.
+      * 

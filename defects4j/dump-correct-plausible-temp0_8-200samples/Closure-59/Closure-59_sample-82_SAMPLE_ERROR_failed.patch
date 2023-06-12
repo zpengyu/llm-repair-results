@@ -1,0 +1,27 @@
+diff --git a/src/com/google/javascript/jscomp/Compiler.java b/src/com/google/javascript/jscomp/Compiler.java
+index f96ec5db..ab84ab0b 100644
+--- a/src/com/google/javascript/jscomp/Compiler.java
++++ b/src/com/google/javascript/jscomp/Compiler.java
+@@ -280,13 +274,18 @@ public class Compiler extends AbstractCompiler {
+     // error off.
+     if (!options.checkSymbols &&
+         !composedGuards.enables(DiagnosticGroups.CHECK_VARIABLES)) {
+-      composedGuards.addGuard(new DiagnosticGroupWarningsGuard(
+-          DiagnosticGroups.CHECK_VARIABLES, CheckLevel.OFF));
++      if (!options.shouldPreserveDetailedSourceInfo()) {
++        composedGuards.addGuard(new DiagnosticGroupWarningsGuard(
++            DiagnosticGroups.CHECK_VARIABLES, CheckLevel.OFF));
++      } else {
++        DiagnosticGroupWarningsGuard checkVariables = new DiagnosticGroupWarningsGuard(
++            DiagnosticGroups.CHECK_VARIABLES, CheckLevel.WARNING);
++        // Preserve detailed source info and check symbols.
++        composedGuards.addGuard(checkVariables);
++      }
+     }
+-
+     this.warningsGuard = composedGuards;
+   }
+-
+   /**
+    * Initializes the instance state needed for a compile job.
+    */

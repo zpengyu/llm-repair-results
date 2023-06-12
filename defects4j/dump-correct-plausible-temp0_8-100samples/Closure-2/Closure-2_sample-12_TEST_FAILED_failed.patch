@@ -1,0 +1,23 @@
+diff --git a/src/com/google/javascript/jscomp/TypeCheck.java b/src/com/google/javascript/jscomp/TypeCheck.java
+index 3749839a..460d6fb8 100644
+--- a/src/com/google/javascript/jscomp/TypeCheck.java
++++ b/src/com/google/javascript/jscomp/TypeCheck.java
+@@ -1583,7 +1583,17 @@ public class TypeCheck implements NodeTraversal.Callback, CompilerPass {
+                   interfaceType.toString()));
+         }
+       }
+-      currentProperties.put(name, interfaceType);
++      if (currentProperties.containsKey(name)) {
++        ObjectType currentType = currentProperties.get(name);
++        if (currentType != interfaceType) {
++          compiler.report(
++              t.makeError(n, CONFLICTING_IMPLEMENTED_TYPE,
++                  functionName, name, currentType.toString(),
++                  interfaceType.toString()));
++        }
++      } else {
++        currentProperties.put(name, interfaceType);
++      }
+     }
+     for (ObjectType iType : interfaceType.getCtorExtendedInterfaces()) {
+       checkInterfaceConflictProperties(t, n, functionName, properties,

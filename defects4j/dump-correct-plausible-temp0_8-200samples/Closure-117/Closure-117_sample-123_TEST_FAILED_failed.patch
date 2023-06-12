@@ -1,0 +1,20 @@
+diff --git a/src/com/google/javascript/jscomp/TypeValidator.java b/src/com/google/javascript/jscomp/TypeValidator.java
+index c6d25483..3c6f9911 100644
+--- a/src/com/google/javascript/jscomp/TypeValidator.java
++++ b/src/com/google/javascript/jscomp/TypeValidator.java
+@@ -770,7 +766,14 @@ class TypeValidator {
+       return qualifiedName;
+     } else if (type.isFunctionType()) {
+       // Don't show complex function names.
+-      return "function";
++      FunctionType functionType = type.toMaybeFunctionType();
++      if (functionType != null &&
++          functionType.isConstructor() &&
++          functionType.getInstanceType() != null) {
++        return functionType.getInstanceType().toString();
++      } else {
++        return "function";
++      }
+     } else {
+       return type.toString();
+     }

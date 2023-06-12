@@ -1,0 +1,25 @@
+diff --git a/src/com/google/javascript/jscomp/TypedScopeCreator.java b/src/com/google/javascript/jscomp/TypedScopeCreator.java
+index 9489dc30..b4483a53 100644
+--- a/src/com/google/javascript/jscomp/TypedScopeCreator.java
++++ b/src/com/google/javascript/jscomp/TypedScopeCreator.java
+@@ -1557,9 +1549,19 @@ final class TypedScopeCreator implements ScopeCreator {
+             defineSlot(n, parent, getNativeType(BOOLEAN_TYPE), true);
+           }
+         }
++      } else if (rhsValue != null && rhsValue.isFunction() &&
++          JSType.isSubtype(valueType, getNativeType(BOOLEAN_TYPE))) {
++        // We can't statically determine whether the value of a
++        // function node is true. So if we're in a context where
++        // a function node is implicitly coerced to boolean,
++        // we need to warn about it.
++        scope.undeclare(qName);
++        scope.declare(qName, n, rhsValue.getJSType(),
++            rhsValue.getJSDocInfo(),
++            rhsValue.getSourceFileName(),
++            rhsValue.getLineno(), rhsValue.getCharno());
+       }
+     }
+-
+     /**
+      * Find the ObjectType associated with the given slot.
+      * @param slotName The name of the slot to find the type in.

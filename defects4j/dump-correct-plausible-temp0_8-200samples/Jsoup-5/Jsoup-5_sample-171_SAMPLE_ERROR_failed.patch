@@ -1,0 +1,27 @@
+diff --git a/src/main/java/org/jsoup/parser/Parser.java b/src/main/java/org/jsoup/parser/Parser.java
+index 5f71aaf..9047c74 100644
+--- a/src/main/java/org/jsoup/parser/Parser.java
++++ b/src/main/java/org/jsoup/parser/Parser.java
+@@ -185,18 +185,20 @@ public class Parser {
+         tq.consumeWhitespace();
+         if (tq.matchChomp("=")) {
+             tq.consumeWhitespace();
+-
++            StringBuilder valueAccum = new StringBuilder();
+             if (tq.matchChomp(SQ)) {
+                 value = tq.chompTo(SQ);
++                value = StringUtil.normaliseWhitespace(value);
+             } else if (tq.matchChomp(DQ)) {
+                 value = tq.chompTo(DQ);
++                value = StringUtil.normaliseWhitespace(value);
+             } else {
+-                StringBuilder valueAccum = new StringBuilder();
+                 // no ' or " to look for, so scan to end tag or space (or end of stream)
+                 while (!tq.matchesAny("<", "/>", ">") && !tq.matchesWhitespace() && !tq.isEmpty()) {
+                     valueAccum.append(tq.consume());
+                 }
+                 value = valueAccum.toString();
++                value = StringUtil.normaliseWhitespace(value);
+             }
+             tq.consumeWhitespace();
+         }

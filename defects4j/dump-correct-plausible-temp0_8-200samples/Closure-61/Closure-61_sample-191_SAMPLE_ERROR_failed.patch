@@ -1,0 +1,56 @@
+diff --git a/src/com/google/javascript/jscomp/NodeUtil.java b/src/com/google/javascript/jscomp/NodeUtil.java
+index 53389622..dbaf607f 100644
+--- a/src/com/google/javascript/jscomp/NodeUtil.java
++++ b/src/com/google/javascript/jscomp/NodeUtil.java
+@@ -923,7 +923,7 @@ public final class NodeUtil {
+    * @param compiler A compiler object to provide program state changing
+    *     context information. Can be null.
+    */
+-  static boolean functionCallHasSideEffects(
++static boolean functionCallHasSideEffects(
+       Node callNode, @Nullable AbstractCompiler compiler) {
+     if (callNode.getType() != Token.CALL) {
+       throw new IllegalStateException(
+@@ -943,26 +940,27 @@ public final class NodeUtil {
+         return false;
+       }
+     } else if (nameNode.getType() == Token.GETPROP) {
+-      if (callNode.hasOneChild()
+-          && OBJECT_METHODS_WITHOUT_SIDEEFFECTS.contains(
+-                nameNode.getLastChild().getString())) {
++      // Functions in the "Math" namespace have no side effects.
++      Node object = nameNode.getFirstChild();
++      Node property = nameNode.getLastChild();
++      if (object.getType() == Token.NAME &&
++          object.getString().equals("Math") &&
++          property.getType() == Token.STRING &&
++          MATH_METHODS.contains(property.getString())) {
+         return false;
+-      }
+-
+-      if (callNode.isOnlyModifiesThisCall()
+-          && evaluatesToLocalValue(nameNode.getFirstChild())) {
++      } else if (callNode.hasOneChild()
++          && OBJECT_METHODS_WITHOUT_SIDEEFFECTS.contains(property.getString())) {
++        return false;
++      } else if (callNode.isOnlyModifiesThisCall()
++          && evaluatesToLocalValue(object)) {
+         return false;
+       }
+-
+-      // Functions in the "Math" namespace have no side effects.
+-
+       if (compiler != null && !compiler.hasRegExpGlobalReferences()) {
+-        if (nameNode.getFirstChild().getType() == Token.REGEXP
+-            && REGEXP_METHODS.contains(nameNode.getLastChild().getString())) {
++        if (object.getType() == Token.REGEXP
++            && REGEXP_METHODS.contains(property.getString())) {
+           return false;
+-        } else if (nameNode.getFirstChild().getType() == Token.STRING
+-            && STRING_REGEXP_METHODS.contains(
+-                nameNode.getLastChild().getString())) {
++        } else if (object.getType() == Token.STRING
++            && STRING_REGEXP_METHODS.contains(property.getString())) {
+           Node param = nameNode.getNext();
+           if (param != null &&
+               (param.getType() == Token.STRING

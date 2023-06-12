@@ -1,0 +1,19 @@
+    private void handleObjectLit(NodeTraversal t, Node n) {
+      for (Node child = n.getFirstChild();
+          child != null;
+          child = child.getNext()) {
+        String name = child.getString();
+        Property prop = getProperty(name);
+        if (!prop.scheduleRenaming(child,
+            processProperty(t, prop, typeSystem.getType(getScope(), n, name),
+                null))) {
+          if (propertiesToErrorFor.containsKey(name)) {
+            compiler.report(JSError.make(
+                t.getSourceName(), child, propertiesToErrorFor.get(name),
+                Warnings.INVALIDATION, name,
+                typeSystem.getType(getScope(), n, name), n.toString(), ""));
+          }
+        }
+      }
+    }
+

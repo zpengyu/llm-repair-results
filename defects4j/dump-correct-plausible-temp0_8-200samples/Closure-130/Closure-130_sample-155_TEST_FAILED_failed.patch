@@ -1,0 +1,28 @@
+diff --git a/src/com/google/javascript/jscomp/CollapseProperties.java b/src/com/google/javascript/jscomp/CollapseProperties.java
+index c24c69b2..a40f204a 100644
+--- a/src/com/google/javascript/jscomp/CollapseProperties.java
++++ b/src/com/google/javascript/jscomp/CollapseProperties.java
+@@ -193,9 +190,22 @@ class CollapseProperties implements CompilerPass {
+         // added to the worklist.
+         workList.addAll(name.props);
+       }
++      if (name.globalSets == 1 && name.localSets == 0 &&
++          name.aliasingGets == 0 && name.props == null) {
++        // {@code name} meets condition (d). Find all of its local aliases
++        // and try to inline them.
++        List<Ref> refs = Lists.newArrayList(name.getRefs());
++        for (Ref ref : refs) {
++          if (ref.type == Type.ALIASING_GET && ref.scope.isLocal()) {
++            // {@code name} meets condition (c). Try to inline it.
++            if (inlineAliasIfPossible(ref, namespace)) {
++              name.removeRef(ref);
++            }
++          }
++        }
++      }
+     }
+   }
+-
+   private boolean inlineAliasIfPossible(Ref alias, GlobalNamespace namespace) {
+     // Ensure that the alias is assigned to a local variable at that
+     // variable's declaration. If the alias's parent is a NAME,

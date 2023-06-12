@@ -1,0 +1,72 @@
+diff --git a/src/main/java/org/apache/commons/compress/archivers/ArchiveStreamFactory.java b/src/main/java/org/apache/commons/compress/archivers/ArchiveStreamFactory.java
+index e2847a61..6b840c92 100644
+--- a/src/main/java/org/apache/commons/compress/archivers/ArchiveStreamFactory.java
++++ b/src/main/java/org/apache/commons/compress/archivers/ArchiveStreamFactory.java
+@@ -203,40 +202,43 @@ public class ArchiveStreamFactory {
+         if (!in.markSupported()) {
+             throw new IllegalArgumentException("Mark is not supported.");
+         }
+-
+-        final byte[] signature = new byte[12];
++        byte[] signature = new byte[12];
+         in.mark(signature.length);
+         try {
+             int signatureLength = in.read(signature);
+             in.reset();
+-            if (ZipArchiveInputStream.matches(signature, signatureLength)) {
+-                return new ZipArchiveInputStream(in);
+-            } else if (JarArchiveInputStream.matches(signature, signatureLength)) {
+-                return new JarArchiveInputStream(in);
+-            } else if (ArArchiveInputStream.matches(signature, signatureLength)) {
++            if (ArArchiveInputStream.matches(signature, signatureLength)) {
+                 return new ArArchiveInputStream(in);
+-            } else if (CpioArchiveInputStream.matches(signature, signatureLength)) {
++            }
++            if (CpioArchiveInputStream.matches(signature, signatureLength)) {
+                 return new CpioArchiveInputStream(in);
+             }
+-
+-            // Dump needs a bigger buffer to check the signature;
+-            final byte[] dumpsig = new byte[32];
++            if (JarArchiveInputStream.matches(signature, signatureLength)) {
++                return new JarArchiveInputStream(in);
++            }
++            if (DumpArchiveInputStream.matches(signature, signatureLength)) {
++                return new DumpArchiveInputStream(in);
++            }
++            if (ZipArchiveInputStream.matches(signature, signatureLength)) {
++                return new ZipArchiveInputStream(in);
++            }
++            if (TarArchiveInputStream.matches(signature, signatureLength)) {
++                return new TarArchiveInputStream(in);
++            }
++            byte[] dumpsig = new byte[32];
+             in.mark(dumpsig.length);
+             signatureLength = in.read(dumpsig);
+             in.reset();
+             if (DumpArchiveInputStream.matches(dumpsig, signatureLength)) {
+                 return new DumpArchiveInputStream(in);
+             }
+-
+-            // Tar needs an even bigger buffer to check the signature; read the first block
+-            final byte[] tarheader = new byte[512];
++            byte[] tarheader = new byte[512];
+             in.mark(tarheader.length);
+             signatureLength = in.read(tarheader);
+             in.reset();
+             if (TarArchiveInputStream.matches(tarheader, signatureLength)) {
+                 return new TarArchiveInputStream(in);
+             }
+-            // COMPRESS-117 - improve auto-recognition
+             try {
+                 TarArchiveInputStream tais = new TarArchiveInputStream(new ByteArrayInputStream(tarheader));
+                 tais.getNextEntry();
+@@ -249,7 +251,5 @@ public class ArchiveStreamFactory {
+         } catch (IOException e) {
+             throw new ArchiveException("Could not use reset and mark operations.", e);
+         }
+-
+         throw new ArchiveException("No Archiver found for the stream signature");
+-    }
+-}
++    }}

@@ -1,0 +1,39 @@
+diff --git a/src/main/java/org/apache/commons/math3/util/MathArrays.java b/src/main/java/org/apache/commons/math3/util/MathArrays.java
+index 9ef28e3d8..36d57d0ab 100644
+--- a/src/main/java/org/apache/commons/math3/util/MathArrays.java
++++ b/src/main/java/org/apache/commons/math3/util/MathArrays.java
+@@ -867,10 +858,32 @@ public class MathArrays {
+                 result += a[i] * b[i];
+             }
+         }
+-
++            if (Double.isInfinite(result)) {
++                // some coefficients were infinite (zero was handled earlier)
++                boolean infiniteFound = false;
++                boolean finiteFound = false;
++                for (int i = 0; i < len; ++i) {
++                    final double ai = a[i];
++                    if (Double.isInfinite(ai)) {
++                        if (finiteFound) {
++                            // We had both finite and infinite factors.
++                            // The result can be either positive infinity or negative infinity.
++                            result = Double.POSITIVE_INFINITY;
++                            break;
++                        }
++                        infiniteFound = true;
++                    } else {
++                        finiteFound = true;
++                    }
++                }
++                if (!Double.isInfinite(result)) {
++                    // All factors were infinite of the same sign.
++                    // The result is the same sign.
++                    result = infiniteFound ? Double.POSITIVE_INFINITY : Double.NEGATIVE_INFINITY;
++                }
++            }
+         return result;
+     }
+-
+     /**
+      * Compute a linear combination accurately.
+      * <p>

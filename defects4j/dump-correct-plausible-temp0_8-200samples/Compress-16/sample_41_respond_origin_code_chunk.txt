@@ -1,0 +1,17 @@
+protected void testCrcWithTwoEntries() throws Exception {
+    ZipArchiveOutputStream zos = getZipOutputStream(archive);
+    zos.putArchiveEntry(new ZipArchiveEntry("foo"));
+    zos.write("foo".getBytes("UTF-8"));
+    zos.closeArchiveEntry();
+    zos.putArchiveEntry(new ZipArchiveEntry("bar"));
+    zos.write("bar".getBytes("UTF-8"));
+    zos.closeArchiveEntry();
+    zos.close();
+    ZipFile zf = new ZipFile(archive, ZipFile.OPEN_READ);
+    Enumeration<ZipArchiveEntry> entries = zf.getEntries();
+    entries.nextElement(); // ignore
+    ZipArchiveEntry entry = entries.nextElement();
+    assertEquals("bar", entry.getName());
+    assertEquals("bar", new String(IOUtils.toByteArray(zf.getInputStream(entry)), "UTF-8"));
+    zf.close();
+}

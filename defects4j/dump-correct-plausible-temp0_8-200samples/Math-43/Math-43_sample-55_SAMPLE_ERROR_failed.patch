@@ -1,0 +1,25 @@
+diff --git a/src/main/java/org/apache/commons/math/stat/descriptive/SummaryStatistics.java b/src/main/java/org/apache/commons/math/stat/descriptive/SummaryStatistics.java
+index 424120430..c09c9e6e9 100644
+--- a/src/main/java/org/apache/commons/math/stat/descriptive/SummaryStatistics.java
++++ b/src/main/java/org/apache/commons/math/stat/descriptive/SummaryStatistics.java
+@@ -146,7 +146,8 @@ public class SummaryStatistics implements StatisticalSummary, Serializable {
+      * Add a value to the data
+      * @param value the value to add
+      */
+-    public void addValue(double value) {
++   public void addValue(double value) {
++        double n0 = n;
+         sumImpl.increment(value);
+         sumsqImpl.increment(value);
+         minImpl.increment(value);
+@@ -159,7 +160,9 @@ public class SummaryStatistics implements StatisticalSummary, Serializable {
+             meanImpl.increment(value);
+         }
+         if (!(varianceImpl instanceof Variance)) {
+-            varianceImpl.increment(value);
++            double oldMean = meanImpl.getResult();
++            double newMean = meanImpl.increment(value);
++            varianceImpl.increment(n0, value, oldMean, newMean);
+         }
+         if (!(geoMeanImpl instanceof GeometricMean)) {
+             geoMeanImpl.increment(value);

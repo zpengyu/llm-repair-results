@@ -1,0 +1,55 @@
+diff --git a/src/java/org/apache/commons/lang3/StringUtils.java b/src/java/org/apache/commons/lang3/StringUtils.java
+index f1b13417..63c451b7 100644
+--- a/src/java/org/apache/commons/lang3/StringUtils.java
++++ b/src/java/org/apache/commons/lang3/StringUtils.java
+@@ -3602,13 +3602,11 @@ public class StringUtils {
+      *             and/or size 0)
+      * @since 2.4
+      */
+-    private static String replaceEach(String text, String[] searchList, String[] replacementList, 
+-                                      boolean repeat, int timeToLive) 
++    public static String replaceEach(String text, String[] searchList, String[] replacementList, 
++                                     boolean repeat, int timeToLive) 
+     {
+-
+         // mchyzer Performance note: This creates very few new objects (one major goal)
+         // let me know if there are performance requests, we can create a harness to measure
+-
+         if (text == null || text.length() == 0 || searchList == null || 
+             searchList.length == 0 || replacementList == null || replacementList.length == 0) 
+         {
+@@ -3659,20 +3650,19 @@ public class StringUtils {
+                 }
+             }
+         }
+-        // NOTE: logic mostly below END
+-
++        // NOTE: logic duplicated below END
+         // no search strings found, we are done
+         if (textIndex == -1) {
+             return text;
+         }
+-
+         int start = 0;
+-
+         // get a good guess on the size of the result buffer so it doesnt have to double if it goes over a bit
+         int increase = 0;
+-
+         // count the replacement text elements that are larger than their corresponding text being replaced
+         for (int i = 0; i < searchList.length; i++) {
++            if (searchList[i] == null || replacementList[i] == null) {
++                continue;
++            }
+             int greater = replacementList[i].length() - searchList[i].length();
+             if (greater > 0) {
+                 increase += 3 * greater; // assume 3 matches
+@@ -3715,8 +3699,7 @@ public class StringUtils {
+                     }
+                 }
+             }
+-            // NOTE: logic duplicated above END
+-
++            // NOTE: logic mostly duplicated above END
+         }
+         int textLength = text.length();
+         for (int i = start; i < textLength; i++) {

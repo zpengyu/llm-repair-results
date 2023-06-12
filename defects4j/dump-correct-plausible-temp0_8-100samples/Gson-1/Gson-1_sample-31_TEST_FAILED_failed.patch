@@ -1,0 +1,21 @@
+diff --git a/gson/src/main/java/com/google/gson/TypeInfoFactory.java b/gson/src/main/java/com/google/gson/TypeInfoFactory.java
+index 0aa1455a..5fe5233e 100644
+--- a/gson/src/main/java/com/google/gson/TypeInfoFactory.java
++++ b/gson/src/main/java/com/google/gson/TypeInfoFactory.java
+@@ -99,7 +92,15 @@ final class TypeInfoFactory {
+           + "http://sites.google.com/site/gson/gson-user-guide#TOC-Serializing-and-Deserializing-Gener");
+     } else if (typeToEvaluate instanceof WildcardType) {
+       WildcardType castedType = (WildcardType) typeToEvaluate;
+-      return getActualType(castedType.getUpperBounds()[0], parentType, rawParentClass);
++      Type[] upperBounds = castedType.getUpperBounds();
++      Type[] lowerBounds = castedType.getLowerBounds();
++      if (upperBounds.length == 1) {
++        return getActualType(upperBounds[0], parentType, rawParentClass);
++      } else if (lowerBounds.length == 1) {
++        return getActualType(lowerBounds[0], parentType, rawParentClass);
++      } else {
++        return typeToEvaluate;
++      }
+     } else {
+       throw new IllegalArgumentException("Type \'" + typeToEvaluate + "\' is not a Class, "
+           + "ParameterizedType, GenericArrayType or TypeVariable. Can't extract type.");

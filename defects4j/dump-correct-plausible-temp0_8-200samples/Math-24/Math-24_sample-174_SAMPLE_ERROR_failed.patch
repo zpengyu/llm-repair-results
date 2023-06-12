@@ -1,0 +1,107 @@
+diff --git a/src/main/java/org/apache/commons/math3/optimization/univariate/BrentOptimizer.java b/src/main/java/org/apache/commons/math3/optimization/univariate/BrentOptimizer.java
+index 6905f1ac9..eb99545c3 100644
+--- a/src/main/java/org/apache/commons/math3/optimization/univariate/BrentOptimizer.java
++++ b/src/main/java/org/apache/commons/math3/optimization/univariate/BrentOptimizer.java
+@@ -108,36 +108,23 @@ public class BrentOptimizer extends BaseAbstractUnivariateOptimizer {
+     @Override
+     protected UnivariatePointValuePair doOptimize() {
+         final boolean isMinim = getGoalType() == GoalType.MINIMIZE;
+-        final double lo = getMin();
+-        final double mid = getStartValue();
+-        final double hi = getMax();
+-
++        double x = getStartValue();
++        double a = getMin();
++        double b = getMax();
++        if (a > b) {
++            x = b;
++            b = a;
++            a = x;
++        }
+         // Optional additional convergence criteria.
+         final ConvergenceChecker<UnivariatePointValuePair> checker
+             = getConvergenceChecker();
+-
+-        double a;
+-        double b;
+-        if (lo < hi) {
+-            a = lo;
+-            b = hi;
+-        } else {
+-            a = hi;
+-            b = lo;
+-        }
+-
+-        double x = mid;
+-        double v = x;
+-        double w = x;
+-        double d = 0;
+-        double e = 0;
+-        double fx = computeObjectiveValue(x);
++        final double fa = computeObjectiveValue(a);
++        double fx = fa;
+         if (!isMinim) {
+             fx = -fx;
+         }
+-        double fv = fx;
+-        double fw = fx;
+-
++        double fb = fx;
+         UnivariatePointValuePair previous = null;
+         UnivariatePointValuePair current
+             = new UnivariatePointValuePair(x, isMinim ? fx : -fx);
+@@ -147,16 +133,18 @@ public class BrentOptimizer extends BaseAbstractUnivariateOptimizer {
+             final double m = 0.5 * (a + b);
+             final double tol1 = relativeThreshold * FastMath.abs(x) + absoluteThreshold;
+             final double tol2 = 2 * tol1;
+-
+-            // Default stopping criterion.
+             final boolean stop = FastMath.abs(x - m) <= tol2 - 0.5 * (b - a);
+             if (!stop) {
+-                double p = 0;
+-                double q = 0;
+-                double r = 0;
+-                double u = 0;
+-
+-                if (FastMath.abs(e) > tol1) { // Fit parabola.
++                final double p;
++                final double q;
++                final double r;
++                final double u;
++                final double v;
++                final double w = x;
++                final double e = 0.0;
++                double fw = fx;
++                double fu;
++                if (FastMath.abs(e) > tol1) {
+                     r = (x - w) * (fx - fv);
+                     q = (x - v) * (fx - fw);
+                     p = (x - v) * q - (x - w) * r;
+@@ -204,8 +188,6 @@ public class BrentOptimizer extends BaseAbstractUnivariateOptimizer {
+                     }
+                     d = GOLDEN_SECTION * e;
+                 }
+-
+-                // Update by at least "tol1".
+                 if (FastMath.abs(d) < tol1) {
+                     if (d >= 0) {
+                         u = x + tol1;
+@@ -215,8 +197,7 @@ public class BrentOptimizer extends BaseAbstractUnivariateOptimizer {
+                 } else {
+                     u = x + d;
+                 }
+-
+-                double fu = computeObjectiveValue(u);
++                fu = computeObjectiveValue(u);
+                 if (!isMinim) {
+                     fu = -fu;
+                 }
+@@ -230,8 +209,6 @@ public class BrentOptimizer extends BaseAbstractUnivariateOptimizer {
+                         return current;
+                     }
+                 }
+-
+-                // Update a, b, v, w and x.
+                 if (fu <= fx) {
+                     if (u < x) {
+                         b = x;

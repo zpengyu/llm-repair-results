@@ -1,0 +1,20 @@
+diff --git a/src/com/google/javascript/jscomp/PrepareAst.java b/src/com/google/javascript/jscomp/PrepareAst.java
+index 0791c7e6..14a12f59 100644
+--- a/src/com/google/javascript/jscomp/PrepareAst.java
++++ b/src/com/google/javascript/jscomp/PrepareAst.java
+@@ -173,9 +169,14 @@ class PrepareAst implements CompilerPass {
+       if (first.isName() &&
+           "eval".equals(first.getString())) {
+         first.putBooleanProp(Node.DIRECT_EVAL, true);
++        for(Node callParent = n.getParent(); callParent != null;
++            callParent = callParent.getParent()){
++          if (callParent.isCall()) {
++            callParent.putBooleanProp(Node.DIRECT_EVAL, true);
++          }
++        }
+       }
+     }
+-
+     /**
+      * Translate dispatcher info into the property expected node.
+      */

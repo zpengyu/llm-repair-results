@@ -1,0 +1,46 @@
+diff --git a/src/java/org/apache/commons/math/analysis/BrentSolver.java b/src/java/org/apache/commons/math/analysis/BrentSolver.java
+index 8dab47503..5ce7d2c56 100644
+--- a/src/java/org/apache/commons/math/analysis/BrentSolver.java
++++ b/src/java/org/apache/commons/math/analysis/BrentSolver.java
+@@ -136,21 +132,32 @@ public class BrentSolver extends UnivariateRealSolverImpl {
+         // Verify bracketing
+         double sign = yMin * yMax;
+         if (sign >= 0) {
+-            // check if either value is close to a zero
+-                // neither value is close to zero and min and max do not bracket root.
+-                throw new IllegalArgumentException
+-                ("Function values at endpoints do not have different signs." +
+-                        "  Endpoints: [" + min + "," + max + "]" +
+-                        "  Values: [" + yMin + "," + yMax + "]");
++            if (sign == 0.0) {
++                if (yMin == 0.0) {
++                    ret = min;
++                } else {
++                    ret = max;
++                }
++            } else {
++                // check if either value is close to a zero
++                if (FastMath.abs(yMin) < functionValueAccuracy) {
++                    ret = min;
++                } else if (FastMath.abs(yMax) < functionValueAccuracy) {
++                    ret = max;
++                } else {
++                    // neither value is close to zero and min and max do not bracket root.
++                    throw new IllegalArgumentException
++                    ("Function values at endpoints do not have different signs." +
++                            "  Endpoints: [" + min + "," + max + "]" + 
++                            "  Values: [" + yMin + "," + yMax + "]");
++                }
++            }
+         } else {
+             // solve using only the first endpoint as initial guess
+             ret = solve(min, yMin, max, yMax, min, yMin);
+-            // either min or max is a root
+         }
+-
+         return ret;
+     }        
+-        
+     /**
+      * Find a zero starting search according to the three provided points.
+      * @param x0 old approximation for the root

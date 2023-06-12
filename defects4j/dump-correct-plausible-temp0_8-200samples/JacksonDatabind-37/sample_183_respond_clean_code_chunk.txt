@@ -1,0 +1,21 @@
+    protected JavaType _narrow(Class<?> subclass)
+    {
+        // 15-Jan-2016, tatu: Since we only re-resolve _superClass, we can do this,
+        //   as if there are no placeholders or parametrization, we know super-class
+        //   is either `null` or same as type itself
+        if (_class == subclass) {
+            return this;
+        }
+        // Should we check that there is a sub-class relationship?
+        // 15-Jan-2016, tatu: Almost yes, but there are some complications with
+        //    placeholder values, so no.
+        /*
+        if (!_class.isAssignableFrom(subclass)) {
+            throw new IllegalArgumentException("Class "+subclass.getName()+" not sub-type of "
+                    +_class.getName());
+        }
+        */
+        // 15-Jan-2015, tatu: Not correct; should really re-resolve...
+        return new SimpleType(subclass, _bindings, _superClass, _superInterfaces,
+                _valueHandler, _typeHandler, _asStatic);
+    }

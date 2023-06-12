@@ -1,0 +1,37 @@
+diff --git a/src/main/java/org/jsoup/parser/HtmlTreeBuilderState.java b/src/main/java/org/jsoup/parser/HtmlTreeBuilderState.java
+index 9bb0006..93b3b26 100644
+--- a/src/main/java/org/jsoup/parser/HtmlTreeBuilderState.java
++++ b/src/main/java/org/jsoup/parser/HtmlTreeBuilderState.java
+@@ -762,25 +762,15 @@ enum HtmlTreeBuilderState {
+ 
+         boolean anyOtherEndTag(Token t, HtmlTreeBuilder tb) {
+             String name = t.asEndTag().normalName();
+-            ArrayList<Element> stack = tb.getStack();
+-            for (int pos = stack.size() -1; pos >= 0; pos--) {
+-                Element node = stack.get(pos);
+-                if (node.nodeName().equals(name)) {
+-                    tb.generateImpliedEndTags(name);
+-                    if (!name.equals(tb.currentElement().nodeName()))
+-                        tb.error(this);
+-                    tb.popStackToClose(name);
+-                    break;
+-                } else {
+-                    if (tb.isSpecial(node)) {
+-                        tb.error(this);
+-                        return false;
+-                    }
+-                }
++            Element stack = tb.getFromStack(name);
++            if (stack != null) {
++                tb.generateImpliedEndTags(name);
++                if (!name.equals(tb.currentElement().nodeName()))
++                    tb.error(this);
++                tb.removeFromStack(stack);
+             }
+             return true;
+-        }
+-    },
++        }    },
+     Text {
+         // in script, style etc. normally treated as data tags
+         boolean process(Token t, HtmlTreeBuilder tb) {

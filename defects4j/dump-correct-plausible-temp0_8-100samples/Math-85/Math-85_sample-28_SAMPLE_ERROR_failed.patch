@@ -1,0 +1,37 @@
+diff --git a/src/java/org/apache/commons/math/analysis/solvers/UnivariateRealSolverUtils.java b/src/java/org/apache/commons/math/analysis/solvers/UnivariateRealSolverUtils.java
+index df45ce435..a0ffce7f0 100644
+--- a/src/java/org/apache/commons/math/analysis/solvers/UnivariateRealSolverUtils.java
++++ b/src/java/org/apache/commons/math/analysis/solvers/UnivariateRealSolverUtils.java
+@@ -181,20 +180,20 @@ public class UnivariateRealSolverUtils {
+         }
+         double a = initial;
+         double b = initial;
+-        double fa;
+-        double fb;
++        double fa = function.value(a);
++        double fb = function.value(b);
+         int numIterations = 0 ;
+-    
+-        do {
+-            a = Math.max(a - 1.0, lowerBound);
+-            b = Math.min(b + 1.0, upperBound);
+-            fa = function.value(a);
+-            
+-            fb = function.value(b);
++        while ((fa * fb > 0.0) && (numIterations < maximumIterations) && 
++                ((a > lowerBound) || (b < upperBound))) {
++            if (fa >= fb) {
++                a = Math.max(a - 1.0, lowerBound);
++                fa = function.value(a);
++            } else {
++                b = Math.min(b + 1.0, upperBound);
++                fb = function.value(b);
++            }
+             numIterations++ ;
+-        } while ((fa * fb > 0.0) && (numIterations < maximumIterations) &&
+-                ((a > lowerBound) || (b < upperBound)));
+-
++        }
+         if (fa * fb >= 0.0 ) {
+             throw new ConvergenceException(
+                       "number of iterations={0}, maximum iterations={1}, " +

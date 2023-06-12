@@ -1,0 +1,52 @@
+diff --git a/src/java/org/apache/commons/cli/PosixParser.java b/src/java/org/apache/commons/cli/PosixParser.java
+index 2b1bbb1..d997e79 100644
+--- a/src/java/org/apache/commons/cli/PosixParser.java
++++ b/src/java/org/apache/commons/cli/PosixParser.java
+@@ -151,13 +147,44 @@ public class PosixParser extends Parser {
+             {
+                 tokens.add(token);
+             }
+-
+             gobble(iter);
+         }
+-
+         return (String[]) tokens.toArray(new String[tokens.size()]);
+     }
+-
++    /**
++     * Adds tokens for an option to the processed tokens list.
++     */
++    private void processOptionToken(String token, boolean stopAtNonOption)
++    {
++        Option opt = options.getOption(token);
++        if (opt == null)
++        {
++            tokens.add(token);
++        }
++        else
++        {
++            tokens.add(token);
++            // if an option is part of a group then add the group's name
++            if (opt.hasArg() && (!stopAtNonOption || opt.getValues() == null))
++            {
++                if (opt.isRequired())
++                {
++                    // if required then the value is required
++                    requiredOptions.add(opt);
++                }
++                // check if the option is part of a group
++                OptionGroup group = options.getOptionGroup(opt);
++                if (group != null)
++                {
++                    // if the group is required then the value is required
++                    if (group.isRequired())
++                    {
++                        requiredOptions.add(opt);
++                    }
++                }
++            }
++        }
++    }
+     /**
+      * Adds the remaining tokens to the processed tokens list.
+      *

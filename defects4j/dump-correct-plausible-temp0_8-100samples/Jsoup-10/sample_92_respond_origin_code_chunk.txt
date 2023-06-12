@@ -1,0 +1,60 @@
+    public String absUrl(String attributeKey) {
+        Validate.notEmpty(attributeKey);
+
+        if (!hasAttr(attributeKey)) {
+            return ""; // nothing to make absolute with
+        } else {
+            return absUrl(attr(attributeKey));
+        }
+    }
+
+    public String absUrl(String attributeKey, String base) {
+        Validate.notEmpty(attributeKey);
+
+        if (!hasAttr(attributeKey)) {
+            return ""; // nothing to make absolute with
+        } else {
+            return absUrl(attr(attributeKey), base);
+        }
+    }
+
+    /**
+     Get an absolute URL from an attribute that may be relative (i.e. an <a href=""> or <img src="">).
+     @param url The input URL
+     @return An absolute URL if possible, or the original relative URL input if not.
+     @see #attr(String)
+     @see java.net.URL#URL(java.net.URL, String)
+     */
+    public String absUrl(String url) {
+        Validate.notEmpty(url);
+
+        if (isAbsolute(url)) {
+            return url;
+        } else {
+            return absUrl(url, baseUri());
+        }
+    }
+
+    /**
+     Get an absolute URL from an attribute that may be relative (i.e. an <a href=""> or <img src="">).
+     @param url The input URL
+     @param base Base URL to qualify the input against
+     @return An absolute URL if possible, or the original relative URL input if not.
+     @see #attr(String)
+     @see java.net.URL#URL(java.net.URL, String)
+     */
+    public String absUrl(String url, String base) {
+        Validate.notEmpty(url);
+        Validate.notEmpty(base);
+
+        URL absUrl;
+        try {
+            // workaround: java resolves '//path/file + ?foo' to '//path/?foo', not '//path/file?foo' as desired
+            if (url.startsWith("?"))
+                url = base.replaceAll("\\?.*", "") + url;
+            absUrl = new URL(new URL(base), url);
+            return absUrl.toExternalForm();
+        } catch (MalformedURLException e) {
+            return "";
+        }
+    }

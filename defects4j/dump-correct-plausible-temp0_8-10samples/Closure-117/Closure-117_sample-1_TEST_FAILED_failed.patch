@@ -1,0 +1,40 @@
+diff --git a/src/com/google/javascript/jscomp/TypeValidator.java b/src/com/google/javascript/jscomp/TypeValidator.java
+index c6d25483..6bf4c117 100644
+--- a/src/com/google/javascript/jscomp/TypeValidator.java
++++ b/src/com/google/javascript/jscomp/TypeValidator.java
+@@ -752,30 +749,28 @@ class TypeValidator {
+         }
+       }
+     }
+-
+     JSType type = getJSType(n);
+-    if (dereference) {
++    if (dereference && type != null) {
+       ObjectType dereferenced = type.dereference();
+       if (dereferenced != null) {
+         type = dereferenced;
+       }
+     }
+-    if (type.isFunctionPrototypeType() ||
++    if (type != null && (type.isFunctionPrototypeType() ||
+         (type.toObjectType() != null &&
+-         type.toObjectType().getConstructor() != null)) {
++         type.toObjectType().getConstructor() != null))) {
+       return type.toString();
+     }
+     String qualifiedName = n.getQualifiedName();
+     if (qualifiedName != null) {
+       return qualifiedName;
+-    } else if (type.isFunctionType()) {
++    } else if (type != null && type.isFunctionType()) {
+       // Don't show complex function names.
+       return "function";
+     } else {
+-      return type.toString();
++      return (type != null ? type.toString() : "null");
+     }
+   }
+-
+   /**
+    * This method gets the JSType from the Node argument and verifies that it is
+    * present.

@@ -1,0 +1,22 @@
+diff --git a/src/com/google/javascript/jscomp/NameAnalyzer.java b/src/com/google/javascript/jscomp/NameAnalyzer.java
+index 25e2b5d4..4641f347 100644
+--- a/src/com/google/javascript/jscomp/NameAnalyzer.java
++++ b/src/com/google/javascript/jscomp/NameAnalyzer.java
+@@ -896,8 +886,16 @@ final class NameAnalyzer implements CompilerPass {
+         }
+         return;
+       }
+-
+       if (nodesToKeep.contains(n)) {
++        if (nameInfo.name == "this") {
++          name = "*this";
++        } else if (parent.getType() == Token.FUNCTION) {
++          Node grandParent = parent.getParent();
++          if (grandParent.isAssign() && grandParent.getFirstChild() == parent &&
++              grandParent.getParent().isExprResult()) {
++            name = "*" + name;
++          }
++        }
+         NameInformation functionScope = getEnclosingFunctionDependencyScope(t);
+         if (functionScope != null) {
+           recordReference(functionScope.name, name, RefType.REGULAR);

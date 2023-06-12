@@ -1,0 +1,24 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/node/POJONode.java b/src/main/java/com/fasterxml/jackson/databind/node/POJONode.java
+index d1452fc54..828508e88 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/node/POJONode.java
++++ b/src/main/java/com/fasterxml/jackson/databind/node/POJONode.java
+@@ -107,6 +107,19 @@ public class POJONode
+         if (_value == null) {
+             ctxt.defaultSerializeNull(gen);
+         } else if (_value instanceof JsonSerializable) {
++            // Need to handle recursion, in case enclosing POJO holds reference
++            if (gen.canWriteTypeId()) {
++                Object typeId = ((JsonSerializable) _value).getTypeId();
++                if (typeId != null) {
++                    gen.writeTypeId(typeId);
++                    // [databind#916]: May need extra properties
++                    SerializableString as = _serializedId;
++                    if (as != null) {
++                        gen.writeFieldName(as);
++                        ctxt.serialize(typeId, gen);
++                    }
++                }
++            }
+             ((JsonSerializable) _value).serialize(gen, ctxt);
+         } else {
+             // 25-May-2018, tatu: [databind#1991] do not call via generator but through context;

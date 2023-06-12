@@ -1,0 +1,103 @@
+diff --git a/src/com/google/javascript/jscomp/TypeValidator.java b/src/com/google/javascript/jscomp/TypeValidator.java
+index c6d25483..95bb333e 100644
+--- a/src/com/google/javascript/jscomp/TypeValidator.java
++++ b/src/com/google/javascript/jscomp/TypeValidator.java
+@@ -721,61 +721,54 @@ class TypeValidator {
+    * @param dereference If true, the type of the node will be dereferenced
+    *     to an Object type, if possible.
+    */
+-  String getReadableJSTypeName(Node n, boolean dereference) {
+-
+-    // The best type name is the actual type name.
+-
+-    // If we're analyzing a GETPROP, the property may be inherited by the
+-    // prototype chain. So climb the prototype chain and find out where
+-    // the property was originally defined.
+-    if (n.isGetProp()) {
+-      ObjectType objectType = getJSType(n.getFirstChild()).dereference();
+-      if (objectType != null) {
+-        String propName = n.getLastChild().getString();
+-        if (objectType.getConstructor() != null &&
+-            objectType.getConstructor().isInterface()) {
+-          objectType = FunctionType.getTopDefiningInterface(
+-              objectType, propName);
+-        } else {
+-          // classes
+-          while (objectType != null && !objectType.hasOwnProperty(propName)) {
+-            objectType = objectType.getImplicitPrototype();
+-          }
+-        }
+-
+-        // Don't show complex function names or anonymous types.
+-        // Instead, try to get a human-readable type name.
+-        if (objectType != null &&
+-            (objectType.getConstructor() != null ||
+-             objectType.isFunctionPrototypeType())) {
+-          return objectType.toString() + "." + propName;
+-        }
+-      }
+-    }
+-
+-    JSType type = getJSType(n);
++private static String getReadableJSTypeName(Node n, boolean dereference) {
++  String name = getReadableJSTypeName(getJSType(n), n, dereference);
++  if (name != null) {
++    return name;
++  }
++  if (n.isGetProp()) {
++    Node receiver = n.getFirstChild();
++    Node prop = n.getLastChild();
++    JSType type = getJSType(receiver);
+     if (dereference) {
+       ObjectType dereferenced = type.dereference();
+       if (dereferenced != null) {
+         type = dereferenced;
+       }
+     }
++    // Don't show complex function names or anonymous types.
++    // Instead, try to get a human-readable type name.
+     if (type.isFunctionPrototypeType() ||
+         (type.toObjectType() != null &&
+          type.toObjectType().getConstructor() != null)) {
+-      return type.toString();
+-    }
+-    String qualifiedName = n.getQualifiedName();
+-    if (qualifiedName != null) {
+-      return qualifiedName;
+-    } else if (type.isFunctionType()) {
+-      // Don't show complex function names.
+-      return "function";
+-    } else {
+-      return type.toString();
++      return type.toString() + "." + prop.getString();
+     }
+   }
+-
++  return null;
++}
++private static String getReadableJSTypeName(JSType type, Node node,
++    boolean dereference) {
++  if (dereference) {
++    ObjectType dereferenced = type.dereference();
++    if (dereferenced != null) {
++      type = dereferenced;
++    }
++  }
++  if (type.isFunctionPrototypeType() ||
++      (type.toObjectType() != null &&
++       type.toObjectType().getConstructor() != null)) {
++    return type.toString();
++  }
++  String qualifiedName = node.getQualifiedName();
++  if (qualifiedName != null) {
++    return qualifiedName;
++  } else if (type.isFunctionType()) {
++    // Don't show complex function names.
++    return "function";
++  } else {
++    return type.toString();
++  }
++}
+   /**
+    * This method gets the JSType from the Node argument and verifies that it is
+    * present.

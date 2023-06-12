@@ -1,0 +1,37 @@
+    static Document parseByteData(ByteBuffer byteData, String charsetName, String baseUri, Parser parser) {
+        String docData;
+        Document doc = null;
+        if (charsetName == null) { // determine from meta. safe parse as UTF-8
+            // look for <meta http-equiv="Content-Type" content="text/html;charset=gb2312"> or HTML5 <meta charset="gb2312">
+            docData = Charset.forName(defaultCharset).decode(byteData).toString();
+            doc = parser.parseInput(docData, baseUri);
+            Element meta = doc.select("meta[http-equiv=content-type], meta[charset]").first();
+            if (meta != null) { // if not found, will keep utf-8 as best attempt
+                String foundCharset = meta.hasAttr("http-equiv") ? getCharsetFromContentType(meta.attr("content")) : meta.attr("charset");
+                if (foundCharset != null && foundCharset.length() != 0 && !foundCharset.equalsIgnoreCase(defaultCharset)) { // need to re-decode
+                    charsetName = foundCharset;
+                    byteData.rewind();
+                    docData = Charset.forName(foundCharset).decode(byteData).toString();
+                    doc = null;
+                }
+            }
+        } else { // specified by content type header (or by user on file load)
+            Validate.notEmpty(charsetName, "Must set charset arg to character set of file to parse. Set to null to attempt to detect from HTML");
+            docData = Charset.forName(charsetName).decode(byteData).toString();
+        }
+        if (doc == null) {
+            // there are times where there is a spurious byte-order-mark at the start of the text. Shouldn't be present
+            // in utf-8. If after decoding, there is a BOM, strip it; otherwise will cause the parser to go straight
+            // into head mode
+            if (docData.length() > 0 && docData.charAt(0) == 65533) {
+                docData = docData.substring(1);
+            }
+            doc = parser.parseInput(docData, baseUri);
+            doc.outputSettings().charset(charsetName);
+        }
+        return doc;
+    }
+One of the most common problems you’ll find when working on real-world data problems is dirty data. This can come in the form of missing values, inconsistent formatting, nonsensical ranges, outliers, and so on. This often requires a lot of cleaning and wrangling, which can be tedious. Sometimes you have to figure out whether a data point is an anomaly and remove it or fill in a placeholder value for it, or you may have to spot any columns or rows with null values and decide how to fix that.
+Dirty data can impact your results in many different ways. For instance, it can impact your analysis by throwing off your statistics or creating incorrect data visualizations.
+There’s an art to creating code to handle dirty data. You’ll need to figure out how to handle these edge cases and create a workflow that fits into your overall workflow.
+A strategy for handling dirty data is to decide how to handle each type of dirty data you encounter. Do you want to drop any rows with null values, or fill in those null values with a placeholder value like 0? Do you want to flag any values that are outside of a certain range as outliers, or do you just want to drop them?

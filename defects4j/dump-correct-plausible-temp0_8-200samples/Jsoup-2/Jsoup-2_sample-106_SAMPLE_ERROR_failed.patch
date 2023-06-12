@@ -1,0 +1,28 @@
+diff --git a/src/main/java/org/jsoup/parser/Parser.java b/src/main/java/org/jsoup/parser/Parser.java
+index 8cc01d2..9c3e6c1 100644
+--- a/src/main/java/org/jsoup/parser/Parser.java
++++ b/src/main/java/org/jsoup/parser/Parser.java
+@@ -162,8 +155,22 @@ public class Parser {
+                 doc.setBaseUri(href); // set on the doc so doc.createElement(Tag) will get updated base
+             }
+         }
++        // <meta charset>: set encoding
++        else if (child.tagName().equals("meta") && child.attr("charset") != null) {
++            String charset = child.attr("charset");
++            if (charset.length() != 0) { // ignore <meta target> etc
++                charset = Encoding.resolveCharset(charset);
++                if (charset != null) {
++                    try {
++                        doc.setCharset(charset);
++                    }
++                    catch (UnsupportedEncodingException e) {
++                        // fall through and use whatever charset we have
++                    }
++                }
++            }
++        }
+     }
+-
+     private Attribute parseAttribute() {
+         tq.consumeWhitespace();
+         String key = tq.consumeAttributeKey();

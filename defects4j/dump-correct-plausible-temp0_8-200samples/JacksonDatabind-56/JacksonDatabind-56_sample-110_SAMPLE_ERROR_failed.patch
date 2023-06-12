@@ -1,0 +1,23 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/deser/std/FromStringDeserializer.java b/src/main/java/com/fasterxml/jackson/databind/deser/std/FromStringDeserializer.java
+index 01a819a9f..7a476c061 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/deser/std/FromStringDeserializer.java
++++ b/src/main/java/com/fasterxml/jackson/databind/deser/std/FromStringDeserializer.java
+@@ -287,7 +280,14 @@ public abstract class FromStringDeserializer<T> extends StdScalarDeserializer<T>
+             }
+             return super._deserializeFromEmptyString();
+         }
+-
+-
+-    }
+-}
++        /**
++         * Added to handle the cases of null values
++         */
++        @Override
++        protected Object _deserializeFromEmptyString(DeserializationContext ctxt) throws IOException {
++            if (ctxt.isEnabled(DeserializationFeature.ACCEPT_EMPTY_STRING_AS_NULL_OBJECT)) {
++                return null;
++            }
++            return _deserializeFromEmptyString();
++        }
++    }}

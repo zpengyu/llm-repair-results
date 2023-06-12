@@ -1,0 +1,36 @@
+diff --git a/src/org/mockito/internal/stubbing/defaultanswers/ReturnsDeepStubs.java b/src/org/mockito/internal/stubbing/defaultanswers/ReturnsDeepStubs.java
+index c4384f7fc..41067df80 100644
+--- a/src/org/mockito/internal/stubbing/defaultanswers/ReturnsDeepStubs.java
++++ b/src/org/mockito/internal/stubbing/defaultanswers/ReturnsDeepStubs.java
+@@ -108,21 +94,19 @@ public class ReturnsDeepStubs implements Answer<Object>, Serializable {
+             }
+         };
+     }
+-
+     private Object recordDeepStubMock(final Object mock, InvocationContainerImpl container) throws Throwable {
+-
+-        container.addAnswer(new Answer<Object>() {
+-            public Object answer(InvocationOnMock invocation) throws Throwable {
+-                return mock;
+-            }
+-        }, false);
+-
++		if(!isDeepStub(invocation)) {
++			container.addAnswer(new Answer<Object>() {
++				public Object answer(InvocationOnMock invocation) throws Throwable {
++					return mock;
++				}
++			}, false);
++		}
+         return mock;
+     }
+-	
+-		
+-	
+-
++	private boolean isDeepStub(Invocation invocation) {
++		return invocation.getMethod().getReturnType().isInterface();
++	}
+     protected GenericMetadataSupport actualParameterizedType(Object mock) {
+         CreationSettings mockSettings = (CreationSettings) new MockUtil().getMockHandler(mock).getMockSettings();
+         return GenericMetadataSupport.inferFrom(mockSettings.getTypeToMock());

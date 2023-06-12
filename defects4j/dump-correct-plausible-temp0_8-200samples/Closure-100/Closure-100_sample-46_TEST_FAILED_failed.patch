@@ -1,0 +1,50 @@
+diff --git a/src/com/google/javascript/jscomp/CheckGlobalThis.java b/src/com/google/javascript/jscomp/CheckGlobalThis.java
+index 42c1411a..fd319075 100644
+--- a/src/com/google/javascript/jscomp/CheckGlobalThis.java
++++ b/src/com/google/javascript/jscomp/CheckGlobalThis.java
+@@ -56,8 +56,7 @@ import com.google.javascript.rhino.Token;
+ *
+ *
+  */
+-final class CheckGlobalThis implements Callback {
+-
++class CheckGlobalThis implements Callback {
+   static final DiagnosticType GLOBAL_THIS = DiagnosticType.warning(
+       "JSC_USED_GLOBAL_THIS",
+       "dangerous use of the global 'this' object");
+@@ -101,16 +93,15 @@ final class CheckGlobalThis implements Callback {
+     if (parent != null && parent.getType() == Token.ASSIGN) {
+       Node lhs = parent.getFirstChild();
+       Node rhs = lhs.getNext();
+-      
+-      if (n == lhs) {
+-        // Always traverse the left side of the assignment. To handle
++      if (n == rhs) {
++        // Always traverse the right side of the assignment. To handle
+         // nested assignments properly (e.g., (a = this).property = c;),
+         // assignLhsChild should not be overridden.
+         if (assignLhsChild == null) {
+-          assignLhsChild = lhs;
++          assignLhsChild = rhs;
+         }
+       } else {
+-        // Only traverse the right side if it's not an assignment to a prototype
++        // Only traverse the left side if it's not an assignment to a prototype
+         // property or subproperty.
+         if (lhs.getType() == Token.GETPROP) {
+           if (lhs.getLastChild().getString().equals("prototype")) {
+@@ -135,13 +124,11 @@ final class CheckGlobalThis implements Callback {
+       assignLhsChild = null;
+     }
+   }
+-
+   private boolean shouldReportThis(Node n, Node parent) {
+     if (assignLhsChild != null) {
+-      // Always report a THIS on the left side of an assign.
++      // Always report a THIS on the right side of an assign.
+       return true;
+     }
+-
+     // Also report a THIS with a property access.
+     return false;
+   }

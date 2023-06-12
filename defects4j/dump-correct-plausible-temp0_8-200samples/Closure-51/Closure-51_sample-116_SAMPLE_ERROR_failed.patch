@@ -1,0 +1,90 @@
+diff --git a/src/com/google/javascript/jscomp/CodeConsumer.java b/src/com/google/javascript/jscomp/CodeConsumer.java
+index dbdb0a9b..7c5b647b 100644
+--- a/src/com/google/javascript/jscomp/CodeConsumer.java
++++ b/src/com/google/javascript/jscomp/CodeConsumer.java
+@@ -27,10 +27,6 @@ import com.google.javascript.rhino.Node;
+  * @see InlineCostEstimator
+  */
+ abstract class CodeConsumer {
+-  boolean statementNeedsEnded = false;
+-  boolean statementStarted = false;
+-  boolean sawFunction = false;
+-
+   /**
+    * Starts the source mapping for the given
+    * node at the current position.
+@@ -87,27 +74,16 @@ abstract class CodeConsumer {
+   void maybeLineBreak() {
+     maybeCutLine();
+   }
+-
+   void maybeCutLine() {
+   }
+-
+   void endLine() {
+   }
+-
+   void notePreferredLineBreak() {
+   }
+-
+   void beginBlock() {
+-    if (statementNeedsEnded) {
+-      append(";");
+-      maybeLineBreak();
+-    }
+     appendBlockStart();
+-
+     endLine();
+-    statementNeedsEnded = false;
+   }
+-
+   void endBlock() {
+     endBlock(false);
+   }
+@@ -117,9 +92,7 @@ abstract class CodeConsumer {
+     if (shouldEndLine) {
+       endLine();
+     }
+-    statementNeedsEnded = false;
+   }
+-
+   void listSeparator() {
+     add(",");
+     maybeLineBreak();
+@@ -139,12 +110,8 @@ abstract class CodeConsumer {
+     if (needSemiColon) {
+       append(";");
+       maybeLineBreak();
+-      statementNeedsEnded = false;
+-    } else if (statementStarted) {
+-      statementNeedsEnded = true;
+     }
+   }
+-
+   /**
+    * This is to be called when we're in a statement. If the prev statement
+    * needs to be ended, add a ';'.
+@@ -163,9 +129,7 @@ abstract class CodeConsumer {
+   void endFunction() {
+     endFunction(false);
+   }
+-
+   void endFunction(boolean statementContext) {
+-    sawFunction = true;
+     if (statementContext) {
+       endLine();
+     }
+@@ -174,13 +137,9 @@ abstract class CodeConsumer {
+   void beginCaseBody() {
+     append(":");
+   }
+-
+   void endCaseBody() {
+   }
+-
+   void add(String newcode) {
+-    maybeEndStatement();
+-
+     if (newcode.length() == 0) {
+       return;
+     }

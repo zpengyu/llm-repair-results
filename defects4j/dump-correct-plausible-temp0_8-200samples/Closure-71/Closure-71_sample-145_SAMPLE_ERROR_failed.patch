@@ -1,0 +1,30 @@
+diff --git a/src/com/google/javascript/jscomp/CheckAccessControls.java b/src/com/google/javascript/jscomp/CheckAccessControls.java
+index c4ecc477..4b7d5ada 100644
+--- a/src/com/google/javascript/jscomp/CheckAccessControls.java
++++ b/src/com/google/javascript/jscomp/CheckAccessControls.java
+@@ -498,7 +492,24 @@ class CheckAccessControls implements ScopedCallback, HotSwapCompilerPass {
+       }
+     }
+   }
+-
++  /**
++   * Checks if the given property access is a valid access to a private
++   * constructor. A private constructor can only be accessed by a static
++   * method on the same class.
++   *
++   * @param callNode The node that is accessing a private constructor. This
++   *     could be either a CALL node or a NEW node.
++   * @return True if the access is valid.
++   */
++  private boolean isValidPrivateConstructorAccess(Node callNode) {
++    Node recv = callNode.getFirstChild().getFirstChild();
++    return recv.isGetProp() &&
++        NodeUtil.isGetOrSetKey(recv.getParent()) &&
++        recv.getNext().isString() &&
++        "call".equals(recv.getNext().getString()) &&
++        recv.getFirstChild().isName() &&
++        "Function".equals(recv.getFirstChild().getString());
++  }
+   /**
+    * Whether the given access of a private constructor is legal.
+    *

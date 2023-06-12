@@ -1,0 +1,28 @@
+diff --git a/src/com/google/javascript/jscomp/TypedScopeCreator.java b/src/com/google/javascript/jscomp/TypedScopeCreator.java
+index 051f5c8e..1c463501 100644
+--- a/src/com/google/javascript/jscomp/TypedScopeCreator.java
++++ b/src/com/google/javascript/jscomp/TypedScopeCreator.java
+@@ -1462,9 +1460,22 @@ final class TypedScopeCreator implements ScopeCreator {
+         case Token.VAR:
+           defineVar(n, parent);
+           break;
++        case Token.CONST:
++          defineConst(n, parent);
++          break;
+       }
+     }
+-
++    // defineConst
++    private void defineConst(Node n, Node parent) {
++      Node nameNode = n.getFirstChild();
++      String name = nameNode.getString();
++      checkNotDuplicate(n, nameNode, name);
++      JSType type = n.getJSType();
++      if (type == null) {
++        type = JSType.UNKNOWN;
++      }
++      scope.declare(name, nameNode, type, n, false);
++    }
+     /** Handle bleeding functions and function parameters. */
+     private void handleFunctionInputs(Node fnNode) {
+       // Handle bleeding functions.

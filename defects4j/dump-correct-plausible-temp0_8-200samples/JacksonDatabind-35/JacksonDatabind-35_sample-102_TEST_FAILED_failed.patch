@@ -1,0 +1,42 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/jsontype/impl/AsWrapperTypeDeserializer.java b/src/main/java/com/fasterxml/jackson/databind/jsontype/impl/AsWrapperTypeDeserializer.java
+index e9bf3cdcb..ab4c66047 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/jsontype/impl/AsWrapperTypeDeserializer.java
++++ b/src/main/java/com/fasterxml/jackson/databind/jsontype/impl/AsWrapperTypeDeserializer.java
+@@ -90,15 +90,13 @@ public class AsWrapperTypeDeserializer
+             throw ctxt.wrongTokenException(p, JsonToken.START_OBJECT,
+                     "need JSON Object to contain As.WRAPPER_OBJECT type information for class "+baseTypeName());
+         }
+-            // should always get field name, but just in case...
+-            if (p.nextToken() != JsonToken.FIELD_NAME) {
+-                throw ctxt.wrongTokenException(p, JsonToken.FIELD_NAME,
+-                        "need JSON String that contains type id (for subtype of "+baseTypeName()+")");
+-            }
+-        final String typeId = p.getText();
+-        JsonDeserializer<Object> deser = _findDeserializer(ctxt, typeId);
++        final String typeId;
++        if (p.nextToken() != JsonToken.FIELD_NAME) {
++            throw ctxt.wrongTokenException(p, JsonToken.FIELD_NAME,
++                    "need JSON String that contains type id (for subtype of "+baseTypeName()+")");
++        }
++        typeId = p.getText();
+         p.nextToken();
+-
+         // Minor complication: we may need to merge type id in?
+         if (_typeIdVisible && p.getCurrentToken() == JsonToken.START_OBJECT) {
+             // but what if there's nowhere to add it in? Error? Or skip? For now, skip.
+@@ -109,7 +107,7 @@ public class AsWrapperTypeDeserializer
+             p = JsonParserSequence.createFlattened(tb.asParser(p), p);
+             p.nextToken();
+         }
+-        
++        JsonDeserializer<Object> deser = _findDeserializer(ctxt, typeId);
+         Object value = deser.deserialize(p, ctxt);
+         // And then need the closing END_OBJECT
+         if (p.nextToken() != JsonToken.END_OBJECT) {
+@@ -117,5 +115,4 @@ public class AsWrapperTypeDeserializer
+                     "expected closing END_OBJECT after type information and deserialized value");
+         }
+         return value;
+-    }
+-}
++    }}

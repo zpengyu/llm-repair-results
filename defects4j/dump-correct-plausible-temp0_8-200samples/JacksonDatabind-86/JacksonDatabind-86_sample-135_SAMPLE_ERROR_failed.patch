@@ -1,0 +1,37 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/type/ResolvedRecursiveType.java b/src/main/java/com/fasterxml/jackson/databind/type/ResolvedRecursiveType.java
+index 7b8c69af7..68e3142c0 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/type/ResolvedRecursiveType.java
++++ b/src/main/java/com/fasterxml/jackson/databind/type/ResolvedRecursiveType.java
+@@ -68,8 +55,6 @@ public class ResolvedRecursiveType extends TypeBase
+     public JavaType withStaticTyping() {
+         return this;
+     }
+-
+-    @Deprecated // since 2.7
+     @Override
+     protected JavaType _narrow(Class<?> subclass) {
+         return this;
+@@ -97,9 +79,8 @@ public class ResolvedRecursiveType extends TypeBase
+             //   and only include type-erased class
+             sb.append(_referencedType.getRawClass().getName());
+         }
+-        return sb.toString();
++        return sb.append(']').toString();
+     }
+-
+     @Override
+     public boolean equals(Object o) {
+         if (o == this) return true;
+@@ -111,4 +92,11 @@ public class ResolvedRecursiveType extends TypeBase
+         return (o.getClass() == getClass()
+                 && _referencedType.equals(((ResolvedRecursiveType) o).getSelfReferencedType()));
+     }
++    @Override
++    public int hashCode() {
++        if (_referencedType == null) {
++            return 0;
++        }
++        return _referencedType.hashCode();
++    }
+ }
+\ No newline at end of file

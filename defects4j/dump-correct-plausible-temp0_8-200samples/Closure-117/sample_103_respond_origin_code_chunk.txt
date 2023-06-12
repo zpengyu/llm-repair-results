@@ -1,0 +1,26 @@
+  String getReadableJSTypeName(Node n, boolean dereference) {
+
+    // The best type name is the actual type name.
+    String qualifiedName = n.getQualifiedName();
+    if (qualifiedName != null) {
+      return qualifiedName;
+    }
+
+    JSType type = getJSType(n);
+    if (dereference) {
+      ObjectType dereferenced = type.dereference();
+      if (dereferenced != null) {
+        type = dereferenced;
+      }
+    }
+
+    if (type.isFunctionType()) {
+      return "function";
+    } else if (type.isFunctionPrototypeType() ||
+        (type.toObjectType() != null &&
+         type.toObjectType().getConstructor() != null)) {
+      return type.toString();
+    }
+
+    return type.toString();
+  }

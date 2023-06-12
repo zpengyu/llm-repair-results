@@ -1,0 +1,50 @@
+diff --git a/src/java/org/apache/commons/lang/enums/ValuedEnum.java b/src/java/org/apache/commons/lang/enums/ValuedEnum.java
+index 0823e77d..a2cc7a49 100644
+--- a/src/java/org/apache/commons/lang/enums/ValuedEnum.java
++++ b/src/java/org/apache/commons/lang/enums/ValuedEnum.java
+@@ -180,19 +174,40 @@ public abstract class ValuedEnum extends Enum {
+      * @throws NullPointerException if other is <code>null</code>
+      */
+     public int compareTo(Object other) {
++        if (other == this) {
++            return 0;
++        }
+         return iValue - ((ValuedEnum) other).iValue;
+     }
+-
+     /**
+      * <p>Use reflection to return an objects value.</p>
+      *
+      * @param other  the object to determine the value for
+      * @return the value
+      */
+-            // ignore - should never happen
+-            // ignore - should never happen
+-            // ignore - should never happen
+-
++    private static int checkNumeric(Object other) {
++        int otherValue = -1;
++        if (other instanceof ValuedEnum) {
++            ValuedEnum otherValuedEnum = (ValuedEnum) other;
++            otherValue = otherValuedEnum.iValue;
++        } else {
++            // this must be checked, as the compareTo(Object) method may be
++            // overridden to accept non-ValuedEnum objects
++            if (other != null && other.getClass().isEnum()) {
++                // use reflection
++                Class cls = other.getClass();
++                try {
++                    Method method = cls.getMethod("getValue", null);
++                    otherValue = ((Number) method.invoke(other, null)).intValue();
++                } catch (Exception e) {
++                    // ignore - should never happen
++                    throw new IllegalStateException(
++                        "This should not happen: " + e.getMessage());
++                }
++            }
++        }
++        return otherValue;
++    }
+     /**
+      * <p>Human readable description of this <code>Enum</code> item.</p>
+      *

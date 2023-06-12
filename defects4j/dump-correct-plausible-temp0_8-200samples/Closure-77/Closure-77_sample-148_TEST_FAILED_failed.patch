@@ -1,0 +1,45 @@
+diff --git a/src/com/google/javascript/jscomp/CodeGenerator.java b/src/com/google/javascript/jscomp/CodeGenerator.java
+index a9d0a5b0..83aba7b2 100644
+--- a/src/com/google/javascript/jscomp/CodeGenerator.java
++++ b/src/com/google/javascript/jscomp/CodeGenerator.java
+@@ -981,14 +981,14 @@ class CodeGenerator {
+         case '<':
+           // Break </script into <\/script
+           final String END_SCRIPT = "/script";
+-
+           // Break <!-- into <\!--
+           final String START_COMMENT = "!--";
+-
+-          if (s.regionMatches(true, i + 1, END_SCRIPT, 0,
++          if (i + END_SCRIPT.length() < s.length() &&
++              s.regionMatches(true, i + 1, END_SCRIPT, 0,
+                               END_SCRIPT.length())) {
+             sb.append("<\\");
+-          } else if (s.regionMatches(false, i + 1, START_COMMENT, 0,
++          } else if (i + START_COMMENT.length() < s.length() &&
++                     s.regionMatches(false, i + 1, START_COMMENT, 0,
+                                      START_COMMENT.length())) {
+             sb.append("<\\");
+           } else {
+@@ -1023,7 +1023,20 @@ class CodeGenerator {
+     sb.append(quote);
+     return sb.toString();
+   }
+-
++  /**
++   * @param sb Append the JavaScrip representation of the given character
++   *     to sb.
++   */
++  private static void appendHexJavaScriptRepresentation(
++      StringBuilder sb, int c) {
++    // Unicode-escape the character.
++    sb.append("\\u");
++    String hex = Integer.toHexString(c);
++    for (int j = hex.length(); j < 4; j++) {
++      sb.append('0');
++    }
++    sb.append(hex);
++  }
+   static String identifierEscape(String s) {
+     // First check if escaping is needed at all -- in most cases it isn't.
+     if (NodeUtil.isLatin(s)) {

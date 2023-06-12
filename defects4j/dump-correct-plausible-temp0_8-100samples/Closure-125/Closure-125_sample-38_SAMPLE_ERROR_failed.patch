@@ -1,0 +1,18 @@
+diff --git a/src/com/google/javascript/jscomp/TypeCheck.java b/src/com/google/javascript/jscomp/TypeCheck.java
+index 75a54ad5..518e446e 100644
+--- a/src/com/google/javascript/jscomp/TypeCheck.java
++++ b/src/com/google/javascript/jscomp/TypeCheck.java
+@@ -1660,6 +1660,13 @@ public class TypeCheck implements NodeTraversal.Callback, CompilerPass {
+       FunctionType fnType = type.toMaybeFunctionType();
+       if (fnType != null) {
+         visitParameterList(t, n, fnType);
++        Node enclosing = NodeUtil.getEnclosingStatement(n);
++        if (enclosing == null
++            || NodeUtil.isStatementBlock(enclosing)) {
++          if (fnType.getInstanceType().isUnknownType()) {
++            report(t, n, CONSTRUCTOR_EXPECTS_NON_VOID_RETURN);
++          }
++        }
+         ensureTyped(t, n, fnType.getInstanceType());
+       } else {
+         ensureTyped(t, n);

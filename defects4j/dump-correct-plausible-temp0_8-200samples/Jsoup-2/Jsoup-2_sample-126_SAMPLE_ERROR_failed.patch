@@ -1,0 +1,22 @@
+diff --git a/src/main/java/org/jsoup/parser/Parser.java b/src/main/java/org/jsoup/parser/Parser.java
+index 8cc01d2..6a18542 100644
+--- a/src/main/java/org/jsoup/parser/Parser.java
++++ b/src/main/java/org/jsoup/parser/Parser.java
+@@ -152,8 +146,16 @@ public class Parser {
+             else
+                 dataNode = new DataNode(data, baseUri); // data not encoded but raw (for " in script)
+             child.appendChild(dataNode);
++            if (tag.equals(scriptTag) && data.length() > 0 && data.charAt(0) == '<' && data.charAt(data.length() - 1) == '>') {
++                // script block: keep as data if starts and ends with <, as that probably indicates a src
++                // TODO fix this by merging CDATA with this code, and moving js dependency to more specific place.
++            } else {
++                // TODO: probably want a whitelist of allowed tags here.
++                Parser parser = Parser.htmlParser();
++                List<Node> childNodes = parser.parseFragment(data, child, baseUri).childNodes();
++                child.childNodes.addAll(childNodes);
++            }
+         }
+-
+         // <base href>: update the base uri
+         if (child.tagName().equals("base")) {
+             String href = child.absUrl("href");

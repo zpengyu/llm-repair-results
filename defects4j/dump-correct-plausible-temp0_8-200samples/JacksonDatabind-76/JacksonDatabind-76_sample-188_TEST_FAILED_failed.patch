@@ -1,0 +1,48 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/deser/BuilderBasedDeserializer.java b/src/main/java/com/fasterxml/jackson/databind/deser/BuilderBasedDeserializer.java
+index 316efa3a9..c7ad58b92 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/deser/BuilderBasedDeserializer.java
++++ b/src/main/java/com/fasterxml/jackson/databind/deser/BuilderBasedDeserializer.java
+@@ -581,18 +579,18 @@ public class BuilderBasedDeserializer
+             SettableBeanProperty creatorProp = creator.findCreatorProperty(propName);
+             if (creatorProp != null) {
+                 if (buffer.assignParameter(creatorProp, creatorProp.deserialize(p, ctxt))) {
+-                    t = p.nextToken();
++                    t = p.nextToken(); // to move to following FIELD_NAME/END_OBJECT
+                     Object bean;
++                    while (t == JsonToken.FIELD_NAME) { // need to copy all that part as well
++                        p.nextToken(); // to skip name
++                        tokens.copyCurrentStructure(p);
++                        t = p.nextToken();
++                    }
+                     try {
+                         bean = creator.build(ctxt, buffer);
+                     } catch (Exception e) {
+                         wrapAndThrow(e, _beanType.getRawClass(), propName, ctxt);
+-                        continue;
+-                    }
+-                    while (t == JsonToken.FIELD_NAME) {
+-                        p.nextToken();
+-                        tokens.copyCurrentStructure(p);
+-                        t = p.nextToken();
++                        continue; // never gets here
+                     }
+                     tokens.writeEndObject();
+                     if (bean.getClass() != _beanType.getRawClass()) {
+@@ -624,14 +622,13 @@ public class BuilderBasedDeserializer
+                 buffer.bufferAnyProperty(_anySetter, propName, _anySetter.deserialize(p, ctxt));
+             }
+         }
+-
+         // We hit END_OBJECT, so:
+         Object bean;
+-        // !!! 15-Feb-2012, tatu: Need to modify creator to use Builder!
+         try {
+-            bean = creator.build(ctxt, buffer);
++            bean =  creator.build(ctxt, buffer);
+         } catch (Exception e) {
+-            return wrapInstantiationProblem(e, ctxt);
++            wrapInstantiationProblem(e, ctxt);
++            return null; // never gets here
+         }
+         return _unwrappedPropertyHandler.processUnwrapped(p, ctxt, bean, tokens);
+     }

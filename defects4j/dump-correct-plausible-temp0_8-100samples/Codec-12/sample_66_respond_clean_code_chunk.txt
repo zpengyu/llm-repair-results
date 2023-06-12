@@ -1,0 +1,41 @@
+/**
+     * {@inheritDoc}
+     *
+     * @throws IllegalArgumentException if the provided skip length is negative
+     */
+    @Override
+    public long skip(long n) throws IOException {
+        if ( n >= 0 ) {
+            final long chunkSkip = Math.min( n, SKIP_BUFFER_SIZE );
+            long remaining = n;
+            while ( remaining > 0 ) {
+                final int skipped = read( SKIP_BYTE_BUFFER, 0, (int) Math.min( SKIP_BUFFER_SIZE, remaining ) );
+                if ( skipped < 0 ) {
+                    break;
+                }
+                remaining -= skipped;
+            }
+            return n - remaining;
+        }
+        throw new IllegalArgumentException( "Negative skip length: " + n );
+    }
+    /**
+     * {@inheritDoc}
+     *
+     * @return <code>0</code> if the {@link InputStream} has reached <code>EOF</code>,
+     * <code>1</code> otherwise
+     */
+    @Override
+    public int available() throws IOException {
+        return baseNCodec.hasData() ? 1 : 0;
+    }
+    /**
+     * {@inheritDoc}
+     *
+     * @throws IOException if the underlying stream throws an exception
+     */
+    @Override
+    public void close() throws IOException {
+        in.close();
+    }
+}

@@ -1,0 +1,22 @@
+    public static int formatLongOctalOrBinaryBytes(
+            final long value, final byte[] buf, final int offset, final int length) {
+        // Check whether we are dealing with UID/GID or SIZE field
+        final long maxAsOctalChar = length == TarConstants.UIDLEN ? TarConstants.MAXID : TarConstants.MAXSIZE;
+        final boolean negative = value < 0;
+        if (!negative && value <= maxAsOctalChar) { // OK to store as octal chars
+            return formatLongOctalBytes(value, buf, offset, length);
+        }
+        final int limit = offset + length - 1;
+        long val = Math.abs(value);
+        int idx = limit;
+        while ((idx >= offset) && (val != 0)) {
+            buf[idx--] = (byte) (0x80 | (byte) (val & 0x7f));
+            val = val >> 7;
+        }
+        if (negative) {
+            buf[idx] = (byte) (0x80 | 0x40 | (buf[idx + 1] & 0x3f));
+        } else {
+            buf[idx] = (byte) (0x80 | (buf[idx + 1] & 0x7f));
+        }
+        return limit + 1;
+    }

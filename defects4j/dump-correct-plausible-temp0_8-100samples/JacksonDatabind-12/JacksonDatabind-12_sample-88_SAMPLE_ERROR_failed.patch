@@ -1,0 +1,22 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/deser/std/MapDeserializer.java b/src/main/java/com/fasterxml/jackson/databind/deser/std/MapDeserializer.java
+index fde65ce30..5d479fbd7 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/deser/std/MapDeserializer.java
++++ b/src/main/java/com/fasterxml/jackson/databind/deser/std/MapDeserializer.java
+@@ -300,10 +300,14 @@ public class MapDeserializer
+         /* As per [databind#735], existence of value or key deserializer (only passed
+          * if annotated to use non-standard one) should also prevent caching.
+          */
+-        return (_valueTypeDeserializer == null)
+-                && (_ignorableProperties == null);
++        if ((_valueTypeDeserializer == null) && (_ignorableProperties == null)) {
++            JavaType keyType = _mapType.getKeyType();
++            if (keyType == null || keyType.isJavaLangObject()) {
++                return true;
++            }
++        }
++        return false;
+     }
+-
+     @Override
+     @SuppressWarnings("unchecked")
+     public Map<Object,Object> deserialize(JsonParser jp, DeserializationContext ctxt)

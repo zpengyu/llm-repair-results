@@ -1,0 +1,46 @@
+    protected void processProperties(Properties properties)
+    {
+        if (properties == null)
+        {
+            return;
+        }
+        // find out which options have values and which don't
+        Hashtable noArgOptions = new Hashtable();
+        Hashtable argOptions = new Hashtable();
+        for (Iterator it = getOptions().getOptions().iterator(); it.hasNext();)
+        {
+            Option opt = (Option) it.next();
+            if (opt.hasArg())
+            {
+                argOptions.put(opt.getKey(), opt);
+            }
+            else
+            {
+                noArgOptions.put(opt.getKey(), opt);
+            }
+        }
+        for (Enumeration e = properties.propertyNames(); e.hasMoreElements();)
+        {
+            String option = e.nextElement().toString();
+            String value = properties.getProperty(option);
+            // is the key a no-arg option
+            Option opt = (Option) noArgOptions.get(option);
+            if (opt != null)
+            {
+                if ("yes".equalsIgnoreCase(value)
+                    || "true".equalsIgnoreCase(value)
+                    || "1".equalsIgnoreCase(value))
+                {
+                    // if the value is yes, true or 1 then add the option to
+                    // the CommandLine
+                    cmd.addOption(opt);
+                }
+            }
+            opt = (Option) argOptions.get(option);
+            if (opt != null)
+            {
+                // add the value to the CommandLine
+                cmd.addOption(opt, value);
+            }
+        }
+    }

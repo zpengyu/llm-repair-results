@@ -1,0 +1,21 @@
+diff --git a/src/com/google/javascript/jscomp/GlobalNamespace.java b/src/com/google/javascript/jscomp/GlobalNamespace.java
+index a00893b3..3cb1269b 100644
+--- a/src/com/google/javascript/jscomp/GlobalNamespace.java
++++ b/src/com/google/javascript/jscomp/GlobalNamespace.java
+@@ -395,7 +393,15 @@ class GlobalNamespace
+                 type = Name.Type.OTHER;
+                 break;
+               case Token.GETPROP:
+-                return;
++                if (parent.getParent().getType() == Token.ASSIGN) {
++                  Node grandParent = parent.getParent();
++                  if (grandParent.getFirstChild() == parent) {
++                    isSet = true;
++                    type = getValueType(parent.getNext());
++                    isPropAssign = true;
++                  }
++                }
++                break;
+               default:
+                 if (NodeUtil.isAssignmentOp(parent) &&
+                     parent.getFirstChild() == n) {

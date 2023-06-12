@@ -1,0 +1,23 @@
+diff --git a/src/com/google/javascript/jscomp/TypedScopeCreator.java b/src/com/google/javascript/jscomp/TypedScopeCreator.java
+index 13d8808b..47959a7a 100644
+--- a/src/com/google/javascript/jscomp/TypedScopeCreator.java
++++ b/src/com/google/javascript/jscomp/TypedScopeCreator.java
+@@ -1312,10 +1312,16 @@ final class TypedScopeCreator implements ScopeCreator {
+           }
+         }
+       }
+-
++      if (info != null && info.hasEnumParameterType()) {
++        if (rValue != null && rValue.isObjectLit()) {
++          return rValue.getJSType();
++        } else {
++          return createEnumTypeFromNodes(rValue, lValue.getQualifiedName(),
++              info, lValue);
++        }
++      }
+       return getDeclaredTypeInAnnotation(sourceName, lValue, info);
+     }
+-
+     private FunctionType getFunctionType(@Nullable Var v) {
+       JSType t = v == null ? null : v.getType();
+       ObjectType o = t == null ? null : t.dereference();

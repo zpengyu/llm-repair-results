@@ -1,0 +1,30 @@
+diff --git a/source/org/jfree/data/time/TimeSeries.java b/source/org/jfree/data/time/TimeSeries.java
+index 4067e3e..f76e76e 100644
+--- a/source/org/jfree/data/time/TimeSeries.java
++++ b/source/org/jfree/data/time/TimeSeries.java
+@@ -952,9 +951,23 @@ public class TimeSeries extends Series implements Cloneable, Serializable {
+         else {
+             return createCopy(startIndex, endIndex);
+         }
+-
+     }
+-
++    private TimeSeries createCopy(int start, int end)
++            throws CloneNotSupportedException {
++        TimeSeries copy = (TimeSeries) super.clone();
++        copy.data = new java.util.ArrayList(end - start + 1);
++        for (int index = start; index <= end; index++) {
++            TimeSeriesDataItem item = (TimeSeriesDataItem) this.data.get(index);
++            TimeSeriesDataItem clone = (TimeSeriesDataItem) item.clone();
++            try {
++                copy.add(clone);
++            }
++            catch (SeriesException e) {
++                System.err.println("Unable to add cloned data item.");
++            }
++        }
++        return copy;
++    }
+     /**
+      * Tests the series for equality with an arbitrary object.
+      *

@@ -1,0 +1,24 @@
+diff --git a/src/com/google/javascript/jscomp/ProcessClosurePrimitives.java b/src/com/google/javascript/jscomp/ProcessClosurePrimitives.java
+index d1d12a3c..745c0f41 100644
+--- a/src/com/google/javascript/jscomp/ProcessClosurePrimitives.java
++++ b/src/com/google/javascript/jscomp/ProcessClosurePrimitives.java
+@@ -806,8 +804,18 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback
+         }
+         compiler.reportCodeChange();
+       }
++      if (candidateDefinition == null) {
++        // The replace() methods above will always set replacementNode.
++        // Unfortunately, the case where candidateDefinition is non-null
++        // is mis-handled.  We can't just set replacementNode to null,
++        // because there's no way to tell the code above to skip running.
++        // Instead, we'll keep a temporary reference and null it out.
++        final Node tmpNode = replacementNode;
++        replacementNode = null;
++        compiler.reportCodeChange();
++        return;
++      }
+     }
+-
+     /**
+      * Create the declaration node for this name, without inserting it
+      * into the AST.

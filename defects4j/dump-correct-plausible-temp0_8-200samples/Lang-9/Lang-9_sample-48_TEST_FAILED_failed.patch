@@ -1,0 +1,36 @@
+diff --git a/src/main/java/org/apache/commons/lang3/time/FastDateParser.java b/src/main/java/org/apache/commons/lang3/time/FastDateParser.java
+index 24fa134a..33b092da 100644
+--- a/src/main/java/org/apache/commons/lang3/time/FastDateParser.java
++++ b/src/main/java/org/apache/commons/lang3/time/FastDateParser.java
+@@ -124,27 +121,16 @@ public class FastDateParser implements DateParser, Serializable {
+         if(!patternMatcher.lookingAt()) {
+             throw new IllegalArgumentException("Invalid pattern");
+         }
+-
+-        currentFormatField= patternMatcher.group();
+-        Strategy currentStrategy= getStrategy(currentFormatField);
+-        for(;;) {
++        Strategy currentStrategy= getStrategy(patternMatcher.group());
++        while(patternMatcher.regionStart() < patternMatcher.regionEnd()) {
+             patternMatcher.region(patternMatcher.end(), patternMatcher.regionEnd());
+             if(!patternMatcher.lookingAt()) {
+-                nextStrategy = null;
+                 break;
+             }
+-            String nextFormatField= patternMatcher.group();
+-            nextStrategy = getStrategy(nextFormatField);
+-            if(currentStrategy.addRegex(this, regex)) {
+-                collector.add(currentStrategy);
+-            }
+-            currentFormatField= nextFormatField;
+-            currentStrategy= nextStrategy;
+-        }
+-        if(currentStrategy.addRegex(this, regex)) {
++            currentStrategy= getStrategy(patternMatcher.group());
++            currentStrategy.addRegex(this, regex);
+             collector.add(currentStrategy);
+         }
+-        currentFormatField= null;
+         strategies= collector.toArray(new Strategy[collector.size()]);
+         parsePattern= Pattern.compile(regex.toString());
+     }

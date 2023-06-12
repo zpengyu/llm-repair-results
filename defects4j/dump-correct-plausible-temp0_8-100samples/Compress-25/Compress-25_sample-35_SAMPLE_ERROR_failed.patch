@@ -1,0 +1,25 @@
+diff --git a/src/main/java/org/apache/commons/compress/archivers/zip/ZipArchiveInputStream.java b/src/main/java/org/apache/commons/compress/archivers/zip/ZipArchiveInputStream.java
+index 84eb7403..b7089f5d 100644
+--- a/src/main/java/org/apache/commons/compress/archivers/zip/ZipArchiveInputStream.java
++++ b/src/main/java/org/apache/commons/compress/archivers/zip/ZipArchiveInputStream.java
+@@ -175,14 +175,15 @@ public class ZipArchiveInputStream extends ArchiveInputStream {
+                                  String encoding,
+                                  boolean useUnicodeExtraFields,
+                                  boolean allowStoredEntriesWithDataDescriptor) {
+-        zipEncoding = ZipEncodingHelper.getZipEncoding(encoding);
++        this.inputStream = inputStream;
++        this.encoding = encoding;
+         this.useUnicodeExtraFields = useUnicodeExtraFields;
++        this.allowStoredEntriesWithDataDescriptor = allowStoredEntriesWithDataDescriptor;
+         in = new PushbackInputStream(inputStream, buf.capacity());
+-        this.allowStoredEntriesWithDataDescriptor =
+-            allowStoredEntriesWithDataDescriptor;
+-        // haven't read anything so far
+     }
+-
++    public void init() {
++        zipEncoding = ZipEncodingHelper.getZipEncoding(encoding);
++    }
+     public ZipArchiveEntry getNextZipEntry() throws IOException {
+         boolean firstEntry = true;
+         if (closed || hitCentralDirectory) {

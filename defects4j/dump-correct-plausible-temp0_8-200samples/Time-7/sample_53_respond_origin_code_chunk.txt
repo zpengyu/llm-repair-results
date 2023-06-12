@@ -1,0 +1,33 @@
+    public int parseInto(ReadWritableInstant instant, String text, int position) {
+        DateTimeParser parser = requireParser();
+        if (instant == null) {
+            throw new IllegalArgumentException("Instant must not be null");
+        }
+        
+        long instantMillis = instant.getMillis();
+        Chronology chrono = instant.getChronology();
+        long instantLocal = instantMillis + chrono.getZone().getOffset(instantMillis);
+        chrono = selectChronology(chrono);
+        int defaultYear = chrono.year().get(instantLocal);
+        
+        DateTimeParserBucket bucket = new DateTimeParserBucket(
+            instantLocal, chrono, iLocale, iPivotYear, defaultYear);
+        int newPos = parser.parseInto(bucket, text, position);
+        instant.setMillis(bucket.computeMillis(false, text));
+        if (iZone != null) {
+            DateTimeZone parsedZone = null;
+            if (iOffsetParsed && bucket.getOffsetInteger() != null) {
+                int parsedOffset = bucket.getOffsetInteger();
+                parsedZone = DateTimeZone.forOffsetMillis(parsedOffset);
+            } else if (bucket.getZone() != null) {
+                parsedZone = bucket.getZone();
+            }
+            if (parsedZone != null) {
+                chrono = chrono.withZone(parsedZone);
+                instant.setChronology(chrono);
+            }
+            instant.setZone(iZone);
+        }
+        return newPos;
+    }
+

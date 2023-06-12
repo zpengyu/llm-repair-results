@@ -1,0 +1,28 @@
+diff --git a/src/com/google/javascript/jscomp/TypedScopeCreator.java b/src/com/google/javascript/jscomp/TypedScopeCreator.java
+index 9489dc30..3ec7538f 100644
+--- a/src/com/google/javascript/jscomp/TypedScopeCreator.java
++++ b/src/com/google/javascript/jscomp/TypedScopeCreator.java
+@@ -1557,9 +1549,22 @@ final class TypedScopeCreator implements ScopeCreator {
+             defineSlot(n, parent, getNativeType(BOOLEAN_TYPE), true);
+           }
+         }
++      } else if (rhsValue != null && rhsValue.isFalse()) {
++        // We declare these for delegate proxy method properties.
++        FunctionType ownerType =
++            JSType.toMaybeFunctionType(getObjectSlot(ownerName));
++        if (ownerType != null) {
++          JSType ownerTypeOfThis = ownerType.getTypeOfThis();
++          String delegateName = codingConvention.getDelegateSuperclassName();
++          JSType delegateType = delegateName == null ?
++              null : typeRegistry.getType(delegateName);
++          if (delegateType != null &&
++              ownerTypeOfThis.isSubtype(delegateType)) {
++            defineSlot(n, parent, getNativeType(NUMBER_TYPE), true);
++          }
++        }
+       }
+     }
+-
+     /**
+      * Find the ObjectType associated with the given slot.
+      * @param slotName The name of the slot to find the type in.

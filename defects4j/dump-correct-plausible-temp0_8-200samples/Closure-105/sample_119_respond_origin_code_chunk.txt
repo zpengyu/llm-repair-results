@@ -1,0 +1,69 @@
+  void tryFoldStringJoin(NodeTraversal t, Node n, Node left, Node right,
+      Node parent) {
+    if (!NodeUtil.isGetProp(left) || !NodeUtil.isImmutableValue(right)) {
+      return;
+    }
+
+    Node arrayNode = left.getFirstChild();
+    Node functionName = arrayNode.getNext();
+
+    if ((arrayNode.getType() != Token.ARRAYLIT) ||
+        !functionName.getString().equals("join")) {
+      return;
+    }
+
+    String joinString = NodeUtil.getStringValue(right);
+    List<Node> arrayFoldedChildren = Lists.newLinkedList();
+    Node elem = arrayNode.getFirstChild();
+    // Merges adjacent String nodes.
+    while (elem != null) {
+      if (NodeUtil.isImmutableValue(elem)) {
+        String concatenatedString = "";
+        StringBuilder sb = new StringBuilder();
+        if (sb.length() > 0) {
+          sb.append(joinString);
+        }
+        sb.append(NodeUtil.getStringValue(elem));
+        concatenatedString = sb.toString();
+        if (concatenatedString.length() > 0) {
+          // + 2 for the quotes.
+          arrayFoldedChildren.add(Node.newString(concatenatedString));
+        }
+      } else {
+        arrayFoldedChildren.add(elem);
+      }
+      elem = elem.getNext();
+    }
+    int originalSize = InlineCostEstimator.getCost(n);
+    switch (arrayFoldedChildren.size()) {
+      case 0:
+        Node emptyStringNode = Node.newString("");
+        parent.replaceChild(n, emptyStringNode);
+        break;
+
+      case 1:
+        Node foldedStringNode = arrayFoldedChildren.remove(0);
+        arrayNode.detachChildren();
+        if (foldedStringNode.getType() != Token.STRING) {
+          // If the Node is not a string literal, ensure that
+          // it is coerced to a string.
+          Node replacement = new Node(Token.ADD,
+              Node.newString(""), foldedStringNode);
+          foldedStringNode = replacement;
+        }
+        parent.replaceChild(n, foldedStringNode);
+        break;
+
+      default:
+        // No folding could actually be performed.
+        if (arrayFoldedChildren.size() == arrayNode.getChildCount()) {
+          return;
+        }
+        arrayNode.detachChildren();
+        for (Node node : arrayFoldedChildren) {
+          arrayNode.addChildToBack(node);
+        }
+        break;
+    }
+    t.getCompiler().reportCodeChange();
+  }

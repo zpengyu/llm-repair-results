@@ -1,0 +1,27 @@
+diff --git a/gson/src/main/java/com/google/gson/internal/bind/JsonAdapterAnnotationTypeAdapterFactory.java b/gson/src/main/java/com/google/gson/internal/bind/JsonAdapterAnnotationTypeAdapterFactory.java
+index cd675c71..be689c3f 100644
+--- a/gson/src/main/java/com/google/gson/internal/bind/JsonAdapterAnnotationTypeAdapterFactory.java
++++ b/gson/src/main/java/com/google/gson/internal/bind/JsonAdapterAnnotationTypeAdapterFactory.java
+@@ -55,6 +55,11 @@ public final class JsonAdapterAnnotationTypeAdapterFactory implements TypeAdapte
+     if (TypeAdapter.class.isAssignableFrom(value)) {
+       Class<TypeAdapter<?>> typeAdapterClass = (Class<TypeAdapter<?>>) value;
+       typeAdapter = constructorConstructor.get(TypeToken.get(typeAdapterClass)).construct();
++      if (typeAdapter instanceof ReflectiveTypeAdapterFactory.Adapter) {
++        // TODO(joel): replace with warning once this class moves out of gson
++        throw new IllegalArgumentException(
++            "OffsetDateTimeTypeAdapter would require Gson to use unsafe reflection which it does not want to do");
++      }
+     } else if (TypeAdapterFactory.class.isAssignableFrom(value)) {
+       Class<TypeAdapterFactory> typeAdapterFactory = (Class<TypeAdapterFactory>) value;
+       typeAdapter = constructorConstructor.get(TypeToken.get(typeAdapterFactory))
+@@ -64,7 +69,8 @@ public final class JsonAdapterAnnotationTypeAdapterFactory implements TypeAdapte
+       throw new IllegalArgumentException(
+           "@JsonAdapter value must be TypeAdapter or TypeAdapterFactory reference.");
+     }
++    if (typeAdapter != null && annotation.nullSafe()) {
+       typeAdapter = typeAdapter.nullSafe();
++    }
+     return typeAdapter;
+-  }
+-}
++  }}

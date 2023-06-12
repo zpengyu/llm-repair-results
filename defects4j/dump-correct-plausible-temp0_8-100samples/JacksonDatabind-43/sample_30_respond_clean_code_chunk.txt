@@ -1,0 +1,20 @@
+    public Object deserializeSetAndReturn(JsonParser p,
+    		DeserializationContext ctxt, Object instance) throws IOException
+    {
+        Object id = _valueDeserializer.deserialize(p, ctxt);
+        if (id == null) {
+            throw new UnresolvedForwardReference(p,
+    				"Cannot resolve ObjectId forward reference using property '"
+    						+ _objectIdReader.propertyName
+    						+ "' for <"
+    						+ _objectIdReader.idType.getRawClass().getName()
+    						+ ">, but found null for id", p.getCurrentLocation(), null);
+        }
+        ReadableObjectId roid = ctxt.findObjectId(id, _objectIdReader.generator, _objectIdReader.resolver);
+        roid.bindItem(instance);
+        SettableBeanProperty idProp = _objectIdReader.idProperty;
+        if (idProp != null) {
+            return idProp.setAndReturn(instance, id);
+        }
+        return instance;
+    }

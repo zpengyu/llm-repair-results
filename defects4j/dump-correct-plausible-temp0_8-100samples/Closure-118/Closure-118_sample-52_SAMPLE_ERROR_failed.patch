@@ -1,0 +1,25 @@
+diff --git a/src/com/google/javascript/jscomp/DisambiguateProperties.java b/src/com/google/javascript/jscomp/DisambiguateProperties.java
+index 96c66201..0be59615 100644
+--- a/src/com/google/javascript/jscomp/DisambiguateProperties.java
++++ b/src/com/google/javascript/jscomp/DisambiguateProperties.java
+@@ -488,6 +488,7 @@ class DisambiguateProperties<T> implements CompilerPass {
+      * Processes a OBJECTLIT node.
+      */
+     private void handleObjectLit(NodeTraversal t, Node n) {
++      Set<String> seen = Sets.newHashSet();
+       for (Node child = n.getFirstChild();
+           child != null;
+           child = child.getNext()) {
+@@ -509,9 +508,11 @@ class DisambiguateProperties<T> implements CompilerPass {
+                 (type == null ? "null" : type.toString()), n.toString(), ""));
+           }
+         }
++        Preconditions.checkState(seen.add(name),
++                                 "Duplicate key: %s", name);
+       }
+     }
+-
++  }
+     private void printErrorLocations(List<String> errors, JSType t) {
+       if (!t.isObject() || t.isAllType()) {
+         return;

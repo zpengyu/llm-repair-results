@@ -1,0 +1,71 @@
+    protected StringBuffer renderWrappedText(StringBuffer sb, int width, 
+                                             int nextLineTabStop, String text)
+    {
+        int pos = findWrapPos(text, width, 0);
+        if (pos == -1)
+        {
+            sb.append(rtrim(text));
+            return sb;
+        }
+        sb.append(rtrim(text.substring(0, pos))).append(defaultNewLine);
+        if (nextLineTabStop >= width)
+        {
+            // stops infinite loop happening
+            throw new IllegalStateException("Total width is less than the width of the argument and indent " +
+                                            "- no room for the description");
+        }
+        // all following lines must be padded with nextLineTabStop space 
+        // characters
+        final String padding = createPadding(nextLineTabStop);
+        while (true)
+        {
+            text = padding + text.substring(pos).trim();
+            pos = findWrapPos(text, width, 0);
+            if (pos == -1)
+            {
+                sb.append(text);
+                return sb;
+            }
+            if ( (text.length() > width) && (pos == nextLineTabStop - 1) ) 
+            {
+                pos = width;
+            }
+            sb.append(rtrim(text.substring(0, pos))).append(defaultNewLine);
+        }
+    }
+%ls -l 
+**This is a header**
+*italics*
+~~strikethrough~~
+\*without asterisks\*
+**bold**
+![alt text](https://github.com/adam-p/markdown-here/raw/master/src/common/images/icon48.png "Logo Title Text 1")
+~~Strikethrough~~
+>quoted text
+```javascript
+var s = "JavaScript syntax highlighting";
+alert(s);
+```
+```python
+s = "Python syntax highlighting"
+print s
+```
+```
+No language indicated, so no syntax highlighting. 
+But let's throw in a <b>tag</b>.
+```
+| Tables        | Are           | Cool  |
+| ------------- |:-------------:| -----:|
+| col 3 is      | right-aligned | $1600 |
+| col 2 is      | centered      |   $12 |
+| zebra stripes | are neat      |    $1 |
+- [x] @mentions, #refs, [links](), **formatting**, and <del>tags</del> supported
+- [x] list syntax required (any unordered or ordered list supported)
+- [x] this is a complete item
+- [ ] this is an incomplete item
+[The Chosen One](http://www.harrypotterforchildren.com/images/hp_harry_potter_loves_hogsmeade_5.jpg)
+First Header | Second Header
+------------ | -------------
+Content from cell 1 | Content from cell 2
+Content in the first column | Content in the second column
+@jbranchaud

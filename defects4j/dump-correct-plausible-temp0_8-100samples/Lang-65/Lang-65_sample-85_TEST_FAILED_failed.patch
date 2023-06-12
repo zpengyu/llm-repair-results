@@ -1,0 +1,48 @@
+diff --git a/src/java/org/apache/commons/lang/time/DateUtils.java b/src/java/org/apache/commons/lang/time/DateUtils.java
+index 324dd037..4d7b371c 100644
+--- a/src/java/org/apache/commons/lang/time/DateUtils.java
++++ b/src/java/org/apache/commons/lang/time/DateUtils.java
+@@ -620,8 +620,7 @@ public class DateUtils {
+         if (val.get(Calendar.YEAR) > 280000000) {
+             throw new ArithmeticException("Calendar value too large for accurate calculations");
+         }
+-
+-
++        Date date = val.getTime();
+         // ----------------- Fix for LANG-59 ---------------------- START ---------------
+         // see http://issues.apache.org/jira/browse/LANG-59
+         //
+@@ -654,6 +647,18 @@ public class DateUtils {
+                                 val.add(Calendar.DATE, -15);
+                                 val.add(Calendar.MONTH, 1);
+                             }
++                            // ----------------- Fix for LANG-440 ---------------------- START ---------------
++                        } else if (field == Calendar.AM_PM) {
++                            // This is a special case
++                            // If the time is 0, we round up to 12, otherwise
++                            // we subtract 12 hours and add 1 day
++                            if (val.get(Calendar.HOUR_OF_DAY) == 0) {
++                                val.add(Calendar.HOUR_OF_DAY, 12);
++                            } else {
++                                val.add(Calendar.HOUR_OF_DAY, -12);
++                                val.add(Calendar.DAY_OF_MONTH, 1);
++                            }
++                            // ----------------- Fix for LANG-440 ---------------------- END ---------------
+                         } else {
+                             //We need at add one to this field since the
+                             //  last number causes us to round up
+@@ -706,12 +711,12 @@ public class DateUtils {
+                 roundUp = offset > ((max - min) / 2);
+             }
+             //We need to remove this field
++            if (offset != 0) {
+                 val.set(fields[i][0], val.get(fields[i][0]) - offset);
++            }
+         }
+         throw new IllegalArgumentException("The field " + field + " is not supported");
+-
+     }
+-
+     //-----------------------------------------------------------------------
+     /**
+      * <p>This constructs an <code>Iterator</code> over each day in a date

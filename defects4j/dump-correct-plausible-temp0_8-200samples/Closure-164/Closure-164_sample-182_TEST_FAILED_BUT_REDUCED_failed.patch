@@ -1,0 +1,46 @@
+diff --git a/src/com/google/javascript/rhino/jstype/ArrowType.java b/src/com/google/javascript/rhino/jstype/ArrowType.java
+index 0c0ef637..a2c4ed4e 100644
+--- a/src/com/google/javascript/rhino/jstype/ArrowType.java
++++ b/src/com/google/javascript/rhino/jstype/ArrowType.java
+@@ -122,17 +118,8 @@ final class ArrowType extends JSType {
+           return false;
+         }
+       }
+-
+       boolean thisIsVarArgs = thisParam.isVarArgs();
+       boolean thatIsVarArgs = thatParam.isVarArgs();
+-
+-      // "that" can't be a supertype, because it's missing a required argument.
+-        // NOTE(nicksantos): In our type system, we use {function(...?)} and
+-        // {function(...NoType)} to to indicate that arity should not be
+-        // checked. Strictly speaking, this is not a correct formulation,
+-        // because now a sub-function can required arguments that are var_args
+-        // in the super-function. So we special-case this.
+-
+       // don't advance if we have variable arguments
+       if (!thisIsVarArgs) {
+         thisParam = thisParam.getNext();
+@@ -147,12 +133,20 @@ final class ArrowType extends JSType {
+         thatParam = null;
+       }
+     }
+-
+     // "that" can't be a supertype, because it's missing a required arguement.
+-
++    // NOTE(nicksantos): In our type system, we use {function(...?)} and
++    // {function(...NoType)} to to indicate that arity should not be
++    // checked. Strictly speaking, this is not a correct formulation,
++    // because now a sub-function can required arguments that are var_args
++    // in the super-function. So we special-case this.
++    if (thisParam != null && thatParam == null) {
++      JSType thisParamType = thisParam.getJSType();
++      if (thisParamType != null && !thisParam.isVarArgs()) {
++        return false;
++      }
++    }
+     return true;
+   }
+-
+   /**
+    * @return True if our parameter spec is equal to {@code that}'s parameter
+    *     spec.

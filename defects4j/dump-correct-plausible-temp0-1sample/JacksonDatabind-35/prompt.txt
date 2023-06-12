@@ -1,0 +1,108 @@
+###Provide a fix for the buggy function
+###Buggy Function
+class FibonacciExample {
+    public static void main(String args[]) {
+        int n1 = 0, n2 = 1, n3, i, count = 10;
+
+        System.out.print(n1 + " " + n2);
+
+        for (i = 2; i < count; ++i) {
+            n3 = n1 - n2;
+            System.out.print(" " + n3);
+            n1 = n2;
+            n2 = n3;
+        }
+    }
+}
+
+###Fixed Function
+class FibonacciExample {
+    public static void main(String args[]) {
+        int n1 = 0, n2 = 1, n3, i, count = 10;
+
+        System.out.print(n1 + " " + n2);
+
+        for (i = 2; i < count; ++i) {
+            n3 = n1 + n2;
+            System.out.print(" " + n3);
+            n1 = n2;
+            n2 = n3;
+        }
+    }
+}
+
+###Provide a fix for the buggy function
+###Buggy Function
+public TokenBuffer deserialize(JsonParser jp, DeserializationContext ctxt) throws IOException
+{
+    copyCurrentStructure(jp);
+    return this;
+}
+###Fixed Function
+public TokenBuffer deserialize(JsonParser jp, DeserializationContext ctxt) throws IOException
+{
+    if (jp.getCurrentTokenId() != JsonToken.FIELD_NAME.id()) {
+        copyCurrentStructure(jp);
+        return this;
+    }
+    /* 28-Oct-2014, tatu: As per #592, need to support a special case of starting from
+     *    FIELD_NAME, which is taken to mean that we are missing START_OBJECT, but need
+     *    to assume one did exist.
+     */
+    JsonToken t;
+    writeStartObject();
+    do {
+        copyCurrentStructure(jp);
+    } while ((t = jp.nextToken()) == JsonToken.FIELD_NAME);
+    if (t != JsonToken.END_OBJECT) {
+        throw ctxt.mappingException("Expected END_OBJECT after copying contents of a JsonParser into TokenBuffer, got "+t);
+    }
+    writeEndObject();
+    return this;
+}
+###Provide a fix for the buggy function
+###Buggy Function
+    private final Object _deserialize(JsonParser p, DeserializationContext ctxt) throws IOException
+    {
+        // 02-Aug-2013, tatu: May need to use native type ids
+        if (p.canReadTypeId()) {
+            Object typeId = p.getTypeId();
+            if (typeId != null) {
+                return _deserializeWithNativeTypeId(p, ctxt, typeId);
+            }
+        }
+        // first, sanity checks
+        if (p.getCurrentToken() != JsonToken.START_OBJECT) {
+            throw ctxt.wrongTokenException(p, JsonToken.START_OBJECT,
+                    "need JSON Object to contain As.WRAPPER_OBJECT type information for class "+baseTypeName());
+        }
+            // should always get field name, but just in case...
+            if (p.nextToken() != JsonToken.FIELD_NAME) {
+                throw ctxt.wrongTokenException(p, JsonToken.FIELD_NAME,
+                        "need JSON String that contains type id (for subtype of "+baseTypeName()+")");
+            }
+        final String typeId = p.getText();
+        JsonDeserializer<Object> deser = _findDeserializer(ctxt, typeId);
+        p.nextToken();
+
+        // Minor complication: we may need to merge type id in?
+        if (_typeIdVisible && p.getCurrentToken() == JsonToken.START_OBJECT) {
+            // but what if there's nowhere to add it in? Error? Or skip? For now, skip.
+            TokenBuffer tb = new TokenBuffer(null, false);
+            tb.writeStartObject(); // recreate START_OBJECT
+            tb.writeFieldName(_typePropertyName);
+            tb.writeString(typeId);
+            p = JsonParserSequence.createFlattened(tb.asParser(p), p);
+            p.nextToken();
+        }
+        
+        Object value = deser.deserialize(p, ctxt);
+        // And then need the closing END_OBJECT
+        if (p.nextToken() != JsonToken.END_OBJECT) {
+            throw ctxt.wrongTokenException(p, JsonToken.END_OBJECT,
+                    "expected closing END_OBJECT after type information and deserialized value");
+        }
+        return value;
+    }
+
+###Fixed Function

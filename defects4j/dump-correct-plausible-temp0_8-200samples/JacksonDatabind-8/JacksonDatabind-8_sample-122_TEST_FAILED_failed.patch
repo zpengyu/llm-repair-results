@@ -1,0 +1,30 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/deser/impl/CreatorCollector.java b/src/main/java/com/fasterxml/jackson/databind/deser/impl/CreatorCollector.java
+index fd590d628..43877bea6 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/deser/impl/CreatorCollector.java
++++ b/src/main/java/com/fasterxml/jackson/databind/deser/impl/CreatorCollector.java
+@@ -280,16 +280,21 @@ public class CreatorCollector
+         AnnotatedWithParams oldOne = _creators[typeIndex];
+         // already had an explicitly marked one?
+         if (oldOne != null) {
+-
+-            if ((_explicitCreators & mask) != 0) { // already had explicitly annotated, leave as-is
++            // If only one of existing or new one is explicit, use explicit
++            if ((_explicitCreators & mask) == 0) { // already had implicitly annotated, leave as-is
+                 // but skip, if new one not annotated
+-                if (!explicit) {
++                if (explicit) {
+                     return;
+                 }
+                 // both explicit: verify
+                 // otherwise only verify if neither explicitly annotated.
+             }
+-
++            if ((_explicitCreators & mask) != 0) { // already had explicitly annotated, leave as-is
++                // but skip, if new one not annotated
++                if (!explicit) {
++                    return;
++                }
++            }
+             // one more thing: ok to override in sub-class
+             if (oldOne.getClass() == newOne.getClass()) {
+                 // [databind#667]: avoid one particular class of bogus problems

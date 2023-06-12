@@ -1,0 +1,24 @@
+    public PropertyName findNameForSerialization(Annotated a)
+    {
+        PropertyName name = null;
+        JsonGetter jg = _findAnnotation(a, JsonGetter.class);
+        if (jg != null) {
+            name = PropertyName.construct(jg.value());
+        } else {
+            JsonProperty pann = _findAnnotation(a, JsonProperty.class);
+            if (pann != null) {
+                name = PropertyName.construct(pann.value());
+            } else if (_hasAnnotation(a, JsonSerialize.class)
+                    || _hasAnnotation(a, JsonView.class)
+                    || _hasAnnotation(a, JsonRawValue.class)) {
+                name = PropertyName.USE_DEFAULT;
+            } else {
+                return null;
+            }
+        }
+        // Null name is only to be used with 'use default'; otherwise it suppresses
+        if (name == null || name.isEmpty()) {
+            name = PropertyName.USE_DEFAULT;
+        }
+        return name;
+    }

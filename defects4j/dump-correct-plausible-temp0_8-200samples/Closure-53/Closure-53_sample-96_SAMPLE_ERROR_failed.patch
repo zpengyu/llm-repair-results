@@ -1,0 +1,50 @@
+diff --git a/src/com/google/javascript/jscomp/InlineObjectLiterals.java b/src/com/google/javascript/jscomp/InlineObjectLiterals.java
+index 5b8fedb1..2e77ad9a 100644
+--- a/src/com/google/javascript/jscomp/InlineObjectLiterals.java
++++ b/src/com/google/javascript/jscomp/InlineObjectLiterals.java
+@@ -326,8 +325,23 @@ class InlineObjectLiterals implements CompilerPass {
+                    Node.newString(Token.NAME, varmap.get(var)),
+                    NodeUtil.newUndefinedNode(null)));
+       }
+-
+       Node replacement;
++      if (nodes.size() == 1) {
++        replacement = nodes.get(0);
++      } else if (ref.isLvalue()) {
++        // If this assignment is not the RHS of an expression,
++        // use BLOCK to assign the value of the result.
++        Node block = new Node(Token.BLOCK);
++        for (Node assign : nodes) {
++          block.addChildToBack(NodeUtil.newExpr(assign));
++        }
++        replacement = NodeUtil.newExpr(
++            new Node(Token.COMMA, block, nodes.get(nodes.size() - 1)));
++      } else if (nodes.size() == 2) {
++        // If there is only one additional assignment, then we can
++        // pass that as a second child to COMMA.
++        replacement = new Node(Token.COMMA, nodes.get(0), nodes.get(1));
++      } else {
+         // All assignments evaluate to true, so make sure that the
+         // expr statement evaluates to true in case it matters.
+         nodes.add(new Node(Token.TRUE));
+@@ -347,10 +360,9 @@ class InlineObjectLiterals implements CompilerPass {
+         }
+         cur.addChildToFront(nodes.get(i));
+         cur.addChildToFront(nodes.get(i + 1));
+-
++      }
+       Node replace = ref.getParent();
+       replacement.copyInformationFromForTree(replace);
+-
+       if (replace.getType() == Token.VAR) {
+         replace.getParent().replaceChild(
+             replace, NodeUtil.newExpr(replacement));
+@@ -358,7 +370,7 @@ class InlineObjectLiterals implements CompilerPass {
+         replace.getParent().replaceChild(replace, replacement);
+       }
+     }
+-
++  }
+     /**
+      * Splits up the object literal into individual variables, and
+      * updates all uses.

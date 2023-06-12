@@ -1,0 +1,50 @@
+diff --git a/src/java/org/apache/commons/lang/enums/ValuedEnum.java b/src/java/org/apache/commons/lang/enums/ValuedEnum.java
+index 0823e77d..06d36856 100644
+--- a/src/java/org/apache/commons/lang/enums/ValuedEnum.java
++++ b/src/java/org/apache/commons/lang/enums/ValuedEnum.java
+@@ -180,19 +174,39 @@ public abstract class ValuedEnum extends Enum {
+      * @throws NullPointerException if other is <code>null</code>
+      */
+     public int compareTo(Object other) {
+-        return iValue - ((ValuedEnum) other).iValue;
++        if (other == this) {
++            return 0;
++        }
++        if (other.getClass() == getClass()) {
++            // same type, safe to cast.
++            ValuedEnum cast = (ValuedEnum) other;
++            return iValue - cast.iValue;
++        }
++        if (other.getClass().getName().equals(getClass().getName())) {
++            // different classloader.
++            return compareTo(other);
++        }
++        // different type, can't compare.
++        throw new ClassCastException("Different enum class '" + ClassUtils.getShortClassName(other.getClass()) 
++            + "'");
+     }
+-
+     /**
+      * <p>Use reflection to return an objects value.</p>
+      *
+      * @param other  the object to determine the value for
+      * @return the value
+      */
+-            // ignore - should never happen
+-            // ignore - should never happen
+-            // ignore - should never happen
+-
++        Object otherValue = null;
++        try {
++            otherValue = meth.invoke(other, new Object[0]);
++            return new Integer(iValue).compareTo((Integer) otherValue);
++        } catch (IllegalAccessException e) {
++            throw new InternalError("IllegalAccessException: " + e.getMessage());
++        } catch (InvocationTargetException e) {
++            throw new InternalError("InvocationTargetException: " + e.getMessage());
++        } catch (ClassCastException e) {
++            throw new InternalError("ClassCastException: " + e.getMessage());
++        }
+     /**
+      * <p>Human readable description of this <code>Enum</code> item.</p>
+      *

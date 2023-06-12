@@ -1,0 +1,37 @@
+diff --git a/src/java/org/apache/commons/math/analysis/solvers/UnivariateRealSolverUtils.java b/src/java/org/apache/commons/math/analysis/solvers/UnivariateRealSolverUtils.java
+index df45ce435..7f925bef6 100644
+--- a/src/java/org/apache/commons/math/analysis/solvers/UnivariateRealSolverUtils.java
++++ b/src/java/org/apache/commons/math/analysis/solvers/UnivariateRealSolverUtils.java
+@@ -189,12 +187,17 @@ public class UnivariateRealSolverUtils {
+             a = Math.max(a - 1.0, lowerBound);
+             b = Math.min(b + 1.0, upperBound);
+             fa = function.value(a);
+-            
++            numIterations++ ;
++            if (fa * fb <= 0.0 ) {
++                return new double[]{a, b};
++            }
+             fb = function.value(b);
+             numIterations++ ;
+-        } while ((fa * fb > 0.0) && (numIterations < maximumIterations) &&
++            if (fa * fb <= 0.0 ) {
++                return new double[]{a, b};
++            }
++        } while ((numIterations < maximumIterations) && 
+                 ((a > lowerBound) || (b < upperBound)));
+-
+         if (fa * fb >= 0.0 ) {
+             throw new ConvergenceException(
+                       "number of iterations={0}, maximum iterations={1}, " +
+@@ -203,10 +206,9 @@ public class UnivariateRealSolverUtils {
+                       numIterations, maximumIterations, initial,
+                       lowerBound, upperBound, a, b, fa, fb);
+         }
+-        
+         return new double[]{a, b};
+     }
+-
++---
+     /**
+      * Compute the midpoint of two values.
+      * 

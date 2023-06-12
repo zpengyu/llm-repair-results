@@ -1,0 +1,25 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/deser/std/CollectionDeserializer.java b/src/main/java/com/fasterxml/jackson/databind/deser/std/CollectionDeserializer.java
+index af4270610..0270aef3f 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/deser/std/CollectionDeserializer.java
++++ b/src/main/java/com/fasterxml/jackson/databind/deser/std/CollectionDeserializer.java
+@@ -190,14 +190,13 @@ public class CollectionDeserializer
+                 JsonFormat.Feature.ACCEPT_SINGLE_VALUE_AS_ARRAY);
+         // also, often value deserializer is resolved here:
+         JsonDeserializer<?> valueDeser = _valueDeserializer;
+-        
+-        // May have a content converter
+-        valueDeser = findConvertingContentDeserializer(ctxt, property, valueDeser);
+-        final JavaType vt = _collectionType.getContentType();
++        // 11-Dec-2015, tatu: Should we pass basic `Collection.class`, or more refined? Mostly
++        //   comes down to "List vs Collection" I suppose... for now, pass Collection
+         if (valueDeser == null) {
+-            valueDeser = ctxt.findContextualValueDeserializer(vt, property);
+-        } else { // if directly assigned, probably not yet contextual, so:
+-            valueDeser = ctxt.handleSecondaryContextualization(valueDeser, property, vt);
++            valueDeser = ctxt.findContextualValueDeserializer(ctxt.getTypeFactory().constructCollectionType(Collection.class, _collectionType.getContentType()), property);
++        }
++        else { // if directly assigned, probably not yet contextual, so:
++            valueDeser = ctxt.handleSecondaryContextualization(valueDeser, property, null);
+         }
+         // and finally, type deserializer needs context as well
+         TypeDeserializer valueTypeDeser = _valueTypeDeserializer;

@@ -1,0 +1,66 @@
+        public int parseInto(DateTimeParserBucket bucket, String text, int position) {
+            DateTimeParser[] parsers = iParsers;
+            int length = parsers.length;
+            final Object originalState = bucket.saveState();
+            boolean isOptional = false;
+            int bestValidPos = position;
+            Object bestValidState = null;
+            int bestInvalidPos = position;
+            int lastValue = -1;
+            int lastValidValue = -1;
+            for (int i=0; i<length; i++) {
+                DateTimeParser parser = parsers[i];
+                if (parser == null) {
+                    // The empty parser wins only if nothing is better.
+                    if (bestValidPos <= position) {
+                        return position;
+                    }
+                    isOptional = true;
+                    break;
+                }
+                int parsePos = parser.parseInto(bucket, text, position);
+                if (parsePos >= position) {
+                    if (parsePos > bestValidPos) {
+                        if (parsePos >= text.length() ||
+                            (i + 1) >= length || parsers[i + 1] == null) {
+                            // Completely parsed text or no more parsers to
+                            // check. Skip the rest.
+                            return parsePos;
+                        }
+                        bestValidPos = parsePos;
+                        bestValidState = bucket.saveState();
+                    }
+                    lastValue = i;
+                    lastValidValue = i;
+                } else {
+                    if (parsePos < 0) {
+                        parsePos = ~parsePos;
+                        if (parsePos > bestInvalidPos) {
+                            bestInvalidPos = parsePos;
+                        }
+                    }
+                }
+                bucket.restoreState(originalState);
+            }
+            if (bestValidPos > position || (bestValidPos == position && isOptional)) {
+                // Restore the state to the best valid parse.
+                if (bestValidState != null) {
+                    bucket.restoreState(bestValidState);
+                }
+                if (lastValue == -1) {
+                    // Find the value that must be used for the field.
+                    for (int i=length; --i>=0; ) {
+                        DateTimeParser parser = parsers[i];
+                        if (parser != null) {
+                            bucket.saveField(this, i);
+                            return bestValidPos;
+                        }
+                    }
+                    throw new IllegalStateException();
+                } else {
+                    bucket.saveField(this, lastValue);
+                    return bestValidPos;
+                }
+            }
+            return ~bestInvalidPos;
+        }

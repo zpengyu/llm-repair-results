@@ -1,0 +1,26 @@
+diff --git a/src/com/google/javascript/jscomp/RemoveUnusedVars.java b/src/com/google/javascript/jscomp/RemoveUnusedVars.java
+index 41175cf3..7b47dc03 100644
+--- a/src/com/google/javascript/jscomp/RemoveUnusedVars.java
++++ b/src/com/google/javascript/jscomp/RemoveUnusedVars.java
+@@ -402,6 +399,21 @@ class RemoveUnusedVars
+       }
+     } else {
+       callSiteOptimizer.optimize(fnScope, referenced);
++      HashSet<Node> referencedWithThis = new HashSet<>();
++      for (Var var : referenced) {
++        if (var.getScope() == fnScope)
++          referencedWithThis.add(var.getNameNode());
++      }
++      Node lastArg;
++      while ((lastArg = argList.getLastChild()) != null) {
++        Var var = fnScope.getVar(lastArg.getString());
++        if (!referencedWithThis.contains(var.getNameNode())) {
++          argList.removeChild(lastArg);
++          compiler.reportCodeChange();
++        } else {
++          break;
++        }
++      }
+     }
+   }
+ 

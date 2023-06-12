@@ -1,0 +1,215 @@
+###Provide a fix for the buggy function
+###Buggy Function
+class FibonacciExample {
+    public static void main(String args[]) {
+        int n1 = 0, n2 = 1, n3, i, count = 10;
+
+        System.out.print(n1 + " " + n2);
+
+        for (i = 2; i < count; ++i) {
+            n3 = n1 - n2;
+            System.out.print(" " + n3);
+            n1 = n2;
+            n2 = n3;
+        }
+    }
+}
+
+###Fixed Function
+class FibonacciExample {
+    public static void main(String args[]) {
+        int n1 = 0, n2 = 1, n3, i, count = 10;
+
+        System.out.print(n1 + " " + n2);
+
+        for (i = 2; i < count; ++i) {
+            n3 = n1 + n2;
+            System.out.print(" " + n3);
+            n1 = n2;
+            n2 = n3;
+        }
+    }
+}
+
+###Provide a fix for the buggy function
+###Buggy Function
+public TokenBuffer deserialize(JsonParser jp, DeserializationContext ctxt) throws IOException
+{
+    copyCurrentStructure(jp);
+    return this;
+}
+###Fixed Function
+public TokenBuffer deserialize(JsonParser jp, DeserializationContext ctxt) throws IOException
+{
+    if (jp.getCurrentTokenId() != JsonToken.FIELD_NAME.id()) {
+        copyCurrentStructure(jp);
+        return this;
+    }
+    /* 28-Oct-2014, tatu: As per #592, need to support a special case of starting from
+     *    FIELD_NAME, which is taken to mean that we are missing START_OBJECT, but need
+     *    to assume one did exist.
+     */
+    JsonToken t;
+    writeStartObject();
+    do {
+        copyCurrentStructure(jp);
+    } while ((t = jp.nextToken()) == JsonToken.FIELD_NAME);
+    if (t != JsonToken.END_OBJECT) {
+        throw ctxt.mappingException("Expected END_OBJECT after copying contents of a JsonParser into TokenBuffer, got "+t);
+    }
+    writeEndObject();
+    return this;
+}
+###Provide a fix for the buggy function
+###Buggy Function
+public final class InnerClassProperty
+    extends SettableBeanProperty
+{
+    private static final long serialVersionUID = 1L;
+
+    /**
+     * Actual property that we use after value construction.
+     */
+    protected final SettableBeanProperty _delegate;
+
+    /**
+     * Constructor used when deserializing this property.
+     * Transient since there is no need to persist; only needed during
+     * construction of objects.
+     */
+    final protected transient Constructor<?> _creator;
+    
+    /**
+     * Serializable version of single-arg constructor we use for value instantiation.
+     */
+    protected AnnotatedConstructor _annotated;
+
+    public InnerClassProperty(SettableBeanProperty delegate,
+            Constructor<?> ctor)
+    {
+        super(delegate);
+        _delegate = delegate;
+        _creator = ctor;
+    }
+
+    /**
+     * Constructor used with JDK Serialization; needed to handle transient
+     * Constructor, wrap/unwrap in/out-of Annotated variant.
+     */
+    protected InnerClassProperty(InnerClassProperty src, AnnotatedConstructor ann)
+    {
+        super(src);
+        _delegate = src._delegate;
+        _annotated = ann;
+        _creator = (_annotated == null) ? null : _annotated.getAnnotated();
+        if (_creator == null) {
+            throw new IllegalArgumentException("Missing constructor (broken JDK (de)serialization?)");
+        }
+    }
+    
+    protected InnerClassProperty(InnerClassProperty src, JsonDeserializer<?> deser)
+    {
+        super(src, deser);
+        _delegate = src._delegate.withValueDeserializer(deser);
+        _creator = src._creator;
+    }
+
+    protected InnerClassProperty(InnerClassProperty src, PropertyName newName) {
+        super(src, newName);
+        _delegate = src._delegate.withName(newName);
+        _creator = src._creator;
+    }
+
+    @Override
+    public InnerClassProperty withName(PropertyName newName) {
+        return new InnerClassProperty(this, newName);
+    }
+
+    @Override
+    public InnerClassProperty withValueDeserializer(JsonDeserializer<?> deser) {
+        return new InnerClassProperty(this, deser);
+    }
+
+    @Override
+    public void assignIndex(int index) { _delegate.assignIndex(index); }
+
+    @Override
+    public int getPropertyIndex() { return _delegate.getPropertyIndex(); }
+
+
+    // // // BeanProperty impl
+
+    @Override
+    public <A extends Annotation> A getAnnotation(Class<A> acls) {
+        return _delegate.getAnnotation(acls);
+    }
+
+    @Override public AnnotatedMember getMember() {  return _delegate.getMember(); }
+
+    /*
+    /**********************************************************
+    /* Deserialization methods
+    /**********************************************************
+     */
+
+    @Override
+    public void deserializeAndSet(JsonParser jp, DeserializationContext ctxt, Object bean)
+        throws IOException
+    {
+        JsonToken t = jp.getCurrentToken();
+        Object value;
+        if (t == JsonToken.VALUE_NULL) {
+            value = _valueDeserializer.getNullValue(ctxt);
+        } else if (_valueTypeDeserializer != null) {
+            value = _valueDeserializer.deserializeWithType(jp, ctxt, _valueTypeDeserializer);
+        } else  { // the usual case
+            try {
+                value = _creator.newInstance(bean);
+            } catch (Exception e) {
+                ClassUtil.unwrapAndThrowAsIAE(e, "Failed to instantiate class "+_creator.getDeclaringClass().getName()+", problem: "+e.getMessage());
+                value = null;
+            }
+            _valueDeserializer.deserialize(jp, ctxt, value);
+        }
+        set(bean, value);
+    }
+
+    @Override
+    public Object deserializeSetAndReturn(JsonParser jp,
+    		DeserializationContext ctxt, Object instance)
+        throws IOException
+    {
+        return setAndReturn(instance, deserialize(jp, ctxt));
+    }
+    
+    @Override
+    public final void set(Object instance, Object value) throws IOException {
+        _delegate.set(instance, value);
+    }
+
+    @Override
+    public Object setAndReturn(Object instance, Object value) throws IOException {
+        return _delegate.setAndReturn(instance, value);
+    }
+
+    /*
+    /**********************************************************
+    /* JDK serialization handling
+    /**********************************************************
+     */
+
+    // When reading things back, 
+    Object readResolve() {
+        return new InnerClassProperty(this, _annotated);
+    }
+
+    Object writeReplace() {
+        // need to construct a fake instance to support serialization
+        if (_annotated != null) {
+            return this;
+        }
+        return new InnerClassProperty(this, new AnnotatedConstructor(null, _creator, null, null));
+    }
+}
+
+###Fixed Function

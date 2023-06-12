@@ -1,0 +1,34 @@
+diff --git a/src/com/google/javascript/rhino/jstype/FunctionType.java b/src/com/google/javascript/rhino/jstype/FunctionType.java
+index f68dfea6..07b4be5f 100644
+--- a/src/com/google/javascript/rhino/jstype/FunctionType.java
++++ b/src/com/google/javascript/rhino/jstype/FunctionType.java
+@@ -869,7 +867,11 @@ public class FunctionType extends PrototypeObjectType {
+     // is handled further upstream.
+     // TODO(nicksantos): Handle this correctly if we have a UnionType.
+     typeOfThis = (ObjectType) safeResolve(typeOfThis, t, scope);
+-
++    if (subTypes != null) {
++      for (int i = 0; i < subTypes.size(); i++) {
++        subTypes.set(i, (FunctionType) subTypes.get(i).resolve(t, scope));
++      }
++    }
+     boolean changed = false;
+     ImmutableList.Builder<ObjectType> resolvedInterfaces =
+         ImmutableList.builder();
+@@ -881,16 +883,8 @@ public class FunctionType extends PrototypeObjectType {
+     if (changed) {
+       implementedInterfaces = resolvedInterfaces.build();
+     }
+-
+-    if (subTypes != null) {
+-      for (int i = 0; i < subTypes.size(); i++) {
+-        subTypes.set(i, (FunctionType) subTypes.get(i).resolve(t, scope));
+-      }
+-    }
+-
+     return super.resolveInternal(t, scope);
+   }
+-
+   @Override
+   public String toDebugHashCodeString() {
+     if (this == registry.getNativeType(JSTypeNative.FUNCTION_INSTANCE_TYPE)) {

@@ -1,0 +1,48 @@
+diff --git a/src/java/org/apache/commons/jxpath/ri/compiler/CoreOperationRelationalExpression.java b/src/java/org/apache/commons/jxpath/ri/compiler/CoreOperationRelationalExpression.java
+index 2a40620..05f7abe 100644
+--- a/src/java/org/apache/commons/jxpath/ri/compiler/CoreOperationRelationalExpression.java
++++ b/src/java/org/apache/commons/jxpath/ri/compiler/CoreOperationRelationalExpression.java
+@@ -54,29 +54,27 @@ public abstract class CoreOperationRelationalExpression extends CoreOperation {
+     protected abstract boolean evaluateCompare(int compare);
+ 
+     private boolean compute(Object left, Object right) {
+-        left = reduce(left);
+-        right = reduce(right);
+-
+-        if (left instanceof InitialContext) {
+-            ((InitialContext) left).reset();
++        Object leftType = getType(left);
++        Object rightType = getType(right);
++        if (leftType instanceof InitialContext) {
++            ((InitialContext) leftType).reset();
+         }
+-        if (right instanceof InitialContext) {
+-            ((InitialContext) right).reset();
++        if (rightType instanceof InitialContext) {
++            ((InitialContext) rightType).reset();
+         }
+-        if (left instanceof Iterator && right instanceof Iterator) {
+-            return findMatch((Iterator) left, (Iterator) right);
++        if (leftType instanceof Iterator && rightType instanceof Iterator) {
++            return findMatch((Iterator) leftType, (Iterator) rightType);
+         }
+-        if (left instanceof Iterator) {
+-            return containsMatch((Iterator) left, right);
++        if (leftType instanceof Iterator) {
++            return containsMatch((Iterator) leftType, rightType);
+         }
+-        if (right instanceof Iterator) {
+-            return containsMatch((Iterator) right, left);
++        if (rightType instanceof Iterator) {
++            return containsMatch((Iterator) rightType, leftType);
+         }
+-        double ld = InfoSetUtil.doubleValue(left);
+-        double rd = InfoSetUtil.doubleValue(right);
++        double ld = InfoSetUtil.doubleValue(leftType);
++        double rd = InfoSetUtil.doubleValue(rightType);
+         return evaluateCompare(ld == rd ? 0 : ld < rd ? -1 : 1);
+     }
+-
+     private Object reduce(Object o) {
+         if (o instanceof SelfContext) {
+             o = ((EvalContext) o).getSingleNodePointer();

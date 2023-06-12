@@ -1,0 +1,35 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/deser/impl/ExternalTypeHandler.java b/src/main/java/com/fasterxml/jackson/databind/deser/impl/ExternalTypeHandler.java
+index b0797059f..5b0241135 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/deser/impl/ExternalTypeHandler.java
++++ b/src/main/java/com/fasterxml/jackson/databind/deser/impl/ExternalTypeHandler.java
+@@ -263,18 +263,19 @@ public class ExternalTypeHandler
+             String typeId = _typeIds[i];
+             final ExtTypedProperty extProp = _properties[i];
+             if (typeId == null) {
+-                // let's allow missing both type and property (may already have been set, too)
+-                if (_tokens[i] == null) {
+-                    continue;
+-                }
+-                // but not just one
+-                // 26-Oct-2012, tatu: As per [databind#94], must allow use of 'defaultImpl'
+-                if (!extProp.hasDefaultType()) {
+-                    ctxt.reportInputMismatch(_beanType,
+-                            "Missing external type id property '%s'",
+-                            extProp.getTypePropertyName());
++                if (_tokens[i] != null) {
++                    // but not just one
++                    // 26-Oct-2012, tatu: As per [databind#94], must allow use of 'defaultImpl'
++                    if (!extProp.hasDefaultType()) {
++                        ctxt.reportInputMismatch(_beanType,
++                                "Missing external type id property '%s'",
++                                extProp.getTypePropertyName());
++                    } else {
++                        typeId = extProp.getDefaultTypeId();
++                    }
+                 } else {
+-                    typeId = extProp.getDefaultTypeId();
++                    // let's allow missing both type and property (may already have been set, too)
++                    continue;
+                 }
+             } else if (_tokens[i] == null) {
+                 SettableBeanProperty prop = extProp.getProperty();

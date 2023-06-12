@@ -1,0 +1,27 @@
+    public JsonSerializer<?> createContextual(SerializerProvider serializers,
+            BeanProperty property) throws JsonMappingException
+    {
+        if (property != null) {
+            JsonFormat.Value format = serializers.getAnnotationIntrospector().findFormat((Annotated)property.getMember());
+            if (format != null) {
+                Boolean B = format.getShape().isNumeric() ? Boolean.TRUE : null;
+                if (B != null) {
+                    return withFormat(B, null);
+                }
+                if (format.getShape() == JsonFormat.Shape.STRING) {
+                    TimeZone tz = format.getTimeZone();
+                    if (tz == null) {
+                        tz = serializers.getTimeZone();
+                    }
+                    final Locale loc = format.hasLocale()
+                                    ? format.getLocale()
+                                    : serializers.getLocale();
+                    final String pattern = format.hasPattern()
+                                    ? format.getPattern()
+                                    : StdDateFormat.DATE_FORMAT_STR_ISO8601;
+                    return withFormat(Boolean.FALSE, new SimpleDateFormat(pattern, loc));
+                }
+            }
+        }
+        return this;
+    }

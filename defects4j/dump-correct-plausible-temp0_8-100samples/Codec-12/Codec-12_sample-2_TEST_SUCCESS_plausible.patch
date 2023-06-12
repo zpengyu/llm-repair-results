@@ -1,0 +1,62 @@
+diff --git a/src/main/java/org/apache/commons/codec/binary/BaseNCodecInputStream.java b/src/main/java/org/apache/commons/codec/binary/BaseNCodecInputStream.java
+index 78f4d67e..17b22e26 100644
+--- a/src/main/java/org/apache/commons/codec/binary/BaseNCodecInputStream.java
++++ b/src/main/java/org/apache/commons/codec/binary/BaseNCodecInputStream.java
+@@ -139,20 +131,46 @@ public class BaseNCodecInputStream extends FilterInputStream {
+      *
+      * @throws IllegalArgumentException if the provided skip length is negative
+      */
+-
+-        // skip in chunks of 512 bytes
+-
+-
++    @Override
++    public long skip(long n) throws IOException {
++        if (n < 0) {
++            throw new IllegalArgumentException("Negative skip length: " + n);
++        }
++        final int chunkSize = 512; // Expressed as a power of 2 for efficiency
++        long remain = n;
++        byte[] skipBuffer = new byte[chunkSize];
++        while (remain > 0) {
++            long nr = read(skipBuffer, 0, (int) Math.min(remain, chunkSize));
++            if (nr < 0) {
++                break;
++            }
++            remain -= nr;
++        }
++        return n - remain;
++    }
+     /**
+      * {@inheritDoc}
+      *
+      * @return <code>0</code> if the {@link InputStream} has reached <code>EOF</code>,
+      * <code>1</code> otherwise
+      */
+-        // Note: the logic is similar to the InflaterInputStream:
+-        //       as long as we have not reached EOF, indicate that there is more
+-        //       data available. As we do not know for sure how much data is left,
+-        //       just return 1 as a safe guess.
+-
+-        // use the EOF flag of the underlying codec instance
++    @Override
++    public int available() throws IOException {
++        if (baseNCodec.hasData()) {
++            return 1;
++        } else if (in.available() == 0) {
++            return 0;
++        } else {
++            return 1;
++        }
++    }
++    /**
++     * {@inheritDoc}
++     *
++     * @return <code>-1</code> if the {@link InputStream} has reached <code>EOF</code>
++     */
++    @Override
++    public int read(byte[] b) throws IOException {
++        return read(b, 0, b.length);
++    }
+ }
+\ No newline at end of file

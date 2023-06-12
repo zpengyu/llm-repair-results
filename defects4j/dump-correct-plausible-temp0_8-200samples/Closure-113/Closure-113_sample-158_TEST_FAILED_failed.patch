@@ -1,0 +1,22 @@
+diff --git a/src/com/google/javascript/jscomp/ProcessClosurePrimitives.java b/src/com/google/javascript/jscomp/ProcessClosurePrimitives.java
+index 385e8b07..3ebb5aa1 100644
+--- a/src/com/google/javascript/jscomp/ProcessClosurePrimitives.java
++++ b/src/com/google/javascript/jscomp/ProcessClosurePrimitives.java
+@@ -329,6 +325,17 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback
+       if (provided != null) {
+         parent.detachFromParent();
+         compiler.reportCodeChange();
++      } else {
++        // Allow processing to continue on broken requires
++        // by preserving the call node.
++        parent.detachFromParent();
++        n.detachFromParent();
++        left.detachFromParent();
++        arg.detachFromParent();
++        parent.addChildToBack(n);
++        n.addChildToBack(left);
++        n.addChildToBack(arg);
++        compiler.reportCodeChange();
+       }
+     }
+   }

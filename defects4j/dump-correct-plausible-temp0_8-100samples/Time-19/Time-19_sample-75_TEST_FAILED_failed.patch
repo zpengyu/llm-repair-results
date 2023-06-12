@@ -1,0 +1,37 @@
+diff --git a/src/main/java/org/joda/time/DateTimeZone.java b/src/main/java/org/joda/time/DateTimeZone.java
+index 17672725..c72564b0 100644
+--- a/src/main/java/org/joda/time/DateTimeZone.java
++++ b/src/main/java/org/joda/time/DateTimeZone.java
+@@ -896,6 +896,32 @@ public abstract class DateTimeZone implements Serializable {
+                 if (nextLocal != nextAdjusted) {
+                     return offsetLocal;
+                 }
++                // else, if the gap is exactly one hour, we always choose the later
++                // instant to avoid accidental double counting of the hour.
++                if ((nextLocal - instantLocal) == (instantLocal - nextAdjusted)) {
++                    return offsetLocal;
++                }
++                // else, if the adjusted time falls into the standard offset, use that
++                int offsetStandard = getStandardOffset(instantAdjusted);
++                if (offsetAdjusted == offsetStandard) {
++                    return offsetAdjusted;
++                }
++                // else choose the offset which is closer to the actual one
++                long diff = Math.abs(offsetLocal - offsetAdjusted);
++                long diffStandard = Math.abs(offsetStandard - offsetAdjusted);
++                if (diff < diffStandard) {
++                    return offsetLocal;
++                } else if (diff > diffStandard) {
++                    return offsetStandard;
++                } else {
++                    // choose the one that is further in the future
++                    long nextStandard = nextTransition(instantAdjusted - offsetStandard);
++                    if (nextStandard == nextLocal) {
++                        return offsetLocal;
++                    } else {
++                        return offsetStandard;
++                    }
++                }
+             }
+         } else if (offsetLocal > 0) {
+             long prev = previousTransition(instantAdjusted);

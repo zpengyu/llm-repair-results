@@ -1,0 +1,36 @@
+diff --git a/src/com/google/javascript/jscomp/FlowSensitiveInlineVariables.java b/src/com/google/javascript/jscomp/FlowSensitiveInlineVariables.java
+index 73531dc5..fe1b190f 100644
+--- a/src/com/google/javascript/jscomp/FlowSensitiveInlineVariables.java
++++ b/src/com/google/javascript/jscomp/FlowSensitiveInlineVariables.java
+@@ -486,17 +484,27 @@ class FlowSensitiveInlineVariables extends AbstractPostOrderCallback
+             // TODO(blickly): Make the SIDE_EFFECT_PREDICATE check more exact
+             //   and remove this special case.
+               !(parent.isAssign() &&
+-               (parent.getFirstChild() == n))) {
++               parent.getFirstChild() == n &&
++               isInAssignChain(parent))) {
+               // Don't count lhs of top-level assignment chain
+               numUsesWithinCfgNode++;
+           }
+         }
+-
+       };
+-
+       NodeTraversal.traverse(compiler, cfgNode, gatherCb);
+     }
+-  }
++    private boolean isInAssignChain(Node assign) {
++      Node cur = assign.getParent();
++      while (cur != null) {
++        if (NodeUtil.isFunction(cur)) {
++          break;
++        } else if (cur.isAssign() || cur.isExprResult()) {
++          return true;
++        }
++        cur = cur.getParent();
++      }
++      return false;
++    }  }
+ 
+   /**
+    * Given an expression by its root and sub-expression n, return true if there

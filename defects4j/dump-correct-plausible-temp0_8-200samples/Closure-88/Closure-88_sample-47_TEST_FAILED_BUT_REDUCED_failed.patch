@@ -1,0 +1,25 @@
+diff --git a/src/com/google/javascript/jscomp/DeadAssignmentsElimination.java b/src/com/google/javascript/jscomp/DeadAssignmentsElimination.java
+index 19b8b6bd..e48e878b 100644
+--- a/src/com/google/javascript/jscomp/DeadAssignmentsElimination.java
++++ b/src/com/google/javascript/jscomp/DeadAssignmentsElimination.java
+@@ -327,7 +327,12 @@ class DeadAssignmentsElimination extends AbstractPostOrderCallback implements
+         // The expression to which the assignment is made is evaluated before
+         // the RHS is evaluated (normal left to right evaluation) but the KILL
+         // occurs after the RHS is evaluated.
+-        return VariableLiveness.KILL;
++        if (NodeUtil.isFunctionExpression(n.getParent())) {
++          // Only get/set declarations introduce a kill.
++          return VariableLiveness.KILL;
++        } else {
++          return VariableLiveness.READ;
++        }
+       } else {
+         return VariableLiveness.READ;
+       }
+@@ -344,5 +348,4 @@ class DeadAssignmentsElimination extends AbstractPostOrderCallback implements
+       }
+     }
+     return VariableLiveness.MAYBE_LIVE;
+-  }
+-}
++  }}

@@ -1,0 +1,32 @@
+diff --git a/src/com/google/javascript/jscomp/TypedScopeCreator.java b/src/com/google/javascript/jscomp/TypedScopeCreator.java
+index 0185298f..6ea30866 100644
+--- a/src/com/google/javascript/jscomp/TypedScopeCreator.java
++++ b/src/com/google/javascript/jscomp/TypedScopeCreator.java
+@@ -1664,12 +1664,10 @@ final class TypedScopeCreator implements ScopeCreator {
+       if (valueType == null) {
+         return true;
+       }
+-
+       // Prototypes of constructors and interfaces are always declared.
+       if (qName != null && qName.endsWith(".prototype")) {
+-          return false;
++        return false;
+       }
+-
+       boolean inferred = true;
+       if (info != null) {
+         inferred = !(info.hasType()
+@@ -1705,9 +1700,11 @@ final class TypedScopeCreator implements ScopeCreator {
+           }
+         }
+       }
+-      return inferred;
++      // We used to infer the type of all variables in the global scope, but this
++      // causes problem with externs files that use @typedef to define types in
++      // the global scope.
++      return !scope.isGlobal() && inferred;
+     }
+-
+     private boolean isConstantSymbol(JSDocInfo info, Node node) {
+       if (info != null && info.isConstant()) {
+         return true;

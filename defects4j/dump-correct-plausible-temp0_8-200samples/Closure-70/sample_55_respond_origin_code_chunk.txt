@@ -1,0 +1,23 @@
+    private void declareArguments(Node functionNode) {
+      Node astParameters = functionNode.getFirstChild().getNext();
+      Node body = astParameters.getNext();
+      FunctionType functionType = (FunctionType) functionNode.getJSType();
+      if (functionType != null) {
+        Node jsDocParameters = functionType.getParametersNode();
+        if (jsDocParameters != null) {
+          Iterator<Node> jsDocParameterItr = jsDocParameters.iterator();
+          Iterator<Node> astParameterItr = astParameters.iterator();
+
+          while (jsDocParameterItr.hasNext() && astParameterItr.hasNext()) {
+            Node jsDocParameter = jsDocParameterItr.next();
+            Node astParameter = astParameterItr.next();
+            defineSlot(astParameter, functionNode, jsDocParameter.getJSType(), true);
+          }
+
+          while (astParameterItr.hasNext()) {
+            defineSlot(astParameterItr.next(), functionNode, null, true);
+          }
+        }
+      }
+    } // end declareArguments
+

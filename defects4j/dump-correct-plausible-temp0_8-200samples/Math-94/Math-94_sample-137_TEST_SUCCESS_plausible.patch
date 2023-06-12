@@ -1,0 +1,51 @@
+diff --git a/src/java/org/apache/commons/math/util/MathUtils.java b/src/java/org/apache/commons/math/util/MathUtils.java
+index 6ee916469..b09af0bd5 100644
+--- a/src/java/org/apache/commons/math/util/MathUtils.java
++++ b/src/java/org/apache/commons/math/util/MathUtils.java
+@@ -408,9 +408,43 @@ public final class MathUtils {
+      * @return the greatest common divisor, never zero
+      * @since 1.1
+      */
+-    public static int gcd(int u, int v) {
+-        if (u * v == 0) {
+-            return (Math.abs(u) + Math.abs(v));
++/**
++     * Returns the greatest common divisor of the absolute value of two
++     * numbers, using a modified binary GCD algorithm. See Knuth 4.5.2
++     * algorithm B. This algorithm is due to Josef Stein (1961).
++     * <p>
++     * Special cases:
++     * <ul>
++     * <li>The invocations
++     * <code>gcd(Integer.MIN_VALUE, Integer.MIN_VALUE)</code>,
++     * <code>gcd(Integer.MIN_VALUE, 0)</code> and
++     * <code>gcd(0, Integer.MIN_VALUE)</code> throw an
++     * <code>ArithmeticException</code>, because the result would be 2^31, which
++     * is too large for an int value.</li>
++     * <li>The result of <code>gcd(x, x)</code>, <code>gcd(0, x)</code> and
++     * <code>gcd(x, 0)</code> is the absolute value of <code>x</code>, except for
++     * the special cases above.
++     * <li>The invocation <code>gcd(0, 0)</code> is the only one which returns
++     * <code>0</code>.</li>
++     * </ul>
++     *
++     * @param p
++     *            Number.
++     * @param q
++     *            Number.
++     * @return the greatest common divisor, never negative.
++     * @throws ArithmeticException
++     *             if the result cannot be represented as a nonnegative int value.
++     * @since 1.1
++     */
++    public static int gcd(int p, int q) {
++        int u = p;
++        int v = q;
++        if ((u == 0) || (v == 0)) {
++            if ((u == Integer.MIN_VALUE) || (v == Integer.MIN_VALUE)) {
++                throw new ArithmeticException("overflow: gcd is 2^31");
++            }
++            return Math.abs(u) + Math.abs(v);
+         }
+         // keep u and v negative, as negative integers range down to
+         // -2^31, while positive numbers can only be as large as 2^31-1

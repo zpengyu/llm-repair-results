@@ -1,0 +1,30 @@
+diff --git a/src/main/java/org/apache/commons/math/stat/descriptive/SummaryStatistics.java b/src/main/java/org/apache/commons/math/stat/descriptive/SummaryStatistics.java
+index 424120430..e4a1115f3 100644
+--- a/src/main/java/org/apache/commons/math/stat/descriptive/SummaryStatistics.java
++++ b/src/main/java/org/apache/commons/math/stat/descriptive/SummaryStatistics.java
+@@ -165,8 +165,24 @@ public class SummaryStatistics implements StatisticalSummary, Serializable {
+             geoMeanImpl.increment(value);
+         }
+         n++;
++        if (n == 1) {
++            m1 = value;
++            dev = 0;
++        } else {
++            m2 = m1;
++            m1 = value;
++            m4 = m3;
++            dev = (m1 / n) - (m2 / (n - 1));
++            if (n > 3) {
++                m3 = m2 - m1;
++                m4 -= m3 * m3 * (n - 1) * (n - 2) / ((n - 2) * (n - 3));
++                if (m4 < 0) {
++                    m4 = 0;
++                }
++                m4 *= n * (n - 1) / (n - 2) / (n - 3);
++            }
++        }
+     }
+-
+     /**
+      * Returns the number of available values
+      * @return The number of available values

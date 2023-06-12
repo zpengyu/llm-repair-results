@@ -1,0 +1,22 @@
+diff --git a/src/com/google/javascript/jscomp/Compiler.java b/src/com/google/javascript/jscomp/Compiler.java
+index f96ec5db..e5eb70c2 100644
+--- a/src/com/google/javascript/jscomp/Compiler.java
++++ b/src/com/google/javascript/jscomp/Compiler.java
+@@ -283,10 +277,15 @@ public class Compiler extends AbstractCompiler {
+       composedGuards.addGuard(new DiagnosticGroupWarningsGuard(
+           DiagnosticGroups.CHECK_VARIABLES, CheckLevel.OFF));
+     }
+-
++    // The typed scope creator reports problems inside functions, so
++    // we don't need to run it if we're checking the whole scope.
++    if (options.checkSymbols &&
++        !composedGuards.enables(DiagnosticGroups.CHECK_TYPES)) {
++      composedGuards.addGuard(new DiagnosticGroupWarningsGuard(
++          DiagnosticGroups.CHECK_TYPES, CheckLevel.OFF));
++    }
+     this.warningsGuard = composedGuards;
+   }
+-
+   /**
+    * Initializes the instance state needed for a compile job.
+    */

@@ -1,0 +1,237 @@
+public class BaseNCodecInputStream extends FilterInputStream {
+
+    private final boolean doEncode;
+
+    private final BaseNCodec baseNCodec;
+
+    private final byte[] singleByte = new byte[1];
+
+    protected BaseNCodecInputStream(InputStream in, BaseNCodec baseNCodec, boolean doEncode) {
+        super(in);
+        this.doEncode = doEncode;
+        this.baseNCodec = baseNCodec;
+    }
+
+    /**
+     * Reads one <code>byte</code> from this input stream.
+     * 
+     * @return the byte as an integer in the range 0 to 255. Returns -1 if EOF has been reached.
+     * @throws IOException
+     *             if an I/O error occurs.
+     */
+    @Override
+    public int read() throws IOException {
+        int r = read(singleByte, 0, 1);
+        while (r == 0) {
+            r = read(singleByte, 0, 1);
+        }
+        if (r > 0) {
+            final byte b = singleByte[0];
+            return b < 0 ? 256 + b : b;
+        }
+        return EOF;
+    }
+
+    /**
+     * Attempts to read <code>len</code> bytes into the specified <code>b</code> array starting at <code>offset</code>
+     * from this InputStream.
+     * 
+     * @param b
+     *            destination byte array
+     * @param offset
+     *            where to start writing the bytes
+     * @param len
+     *            maximum number of bytes to read
+     * 
+     * @return number of bytes read
+     * @throws IOException
+     *             if an I/O error occurs.
+     * @throws NullPointerException
+     *             if the byte array parameter is null
+     * @throws IndexOutOfBoundsException
+     *             if offset, len or buffer size are invalid
+     */
+    @Override
+    public int read(byte b[], int offset, int len) throws IOException {
+        if (b == null) {
+            throw new NullPointerException();
+        } else if (offset < 0 || len < 0) {
+            throw new IndexOutOfBoundsException();
+        } else if (offset > b.length || offset + len > b.length) {
+            throw new IndexOutOfBoundsException();
+        } else if (len == 0) {
+            return 0;
+        } else {
+            int readLen = 0;
+            /*
+             Rationale for while-loop on (readLen == 0):
+             -----
+             Base32.readResults() usually returns > 0 or EOF (-1).  In the
+             rare case where it returns 0, we just keep trying.
+
+             This is essentially an undocumented contract for InputStream
+             implementors that want their code to work properly with
+             java.io.InputStreamReader, since the latter hates it when
+             InputStream.read(byte[]) returns a zero.  Unfortunately our
+             readResults() call must return 0 if a large amount of the data
+             being decoded was non-base32, so this while-loop enables proper
+             interop with InputStreamReader for that scenario.
+             -----
+             This is a fix for CODEC-101
+            */
+            while (readLen == 0) {
+                if (!baseNCodec.hasData()) {
+                    byte[] buf = new byte[doEncode ? 4096 : 8192];
+                    int c = in.read(buf);
+                    if (c == -1) {
+                        break;
+                    }
+                    if (doEncode) {
+                        baseNCodec.encode(buf, 0, c);
+                    } else {
+                        baseNCodec.decode(buf, 0, c);
+                    }
+                }
+                readLen = baseNCodec.readResults(b, offset, len);
+            }
+            return readLen;
+        }
+    }
+    /**
+     * {@inheritDoc}
+     * 
+     * @return false
+     */
+    @Override
+    public boolean markSupported() {
+        return false; // not an easy job to support marks
+    }
+
+    /**
+     * {@inheritDoc}
+     *
+     * @throws IllegalArgumentException if the provided skip length is negative
+     */
+    @Override
+    public long skip(long n) throws IOException {
+        if (n < 0) {
+            throw new IllegalArgumentException("Negative skip length: " + n);
+        }
+        final int chunkSize = 512;
+        long remain = n;
+        while (remain > 0) {
+            final int skipped = read(new byte[(int) Math.min(remain, chunkSize)]);
+            if (skipped == EOF) {
+                break;
+            }
+            remain -= skipped;
+        }
+        return n - remain;
+    }
+
+    /**
+     * {@inheritDoc}
+     *
+     * @return <code>0</code> if the {@link InputStream} has reached <code>EOF</code>,
+     * <code>1</code> otherwise
+     */
+    @Override
+    public int available() throws IOException {
+        return baseNCodec.hasData() ? 1 : 0;
+    }
+
+    /**
+     * Indicates whether this stream supports the {@link #mark mark} and {@link #reset reset} methods.
+     * The <code>markSupported</code> method of <code>FilterInputStream</code> returns <code>false</code>.
+     *
+     * @since 1.4
+     */
+    @Override
+    public boolean markSupported() {
+        return false;
+    }
+
+    /**
+     * Marks the current position in this input stream. A subsequent call to the reset method repositions this stream at
+     * the last marked position so that subsequent reads re-read the same bytes.
+     *
+     * The readlimit arguments tells this input stream to allow that many bytes to be read before the mark position gets
+     * invalidated.
+     *
+     * The general contract of mark is that, if the method markSupported returns true, the stream somehow remembers all
+     * the bytes read after the call to mark and stands ready to supply those same bytes again if and whenever the method
+     * reset is called. However, the stream is not required to remember any data at all if more than readlimit bytes are
+     * read from the stream before reset is called.
+     *
+     * The mark method of <code>FilterInputStream</code> remembers nothing and does nothing except throw an exception if
+     * the attempt is made to mark a stream whose markSupported method returns false.
+     *
+     * @param readlimit
+     *            the maximum limit of bytes that can be read before the mark position becomes invalid.
+     * @exception IOException
+     *                if an I/O error occurs, or if mark is not supported.
+     * @see java.io.InputStream#mark(int)
+     * @since 1.4
+     */
+    @Override
+    public void mark(int readlimit) {
+        throw new UnsupportedOperationException();
+    }
+
+    /**
+     * Repositions this stream to the position at the time the mark method was last called on this input stream.
+     *
+     * The general contract of reset is:
+     * <ul>
+     * <li>If the method markSupported returns true, then:
+     * <ul>
+     * <li> If the method mark has not been called since the stream was created, or the number of bytes read from the
+     * stream since mark was last called is larger than the argument to mark at that last call, then an
+     * IOException might be thrown.
+     *
+     * <li> If such an IOException is not thrown, then the stream is reset to a state such that all the bytes read since
+     * the most recent call to mark (or since the start of the file, if mark has not been called) will be resupplied to
+     * subsequent callers of the read method, followed by any bytes that otherwise would have been the next input data
+     * as of the time of the call to reset.
+     * </ul>
+     *
+     * <li>If the method markSupported returns false, then:
+     * <ul>
+     * <li> The call to reset may throw an IOException.
+     *
+     * <li> If an IOException is not thrown, then the stream is reset to a fixed state that depends on the particular
+     * type of the input stream and how it was created. The bytes that will be supplied to subsequent callers of the
+     * read method depend on the particular type of the input stream.
+     * </ul>
+     * </ul>
+     *
+     * The method <code>reset</code> for class <code>FilterInputStream</code> does nothing except throw an
+     * <code>IOException</code>.
+     *
+     * @exception IOException
+     *                if this stream has not been marked or if the mark has been invalidated.
+     * @see java.io.InputStream#reset()
+     * @since 1.4
+     */
+    @Override
+    public void reset() throws IOException {
+        throw new UnsupportedOperationException();
+    }
+
+    /**
+     * Closes this input stream and releases any system resources associated with the stream.
+     *
+     * The <code>close</code> method of <code>FilterInputStream</code> calls its <code>flush</code> method, and then
+     * calls the <code>close</code> method of its underlying input stream.
+     *
+     * @exception IOException
+     *                if an I/O error occurs.
+     * @see java.io.FilterInputStream#in
+     * @see java.io.InputStream#close()
+     */
+    @Override
+    public void close() throws IOException {
+        in.close();
+    }
+}
+

@@ -1,0 +1,40 @@
+diff --git a/src/java/org/apache/commons/lang/enums/ValuedEnum.java b/src/java/org/apache/commons/lang/enums/ValuedEnum.java
+index 0823e77d..c524077e 100644
+--- a/src/java/org/apache/commons/lang/enums/ValuedEnum.java
++++ b/src/java/org/apache/commons/lang/enums/ValuedEnum.java
+@@ -102,8 +102,7 @@ import org.apache.commons.lang.ClassUtils;
+  * @since 2.1 (class existed in enum package from v1.0)
+  * @version $Id$
+  */
+-public abstract class ValuedEnum extends Enum {
+-    
++public abstract class ValuedEnum extends Enum implements Comparable {
+     /**
+      * Required for serialization support.
+      * 
+@@ -189,10 +182,21 @@ public abstract class ValuedEnum extends Enum {
+      * @param other  the object to determine the value for
+      * @return the value
+      */
+-            // ignore - should never happen
+-            // ignore - should never happen
+-            // ignore - should never happen
+-
++    private int getValue(Object other) {
++        int value = 0;
++        try {
++            Method method = other.getClass().getMethod("getValue", (Class[]) null);
++            Integer methodValue = (Integer) method.invoke(other, (Object[]) null);
++            value = methodValue.intValue();
++        } catch (NoSuchMethodException e) {
++            throw new IllegalArgumentException("The Enum must contain a getValue() method");
++        } catch (IllegalAccessException e) {
++            throw new IllegalArgumentException("The Enum getValue() method must be public");
++        } catch (InvocationTargetException e) {
++            throw new IllegalArgumentException("The Enum getValue() method must not throw an exception");
++        }
++        return value;
++    }
+     /**
+      * <p>Human readable description of this <code>Enum</code> item.</p>
+      *

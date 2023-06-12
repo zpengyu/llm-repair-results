@@ -1,0 +1,45 @@
+diff --git a/src/com/google/javascript/jscomp/CheckAccessControls.java b/src/com/google/javascript/jscomp/CheckAccessControls.java
+index c4ecc477..26bdd4fe 100644
+--- a/src/com/google/javascript/jscomp/CheckAccessControls.java
++++ b/src/com/google/javascript/jscomp/CheckAccessControls.java
+@@ -404,12 +404,12 @@ class CheckAccessControls implements ScopedCallback, HotSwapCompilerPass {
+    * @param t The current traversal.
+    * @param getprop The getprop node.
+    */
+-  private void checkPropertyVisibility(NodeTraversal t,
++ private void checkPropertyVisibility(NodeTraversal t,
+       Node getprop, Node parent) {
+     ObjectType objectType =
+         ObjectType.cast(dereference(getprop.getFirstChild().getJSType()));
+     String propertyName = getprop.getLastChild().getString();
+-
++    Node firstChild = getprop.getFirstChild();
+     if (objectType != null) {
+       // Is this a normal property access, or are we trying to override
+       // an existing property?
+@@ -472,15 +468,16 @@ class CheckAccessControls implements ScopedCallback, HotSwapCompilerPass {
+               isValidPrivateConstructorAccess(parent)) {
+             return;
+           }
+-
+-          // private access is not allowed outside the file from a different
+-          // enclosing class.
+-          compiler.report(
+-              t.makeError(getprop,
+-                  BAD_PRIVATE_PROPERTY_ACCESS,
+-                  propertyName,
+-                  validator.getReadableJSTypeName(
+-                      getprop.getFirstChild(), true)));
++          if(firstChild.getType() == Token.THIS){
++            // private access is not allowed outside the file from a different
++            // enclosing class.
++            compiler.report(
++                t.makeError(getprop,
++                    BAD_PRIVATE_PROPERTY_ACCESS,
++                    propertyName,
++                    validator.getReadableJSTypeName(
++                        getprop.getFirstChild(), true)));
++          }
+         } else if (visibility == Visibility.PROTECTED) {
+           // There are 3 types of legal accesses of a protected property:
+           // 1) Accesses in the same file

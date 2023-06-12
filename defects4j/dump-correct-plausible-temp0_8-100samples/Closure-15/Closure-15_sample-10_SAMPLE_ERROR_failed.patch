@@ -1,0 +1,37 @@
+diff --git a/src/com/google/javascript/jscomp/FlowSensitiveInlineVariables.java b/src/com/google/javascript/jscomp/FlowSensitiveInlineVariables.java
+index 0a7f29c3..f9decd1c 100644
+--- a/src/com/google/javascript/jscomp/FlowSensitiveInlineVariables.java
++++ b/src/com/google/javascript/jscomp/FlowSensitiveInlineVariables.java
+@@ -81,7 +81,8 @@ class FlowSensitiveInlineVariables extends AbstractPostOrderCallback
+   private static final Predicate<Node> SIDE_EFFECT_PREDICATE =
+     new Predicate<Node>() {
+       @Override
+-      public boolean apply(Node n) {
++class BuggyFunction {
++   public boolean apply(Node n) {
+         // When the node is null it means, we reached the implicit return
+         // where the function returns (possibly without an return statement)
+         if (n == null) {
+@@ -107,7 +104,21 @@ class FlowSensitiveInlineVariables extends AbstractPostOrderCallback
+         }
+         return false;
+       }
+-  };
++      public static void main (String[] args) {
++        BuggyFunction bf = new BuggyFunction();
++        Node n = new Node(1);
++        n.addChildToBack(new Node(2));
++        n.addChildToBack(new Node(3));
++        n.addChildToBack(new Node(4));
++        n.addChildToBack(new Node(5));
++        n.addChildToBack(new Node(6));
++        n.addChildToBack(new Node(7));
++        n.addChildToBack(new Node(8));
++        n.addChildToBack(new Node(9));
++        n.addChildToBack(new Node(10));
++        bf.apply(n);
++      }
++}  };
+ 
+   public FlowSensitiveInlineVariables(AbstractCompiler compiler) {
+     this.compiler = compiler;

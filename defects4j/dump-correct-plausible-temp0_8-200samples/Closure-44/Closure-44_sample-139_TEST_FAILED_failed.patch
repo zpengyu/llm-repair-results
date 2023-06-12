@@ -1,0 +1,27 @@
+diff --git a/src/com/google/javascript/jscomp/CodeConsumer.java b/src/com/google/javascript/jscomp/CodeConsumer.java
+index 74978330..3285ee81 100644
+--- a/src/com/google/javascript/jscomp/CodeConsumer.java
++++ b/src/com/google/javascript/jscomp/CodeConsumer.java
+@@ -196,11 +194,20 @@ abstract class CodeConsumer {
+       // REGEXP DIV REGEXP
+       // is valid and should print like
+       // / // / /
++    } else if (c == '/' &&
++        (getLastChar() == '=' || getLastChar() == '/')) {
++      // For example,
++      // (x/y) / z
++      // is valid and should print like
++      // (x / y) / z
++      //
++      // RegExp DIV DIV DIV DIV RegExp
++      // is valid and should print like
++      // / / / / / / /
++      append(" ");
+     }
+-
+     append(newcode);
+   }
+-
+   void appendOp(String op, boolean binOp) {
+     append(op);
+   }

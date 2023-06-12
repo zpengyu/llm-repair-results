@@ -1,0 +1,28 @@
+diff --git a/src/main/java/org/jsoup/nodes/LeafNode.java b/src/main/java/org/jsoup/nodes/LeafNode.java
+index 0e068b5..ae96741 100644
+--- a/src/main/java/org/jsoup/nodes/LeafNode.java
++++ b/src/main/java/org/jsoup/nodes/LeafNode.java
+@@ -39,16 +32,18 @@ abstract class LeafNode extends Node {
+     @Override
+     public String attr(String key) {
+         Validate.notNull(key);
+-        if (!hasAttributes()) {
++        if (hasAttributes()) {
++            Attributes attributes = (Attributes) value;
++            return attributes.hasKey(key) ? attributes.get(key) : EmptyString;
++        } else {
+             return key.equals(nodeName()) ? (String) value : EmptyString;
+         }
+-        return super.attr(key);
+     }
+-
+     @Override
+     public Node attr(String key, String value) {
+-        if (!hasAttributes() && key.equals(nodeName())) {
+-            this.value = value;
++        if (hasAttributes()) {
++            Attributes attributes = (Attributes) this.value;
++            attributes.put(key, value);
+         } else {
+             ensureAttributes();
+             super.attr(key, value);

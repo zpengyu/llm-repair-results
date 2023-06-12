@@ -1,0 +1,59 @@
+diff --git a/src/main/java/org/apache/commons/compress/compressors/bzip2/BZip2CompressorInputStream.java b/src/main/java/org/apache/commons/compress/compressors/bzip2/BZip2CompressorInputStream.java
+index bfedfd0b..8e324767 100644
+--- a/src/main/java/org/apache/commons/compress/compressors/bzip2/BZip2CompressorInputStream.java
++++ b/src/main/java/org/apache/commons/compress/compressors/bzip2/BZip2CompressorInputStream.java
+@@ -200,13 +200,12 @@ public class BZip2CompressorInputStream extends CompressorInputStream implements
+         switch (currentState) {
+         case EOF:
+             return -1;
+-
+         case START_BLOCK_STATE:
+-            throw new IllegalStateException();
+-
++            //moved to the next method
++            break;
+         case RAND_PART_A_STATE:
+-            throw new IllegalStateException();
+-
++            //moved to the next method
++            break;
+         case RAND_PART_B_STATE:
+             setupRandPartB();
+             break;
+@@ -214,10 +212,9 @@ public class BZip2CompressorInputStream extends CompressorInputStream implements
+         case RAND_PART_C_STATE:
+             setupRandPartC();
+             break;
+-
+         case NO_RAND_PART_A_STATE:
+-            throw new IllegalStateException();
+-
++            //moved to the next method
++            break;
+         case NO_RAND_PART_B_STATE:
+             setupNoRandPartB();
+             break;
+@@ -231,7 +226,22 @@ public class BZip2CompressorInputStream extends CompressorInputStream implements
+         }
+         return retChar;
+     }
+-
++    private void setupNoRandPartA() {
++        if (this.inUse16[this.block[this.blockPointer]] == 0) {
++            this.currentState = NO_RAND_PART_A_STATE;
++            this.currentChar = this.block[this.blockPointer];
++        } else {
++            this.setupNoRandPartB();
++        }
++    }
++    private void setupRandPartA() {
++        if (this.inUse16[this.block[this.blockPointer]] == 0) {
++            this.currentState = RAND_PART_A_STATE;
++            this.currentChar = this.block[this.blockPointer];
++        } else {
++            this.setupRandPartB();
++        }
++    }
+     private boolean init(boolean isFirstStream) throws IOException {
+         if (null == in) {
+             throw new IOException("No InputStream");

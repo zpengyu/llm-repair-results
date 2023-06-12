@@ -1,0 +1,109 @@
+###Provide a fix for the buggy function
+###Buggy Function
+class FibonacciExample {
+    public static void main(String args[]) {
+        int n1 = 0, n2 = 1, n3, i, count = 10;
+
+        System.out.print(n1 + " " + n2);
+
+        for (i = 2; i < count; ++i) {
+            n3 = n1 - n2;
+            System.out.print(" " + n3);
+            n1 = n2;
+            n2 = n3;
+        }
+    }
+}
+
+###Fixed Function
+class FibonacciExample {
+    public static void main(String args[]) {
+        int n1 = 0, n2 = 1, n3, i, count = 10;
+
+        System.out.print(n1 + " " + n2);
+
+        for (i = 2; i < count; ++i) {
+            n3 = n1 + n2;
+            System.out.print(" " + n3);
+            n1 = n2;
+            n2 = n3;
+        }
+    }
+}
+
+###Provide a fix for the buggy function
+###Buggy Function
+public TokenBuffer deserialize(JsonParser jp, DeserializationContext ctxt) throws IOException
+{
+    copyCurrentStructure(jp);
+    return this;
+}
+###Fixed Function
+public TokenBuffer deserialize(JsonParser jp, DeserializationContext ctxt) throws IOException
+{
+    if (jp.getCurrentTokenId() != JsonToken.FIELD_NAME.id()) {
+        copyCurrentStructure(jp);
+        return this;
+    }
+    /* 28-Oct-2014, tatu: As per #592, need to support a special case of starting from
+     *    FIELD_NAME, which is taken to mean that we are missing START_OBJECT, but need
+     *    to assume one did exist.
+     */
+    JsonToken t;
+    writeStartObject();
+    do {
+        copyCurrentStructure(jp);
+    } while ((t = jp.nextToken()) == JsonToken.FIELD_NAME);
+    if (t != JsonToken.END_OBJECT) {
+        throw ctxt.mappingException("Expected END_OBJECT after copying contents of a JsonParser into TokenBuffer, got "+t);
+    }
+    writeEndObject();
+    return this;
+}
+###Provide a fix for the buggy function
+###Buggy Function
+    public void serializeAsColumn(Object bean, JsonGenerator jgen, SerializerProvider prov)
+        throws Exception
+    {
+        Object value = get(bean);
+        if (value == null) { // nulls need specialized handling
+            if (_nullSerializer != null) {
+                _nullSerializer.serialize(null, jgen, prov);
+            } else { // can NOT suppress entries in tabular output
+                jgen.writeNull();
+            }
+        }
+        // otherwise find serializer to use
+        JsonSerializer<Object> ser = _serializer;
+        if (ser == null) {
+            Class<?> cls = value.getClass();
+            PropertySerializerMap map = _dynamicSerializers;
+            ser = map.serializerFor(cls);
+            if (ser == null) {
+                ser = _findAndAddDynamic(map, cls, prov);
+            }
+        }
+        // and then see if we must suppress certain values (default, empty)
+        if (_suppressableValue != null) {
+            if (MARKER_FOR_EMPTY == _suppressableValue) {
+                if (ser.isEmpty(value)) { // can NOT suppress entries in tabular output
+                    serializeAsPlaceholder(bean, jgen, prov);
+                    return;
+                }
+            } else if (_suppressableValue.equals(value)) { // can NOT suppress entries in tabular output
+                serializeAsPlaceholder(bean, jgen, prov);
+                return;
+            }
+        }
+        // For non-nulls: simple check for direct cycles
+        if (value == bean) {
+            _handleSelfReference(bean, ser);
+        }
+        if (_typeSerializer == null) {
+            ser.serialize(value, jgen, prov);
+        } else {
+            ser.serializeWithType(value, jgen, prov, _typeSerializer);
+        }
+    }
+
+###Fixed Function

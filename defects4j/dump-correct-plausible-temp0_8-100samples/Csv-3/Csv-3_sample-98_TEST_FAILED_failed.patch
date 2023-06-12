@@ -1,0 +1,32 @@
+diff --git a/src/main/java/org/apache/commons/csv/Lexer.java b/src/main/java/org/apache/commons/csv/Lexer.java
+index c161334..0520926 100644
+--- a/src/main/java/org/apache/commons/csv/Lexer.java
++++ b/src/main/java/org/apache/commons/csv/Lexer.java
+@@ -108,6 +108,27 @@ abstract class Lexer {
+             throw new IOException("EOF whilst processing escape sequence");
+         default:
+             // Now check for meta-characters
++            if (c == 'u') {
++                final StringBuilder sb = new StringBuilder();
++                for (int i = 0; i < 4; ++i) {
++                    sb.append((char) in.read());
++                }
++                try {
++                    return Integer.parseInt(sb.toString(), 16);
++                } catch (final NumberFormatException e) {
++                    throw new IOException("unable to parse unicode character");
++                }
++            } else if (c == 'U') {
++                final StringBuilder sb = new StringBuilder();
++                for (int i = 0; i < 8; ++i) {
++                    sb.append((char) in.read());
++                }
++                try {
++                    return Integer.parseInt(sb.toString(), 16);
++                } catch (final NumberFormatException e) {
++                    throw new IOException("unable to parse unicode character");
++                }
++            }
+                 return c;
+             // indicate unexpected char - available from in.getLastChar()
+         }

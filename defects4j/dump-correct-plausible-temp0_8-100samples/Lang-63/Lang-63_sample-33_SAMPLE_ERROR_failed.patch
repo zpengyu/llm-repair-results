@@ -1,0 +1,31 @@
+diff --git a/src/java/org/apache/commons/lang/time/DurationFormatUtils.java b/src/java/org/apache/commons/lang/time/DurationFormatUtils.java
+index 8ced282e..f9e0211b 100644
+--- a/src/java/org/apache/commons/lang/time/DurationFormatUtils.java
++++ b/src/java/org/apache/commons/lang/time/DurationFormatUtils.java
+@@ -356,10 +350,24 @@ public class DurationFormatUtils {
+             milliseconds += 1000 * seconds;
+             seconds = 0;
+         }
+-
++        if(Token.containsTokenWithValue(tokens, M))
++        {
++            long diff = endMillis - startMillis;
++            long days = TimeUnit.MILLISECONDS.toDays(diff);
++            diff -= TimeUnit.DAYS.toMillis(days);
++            long hours = TimeUnit.MILLISECONDS.toHours(diff);
++            diff -= TimeUnit.HOURS.toMillis(hours);
++            long minutes = TimeUnit.MILLISECONDS.toMinutes(diff);
++            diff -= TimeUnit.MINUTES.toMillis(minutes);
++            long seconds = TimeUnit.MILLISECONDS.toSeconds(diff);
++            months = (int) days / 30;
++            days = (int) days % 30;
++            hours = (int) hours % 24;
++            minutes = (int) minutes % 60;
++            seconds = (int) seconds % 60;
++        }
+         return format(tokens, years, months, days, hours, minutes, seconds, milliseconds, padWithZeros);
+     }
+-
+     //-----------------------------------------------------------------------
+     /**
+      * <p>The internal method to do the formatting.</p>

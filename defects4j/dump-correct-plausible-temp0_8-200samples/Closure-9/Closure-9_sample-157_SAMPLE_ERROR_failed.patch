@@ -1,0 +1,71 @@
+diff --git a/src/com/google/javascript/jscomp/ProcessCommonJSModules.java b/src/com/google/javascript/jscomp/ProcessCommonJSModules.java
+index 6107328b..e8090da3 100644
+--- a/src/com/google/javascript/jscomp/ProcessCommonJSModules.java
++++ b/src/com/google/javascript/jscomp/ProcessCommonJSModules.java
+@@ -35,16 +35,10 @@ import java.util.regex.Pattern;
+  * goog.provide and goog.require are emitted for closure compiler automatic
+  * ordering.
+  */
+-public class ProcessCommonJSModules implements CompilerPass {
+-  // According to the spec, the forward slash should be the delimite on
+-  // all platforms.
++ProcessCommonJSModules implements CompilerPass {
+   private static final String MODULE_SLASH = "/";
+-
+-  public static final String DEFAULT_FILENAME_PREFIX = "." + MODULE_SLASH;
+-
+   private static final String MODULE_NAME_SEPARATOR = "\\$";
+   private static final String MODULE_NAME_PREFIX = "module$";
+-
+   private final AbstractCompiler compiler;
+   private final String filenamePrefix;
+   private final boolean reportDependencies;
+@@ -71,48 +61,6 @@ public class ProcessCommonJSModules implements CompilerPass {
+   String guessCJSModuleName(String filename) {
+     return toModuleName(normalizeSourceName(filename));
+   }
+-
+-  /**
+-   * For every file that is being processed this returns the module that
+-   * created for it.
+-   */
+-  JSModule getModule() {
+-    return module;
+-  }
+-
+-  /**
+-   * Turns a filename into a JS identifier that is used for moduleNames in
+-   * rewritten code. Removes leading ./, replaces / with $, removes trailing .js
+-   * and replaces - with _. All moduleNames get a "module$" prefix.
+-   */
+-  public static String toModuleName(String filename) {
+-    return MODULE_NAME_PREFIX +
+-        filename.replaceAll("^\\." + Pattern.quote(MODULE_SLASH), "")
+-            .replaceAll(Pattern.quote(MODULE_SLASH), MODULE_NAME_SEPARATOR)
+-            .replaceAll("\\.js$", "").replaceAll("-", "_");
+-  }
+-
+-  /**
+-   * Turn a filename into a moduleName with support for relative addressing
+-   * with ./ and ../ based on currentFilename;
+-   */
+-  public static String toModuleName(String requiredFilename,
+-      String currentFilename) {
+-    requiredFilename = requiredFilename.replaceAll("\\.js$", "");
+-    currentFilename = currentFilename.replaceAll("\\.js$", "");
+-
+-    if (requiredFilename.startsWith("." + MODULE_SLASH) ||
+-        requiredFilename.startsWith(".." + MODULE_SLASH)) {
+-      try {
+-        requiredFilename = (new URI(currentFilename)).resolve(new URI(requiredFilename))
+-            .toString();
+-      } catch (URISyntaxException e) {
+-        throw new RuntimeException(e);
+-      }
+-    }
+-    return toModuleName(requiredFilename);
+-  }
+-
+   private String normalizeSourceName(String filename) {
+     // The DOS command shell will normalize "/" to "\", so we have to
+     // wrestle it back.

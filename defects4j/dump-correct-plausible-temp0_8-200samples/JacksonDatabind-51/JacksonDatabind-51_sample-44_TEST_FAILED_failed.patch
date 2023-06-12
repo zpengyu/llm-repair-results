@@ -1,0 +1,33 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/jsontype/impl/TypeDeserializerBase.java b/src/main/java/com/fasterxml/jackson/databind/jsontype/impl/TypeDeserializerBase.java
+index 339362e1e..5e34f5c97 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/jsontype/impl/TypeDeserializerBase.java
++++ b/src/main/java/com/fasterxml/jackson/databind/jsontype/impl/TypeDeserializerBase.java
+@@ -155,6 +155,9 @@ public abstract class TypeDeserializerBase
+                     // 10-May-2016, tatu: We may get some help...
+                     JavaType actual = _handleUnknownTypeId(ctxt, typeId, _idResolver, _baseType);
+                     if (actual == null) { // what should this be taken to mean?
++                        /* 10-May-2016, tatu: There is one known case where this can happen,
++                         *   for [databind#1161]; but not sure if there are others.
++                         */
+                         // TODO: try to figure out something better
+                         return null;
+                     }
+@@ -170,8 +173,7 @@ public abstract class TypeDeserializerBase
+                  *   we may try to narrow a SimpleType (Object.class) into MapType (Map.class), losing actual
+                  *   type in process (getting SimpleType of Map.class which will not work as expected)
+                  */
+-                if ((_baseType != null)
+-                        && _baseType.getClass() == type.getClass()) {
++                if (_baseType != null && !_baseType.hasRawClass(type.getRawClass())) {
+                     /* 09-Aug-2015, tatu: Not sure if the second part of the check makes sense;
+                      *   but it appears to check that JavaType impl class is the same which is
+                      *   important for some reason?
+@@ -181,7 +183,7 @@ public abstract class TypeDeserializerBase
+                     //   generic type with custom type resolvers. If so, should try to retain them.
+                     //  Whether this is sufficient to avoid problems remains to be seen, but for
+                     //  now it should improve things.
+-                        type = ctxt.getTypeFactory().constructSpecializedType(_baseType, type.getRawClass());
++                    type = ctxt.getTypeFactory().constructSpecializedType(_baseType, type.getRawClass());
+                 }
+                 deser = ctxt.findContextualValueDeserializer(type, _property);
+             }

@@ -1,0 +1,29 @@
+diff --git a/src/java/org/apache/commons/jxpath/ri/axes/UnionContext.java b/src/java/org/apache/commons/jxpath/ri/axes/UnionContext.java
+index 0ea5b51..812c45d 100644
+--- a/src/java/org/apache/commons/jxpath/ri/axes/UnionContext.java
++++ b/src/java/org/apache/commons/jxpath/ri/axes/UnionContext.java
+@@ -32,16 +32,20 @@ import org.apache.commons.jxpath.ri.model.NodePointer;
+ public class UnionContext extends NodeSetContext {
+     private EvalContext contexts[];
+     private boolean prepared;
+-
++    private int documentOrder;
+     public UnionContext(EvalContext parentContext, EvalContext contexts[]) {
+         super(parentContext, new BasicNodeSet());
+         this.contexts = contexts;
+     }
+-
+     public int getDocumentOrder() {
+-        return contexts.length > 1 ? 1 : super.getDocumentOrder();
++        if (documentOrder == 0) {
++            documentOrder = 1;
++            for (int i = 0; i < contexts.length; i++) {
++                documentOrder = Math.max(documentOrder, contexts[i].getDocumentOrder());
++            }
++        }
++        return documentOrder;
+     }
+-
+     public boolean setPosition(int position) {
+         if (!prepared) {
+             prepared = true;

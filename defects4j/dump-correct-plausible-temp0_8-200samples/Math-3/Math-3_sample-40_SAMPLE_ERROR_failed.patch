@@ -1,0 +1,40 @@
+diff --git a/src/main/java/org/apache/commons/math3/util/MathArrays.java b/src/main/java/org/apache/commons/math3/util/MathArrays.java
+index 9ef28e3d8..32b55b8c7 100644
+--- a/src/main/java/org/apache/commons/math3/util/MathArrays.java
++++ b/src/main/java/org/apache/commons/math3/util/MathArrays.java
+@@ -817,12 +817,15 @@ public class MathArrays {
+         if (len != b.length) {
+             throw new DimensionMismatchException(len, b.length);
+         }
+-
+             // Revert to scalar multiplication.
+-
++        for (int i = 0; i < len; i++) {
++            if (Double.isInfinite(a[i]) ||
++                Double.isInfinite(b[i])) {
++                return Double.POSITIVE_INFINITY * a[i] * b[i];
++            }
++        }
+         final double[] prodHigh = new double[len];
+         double prodLowSum = 0;
+-
+         for (int i = 0; i < len; i++) {
+             final double ai = a[i];
+             final double ca = SPLIT_FACTOR * ai;
+@@ -867,10 +864,14 @@ public class MathArrays {
+                 result += a[i] * b[i];
+             }
+         }
+-
+         return result;
+     }
+-
++Javaparser is a library that helps to traverse source code programmatically.
++- Parse source code as a tree of JavaParser objects
++- Save a JavaParser tree back to source code
++- Combine pieces of JavaParser trees to create a new one
++- Traverse the tree applying a custom object to each node in the tree
++- Search for a pattern in the tree
+     /**
+      * Compute a linear combination accurately.
+      * <p>

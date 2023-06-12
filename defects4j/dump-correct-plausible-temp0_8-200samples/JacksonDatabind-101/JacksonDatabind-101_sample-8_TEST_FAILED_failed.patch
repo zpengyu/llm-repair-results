@@ -1,0 +1,38 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/deser/BeanDeserializer.java b/src/main/java/com/fasterxml/jackson/databind/deser/BeanDeserializer.java
+index 3c89dc109..8bb69dfd1 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/deser/BeanDeserializer.java
++++ b/src/main/java/com/fasterxml/jackson/databind/deser/BeanDeserializer.java
+@@ -805,11 +802,7 @@ public class BeanDeserializer
+             //    both to any setter AND buffer... but, for now, the only thing
+             //    we can do.
+             // how about any setter? We'll get copies but...
+-            if (_anySetter == null) {
+-                // but... others should be passed to unwrapped property deserializers
+-                tokens.writeFieldName(propName);
+-                tokens.copyCurrentStructure(p);
+-            } else {
++            if (_anySetter != null) {
+                 // Need to copy to a separate buffer first
+                 TokenBuffer b2 = TokenBuffer.asCopyOfValue(p);
+                 tokens.writeFieldName(propName);
+@@ -822,8 +815,19 @@ public class BeanDeserializer
+                 }
+                 continue;
+             }
++            // !!! 08-Jul-2011, tatu: Probably should try to avoid sending content
++            //   both to any setter AND buffer... but, for now, the only thing
++            //   we can do
++            // how about any setter? We'll get copies but...
++            // 24-Jan-2017, tatu: ... if we have one, let's let it handle things
++            if (_anySetter != null) {
++                buffer.bufferAnyProperty(_anySetter, propName, _anySetter.deserialize(p, ctxt));
++                continue;
++            }
++            // Ok then, let's collect the whole field; name and value
++            tokens.writeFieldName(propName);
++            tokens.copyCurrentStructure(p);
+         }
+-
+         // We hit END_OBJECT, so:
+         Object bean;
+         try {

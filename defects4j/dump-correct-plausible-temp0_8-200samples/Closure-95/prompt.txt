@@ -1,0 +1,121 @@
+###Provide a fix for the buggy function
+###Buggy Function
+class FibonacciExample {
+    public static void main(String args[]) {
+        int n1 = 0, n2 = 1, n3, i, count = 10;
+
+        System.out.print(n1 + " " + n2);
+
+        for (i = 2; i < count; ++i) {
+            n3 = n1 - n2;
+            System.out.print(" " + n3);
+            n1 = n2;
+            n2 = n3;
+        }
+    }
+}
+
+###Fixed Function
+class FibonacciExample {
+    public static void main(String args[]) {
+        int n1 = 0, n2 = 1, n3, i, count = 10;
+
+        System.out.print(n1 + " " + n2);
+
+        for (i = 2; i < count; ++i) {
+            n3 = n1 + n2;
+            System.out.print(" " + n3);
+            n1 = n2;
+            n2 = n3;
+        }
+    }
+}
+
+###Provide a fix for the buggy function
+###Buggy Function
+private static boolean isReduceableFunctionExpression(Node n) {
+  return NodeUtil.isFunctionExpression(n);
+}
+###Fixed Function
+private static boolean isReduceableFunctionExpression(Node n) {
+  return NodeUtil.isFunctionExpression(n)
+      && !NodeUtil.isGetOrSetKey(n.getParent());
+}
+###Provide a fix for the buggy function
+###Buggy Function
+    void defineSlot(Node n, Node parent, JSType type, boolean inferred) {
+      Preconditions.checkArgument(inferred || type != null);
+
+      // Only allow declarations of NAMEs and qualfied names.
+      boolean shouldDeclareOnGlobalThis = false;
+      if (n.getType() == Token.NAME) {
+        Preconditions.checkArgument(
+            parent.getType() == Token.FUNCTION ||
+            parent.getType() == Token.VAR ||
+            parent.getType() == Token.LP ||
+            parent.getType() == Token.CATCH);
+        shouldDeclareOnGlobalThis = scope.isGlobal() &&
+            (parent.getType() == Token.VAR ||
+             parent.getType() == Token.FUNCTION);
+      } else {
+        Preconditions.checkArgument(
+            n.getType() == Token.GETPROP &&
+            (parent.getType() == Token.ASSIGN ||
+             parent.getType() == Token.EXPR_RESULT));
+      }
+      String variableName = n.getQualifiedName();
+      Preconditions.checkArgument(!variableName.isEmpty());
+
+      // If n is a property, then we should really declare it in the
+      // scope where the root object appears. This helps out people
+      // who declare "global" names in an anonymous namespace.
+      Scope scopeToDeclareIn = scope;
+
+        // don't try to declare in the global scope if there's
+        // already a symbol there with this name.
+
+      // declared in closest scope?
+      if (scopeToDeclareIn.isDeclared(variableName, false)) {
+        Var oldVar = scopeToDeclareIn.getVar(variableName);
+        validator.expectUndeclaredVariable(
+            sourceName, n, parent, oldVar, variableName, type);
+      } else {
+        if (!inferred) {
+          setDeferredType(n, type);
+        }
+        CompilerInput input = compiler.getInput(sourceName);
+        scopeToDeclareIn.declare(variableName, n, type, input, inferred);
+
+        if (shouldDeclareOnGlobalThis) {
+          ObjectType globalThis =
+              typeRegistry.getNativeObjectType(JSTypeNative.GLOBAL_THIS);
+          boolean isExtern = input.isExtern();
+          if (inferred) {
+            globalThis.defineInferredProperty(variableName,
+                type == null ?
+                    getNativeType(JSTypeNative.NO_TYPE) :
+                    type,
+                isExtern);
+          } else {
+            globalThis.defineDeclaredProperty(variableName, type, isExtern);
+          }
+        }
+
+        // If we're in the global scope, also declare var.prototype
+        // in the scope chain.
+        if (scopeToDeclareIn.isGlobal() && type instanceof FunctionType) {
+          FunctionType fnType = (FunctionType) type;
+          if (fnType.isConstructor() || fnType.isInterface()) {
+            FunctionType superClassCtor = fnType.getSuperClassConstructor();
+            scopeToDeclareIn.declare(variableName + ".prototype", n,
+                fnType.getPrototype(), compiler.getInput(sourceName),
+                /* declared iff there's an explicit supertype */
+                superClassCtor == null ||
+                superClassCtor.getInstanceType().equals(
+                    getNativeType(OBJECT_TYPE)));
+          }
+        }
+      }
+    }
+
+###Fixed Function

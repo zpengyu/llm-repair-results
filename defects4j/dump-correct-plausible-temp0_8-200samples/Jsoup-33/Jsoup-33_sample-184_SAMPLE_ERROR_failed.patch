@@ -1,0 +1,19 @@
+diff --git a/src/main/java/org/jsoup/parser/HtmlTreeBuilder.java b/src/main/java/org/jsoup/parser/HtmlTreeBuilder.java
+index 5c8d58c..6c46dfd 100644
+--- a/src/main/java/org/jsoup/parser/HtmlTreeBuilder.java
++++ b/src/main/java/org/jsoup/parser/HtmlTreeBuilder.java
+@@ -162,7 +162,13 @@ class HtmlTreeBuilder extends TreeBuilder {
+             tokeniser.emit(new Token.EndTag(el.tagName()));  // ensure we get out of whatever state we are in. emitted for yielded processing
+             return el;
+         }
+-        
++        if (startTag.selfClosingOk) { // handle self closing tags
++            Element el = new Element(Tag.valueOf(startTag.name()), baseUri, startTag.attributes);
++            insert(el);
++            stack.add(el);
++            tokeniser.emit(new Token.EndTag(startTag.name()));
++            return el;
++        }
+         Element el = new Element(Tag.valueOf(startTag.name()), baseUri, startTag.attributes);
+         insert(el);
+         return el;

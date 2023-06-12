@@ -1,0 +1,28 @@
+diff --git a/src/com/google/javascript/rhino/jstype/PrototypeObjectType.java b/src/com/google/javascript/rhino/jstype/PrototypeObjectType.java
+index 77c5441e..9de7510c 100644
+--- a/src/com/google/javascript/rhino/jstype/PrototypeObjectType.java
++++ b/src/com/google/javascript/rhino/jstype/PrototypeObjectType.java
+@@ -577,5 +576,21 @@ class PrototypeObjectType extends ObjectType {
+         }
+       }
+     }
+-  }
+-}
++    else if (constraintObj.isNoType()) {
++      // We don't want to lose the function type if the constraint is NoType
++      if (this.isFunctionType()) {
++        return;
++      }
++    }
++    else {
++      // TODO(user): Remove this special case when we do more precise
++      // instantiation. For now, we need to preserve the type information
++      // better for most of our closure primitive types, so we filter out
++      // all non-record types.
++      for (String prop : getOwnPropertyNames()) {
++        if (!isPropertyTypeDeclared(prop)) {
++          removeProperty(prop);
++        }
++      }
++    }
++  }}

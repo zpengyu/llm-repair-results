@@ -1,0 +1,23 @@
+diff --git a/src/main/java/org/apache/commons/compress/utils/BitInputStream.java b/src/main/java/org/apache/commons/compress/utils/BitInputStream.java
+index 4086c8b5..384b11c5 100644
+--- a/src/main/java/org/apache/commons/compress/utils/BitInputStream.java
++++ b/src/main/java/org/apache/commons/compress/utils/BitInputStream.java
+@@ -85,7 +85,10 @@ public class BitInputStream implements Closeable {
+         while (bitsCachedSize < count) {
+             final long nextByte = in.read();
+             if (nextByte < 0) {
+-                return nextByte;
++                if (bitsCachedSize == 0) {
++                    return nextByte;
++                }
++                throw new IOException("Error reading from stream: Premature end of file encountered.");
+             }
+             if (byteOrder == ByteOrder.LITTLE_ENDIAN) {
+                 bitsCached |= (nextByte << bitsCachedSize);
+@@ -106,5 +108,4 @@ public class BitInputStream implements Closeable {
+             }
+             bitsCachedSize -= count;
+         return bitsOut;
+-    }
+-}
++    }}

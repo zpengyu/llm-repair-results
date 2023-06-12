@@ -1,0 +1,32 @@
+diff --git a/src/com/google/javascript/jscomp/TypeCheck.java b/src/com/google/javascript/jscomp/TypeCheck.java
+index 6030d48d..0f4c5389 100644
+--- a/src/com/google/javascript/jscomp/TypeCheck.java
++++ b/src/com/google/javascript/jscomp/TypeCheck.java
+@@ -1541,10 +1541,9 @@ public class TypeCheck implements NodeTraversal.Callback, CompilerPass {
+    * scope chain to use in name lookups as well as error reporting.
+    * @param n The node being visited.
+    */
+-  private void visitCall(NodeTraversal t, Node n) {
++private void visitCall(NodeTraversal t, Node n) {
+     Node child = n.getFirstChild();
+     JSType childType = getJSType(child).restrictByNotNullOrUndefined();
+-
+     if (!childType.canBeCalled()) {
+       report(t, n, NOT_CALLABLE, childType.toString());
+       ensureTyped(t, n);
+@@ -1574,10 +1570,12 @@ public class TypeCheck implements NodeTraversal.Callback, CompilerPass {
+            !isExtern)) {
+         report(t, n, CONSTRUCTOR_NOT_CALLABLE, childType.toString());
+       }
+-
+-      // Functions with explcit 'this' types must be called in a GETPROP
++      // Functions with explicit 'this' types must be called in a GETPROP
+       // or GETELEM.
+-
++      if (n.getType() == Token.CALL &&
++          !child.getJSType().getTypeOfThis().isUnknownType()) {
++        report(t, n, EXPECTED_THIS_TYPE);
++      }
+       visitParameterList(t, n, functionType);
+       ensureTyped(t, n, functionType.getReturnType());
+     } else {

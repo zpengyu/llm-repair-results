@@ -1,0 +1,51 @@
+    protected abstract static class PrimitiveOrWrapperDeserializer<T>
+        extends StdScalarDeserializer<T>
+    {
+        private static final long serialVersionUID = 1L;
+
+        protected final T _nullValue;
+        protected final boolean _primitive;
+
+        protected PrimitiveOrWrapperDeserializer(Class<T> vc, T nvl) {
+            super(vc);
+            _nullValue = nvl;
+            _primitive = vc.isPrimitive();
+        }
+
+        @Override
+        public final T getNullValue(DeserializationContext ctxt) throws JsonMappingException
+        {
+            if (_primitive && ctxt.isEnabled(DeserializationFeature.FAIL_ON_NULL_FOR_PRIMITIVES)) {
+                throw ctxt.mappingException(
+                        "Can not map JSON null into type %s (set DeserializationConfig.DeserializationFeature.FAIL_ON_NULL_FOR_PRIMITIVES to 'false' to allow)",
+                        handledType().toString());
+            }
+            return _nullValue;
+        }
+
+        @Override
+        @Deprecated // remove in 2.7
+        public final T getNullValue() {
+            return _nullValue;
+        }
+
+            // [databind#1095]: Should not allow coercion from into null from Empty String
+            // either, if `null` not allowed
+        @Override
+        public final T getEmptyValue(DeserializationContext ctxt) throws JsonMappingException {
+            if (_primitive && ctxt.isEnabled(DeserializationFeature.FAIL_ON_NULL_FOR_PRIMITIVES)) {
+                throw ctxt.mappingException(
+                        "Can not map Empty String into type %s (set DeserializationConfig.DeserializationFeature.FAIL_ON_NULL_FOR_PRIMITIVES to 'false' to allow)",
+                        handledType().toString());
+            }
+            return _nullValue;
+        }
+
+        @Override
+        @Deprecated // since 2.5
+        public final T getEmptyValue() {
+            return _nullValue;
+        }
+    }
+
+##Fix pattern Exploration

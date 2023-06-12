@@ -1,0 +1,28 @@
+diff --git a/src/com/google/javascript/jscomp/ExploitAssigns.java b/src/com/google/javascript/jscomp/ExploitAssigns.java
+index 196b710d..24ddac46 100644
+--- a/src/com/google/javascript/jscomp/ExploitAssigns.java
++++ b/src/com/google/javascript/jscomp/ExploitAssigns.java
+@@ -209,16 +209,16 @@ class ExploitAssigns extends AbstractPeepholeOptimization {
+       return true;
+     }
+     Preconditions.checkArgument(node.isGetProp());
+-
+-      node = node.getFirstChild();
++    node = node.getFirstChild();
++    // TODO(nicksantos): Make this check more robust.
++    // We should check if this is a prototype property, or if it's ever
++    // assigned to.
+     if (node.isName()
+-        && isNameAssignedTo(node.getString(), replacement)) {
+-      return false;
++        && !isNameAssignedTo(node.getString(), replacement)) {
++      return true;
+     }
+-
+-    return true;
++    return false;
+   }
+-
+   /**
+    * @return Whether name is assigned in the expression rooted at node.
+    */

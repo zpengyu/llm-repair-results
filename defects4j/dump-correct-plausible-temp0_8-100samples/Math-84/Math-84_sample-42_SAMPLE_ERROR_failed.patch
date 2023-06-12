@@ -1,0 +1,58 @@
+diff --git a/src/main/java/org/apache/commons/math/optimization/direct/MultiDirectional.java b/src/main/java/org/apache/commons/math/optimization/direct/MultiDirectional.java
+index 2fa8c34bf..026d557ab 100644
+--- a/src/main/java/org/apache/commons/math/optimization/direct/MultiDirectional.java
++++ b/src/main/java/org/apache/commons/math/optimization/direct/MultiDirectional.java
+@@ -76,28 +71,43 @@ public class MultiDirectional extends DirectSearchOptimizer {
+                 // compute the expanded simplex
+                 final RealPointValuePair[] reflectedSimplex = simplex;
+                 final RealPointValuePair expanded = evaluateNewSimplex(original, khi, comparator);
+-                if (comparator.compare(reflected, expanded) <= 0) {
++                if (comparator.compare(best, expanded) <= 0 &&
++                    comparator.compare(reflected, expanded) <= 0) {
++                    // accept the expanded simplex
++                    simplex = reflectedSimplex;
++                } else {
+                     // accept the reflected simplex
+                     simplex = reflectedSimplex;
+                 }
+-
+                 return;
+-
+             }
+-
+             // compute the contracted simplex
+             final RealPointValuePair contracted = evaluateNewSimplex(original, gamma, comparator);
+-            if (comparator.compare(contracted, best) < 0) {
++            if (comparator.compare(contracted, best) <= 0) {
+                 // accept the contracted simplex
+-
+-            // check convergence
+                 return;
+             }
+-
++            // compute the reduced simplex
++            final RealPointValuePair[] reduced = new RealPointValuePair[n];
++            for (int i = 0; i < n; ++i) {
++                final double[] xi = original[i].getPointRef();
++                final double[] xr = best.getPointRef();
++                final double[] xs = reduced[i].getPoint();
++                for (int j = 0; j < n; ++j) {
++                    xs[j] = xi[j] + sigma * (xi[j] - xr[j]);
++                }
++            }
++            sort(reduced, comparator);
++            if (comparator.compare(reduced[0], best) < 0) {
++                // accept the reduced simplex
++                simplex = reduced;
++                return;
++            }
++            // reject the reduced simplex and try again with
++            // the reflection coefficient reduced by a factor of 2
++            alpha *= 0.5;
+         }
+-
+     }
+-
+     /** Compute and evaluate a new simplex.
+      * @param original original simplex (to be preserved)
+      * @param coeff linear coefficient

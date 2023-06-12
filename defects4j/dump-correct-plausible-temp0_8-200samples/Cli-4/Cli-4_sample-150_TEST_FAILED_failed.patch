@@ -1,0 +1,65 @@
+diff --git a/src/java/org/apache/commons/cli/Parser.java b/src/java/org/apache/commons/cli/Parser.java
+index 2ce0273..a4ea24c 100644
+--- a/src/java/org/apache/commons/cli/Parser.java
++++ b/src/java/org/apache/commons/cli/Parser.java
+@@ -287,27 +287,45 @@ public abstract class Parser implements CommandLineParser {
+      * @throws MissingOptionException if any of the required Options
+      * are not present.
+      */
+-    private void checkRequiredOptions()
+-        throws MissingOptionException
++private void checkRequiredOptions()
++    throws MissingOptionException
++{
++    // if there are required options that have not been
++    // processsed
++    if (requiredOptions.size() > 0)
+     {
+-        // if there are required options that have not been
+-        // processsed
+-        if (requiredOptions.size() > 0)
++        Iterator iter = requiredOptions.iterator();
++        StringBuffer buff = new StringBuffer("Missing required option");
++        int size = requiredOptions.size();
++        if (size == 1)
+         {
+-            Iterator iter = requiredOptions.iterator();
+-            StringBuffer buff = new StringBuffer();
+-
+-
+-            // loop through the required options
+-            while (iter.hasNext())
++            buff.append(": ");
++        }
++        else
++        {
++            buff.append("s");
++            buff.append(": ");
++        }
++        // loop through the required options
++        while (iter.hasNext())
++        {
++            buff.append(iter.next());
++            if (--size > 1)
+             {
+-                buff.append(iter.next());
++                buff.append(", ");
++            }
++            else if (size == 1)
++            {
++                buff.append(" and ");
++            }
++            else
++            {
++                buff.append(".");
+             }
+-
+-            throw new MissingOptionException(buff.toString());
+         }
++        throw new MissingOptionException(buff.toString());
+     }
+-
++}
+     /**
+      * <p>Process the argument values for the specified Option
+      * <code>opt</code> using the values retrieved from the 

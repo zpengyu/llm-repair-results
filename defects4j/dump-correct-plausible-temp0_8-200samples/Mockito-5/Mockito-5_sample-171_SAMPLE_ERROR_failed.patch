@@ -1,0 +1,19 @@
+diff --git a/src/org/mockito/internal/verification/VerificationOverTimeImpl.java b/src/org/mockito/internal/verification/VerificationOverTimeImpl.java
+index 092b9a548..3a9c79c6c 100644
+--- a/src/org/mockito/internal/verification/VerificationOverTimeImpl.java
++++ b/src/org/mockito/internal/verification/VerificationOverTimeImpl.java
+@@ -78,8 +77,12 @@ public class VerificationOverTimeImpl implements VerificationMode {
+         timer.start();
+         while (timer.isCounting()) {
+             try {
+-                delegate.verify(data);
+-
++                if (data.wanted() != null) {
++                    delegate.verify(data);
++                }
++                else {
++                    delegate.verifyNoMoreInteractions(data.getAllMocks().toArray());
++                }
+                 if (returnOnSuccess) {
+                     return;
+                 } else {

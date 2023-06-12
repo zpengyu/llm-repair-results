@@ -1,0 +1,26 @@
+diff --git a/src/java/org/apache/commons/lang3/ArrayUtils.java b/src/java/org/apache/commons/lang3/ArrayUtils.java
+index 9ac66047..b5704b5b 100644
+--- a/src/java/org/apache/commons/lang3/ArrayUtils.java
++++ b/src/java/org/apache/commons/lang3/ArrayUtils.java
+@@ -2957,13 +2957,17 @@ public class ArrayUtils {
+             return clone(array1);
+         }
+         final Class<?> type1 = array1.getClass().getComponentType();
++        @SuppressWarnings("unchecked") // type1 is the same as type2
+         T[] joinedArray = (T[]) Array.newInstance(type1, array1.length + array2.length);
+         System.arraycopy(array1, 0, joinedArray, 0, array1.length);
+-            System.arraycopy(array2, 0, joinedArray, array1.length, array2.length);
+-            // Check if problem is incompatible types
+-        return joinedArray;
++        int newArraySize = array1.length;
++        for (T element : array2) {
++            if (!ArrayUtils.contains(array1, element)) {
++                joinedArray[newArraySize++] = element;
++            }
++        }
++        return Arrays.copyOf(joinedArray, newArraySize);
+     }
+-
+     /**
+      * <p>Adds all the elements of the given arrays into a new array.</p>
+      * <p>The new array contains all of the element of <code>array1</code> followed

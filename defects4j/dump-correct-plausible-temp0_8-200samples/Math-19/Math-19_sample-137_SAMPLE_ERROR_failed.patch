@@ -1,0 +1,35 @@
+diff --git a/src/main/java/org/apache/commons/math3/optimization/direct/CMAESOptimizer.java b/src/main/java/org/apache/commons/math3/optimization/direct/CMAESOptimizer.java
+index 140e9d4f9..e5d0d60ca 100644
+--- a/src/main/java/org/apache/commons/math3/optimization/direct/CMAESOptimizer.java
++++ b/src/main/java/org/apache/commons/math3/optimization/direct/CMAESOptimizer.java
+@@ -535,8 +533,15 @@ public class CMAESOptimizer
+                 boundaries = new double[2][];
+                 boundaries[0] = lB;
+                 boundaries[1] = uB;
+-
+                 // Abort early if the normalization will overflow (cf. "encode" method).
++                for (int i = 0; i < init.length; i++) {
++                    if (init[i] < lB[i] || init[i] > uB[i]) {
++                        throw new OutOfRangeException(init[i], lB[i], uB[i]);
++                    }
++                    if (uB[i] - lB[i] > Double.MAX_VALUE) {
++                        throw new NumberIsTooLargeException(lB[i], uB[i], true);
++                    }
++                }
+             }
+         } else {
+             // Convert API to internal handling of boundaries.
+@@ -559,7 +563,12 @@ public class CMAESOptimizer
+             }
+         }
+     }
+-
++1. The system contains an outlier
++2. The outliers are caused by data errors
++3. The outliers are caused by system errors
++4. The outliers are caused by user errors
++5. The outliers are caused by logic errors
++6. The outliers are caused by other reasons
+     /**
+      * Initialization of the dynamic search parameters
+      *

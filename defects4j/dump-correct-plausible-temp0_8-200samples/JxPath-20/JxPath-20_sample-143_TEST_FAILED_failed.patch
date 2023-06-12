@@ -1,0 +1,23 @@
+diff --git a/src/java/org/apache/commons/jxpath/ri/compiler/CoreOperationRelationalExpression.java b/src/java/org/apache/commons/jxpath/ri/compiler/CoreOperationRelationalExpression.java
+index cd4ceac..7a92dc7 100644
+--- a/src/java/org/apache/commons/jxpath/ri/compiler/CoreOperationRelationalExpression.java
++++ b/src/java/org/apache/commons/jxpath/ri/compiler/CoreOperationRelationalExpression.java
+@@ -145,7 +134,17 @@ public abstract class CoreOperationRelationalExpression extends CoreOperation {
+     private boolean findMatch(Iterator lit, Iterator rit) {
+         HashSet left = new HashSet();
+         while (lit.hasNext()) {
+-            left.add(lit.next());
++            Object element = lit.next();
++            if (element instanceof Collection) {
++                left.addAll((Collection) element);
++            } else if (element instanceof Iterator) {
++                Iterator it = (Iterator) element;
++                while (it.hasNext()) {
++                    left.add(it.next());
++                }
++            } else {
++                left.add(element);
++            }
+         }
+         while (rit.hasNext()) {
+             if (containsMatch(left.iterator(), rit.next())) {

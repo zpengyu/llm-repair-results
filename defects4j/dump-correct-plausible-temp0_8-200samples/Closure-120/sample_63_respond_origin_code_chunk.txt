@@ -1,0 +1,31 @@
+    boolean isAssignedOnceInLifetime() {
+      Reference ref = getOneAndOnlyAssignment();
+      if (ref == null) {
+        return false;
+      }
+
+      // Make sure this assignment is not in a loop.
+      for (BasicBlock block = ref.getBasicBlock();
+           block != null; block = block.getParent()) {
+        if (block.isFunction) {
+          break;
+        } else if (block.isLoop) {
+          return false;
+        }
+      }
+
+      // Check that the value is not modified within the same basic block.
+      if (ref.basicBlock != null) {
+        for (int i = ref.nodeIndex + 1; i < ref.basicBlock.nodes.size(); i++) {
+          Node node = ref.basicBlock.nodes.get(i);
+          if (NodeUtil.isAssignmentOp(node)) {
+            Node lhs = node.getFirstChild();
+            if (lhs.matchesQualifiedName(nameNode)) {
+              return false;
+            }
+          }
+        }
+      }
+
+      return true;
+    }

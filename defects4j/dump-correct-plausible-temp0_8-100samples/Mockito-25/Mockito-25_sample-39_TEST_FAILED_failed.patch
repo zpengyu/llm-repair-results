@@ -1,0 +1,32 @@
+diff --git a/src/org/mockito/internal/stubbing/defaultanswers/ReturnsDeepStubs.java b/src/org/mockito/internal/stubbing/defaultanswers/ReturnsDeepStubs.java
+index 6fa773f53..97b708ce5 100644
+--- a/src/org/mockito/internal/stubbing/defaultanswers/ReturnsDeepStubs.java
++++ b/src/org/mockito/internal/stubbing/defaultanswers/ReturnsDeepStubs.java
+@@ -49,10 +45,11 @@ public class ReturnsDeepStubs implements Answer<Object>, Serializable {
+         if (!new MockCreationValidator().isTypeMockable(rawType)) {
+             return delegate.returnValueFor(rawType);
+         }
+-
++        if (isPrimitiveOrWrapper(rawType)) {
++            return delegate.returnValueFor(rawType);
++        }
+         return getMock(invocation);
+     }
+-
+     private Object getMock(InvocationOnMock invocation) throws Throwable {
+     	InternalMockHandler<Object> handler = new MockUtil().getMockHandler(invocation.getMock());
+     	InvocationContainerImpl container = (InvocationContainerImpl) handler.getInvocationContainer();
+@@ -95,4 +82,12 @@ public class ReturnsDeepStubs implements Answer<Object>, Serializable {
+         CreationSettings mockSettings = (CreationSettings) new MockUtil().getMockHandler(mock).getMockSettings();
+         return GenericMetadataSupport.inferFrom(mockSettings.getTypeToMock());
+     }
++    private boolean isPrimitiveOrWrapper(Class<?> clz) {
++        return (clz.isPrimitive() && clz != void.class) ||
++                Number.class.isAssignableFrom(clz) ||
++                Boolean.class == clz ||
++                Character.class == clz ||
++                String.class == clz ||
++                clz.isEnum();
++    }
+ }
+\ No newline at end of file

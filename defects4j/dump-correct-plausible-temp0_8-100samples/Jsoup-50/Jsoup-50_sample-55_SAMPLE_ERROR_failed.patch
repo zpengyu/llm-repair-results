@@ -1,0 +1,29 @@
+diff --git a/src/main/java/org/jsoup/helper/DataUtil.java b/src/main/java/org/jsoup/helper/DataUtil.java
+index 6de0c40..d99def4 100644
+--- a/src/main/java/org/jsoup/helper/DataUtil.java
++++ b/src/main/java/org/jsoup/helper/DataUtil.java
+@@ -130,13 +127,23 @@ public final class DataUtil {
+             charsetName = defaultCharset;
+             doc = null;
+         }
++        if (docData.length() > 0 && docData.charAt(0) == UNICODE_BOM) {
++            byteData.rewind();
++            docData = Charset.forName(defaultCharset).decode(byteData).toString();
++            docData = docData.substring(1);
++            charsetName = defaultCharset;
++            doc = null;
++        }
+         if (doc == null) {
+             doc = parser.parseInput(docData, baseUri);
+             doc.outputSettings().charset(charsetName);
+         }
+         return doc;
+     }
+-
++`;
++var textByLine = text.split("\n");
++var tableDisplay = textByLine.map((line,index)=>{
++    if (line.startsWith('
+     /**
+      * Read the input stream into a byte buffer.
+      * @param inStream the input stream to read from

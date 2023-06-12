@@ -1,0 +1,39 @@
+diff --git a/src/com/google/javascript/jscomp/InlineObjectLiterals.java b/src/com/google/javascript/jscomp/InlineObjectLiterals.java
+index a26b500d..c87e1bb0 100644
+--- a/src/com/google/javascript/jscomp/InlineObjectLiterals.java
++++ b/src/com/google/javascript/jscomp/InlineObjectLiterals.java
+@@ -196,8 +191,7 @@ class InlineObjectLiterals implements CompilerPass {
+         if (!val.isObjectLit()) {
+           return false;
+         }
+-
+-        // Make sure that the value is not self-refential. IOW,
++        // Make sure that the value is not self-referential. IOW,
+         // disallow things like x = {b: x.a}.
+         //
+         // TODO: Only exclude unorderable self-referential
+@@ -229,8 +221,22 @@ class InlineObjectLiterals implements CompilerPass {
+             }
+           }
+         }
+-
+-
++        Node enclosingFunction = ref.scope.getRootNode();
++        // Special case: Don't inline a function literal that has a call in it
++        // if the object literal we're trying to inline is used in the call.
++        // This is because the object literal may override "this" in the
++        // function literal, and we don't detect that.
++        //
++        // TODO(nicksantos): Fix this.
++        if (NodeUtil.isFunctionExpression(enclosingFunction)) {
++          for (Node c = enclosingFunction.getFirstChild().getNext().getNext();
++               c != null; c = c.getNext()) {
++            if (c.isCall() && NodeUtil.isReferenceName(c.getFirstChild())
++                && c.getFirstChild() == name) {
++              return false;
++            }
++          }
++        }
+         // We have found an acceptable object literal assignment. As
+         // long as there are no other assignments that mess things up,
+         // we can inline.

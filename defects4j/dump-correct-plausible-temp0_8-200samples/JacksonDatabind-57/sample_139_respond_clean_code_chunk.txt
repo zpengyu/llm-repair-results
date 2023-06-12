@@ -1,0 +1,12 @@
+    public <T> MappingIterator<T> readValues(byte[] src, int offset, int length)
+        throws IOException, JsonProcessingException
+    {
+        if (_dataFormatReaders != null) {
+            return _detectBindAndReadValues(_dataFormatReaders.findFormat(src, offset, length), false);
+        }
+        JsonParser p = _considerFilter(_parserFactory.createParser(src),
+                true);
+        DeserializationContext ctxt = createDeserializationContext(p, _config);
+        return new MappingIterator<T>(javaType, p, ctxt,
+                _findRootDeserializer(ctxt, javaType), true, valueToUpdate);
+    }

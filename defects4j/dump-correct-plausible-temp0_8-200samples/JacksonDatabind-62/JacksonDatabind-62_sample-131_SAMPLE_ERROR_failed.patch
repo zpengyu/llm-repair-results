@@ -1,0 +1,42 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/deser/std/CollectionDeserializer.java b/src/main/java/com/fasterxml/jackson/databind/deser/std/CollectionDeserializer.java
+index af4270610..9bcdf3dc7 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/deser/std/CollectionDeserializer.java
++++ b/src/main/java/com/fasterxml/jackson/databind/deser/std/CollectionDeserializer.java
+@@ -199,14 +198,34 @@ public class CollectionDeserializer
+         } else { // if directly assigned, probably not yet contextual, so:
+             valueDeser = ctxt.handleSecondaryContextualization(valueDeser, property, vt);
+         }
+-        // and finally, type deserializer needs context as well
+         TypeDeserializer valueTypeDeser = _valueTypeDeserializer;
+         if (valueTypeDeser != null) {
+             valueTypeDeser = valueTypeDeser.forProperty(property);
+         }
+-        return withResolved(delegateDeser, valueDeser, valueTypeDeser, unwrapSingle);
++        CollectionDeserializer deser = withResolved(delegateDeser, valueDeser,
++                valueTypeDeser, unwrapSingle);
++        if (property != null) {
++            // May need to resolve some List/Collection specifics
++            TypeDeserializer contentTypeDeser = deser.getContentTypeDeserializer();
++            // [databind#1907]: Need to avoid infinite loops
++            SettableBeanProperty prop = property.getValueDeserializer()
++                    .findBackReference(property.getName());
++            if (prop != null) {
++                JavaType refType = prop.getType();
++                if (refType.isContainerType() && !refType.isArrayType()) {
++                    JavaType contentType = refType.getContentType();
++                    TypeDeserializer contentTypeDeser2 = contentType.getTypeHandler();
++                    if (contentTypeDeser2 == null) {
++                        contentTypeDeser2 = ctxt.getConfig().findTypeDeserializer(contentType);
++                    }
++                    contentTypeDeser = TypeDeserializer.refine(contentTypeDeser2, refType,
++                            ctxt.getConfig(), vt, contentTypeDeser);
++                }
++            }
++            deser = deser.withResolved(contentTypeDeser);
++        }
++        return deser;
+     }
+-
+     /*
+     /**********************************************************
+     /* ContainerDeserializerBase API

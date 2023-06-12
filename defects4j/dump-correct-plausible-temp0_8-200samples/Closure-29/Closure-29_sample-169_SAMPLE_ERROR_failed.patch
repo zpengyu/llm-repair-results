@@ -1,0 +1,86 @@
+diff --git a/src/com/google/javascript/jscomp/InlineObjectLiterals.java b/src/com/google/javascript/jscomp/InlineObjectLiterals.java
+index a26b500d..7a44f83c 100644
+--- a/src/com/google/javascript/jscomp/InlineObjectLiterals.java
++++ b/src/com/google/javascript/jscomp/InlineObjectLiterals.java
+@@ -153,7 +153,15 @@ class InlineObjectLiterals implements CompilerPass {
+      * </pre>
+      */
+     private boolean isInlinableObject(List<Reference> refs) {
+-      boolean ret = false;
++      // NOTE(nicksantos): This pass's object-splitting algorithm has
++      // a blind spot. It assumes that if a property isn't defined on an
++      // object, then the value is undefined. This is not true, because
++      // Object.prototype can have arbitrary properties on it.
++      //
++      // We short-circuit this problem by bailing out if we see a reference
++      // to a property that isn't defined on the object literal. This
++      // isn't a perfect algorithm, but it should catch most cases.
++      List<String> props = new ArrayList<String>();
+       for (Reference ref : refs) {
+         Node name = ref.getNode();
+         Node parent = ref.getParent();
+@@ -178,9 +184,11 @@ class InlineObjectLiterals implements CompilerPass {
+           // We short-circuit this problem by bailing out if we see a reference
+           // to a property that isn't defined on the object literal. This
+           // isn't a perfect algorithm, but it should catch most cases.
++          if (getPropertyNameNode(parent) != null) {
++            props.add(getPropertyNameNode(parent).getString());
++          }
+           continue;
+         }
+-
+         // Only rewrite VAR declarations or simple assignment statements
+         if (!isVarOrAssignExprLhs(name)) {
+            return false;
+@@ -196,8 +202,7 @@ class InlineObjectLiterals implements CompilerPass {
+         if (!val.isObjectLit()) {
+           return false;
+         }
+-
+-        // Make sure that the value is not self-refential. IOW,
++        // Make sure that the value is not self-referential. IOW,
+         // disallow things like x = {b: x.a}.
+         //
+         // TODO: Only exclude unorderable self-referential
+@@ -228,17 +231,36 @@ class InlineObjectLiterals implements CompilerPass {
+               refNode = refNode.getParent();
+             }
+           }
++          if (getPropertyNameNode(child) != null) {
++            props.add(getPropertyNameNode(child).getString());
++          }
+         }
+-
+-
+         // We have found an acceptable object literal assignment. As
+         // long as there are no other assignments that mess things up,
+         // we can inline.
+-        ret = true;
+       }
+-      return ret;
++      // Check if all the used properties were defined.
++      if (props.size() == 0) {
++        return false;
++      }
++      for (String prop : props) {
++        if (!prop.startsWith("$jscomp$compprop")) {
++          boolean found = false;
++          for (Reference ref : refs) {
++            for (String defProp : ref.getAssignedLiteralPropertyNames()) {
++              if (prop.equals(defProp)) {
++                found = true;
++              }
++            }
++          }
++          if (!found) {
++            return false;
++          }
++        }
++      }
++      return true;
+     }
+-
++  }
+     private boolean isVarOrAssignExprLhs(Node n) {
+       Node parent = n.getParent();
+       return parent.isVar() ||

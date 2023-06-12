@@ -1,0 +1,31 @@
+private class RecordingTypeCheck extends TypeCheck {
+    private final List<Node> rootFunctionNodes;
+
+    RecordingTypeCheck(JSErrorReporter reporter) {
+      super(reporter, compiler.getCodingConvention());
+      rootFunctionNodes = Lists.newArrayList();
+    }
+
+    @Override
+    public void visit(NodeTraversal t, Node n, Node parent) {
+      super.visit(t, n, parent);
+
+      if (isReduceableFunctionExpression(n)) {
+        rootFunctionNodes.add(n);
+      }
+
+      if (n.isFunction()) {
+        FunctionType functionType = t.getScope().getVar(n.getFirstChild().getString()).getType().toMaybeFunctionType();
+        if (functionType != null) {
+          JSType thisType = functionType.getTypeOfThis();
+          if (thisType != null) {
+            String typeString = thisType.toString();
+            if (typeString.startsWith("?")) {
+              typeString = typeString.substring(1);
+            }
+            n.putProp(Node.IMPLICITLY_TYPED_THIS, typeString);
+          }
+        }
+      }
+    }
+  }

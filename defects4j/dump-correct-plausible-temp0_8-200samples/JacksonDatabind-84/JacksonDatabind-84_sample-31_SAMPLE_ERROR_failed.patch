@@ -1,0 +1,22 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/type/ResolvedRecursiveType.java b/src/main/java/com/fasterxml/jackson/databind/type/ResolvedRecursiveType.java
+index 7b8c69af7..766ad027e 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/type/ResolvedRecursiveType.java
++++ b/src/main/java/com/fasterxml/jackson/databind/type/ResolvedRecursiveType.java
+@@ -111,4 +93,16 @@ public class ResolvedRecursiveType extends TypeBase
+         return (o.getClass() == getClass()
+                 && _referencedType.equals(((ResolvedRecursiveType) o).getSelfReferencedType()));
+     }
++    /**
++     * Older versions (2.1 and earlier) did not properly handle recursive types.
++     * As a result, we MUST override hashCode to ensure we don't end up with
++     * broken Map types.
++     */
++    @Override
++    public int hashCode() {
++        if (_referencedType == null) {
++            return super.hashCode();
++        }
++        return _referencedType.hashCode();
++    }
+ }
+\ No newline at end of file

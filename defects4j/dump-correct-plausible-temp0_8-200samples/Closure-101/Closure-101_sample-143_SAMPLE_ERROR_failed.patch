@@ -1,0 +1,25 @@
+diff --git a/src/com/google/javascript/jscomp/CommandLineRunner.java b/src/com/google/javascript/jscomp/CommandLineRunner.java
+index 00e3e1ba..eaeb1fbd 100644
+--- a/src/com/google/javascript/jscomp/CommandLineRunner.java
++++ b/src/com/google/javascript/jscomp/CommandLineRunner.java
+@@ -433,11 +432,18 @@ public class CommandLineRunner extends
+     if (flags.process_closure_primitives) {
+       options.closurePass = true;
+     }
+-
+     initOptionsFromFlags(options);
++    if (options.manageClosureDependencies) {
++      flags.deps = options.manageClosureDependencies;
++      try {
++        flags.setManageClosureDependencies(flags.deps);
++      } catch (FlagUsageException e) {
++        // If this happens, it means the flag is set incorrectly.
++        throw new RuntimeException("bad dependency management flag");
++      }
++    }
+     return options;
+   }
+-
+   @Override
+   protected Compiler createCompiler() {
+     return new Compiler(getErrorPrintStream());

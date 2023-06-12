@@ -1,0 +1,42 @@
+diff --git a/src/com/google/javascript/rhino/jstype/ArrowType.java b/src/com/google/javascript/rhino/jstype/ArrowType.java
+index 0c0ef637..03e6ba3b 100644
+--- a/src/com/google/javascript/rhino/jstype/ArrowType.java
++++ b/src/com/google/javascript/rhino/jstype/ArrowType.java
+@@ -77,7 +77,7 @@ final class ArrowType extends JSType {
+   }
+ 
+   @Override
+-  public boolean isSubtype(JSType other) {
++public boolean isSubtype(JSType other) {
+     if (!(other instanceof ArrowType)) {
+       return false;
+     }
+@@ -132,9 +126,9 @@ final class ArrowType extends JSType {
+         // checked. Strictly speaking, this is not a correct formulation,
+         // because now a sub-function can required arguments that are var_args
+         // in the super-function. So we special-case this.
+-
+-      // don't advance if we have variable arguments
+-      if (!thisIsVarArgs) {
++      if (thisIsVarArgs && !thatIsVarArgs) {
++        thisParam = thatParam.getNext();
++      } else {
+         thisParam = thisParam.getNext();
+       }
+       if (!thatIsVarArgs) {
+@@ -147,12 +140,12 @@ final class ArrowType extends JSType {
+         thatParam = null;
+       }
+     }
+-
+     // "that" can't be a supertype, because it's missing a required arguement.
+-
++    if (thatParam == null && !thisParam.isVarArgs()) {
++      return false;
++    }
+     return true;
+   }
+-
+   /**
+    * @return True if our parameter spec is equal to {@code that}'s parameter
+    *     spec.

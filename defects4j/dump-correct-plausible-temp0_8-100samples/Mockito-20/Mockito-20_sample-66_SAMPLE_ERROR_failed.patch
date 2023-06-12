@@ -1,0 +1,22 @@
+diff --git a/src/org/mockito/internal/creation/bytebuddy/ByteBuddyMockMaker.java b/src/org/mockito/internal/creation/bytebuddy/ByteBuddyMockMaker.java
+index ddaada2f1..fe20962bb 100644
+--- a/src/org/mockito/internal/creation/bytebuddy/ByteBuddyMockMaker.java
++++ b/src/org/mockito/internal/creation/bytebuddy/ByteBuddyMockMaker.java
+@@ -34,8 +34,15 @@ public class ByteBuddyMockMaker implements MockMaker {
+             mockInstance = classInstantiator.instantiate(mockedProxyType);
+             MockMethodInterceptor.MockAccess mockAccess = (MockMethodInterceptor.MockAccess) mockInstance;
+             mockAccess.setMockitoInterceptor(new MockMethodInterceptor(asInternalMockHandler(handler), settings));
+-
+-            return ensureMockIsAssignableToMockedType(settings, mockInstance);
++            //added by me
++            List<Class<?>> interfaces = new ArrayList<Class<?>>();
++			interfaces.addAll(Arrays.asList(mockedProxyType.getInterfaces()));
++			interfaces.add(MockMethodInterceptor.class);
++			MockMethodInterceptor mockMethodInterceptor = (MockMethodInterceptor) Mockito.mock(mockedProxyType, interfaces.toArray(new Class<?>[]{}));
++			MockMethodInterceptor.MockAccess mockMethodInterceptorAccess = (MockMethodInterceptor.MockAccess) mockMethodInterceptor;
++			mockMethodInterceptorAccess.setMockitoInterceptor(new MockMethodInterceptor(asInternalMockHandler(handler), settings));
++			//added by me
++            return ensureMockIsAssignableToMockedType(settings, mockMethodInterceptor);
+         } catch (ClassCastException cce) {
+             throw new MockitoException(join(
+                     "ClassCastException occurred while creating the mockito mock :",

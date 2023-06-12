@@ -1,0 +1,37 @@
+  /**
+   * Given a variable, returns the list of variable references.
+   */
+  private List<Reference> getReferencesForVar(Var v) {
+    List<Reference> refs = new ArrayList<Reference>();
+    for (Reference ref : refMap.values()) {
+      if (ref.getVar() == v) {
+        refs.add(ref);
+      }
+    }
+    return refs;
+  }
+  /**
+   * Rewrites object literals that are assigned to local variables only once.
+   */
+  void tryRewriteObjectLiteral() {
+    for (Var v : compiler.getSymbolTable().getAllSymbols()) {
+      if (!v.isLocal()) {
+        continue;
+      }
+      List<Reference> refs = getReferencesForVar(v);
+      if (refs.size() != 1) {
+        continue;
+      }
+      Reference ref = refs.get(0);
+      Node value = ref.getAssignedValue();
+      if (value != null && value.isObjectLit()) {
+        // In order for an object literal to be inlinable, it must
+        // be only referenced once, and all of the references to it
+        // must be simple VAR declarations.
+        if (isInlinableObject(refs)) {
+          // This references to the object is a simple declaration.
+          tryInlineObject(refs);
+        }
+      }
+    }
+  }

@@ -1,0 +1,23 @@
+private static void checkPropertyArgument(Node call, Node propArg) {
+    checkNotNull(propArg);
+    // Check whether a string literal was used.
+    if (propArg.isString()) {
+      // Enforce the convention that properties should be accessed using
+      // bracket notation if the property is a reserved word.
+      if (TokenStream.isKeyword(propArg.getString())) {
+        warnings.add(JSError.make(propArg, RESERVED_PROP_NAME, propArg
+            .getString()));
+      }
+    } else {
+      if (propArg.isGetProp()) {
+        // If the property is a qualified name, e.g. x.y, then report an
+        // error.
+        warnings.add(JSError.make(propArg, UNEXPECTED_PARAMETER, propArg
+            .getQualifiedName()));
+      } else {
+        // Otherwise, report an error on the call node.
+        warnings.add(JSError.make(call, BAD_JSDOC_ANNOTATION,
+            "jsdoc type", "Unknown type"));
+      }
+    }
+  }

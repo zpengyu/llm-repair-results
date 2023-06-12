@@ -1,0 +1,141 @@
+diff --git a/src/main/java/com/fasterxml/jackson/core/util/JsonParserSequence.java b/src/main/java/com/fasterxml/jackson/core/util/JsonParserSequence.java
+index bed27f2b..76a1198a 100644
+--- a/src/main/java/com/fasterxml/jackson/core/util/JsonParserSequence.java
++++ b/src/main/java/com/fasterxml/jackson/core/util/JsonParserSequence.java
+@@ -13,8 +13,7 @@ import com.fasterxml.jackson.core.*;
+  * Fairly simple use of {@link JsonParserDelegate}: only need
+  * to override {@link #nextToken} to handle transition
+  */
+-public class JsonParserSequence extends JsonParserDelegate
+-{
++public class JsonParserSequence extends JsonParserDelegate {
+     /**
+      * Parsers other than the first one (which is initially assigned
+      * as delegate)
+@@ -32,15 +29,13 @@ public class JsonParserSequence extends JsonParserDelegate
+      *
+      * @since 2.8
+      */
+-
++    protected boolean _hasToken;
+     /*
+      *******************************************************
+      * Construction
+      *******************************************************
+      */
+-
+-    protected JsonParserSequence(JsonParser[] parsers)
+-    {
++    protected JsonParserSequence(JsonParser[] parsers) {
+         super(parsers[0]);
+         _parsers = parsers;
+         _nextParser = 1;
+@@ -55,8 +49,7 @@ public class JsonParserSequence extends JsonParserDelegate
+      * within sequences. This is done to minimize delegation depth,
+      * ideally only having just a single level of delegation.
+      */
+-    public static JsonParserSequence createFlattened(JsonParser first, JsonParser second)
+-    {
++    public static JsonParserSequence createFlattened(JsonParser first, JsonParser second) {
+         if (!(first instanceof JsonParserSequence || second instanceof JsonParserSequence)) {
+             // simple:
+             return new JsonParserSequence(new JsonParser[] { first, second });
+@@ -74,11 +67,9 @@ public class JsonParserSequence extends JsonParserDelegate
+         }
+         return new JsonParserSequence(p.toArray(new JsonParser[p.size()]));
+     }
+-
+     @SuppressWarnings("resource")
+-    protected void addFlattenedActiveParsers(List<JsonParser> result)
+-    {
+-        for (int i = _nextParser-1, len = _parsers.length; i < len; ++i) {
++    protected void addFlattenedActiveParsers(List<JsonParser> result) {
++        for (int i = _nextParser - 1, len = _parsers.length; i < len; ++i) {
+             JsonParser p = _parsers[i];
+             if (p instanceof JsonParserSequence) {
+                 ((JsonParserSequence) p).addFlattenedActiveParsers(result);
+@@ -94,15 +84,18 @@ public class JsonParserSequence extends JsonParserDelegate
+      * delegation does not work
+      *******************************************************
+      */
+-    
+     @Override
+     public void close() throws IOException {
+-        do { delegate.close(); } while (switchToNext());
++        do {
++            delegate.close();
++        } while (switchToNext());
+     }
+-
+     @Override
+-    public JsonToken nextToken() throws IOException, JsonParseException
+-    {
++    public JsonToken nextToken() throws IOException, JsonParseException {
++        if (_hasToken) {
++            _hasToken = false;
++            return _currToken;
++        }
+         JsonToken t = delegate.nextToken();
+         if (t != null) return t;
+         while (switchToNext()) {
+@@ -111,7 +104,37 @@ public class JsonParserSequence extends JsonParserDelegate
+         }
+         return null;
+     }
+-
++    /**
++     * Overridden to ensure that state is not shared (pointers,
++     * locks), but will also call {@link JsonParser#clearCurrentToken()}
++     * on all contained parsers, since they are not guaranteed to be
++     * used any more.
++     */
++    @Override
++    public void clearCurrentToken() {
++        if (_hasToken) { // need to clear also that
++            _hasToken = false;
++            _lastClearedToken = null;
++        }
++        super.clearCurrentToken();
++        // and then clear remainder of the parsers
++        for (int i = 0, len = _parsers.length; i < len; ++i) {
++            _parsers[i].clearCurrentToken();
++        }
++    }
++    /**
++     * Overridden to ensure that state is not shared (pointers,
++     * locks), but will also call {@link JsonParser#clearCurrentToken()}
++     * on all contained parsers, since they are not guaranteed to be
++     * used any more.
++     */
++    @Override
++    public void overrideCurrentName(String name) {
++        super.overrideCurrentName(name);
++        for (int i = 0, len = _parsers.length; i < len; ++i) {
++            _parsers[i].overrideCurrentName(name);
++        }
++    }
+     /*
+     /*******************************************************
+     /* Additional extended API
+@@ -141,12 +161,18 @@ public class JsonParserSequence extends JsonParserDelegate
+      *
+      * @return True if switch succeeded; false otherwise
+      */
+-    protected boolean switchToNext()
+-    {
++    protected boolean switchToNext() {
+         if (_nextParser >= _parsers.length) {
+             return false;
+         }
++        JsonParser old = delegate;
+         delegate = _parsers[_nextParser++];
++        if (_currToken != null) {
++            _hasToken = true;
++            // note: do NOT clear the delegate, since caller will still reference it
++        } else {
++            old.clearCurrentToken();
++        }
+         return true;
+     }
+ }
+\ No newline at end of file

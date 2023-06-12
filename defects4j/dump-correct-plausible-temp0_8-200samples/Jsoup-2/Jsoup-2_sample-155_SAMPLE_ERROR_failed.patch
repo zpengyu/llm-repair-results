@@ -1,0 +1,17 @@
+diff --git a/src/main/java/org/jsoup/parser/Parser.java b/src/main/java/org/jsoup/parser/Parser.java
+index 8cc01d2..3014581 100644
+--- a/src/main/java/org/jsoup/parser/Parser.java
++++ b/src/main/java/org/jsoup/parser/Parser.java
+@@ -162,8 +155,11 @@ public class Parser {
+                 doc.setBaseUri(href); // set on the doc so doc.createElement(Tag) will get updated base
+             }
+         }
++        // make sure we apply baseUri to any newly created elements - for cases such as document.open() that try to write some elements directly
++        // to the doc, bypassing the parser
++        else if (tag.equals(Tag.base) && baseUri != null)
++            doc.setBaseUri(baseUri);
+     }
+-
+     private Attribute parseAttribute() {
+         tq.consumeWhitespace();
+         String key = tq.consumeAttributeKey();

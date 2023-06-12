@@ -1,0 +1,17 @@
+diff --git a/src/com/google/javascript/jscomp/TypeCheck.java b/src/com/google/javascript/jscomp/TypeCheck.java
+index 6030d48d..8889444b 100644
+--- a/src/com/google/javascript/jscomp/TypeCheck.java
++++ b/src/com/google/javascript/jscomp/TypeCheck.java
+@@ -1544,9 +1544,10 @@ public class TypeCheck implements NodeTraversal.Callback, CompilerPass {
+   private void visitCall(NodeTraversal t, Node n) {
+     Node child = n.getFirstChild();
+     JSType childType = getJSType(child).restrictByNotNullOrUndefined();
+-
+     if (!childType.canBeCalled()) {
+-      report(t, n, NOT_CALLABLE, childType.toString());
++      if (childType.isNullType() || childType.isVoidType()) {
++        report(t, n, NOT_CALLABLE, childType.toString());
++      }
+       ensureTyped(t, n);
+       return;
+     }

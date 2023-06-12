@@ -1,0 +1,45 @@
+  private void hoistNoCompileFiles() {
+    List<CompilerInput> sortedInputs = new ArrayList<>(this.inputs);
+    if (options.dependencyOptions.needsManagement() && options.closurePass) {
+      // The dependency management code is sensitive to the order of inputs.
+      // The inputs are already sorted in the correct order.
+    } else {
+      // We need to sort the inputs because the group inputs are not
+      // guaranteed to be in topological order.
+      Comparator<CompilerInput> comparator = getCodingConvention().getStableInputOrder();
+      if (comparator != null) {
+        Collections.sort(sortedInputs, comparator);
+      }
+    }
+    // Group the inputs by path.
+    Map<String, List<CompilerInput>> groupedInputs = new HashMap<>();
+    for (CompilerInput input : sortedInputs) {
+      String sourceName = input.getName();
+      List<CompilerInput> inputsForSource = groupedInputs.get(sourceName);
+      if (inputsForSource == null) {
+        inputsForSource = new ArrayList<>();
+        groupedInputs.put(sourceName, inputsForSource);
+      }
+      inputsForSource.add(input);
+    }
+    Set<String> alreadyMoved = new HashSet<>();
+    for (List<CompilerInput> inputsForSource : groupedInputs.values()) {
+      CompilerInput input = inputsForSource.get(0);
+      if (input.getCompiler() == this &&
+          options.shouldHoistDeclaration(input.getPathRelativeToClosureBase())) {
+        for (CompilerInput compilerInput : inputsForSource) {
+          compilerInput.getAstRoot(this);
+          compilerInput.setCompiler(this);
+          compilerInput.setIsExtern(true);
+          alreadyMoved.add(compilerInput.getName());
+        }
+        externsRoot.addChildrenToBack(input.getAstRoot(this).removeChildren());
+      }
+    }
+    for (Iterator<CompilerInput> iterator = inputs.iterator(); iterator.hasNext();) {
+      CompilerInput input = iterator.next();
+      if (alreadyMoved.contains(input.getName())) {
+        iterator.remove();
+      }
+    }
+  }

@@ -1,0 +1,30 @@
+diff --git a/src/main/java/org/joda/time/chrono/BasicMonthOfYearDateTimeField.java b/src/main/java/org/joda/time/chrono/BasicMonthOfYearDateTimeField.java
+index 98e6912c..4bdffbba 100644
+--- a/src/main/java/org/joda/time/chrono/BasicMonthOfYearDateTimeField.java
++++ b/src/main/java/org/joda/time/chrono/BasicMonthOfYearDateTimeField.java
+@@ -215,10 +215,23 @@ class BasicMonthOfYearDateTimeField extends ImpreciseDateTimeField {
+             instant = add(instant, valueToAdd);
+             return iChronology.get(partial, instant);
+         } else {
+-            return super.add(partial, fieldIndex, values, valueToAdd);
++            int[] newValues = values;
++            int current = super.get(partial, fieldIndex);
++            int newValue = FieldUtils.safeAdd(current, valueToAdd);
++            newValues = set(partial, fieldIndex, values, newValue);
++            if (newValues[fieldIndex] != current) {
++                int min = getMinimumValue(partial, newValues);
++                int max = getMaximumValue(partial, newValues);
++                if (newValue < min || newValue > max) {
++                    int[] remainder =
++                        getWrappedField(partial, fieldIndex).addWrapPartial(partial, fieldIndex, newValues,
++                            valueToAdd);
++                    System.arraycopy(remainder, 0, newValues, 0, remainder.length);
++                }
++            }
++            return newValues;
+         }
+     }
+-
+     //-----------------------------------------------------------------------
+     /**
+      * Add to the Month component of the specified time instant

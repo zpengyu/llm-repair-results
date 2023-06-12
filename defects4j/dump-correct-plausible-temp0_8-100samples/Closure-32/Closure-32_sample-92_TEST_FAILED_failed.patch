@@ -1,0 +1,48 @@
+diff --git a/src/com/google/javascript/jscomp/parsing/JsDocInfoParser.java b/src/com/google/javascript/jscomp/parsing/JsDocInfoParser.java
+index ad292c02..59799eaf 100644
+--- a/src/com/google/javascript/jscomp/parsing/JsDocInfoParser.java
++++ b/src/com/google/javascript/jscomp/parsing/JsDocInfoParser.java
+@@ -1385,9 +1372,17 @@ public final class JsDocInfoParser {
+         default:
+           ignoreStar = false;
+           state = State.SEARCHING_ANNOTATION;
+-
++          if (builder.length() > 0) {
++            builder.append(' ');
++          }
++          builder.append(toString(token));
++          line = stream.getRemainingJSDocLine();
++          if (option != WhitespaceOption.PRESERVE) {
++            line = trimEnd(line);
++          }
++          builder.append(line);
++          token = next();
+               // All tokens must be separated by a space.
+-
+           if (token == JsDocToken.EOC ||
+               token == JsDocToken.EOF ||
+               // When we're capturing a license block, annotations
+@@ -1407,23 +1399,8 @@ public final class JsDocInfoParser {
+               jsdocBuilder.markText(multilineText, startLineno, startCharno,
+                   endLineno, endCharno);
+             }
+-
+             return new ExtractionInfo(multilineText, token);
+           }
+-
+-          if (builder.length() > 0) {
+-            builder.append(' ');
+-          }
+-          builder.append(toString(token));
+-
+-          line = stream.getRemainingJSDocLine();
+-
+-          if (option != WhitespaceOption.PRESERVE) {
+-            line = trimEnd(line);
+-          }
+-
+-          builder.append(line);
+-          token = next();
+       }
+     } while (true);
+   }

@@ -1,0 +1,67 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/deser/BuilderBasedDeserializer.java b/src/main/java/com/fasterxml/jackson/databind/deser/BuilderBasedDeserializer.java
+index 316efa3a9..7f8313330 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/deser/BuilderBasedDeserializer.java
++++ b/src/main/java/com/fasterxml/jackson/databind/deser/BuilderBasedDeserializer.java
+@@ -580,28 +578,42 @@ public class BuilderBasedDeserializer
+             // creator property?
+             SettableBeanProperty creatorProp = creator.findCreatorProperty(propName);
+             if (creatorProp != null) {
+-                if (buffer.assignParameter(creatorProp, creatorProp.deserialize(p, ctxt))) {
++                // Last creator property to set?
++                Object value;
++                if (creatorProp.deserialize(p, ctxt) == null) {
++                    ctxt.reportInputMismatch(creatorProp,
++                            "Null value for Creator property '%s'; `%s`", propName,
++                            creatorProp.getType());
++                    continue; // never gets here
++                }
++                try {
++                    value = buffer.assignParameter(creatorProp, creatorProp.deserialize(p, ctxt));
++                } catch (Exception e) {
++                    wrapAndThrow(e, _beanType.getRawClass(), propName, ctxt);
++                    continue;
++                }
++                if (!buffer.readIdProperty(propName)) {
++                    buffer.bufferProperty(creatorProp, value);
++                }
++                t = p.nextToken();
++                Object bean;
++                try {
++                    bean = creator.build(ctxt, buffer);
++                } catch (Exception e) {
++                    wrapAndThrow(e, _beanType.getRawClass(), propName, ctxt);
++                    continue;
++                }
++                while (t == JsonToken.FIELD_NAME) {
++                    p.nextToken();
++                    tokens.copyCurrentStructure(p);
+                     t = p.nextToken();
+-                    Object bean;
+-                    try {
+-                        bean = creator.build(ctxt, buffer);
+-                    } catch (Exception e) {
+-                        wrapAndThrow(e, _beanType.getRawClass(), propName, ctxt);
+-                        continue;
+-                    }
+-                    while (t == JsonToken.FIELD_NAME) {
+-                        p.nextToken();
+-                        tokens.copyCurrentStructure(p);
+-                        t = p.nextToken();
+-                    }
+-                    tokens.writeEndObject();
+-                    if (bean.getClass() != _beanType.getRawClass()) {
+-                        ctxt.reportMappingException("Can not create polymorphic instances with unwrapped values");
+-                        return null;
+-                    }
+-                    return _unwrappedPropertyHandler.processUnwrapped(p, ctxt, bean, tokens);
+                 }
+-                continue;
++                tokens.writeEndObject();
++                if (bean.getClass() != _beanType.getRawClass()) {
++                    ctxt.reportMappingException("Can not create polymorphic instances with unwrapped values");
++                    return null;
++                }
++                return _unwrappedPropertyHandler.processUnwrapped(p, ctxt, bean, tokens);
+             }
+             // Object Id property?
+             if (buffer.readIdProperty(propName)) {

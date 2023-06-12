@@ -1,0 +1,26 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/jsontype/impl/AsWrapperTypeDeserializer.java b/src/main/java/com/fasterxml/jackson/databind/jsontype/impl/AsWrapperTypeDeserializer.java
+index e9bf3cdcb..a8d37307a 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/jsontype/impl/AsWrapperTypeDeserializer.java
++++ b/src/main/java/com/fasterxml/jackson/databind/jsontype/impl/AsWrapperTypeDeserializer.java
+@@ -109,7 +108,13 @@ public class AsWrapperTypeDeserializer
+             p = JsonParserSequence.createFlattened(tb.asParser(p), p);
+             p.nextToken();
+         }
+-        
++        else if (_typeIdVisible && p.getCurrentToken() == JsonToken.FIELD_NAME) {
++            TokenBuffer tb = new TokenBuffer(null, false);
++            tb.writeFieldName(_typePropertyName);
++            tb.writeString(typeId);
++            p = JsonParserSequence.createFlattened(tb.asParser(p), p);
++            p.nextToken();
++        }
+         Object value = deser.deserialize(p, ctxt);
+         // And then need the closing END_OBJECT
+         if (p.nextToken() != JsonToken.END_OBJECT) {
+@@ -117,5 +122,4 @@ public class AsWrapperTypeDeserializer
+                     "expected closing END_OBJECT after type information and deserialized value");
+         }
+         return value;
+-    }
+-}
++    }}

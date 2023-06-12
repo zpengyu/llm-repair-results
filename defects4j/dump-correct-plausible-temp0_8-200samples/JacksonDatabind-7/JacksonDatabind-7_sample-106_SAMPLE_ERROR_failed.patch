@@ -1,0 +1,23 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/util/TokenBuffer.java b/src/main/java/com/fasterxml/jackson/databind/util/TokenBuffer.java
+index c700587c8..e3ebaf36a 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/util/TokenBuffer.java
++++ b/src/main/java/com/fasterxml/jackson/databind/util/TokenBuffer.java
+@@ -402,14 +402,16 @@ public class TokenBuffer
+      */
+     public TokenBuffer deserialize(JsonParser jp, DeserializationContext ctxt) throws IOException
+     {
++        if (!(jp instanceof TokenBuffer)) {
+             copyCurrentStructure(jp);
+         /* 28-Oct-2014, tatu: As per #592, need to support a special case of starting from
+          *    FIELD_NAME, which is taken to mean that we are missing START_OBJECT, but need
+          *    to assume one did exist.
+          */
+-        return this;
++            return this;
++        }
++        throw JsonMappingException.from(jp, "Current token not FIELD_NAME, cannot use append");
+     }
+-
+     @Override
+     @SuppressWarnings("resource")
+     public String toString()

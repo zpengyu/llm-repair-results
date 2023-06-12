@@ -1,0 +1,27 @@
+diff --git a/src/main/java/org/jsoup/helper/W3CDom.java b/src/main/java/org/jsoup/helper/W3CDom.java
+index fb864f5..a786664 100644
+--- a/src/main/java/org/jsoup/helper/W3CDom.java
++++ b/src/main/java/org/jsoup/helper/W3CDom.java
+@@ -143,14 +135,18 @@ public class W3CDom {
+                 }
+                 namespaces.put(prefix, attr.getValue());
+             }
+-
+             // get the element prefix if any
+             int pos = el.tagName().indexOf(":");
+-            return pos > 0 ? el.tagName().substring(0, pos) : "";
++            if (pos > 0) {
++                if (el.tagName().substring(0, pos).equals(xmlnsPrefix)) {
++                    namespaces.put(el.tagName().substring(0, pos), el.tagName().substring(pos+1));
++                } else {
++                    return pos > 0 ? el.tagName().substring(0, pos) : "";
++                }
++            }
++            return "";
+         }
+-
+     }
+-
+     /**
+      * Serialize a W3C document to a String.
+      * @param doc Document

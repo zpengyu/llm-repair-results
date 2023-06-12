@@ -1,0 +1,30 @@
+diff --git a/src/com/google/javascript/rhino/jstype/FunctionType.java b/src/com/google/javascript/rhino/jstype/FunctionType.java
+index f68dfea6..4c95f402 100644
+--- a/src/com/google/javascript/rhino/jstype/FunctionType.java
++++ b/src/com/google/javascript/rhino/jstype/FunctionType.java
+@@ -874,23 +871,20 @@ public class FunctionType extends PrototypeObjectType {
+     ImmutableList.Builder<ObjectType> resolvedInterfaces =
+         ImmutableList.builder();
+     for (ObjectType iface : implementedInterfaces) {
+-      ObjectType resolvedIface = (ObjectType) iface.resolve(t, scope);
++      ObjectType resolvedIface = (ObjectType) safeResolve(iface, t, scope);
+       resolvedInterfaces.add(resolvedIface);
+       changed |= (resolvedIface != iface);
+     }
+     if (changed) {
+       implementedInterfaces = resolvedInterfaces.build();
+     }
+-
+     if (subTypes != null) {
+       for (int i = 0; i < subTypes.size(); i++) {
+-        subTypes.set(i, (FunctionType) subTypes.get(i).resolve(t, scope));
++        subTypes.set(i, (FunctionType) safeResolve(subTypes.get(i), t, scope));
+       }
+     }
+-
+     return super.resolveInternal(t, scope);
+   }
+-
+   @Override
+   public String toDebugHashCodeString() {
+     if (this == registry.getNativeType(JSTypeNative.FUNCTION_INSTANCE_TYPE)) {

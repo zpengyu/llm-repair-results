@@ -1,0 +1,43 @@
+diff --git a/src/main/java/org/jsoup/nodes/Entities.java b/src/main/java/org/jsoup/nodes/Entities.java
+index 1fadc57..a9a9827 100644
+--- a/src/main/java/org/jsoup/nodes/Entities.java
++++ b/src/main/java/org/jsoup/nodes/Entities.java
+@@ -45,11 +45,9 @@ public class Entities {
+     static String unescape(String string) {
+         if (!string.contains("&"))
+             return string;
+-
+         Matcher m = unescapePattern.matcher(string); // &(#(x|X)?([0-9a-fA-F]+)|[a-zA-Z]+);?
+-        StringBuffer accum = new StringBuffer(string.length()); // pity matcher can't use stringbuilder, avoid syncs
+-        // todo: replace m.appendReplacement with own impl, so StringBuilder and quoteReplacement not required
+-
++        StringBuilder accum = new StringBuilder(string.length()); // pity matcher can't use stringbuilder, avoid syncs
++        int lastEnd = 0;
+         while (m.find()) {
+             int charval = -1;
+             String num = m.group(3);
+@@ -64,18 +62,19 @@ public class Entities {
+                 if (full.containsKey(name))
+                     charval = full.get(name);
+             }
+-
+             if (charval != -1 || charval > 0xFFFF) { // out of range
+                 String c = Character.toString((char) charval);
+-                m.appendReplacement(accum, c);
++                accum.append(string, lastEnd, m.start()); // append prior text
++                accum.append(c);
++                lastEnd = m.end();
+             } else {
+-                m.appendReplacement(accum, m.group(0));
++                accum.append(string, lastEnd, m.end()); // append prior text, as well as entire match
++                lastEnd = m.end();
+             }
+         }
+-        m.appendTail(accum);
++        accum.append(string, lastEnd, string.length()); // append trailing text
+         return accum.toString();
+     }
+-
+     // most common, base entities can be unescaped without trailing ;
+     // e.g. &amp
+     private static final Object[][] baseArray = {

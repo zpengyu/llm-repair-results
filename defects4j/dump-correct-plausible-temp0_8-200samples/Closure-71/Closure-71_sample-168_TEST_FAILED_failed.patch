@@ -1,0 +1,24 @@
+diff --git a/src/com/google/javascript/jscomp/CheckAccessControls.java b/src/com/google/javascript/jscomp/CheckAccessControls.java
+index c4ecc477..133b325d 100644
+--- a/src/com/google/javascript/jscomp/CheckAccessControls.java
++++ b/src/com/google/javascript/jscomp/CheckAccessControls.java
+@@ -488,11 +482,14 @@ class CheckAccessControls implements ScopedCallback, HotSwapCompilerPass {
+           // 3) Accessing the property from inside a subclass
+           // The first two have already been checked for.
+           if (currentClass == null || !currentClass.isSubtype(ownerType)) {
+-            compiler.report(
+-                t.makeError(getprop,  BAD_PROTECTED_PROPERTY_ACCESS,
+-                    propertyName,
+-                    validator.getReadableJSTypeName(
+-                        getprop.getFirstChild(), true)));
++            if (currentClass != null &&
++                !currentClass.isSubtype(ownerType)) {
++              compiler.report(
++                  t.makeError(getprop,  BAD_PROTECTED_PROPERTY_ACCESS,
++                      propertyName,
++                      validator.getReadableJSTypeName(
++                          getprop.getFirstChild(), true)));
++            }
+           }
+         }
+       }

@@ -1,0 +1,23 @@
+    boolean isAssignedOnceInLifetime() {
+      Reference ref = getOneAndOnlyAssignment();
+      if (ref == null) {
+        return false;
+      }
+
+      // Make sure this assignment is not in a loop.
+      for (BasicBlock block = ref.getBasicBlock();
+           block != null; block = block.getParent()) {
+        if (block.isFunction) {
+          break;
+        } else if (block.isLoop) {
+          return false;
+        } else if (block.isFinally) {
+          // Treat try-finally as a loop, since we cannot change
+          // the value inside the finally block.
+          return false;
+        }
+      }
+
+      return true;
+    }
+ 

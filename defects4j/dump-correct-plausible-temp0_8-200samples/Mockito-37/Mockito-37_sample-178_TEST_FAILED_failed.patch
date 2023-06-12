@@ -1,0 +1,52 @@
+diff --git a/src/org/mockito/internal/stubbing/answers/AnswersValidator.java b/src/org/mockito/internal/stubbing/answers/AnswersValidator.java
+index 5d8057846..ff6b10ee1 100644
+--- a/src/org/mockito/internal/stubbing/answers/AnswersValidator.java
++++ b/src/org/mockito/internal/stubbing/answers/AnswersValidator.java
+@@ -24,16 +20,16 @@ public class AnswersValidator {
+         if (answer instanceof DoesNothing) {
+             validateDoNothing((DoesNothing) answer, invocation);
+         }
+-        
+     }
+-
+-
+-    private void validateDoNothing(DoesNothing answer, Invocation invocation) {
+-        if (!invocation.isVoid()) {
+-            reporter.onlyVoidMethodsCanBeSetToDoNothing();
++    private void validateException(ThrowsException answer, Invocation invocation) {
++        Throwable throwable = answer.getThrowable();
++        if (throwable == null) {
++            reporter.cannotStubWithNullThrowable();
++        }
++        if (!invocation.isValidException(throwable)) {
++            reporter.checkedExceptionInvalid(throwable);
+         }
+     }
+-
+     private void validateReturnValue(Returns answer, Invocation invocation) {
+         if (invocation.isVoid()) {
+             reporter.cannotStubVoidMethodWithAReturnValue();
+@@ -47,19 +41,9 @@ public class AnswersValidator {
+             reporter.wrongTypeOfReturnValue(invocation.printMethodReturnType(), answer.printReturnType(), invocation.getMethodName());
+         }
+     }
+-
+-    private void validateException(ThrowsException answer, Invocation invocation) {
+-        Throwable throwable = answer.getThrowable();
+-        if (throwable == null) {
+-            reporter.cannotStubWithNullThrowable();
+-        }
+-        
+-        if (throwable instanceof RuntimeException || throwable instanceof Error) {
+-            return;
+-        }
+-        
+-        if (!invocation.isValidException(throwable)) {
+-            reporter.checkedExceptionInvalid(throwable);
++    private void validateDoNothing(DoesNothing answer, Invocation invocation) {
++        if (!invocation.isVoid()) {
++            reporter.onlyVoidMethodsCanBeSetToDoNothing();
+         }
+     }
+ }
+\ No newline at end of file

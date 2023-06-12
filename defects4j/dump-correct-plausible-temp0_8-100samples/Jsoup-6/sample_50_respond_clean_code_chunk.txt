@@ -1,0 +1,27 @@
+    static String unescape(String string) {
+        Matcher matcher = unescapePattern.matcher(string);
+        StringBuffer accum = new StringBuffer(string.length()); // pity matcher can't use stringbuilder, avoid syncs
+        while (matcher.find()) {
+            int charval = -1;
+            String num = matcher.group(3);
+            if (num != null) {
+                try {
+                    int base = matcher.group(2) != null ? 16 : 10; // 2 is hex indicator
+                    charval = Integer.valueOf(num, base);
+                } catch (NumberFormatException e) {
+                } // skip
+            } else {
+                String name = matcher.group(1);
+                if (full.containsKey(name))
+                    charval = full.get(name);
+            }
+            if (charval != -1 || charval > 0xFFFF) { // out of range
+                String c = Character.toString((char) charval);
+                matcher.appendReplacement(accum, c);
+            } else {
+                matcher.appendReplacement(accum, matcher.group(0));
+            }
+        }
+        matcher.appendTail(accum);
+        return accum.toString();
+    }

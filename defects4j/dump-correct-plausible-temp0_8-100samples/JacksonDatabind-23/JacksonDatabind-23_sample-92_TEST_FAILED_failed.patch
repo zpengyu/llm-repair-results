@@ -1,0 +1,26 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/ser/std/NumberSerializers.java b/src/main/java/com/fasterxml/jackson/databind/ser/std/NumberSerializers.java
+index 6d0db8734..3f4483862 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/ser/std/NumberSerializers.java
++++ b/src/main/java/com/fasterxml/jackson/databind/ser/std/NumberSerializers.java
+@@ -118,16 +107,16 @@ public class NumberSerializers
+     public final static class ShortSerializer extends Base<Short>
+     {
+         final static ShortSerializer instance = new ShortSerializer();
+-
+         public ShortSerializer() { super(Short.class, JsonParser.NumberType.INT, "number"); }
+-
+-
+         @Override
+         public void serialize(Short value, JsonGenerator gen, SerializerProvider provider) throws IOException {
+-            gen.writeNumber(value.shortValue());
++            if (value.intValue() == Short.MIN_VALUE || value.intValue() == Short.MAX_VALUE) {
++                gen.writeNumber(value.shortValue());
++            } else {
++                gen.writeNumber(value.intValue());
++            }
+         }
+     }
+-
+     /**
+      * This is the special serializer for regular {@link java.lang.Integer}s
+      * (and primitive ints)

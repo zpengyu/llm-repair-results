@@ -1,0 +1,18 @@
+diff --git a/src/com/google/javascript/jscomp/CollapseProperties.java b/src/com/google/javascript/jscomp/CollapseProperties.java
+index c24c69b2..728e1a88 100644
+--- a/src/com/google/javascript/jscomp/CollapseProperties.java
++++ b/src/com/google/javascript/jscomp/CollapseProperties.java
+@@ -179,6 +177,13 @@ class CollapseProperties implements CompilerPass {
+             // {@code name} meets condition (c). Try to inline it.
+             if (inlineAliasIfPossible(ref, namespace)) {
+               name.removeRef(ref);
++              // If we have inlined a local alias we need to re-examine
++              // all the names in the worklist.  A better approach would be
++              // to attempt to only re-examine the names that could have
++              // been affected by the inlining, but that would require extra
++              // bookkeeping.
++              workList.addAll(namespace.getNameForest());
++              break;
+             }
+           }
+         }

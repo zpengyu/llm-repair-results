@@ -1,0 +1,17 @@
+diff --git a/src/main/java/org/apache/commons/compress/archivers/tar/TarUtils.java b/src/main/java/org/apache/commons/compress/archivers/tar/TarUtils.java
+index 34ecc5ac..a7fca9e3 100644
+--- a/src/main/java/org/apache/commons/compress/archivers/tar/TarUtils.java
++++ b/src/main/java/org/apache/commons/compress/archivers/tar/TarUtils.java
+@@ -143,6 +138,12 @@ public class TarUtils {
+                 throw new IllegalArgumentException(
+                         exceptionMessage(buffer, offset, length, start, currentByte));
+             }
++            if (result > (Long.MAX_VALUE >>> 3)) { // result * 8 would overflow
++                throw new IllegalArgumentException(
++                        "Result " + result + " from parsing field '"
++                        + new String(buffer, offset, length, StandardCharsets.ISO_8859_1)
++                        + "' exceeds maximum file size of " + Long.MAX_VALUE);
++            }
+             result = (result << 3) + (currentByte - '0'); // convert from ASCII
+             // CheckStyle:MagicNumber ON
+         }

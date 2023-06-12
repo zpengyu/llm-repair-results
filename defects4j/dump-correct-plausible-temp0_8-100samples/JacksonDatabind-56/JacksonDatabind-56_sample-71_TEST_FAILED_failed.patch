@@ -1,0 +1,45 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/deser/std/FromStringDeserializer.java b/src/main/java/com/fasterxml/jackson/databind/deser/std/FromStringDeserializer.java
+index 01a819a9f..659371148 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/deser/std/FromStringDeserializer.java
++++ b/src/main/java/com/fasterxml/jackson/databind/deser/std/FromStringDeserializer.java
+@@ -228,18 +224,21 @@ public abstract class FromStringDeserializer<T> extends StdScalarDeserializer<T>
+                 return Pattern.compile(value);
+             case STD_LOCALE:
+                 {
+-                    int ix = value.indexOf('_');
+-                    if (ix < 0) { // single argument
+-                        return new Locale(value);
++                    // JDK7 has a way to normalize the input, but let's not depend on that yet:
++                    String[] parts = value.split("_");
++                    int len = parts.length;
++                    if (len > 3) {
++                        throw ctxt.weirdStringException(value, _valueClass,
++                            "Expected Locale value with 3 to 5 components, was given "+len);
+                     }
+-                    String first = value.substring(0, ix);
+-                    value = value.substring(ix+1);
+-                    ix = value.indexOf('_');
+-                    if (ix < 0) { // two pieces
+-                        return new Locale(first, value);
++                    switch (len) {
++                    case 3:
++                        return new Locale(parts[0], parts[1], parts[2]);
++                    case 2:
++                        return new Locale(parts[0], parts[1]);
++                    default:
++                        return new Locale(parts[0]);
+                     }
+-                    String second = value.substring(0, ix);
+-                    return new Locale(first, second, value.substring(ix+1));
+                 }
+             case STD_CHARSET:
+                 return Charset.forName(value);
+@@ -287,7 +283,4 @@ public abstract class FromStringDeserializer<T> extends StdScalarDeserializer<T>
+             }
+             return super._deserializeFromEmptyString();
+         }
+-
+-
+-    }
+-}
++    }}

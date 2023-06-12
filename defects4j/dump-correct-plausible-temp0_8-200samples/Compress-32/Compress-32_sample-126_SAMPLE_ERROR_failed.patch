@@ -1,0 +1,21 @@
+diff --git a/src/main/java/org/apache/commons/compress/archivers/tar/TarArchiveInputStream.java b/src/main/java/org/apache/commons/compress/archivers/tar/TarArchiveInputStream.java
+index 87ff4aab..0459a99d 100644
+--- a/src/main/java/org/apache/commons/compress/archivers/tar/TarArchiveInputStream.java
++++ b/src/main/java/org/apache/commons/compress/archivers/tar/TarArchiveInputStream.java
+@@ -494,7 +494,15 @@ public class TarArchiveInputStream extends ArchiveInputStream {
+             String key = ent.getKey();
+             String val = ent.getValue();
+             if ("path".equals(key)){
+-                currEntry.setName(val);
++                if(val == null){
++                    throw new IOException("Cannot create the tarball: Your path is null.");
++                }
++                else if(val.indexOf("/") == -1){
++                    currEntry.setName(val);
++                }
++                else{
++                    currEntry.setName(val.replace('\\', '/'));
++                }
+             } else if ("linkpath".equals(key)){
+                 currEntry.setLinkName(val);
+             } else if ("gid".equals(key)){

@@ -1,0 +1,22 @@
+        public final Object deserializeKey(String key, DeserializationContext ctxt)
+            throws IOException
+        {
+            if (key == null) {
+                return null;
+            }
+            try {
+                // Ugh... should not have to give parser which may or may not be correct one...
+                Object result = _delegate.deserialize(ctxt.getParser(), ctxt);
+                if (result != null) {
+                    return result;
+                }
+            } catch (Exception re) {
+                throw ctxt.weirdKeyException(_keyClass, key, "not a valid representation: %s", re.getMessage());
+            }
+            // !!! 06-Sep-2016, tatu: This is a very special case, and to be honest, I'm not
+            //   entirely sure what to do... on one hand, it is definitely not good to have
+            //   an empty String as a key. But on the other, it is a valid String, and it
+            //   is possible (albeit unusual) case. So for now, let's just consider it
+            //   an error...
+            return ctxt.handleWeirdKey(_keyClass, key, "not a valid representation, must be empty String");
+        }

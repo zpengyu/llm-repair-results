@@ -1,0 +1,116 @@
+diff --git a/src/main/java/org/jsoup/parser/CharacterReader.java b/src/main/java/org/jsoup/parser/CharacterReader.java
+index 7f39fc5..8e3cafd 100644
+--- a/src/main/java/org/jsoup/parser/CharacterReader.java
++++ b/src/main/java/org/jsoup/parser/CharacterReader.java
+@@ -53,15 +42,13 @@ class CharacterReader {
+     void rewindToMark() {
+         pos = mark;
+     }
+-
+     String consumeAsString() {
+-        return input.substring(pos, pos++);
++        return substring(pos, pos+1);
+     }
+-
+     String consumeTo(char c) {
+         int offset = input.indexOf(c, pos);
+         if (offset != -1) {
+-            String consumed = input.substring(pos, offset);
++            String consumed = substring(pos, offset);
+             pos += consumed.length();
+             return consumed;
+         } else {
+@@ -72,7 +58,7 @@ class CharacterReader {
+     String consumeTo(String seq) {
+         int offset = input.indexOf(seq, pos);
+         if (offset != -1) {
+-            String consumed = input.substring(pos, offset);
++            String consumed = substring(pos, offset);
+             pos += consumed.length();
+             return consumed;
+         } else {
+@@ -91,12 +75,10 @@ class CharacterReader {
+             }
+             pos++;
+         }
+-
+-        return pos > start ? input.substring(start, pos) : "";
++        return pos > start ? substring(start, pos) : "";
+     }
+-
+     String consumeToEnd() {
+-        String data = input.substring(pos, input.length() - 1);
++        String data = substring(pos);
+         pos = input.length();
+         return data;
+     }
+@@ -110,10 +91,8 @@ class CharacterReader {
+             else
+                 break;
+         }
+-
+-        return input.substring(start, pos);
++        return substring(start, pos);
+     }
+-
+     String consumeHexSequence() {
+         int start = pos;
+         while (!isEmpty()) {
+@@ -123,9 +102,8 @@ class CharacterReader {
+             else
+                 break;
+         }
+-        return input.substring(start, pos);
++        return substring(start, pos);
+     }
+-
+     String consumeDigitSequence() {
+         int start = pos;
+         while (!isEmpty()) {
+@@ -135,14 +113,11 @@ class CharacterReader {
+             else
+                 break;
+         }
+-        return input.substring(start, pos);
++        return substring(start, pos);
+     }
+-
+     boolean matches(char c) {
+         return !isEmpty() && input.charAt(pos) == c;
+-
+     }
+-
+     boolean matches(String seq) {
+         return input.startsWith(seq, pos);
+     }
+@@ -201,9 +168,27 @@ class CharacterReader {
+         String hiScan = seq.toUpperCase();
+         return (input.indexOf(loScan, pos) > -1) || (input.indexOf(hiScan, pos) > -1);
+     }
+-
+     @Override
+     public String toString() {
+-        return input.substring(pos);
++        return substring(pos);
++    }
++    private String substring(int beginIndex) {
++        return substring(beginIndex, length);
++    }
++    private String substring(int beginIndex, int endIndex) {
++        if(beginIndex < 0) {
++            throw new StringIndexOutOfBoundsException(beginIndex);
++        }
++        if(endIndex > length) {
++            throw new StringIndexOutOfBoundsException(endIndex);
++        }
++        if(beginIndex > endIndex) {
++            throw new StringIndexOutOfBoundsException(endIndex - beginIndex);
++        }
++        if (beginIndex == 0 && endIndex == length) {
++            return input;
++        } else {
++            return input.substring(beginIndex, endIndex);
++        }
+     }
+ }
+\ No newline at end of file

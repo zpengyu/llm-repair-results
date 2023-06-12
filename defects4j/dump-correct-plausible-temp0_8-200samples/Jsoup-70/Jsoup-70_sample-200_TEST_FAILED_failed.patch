@@ -1,0 +1,30 @@
+diff --git a/src/main/java/org/jsoup/nodes/Element.java b/src/main/java/org/jsoup/nodes/Element.java
+index 2bd1184..ad352fd 100644
+--- a/src/main/java/org/jsoup/nodes/Element.java
++++ b/src/main/java/org/jsoup/nodes/Element.java
+@@ -1088,14 +1088,19 @@ public class Element extends Node {
+         // looks only at this element and five levels up, to prevent recursion & needless stack searches
+         if (node != null && node instanceof Element) {
+             Element el = (Element) node;
+-                if (el.tag.preserveWhitespace())
+-                    return true;
+-                else
+-                    return el.parent() != null && el.parent().tag.preserveWhitespace();
++            if (el.tag().preserveWhitespace()) {
++                return true;
++            } else {
++                if (el.parent() != null) {
++                    return el.parent().tag().preserveWhitespace();
++                } else {
++                    return false;
++                }
++            }
++        } else {
++            return false;
+         }
+-        return false;
+     }
+-
+     /**
+      * Set the text of this element. Any existing contents (text or elements) will be cleared
+      * @param text unencoded text

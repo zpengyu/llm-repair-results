@@ -1,0 +1,24 @@
+diff --git a/src/com/google/javascript/jscomp/TypedScopeCreator.java b/src/com/google/javascript/jscomp/TypedScopeCreator.java
+index 5e7bfa3f..cf8f58a6 100644
+--- a/src/com/google/javascript/jscomp/TypedScopeCreator.java
++++ b/src/com/google/javascript/jscomp/TypedScopeCreator.java
+@@ -2035,8 +2031,17 @@ final class TypedScopeCreator implements ScopeCreator {
+           }
+         }
+       }
+-    }
+-  }
++      else if(n.isGetElem()) {
++          if(parent.isAssign() && n == parent.getFirstChild()){
++              parent.setType(Token.GETPROP);
++              n.getNext().setType(Token.STRING);
++              parent.setJSDocInfo(null);
++              parent.setOriginalName(null);
++              parent.removeProp(Node.ORIGINALNAME_PROP);
++              n.getNext().putBooleanProp(Node.QUOTED_PROP, true);
++          }
++      }
++    }  }
+ 
+   private AstFunctionContents getFunctionAnalysisResults(@Nullable Node n) {
+     if (n == null) {

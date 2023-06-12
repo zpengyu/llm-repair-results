@@ -1,0 +1,23 @@
+diff --git a/src/java/org/apache/commons/cli/HelpFormatter.java b/src/java/org/apache/commons/cli/HelpFormatter.java
+index 7f61ceb..70559ca 100644
+--- a/src/java/org/apache/commons/cli/HelpFormatter.java
++++ b/src/java/org/apache/commons/cli/HelpFormatter.java
+@@ -833,9 +827,16 @@ public class HelpFormatter
+             } else
+             if (pos == lastPos)
+             {
+-                throw new RuntimeException("Text too long for line - throwing exception to avoid infinite loop [CLI-162]: " + text);
++                sb.append(rtrim(text.substring(0, pos))).append(defaultNewLine);
++                text = padding + text.substring(pos);
++                pos = findWrapPos(text, width, 0);
++                if (pos == -1)
++                {
++                    sb.append(text);
++                    return sb;
++                }
++                sb.append(text.substring(0, pos)).append(defaultNewLine);
+             }
+-
+             sb.append(rtrim(text.substring(0, pos))).append(defaultNewLine);
+         }
+     }

@@ -1,0 +1,74 @@
+diff --git a/src/com/google/javascript/jscomp/UnreachableCodeElimination.java b/src/com/google/javascript/jscomp/UnreachableCodeElimination.java
+index 60bfd244..9609c623 100644
+--- a/src/com/google/javascript/jscomp/UnreachableCodeElimination.java
++++ b/src/com/google/javascript/jscomp/UnreachableCodeElimination.java
+@@ -45,20 +45,16 @@ import java.util.logging.Logger;
+  *
+  */
+ class UnreachableCodeElimination extends AbstractPostOrderCallback
+-    implements CompilerPass, ScopedCallback  {
++    implements CompilerPass, ScopedCallback {
+   private static final Logger logger =
+-    Logger.getLogger(UnreachableCodeElimination.class.getName());
+-
++      Logger.getLogger(UnreachableCodeElimination.class.getName());
+   private final AbstractCompiler compiler;
+   private final boolean removeNoOpStatements;
+-
+   Deque<ControlFlowGraph<Node>> cfgStack =
+       new LinkedList<ControlFlowGraph<Node>>();
+-
+   ControlFlowGraph<Node> curCfg = null;
+-
+   UnreachableCodeElimination(AbstractCompiler compiler,
+-      boolean removeNoOpStatements) {
++                             boolean removeNoOpStatements) {
+     this.compiler = compiler;
+     this.removeNoOpStatements = removeNoOpStatements;
+   }
+@@ -138,14 +125,11 @@ class UnreachableCodeElimination extends AbstractPostOrderCallback
+      * if-else conversion but it handles more complicated switch statements
+      * much nicer.
+      */
+-
+     // If n is null the target is the end of the function, nothing to do.
+     if (n == null) {
+-       return n;
++      return n;
+     }
+-
+     DiGraphNode<Node, Branch> gNode = curCfg.getDirectedGraphNode(n);
+-
+     if (gNode == null) {
+       return n;
+     }
+@@ -183,7 +164,11 @@ class UnreachableCodeElimination extends AbstractPostOrderCallback
+           Node fallThrough = tryRemoveUnconditionalBranching(computeFollowing(n));
+           Node nextCfgNode = outEdges.get(0).getDestination().getValue();
+           if (nextCfgNode == fallThrough) {
+-            removeDeadExprStatementSafely(n);
++            if (n.getType() == Token.BREAK) {
++              removeDeadBreak(n);
++            } else {
++              removeDeadExprStatementSafely(n);
++            }
+             return fallThrough;
+           }
+         }
+@@ -195,7 +179,15 @@ class UnreachableCodeElimination extends AbstractPostOrderCallback
+     Node next = ControlFlowAnalysis.computeFollowNode(n);
+     return next;
+   }
+-
++  private void removeDeadBreak(Node n) {
++    Node enclosing = NodeUtil.getEnclosingLoop(n);
++    Preconditions.checkNotNull(enclosing);
++    Node next = enclosing.getNext();
++    if (next != null) {
++      enclosing.getParent().removeChild(next);
++    }
++    NodeUtil.removeChild(n.getParent(), n);
++  }
+   private void removeDeadExprStatementSafely(Node n) {
+     Node parent = n.getParent();
+     if (n.getType() == Token.EMPTY ||

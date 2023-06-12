@@ -1,0 +1,17 @@
+    public void visit(NodeTraversal t, Node n, Node parent) {
+      if (n.isCall()) {
+        Node target = n.getFirstChild();
+        // TODO(johnlenz): add this to the coding convention
+        // so we can remove goog.reflect.sinkValue as well.
+        if (target.isName() && target.getString().equals(PROTECTOR_FN)) {
+          Node expr = n.getLastChild();
+          // If the expression is a function expression, copy the name to the new
+          // function node.
+          if (NodeUtil.isFunctionExpression(expr)) {
+            expr.getFirstChild().getFirstChild().putProp(Node.ORIGINALNAME_PROP, n.getFirstChild());
+          }
+          n.detachChildren();
+          parent.replaceChild(n, expr);
+        }
+      }
+    }

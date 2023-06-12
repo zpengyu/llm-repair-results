@@ -1,0 +1,33 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/deser/BeanDeserializer.java b/src/main/java/com/fasterxml/jackson/databind/deser/BeanDeserializer.java
+index 3c89dc109..c0f38f94f 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/deser/BeanDeserializer.java
++++ b/src/main/java/com/fasterxml/jackson/databind/deser/BeanDeserializer.java
+@@ -754,14 +751,15 @@ public class BeanDeserializer
+             SettableBeanProperty creatorProp = creator.findCreatorProperty(propName);
+             if (creatorProp != null) {
+                 // Last creator property to set?
+-                if (buffer.assignParameter(creatorProp,
+-                        _deserializeWithErrorWrapping(p, ctxt, creatorProp))) {
++                Object value = _deserializeWithErrorWrapping(p, ctxt, creatorProp);
++                if (buffer.assignParameter(creatorProp, value)) {
+                     t = p.nextToken(); // to move to following FIELD_NAME/END_OBJECT
+                     Object bean;
+                     try {
+                         bean = creator.build(ctxt, buffer);
+                     } catch (Exception e) {
+-                        bean = wrapInstantiationProblem(e, ctxt);
++                        wrapInstantiationProblem(e, ctxt);
++                        return null; // never gets here
+                     }
+                     // [databind#631]: Assign current value, to be accessible by custom serializers
+                     p.setCurrentValue(bean);
+@@ -784,6 +782,9 @@ public class BeanDeserializer
+                     }
+                     return _unwrappedPropertyHandler.processUnwrapped(p, ctxt, bean, tokens);
+                 }
++                // nope, just need to buffer it
++                tokens.writeFieldName(propName);
++                tokens.copyCurrentStructure(p);
+                 continue;
+             }
+             // Object Id property?

@@ -1,0 +1,21 @@
+diff --git a/src/com/google/javascript/jscomp/Compiler.java b/src/com/google/javascript/jscomp/Compiler.java
+index 9acb07a5..a1846592 100644
+--- a/src/com/google/javascript/jscomp/Compiler.java
++++ b/src/com/google/javascript/jscomp/Compiler.java
+@@ -277,10 +272,13 @@ public class Compiler extends AbstractCompiler {
+       guards.add(new DiagnosticGroupWarningsGuard(
+           DiagnosticGroups.CHECK_VARIABLES, CheckLevel.OFF));
+     }
+-
+-    this.warningsGuard = new ComposeWarningsGuard(guards);
++    warningsGuard = new ComposeWarningsGuard(guards);
++    // Add the synthetic block error guard so we only warn once per
++    // function.
++    guards.add(new DiagnosticGroupWarningsGuard(
++        DiagnosticGroups.SYNTHETIC_BLOCK, CheckLevel.OFF));
++    warningsGuard = new ComposeWarningsGuard(guards);
+   }
+-
+   /**
+    * Initializes the instance state needed for a compile job.
+    */

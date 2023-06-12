@@ -1,0 +1,41 @@
+    protected Object _deserializeTypedUsingDefaultImpl(JsonParser p, DeserializationContext ctxt,
+            TokenBuffer tb) throws IOException
+    {
+        // As per [JACKSON-614], may have default implementation to use
+        JsonDeserializer<Object> deser = _findDefaultImplDeserializer(ctxt);
+        if (deser != null) {
+            if (tb != null) {
+                tb.writeEndObject();
+                p = tb.asParser(p);
+                // must move to point to the first token:
+                p.nextToken();
+            }
+            Object result;
+            if (_typeIdVisible) {
+                if (p.getCurrentToken() == JsonToken.START_OBJECT) {
+                    result = deser.deserialize(p, ctxt, _findTypeId(p, ctxt));
+                } else {
+                    result = deser.deserialize(p, ctxt);
+                }
+            } else {
+                result = deser.deserialize(p, ctxt);
+            }
+            if (_typeIdVisible && (p.getCurrentToken() == JsonToken.END_OBJECT)) {
+                p.nextToken();
+            }
+            return result;
+        }
+        // or, perhaps we just bumped into a "natural" value (boolean/int/double/String)?
+        Object result = TypeDeserializer.deserializeIfNatural(p, ctxt, _baseType);
+        if (result != null) {
+            return result;
+        }
+        // or, something for which "as-property" won't work, changed into "wrapper-array" type:
+        if (p.getCurrentToken() == JsonToken.START_ARRAY) {
+            return super.deserializeTypedFromAny(p, ctxt);
+        }
+        ctxt.reportWrongTokenException(p, JsonToken.FIELD_NAME,
+                "missing property '"+_typePropertyName+"' that is to contain type id  (for class "+baseTypeName()+")");
+        return null;
+    }
+

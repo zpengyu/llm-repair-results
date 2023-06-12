@@ -1,0 +1,26 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/ObjectReader.java b/src/main/java/com/fasterxml/jackson/databind/ObjectReader.java
+index 66cc8eac7..b9a86a9a6 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/ObjectReader.java
++++ b/src/main/java/com/fasterxml/jackson/databind/ObjectReader.java
+@@ -1434,14 +1434,19 @@ public class ObjectReader
+      */
+     public <T> MappingIterator<T> readValues(byte[] src, int offset, int length)
+         throws IOException, JsonProcessingException
++    {
++        return readValues(src, offset, length, null);
++    }
++    public <T> MappingIterator<T> readValues(byte[] src, int offset, int length,
++            JsonParser jp)
++        throws IOException, JsonProcessingException
+     {
+         if (_dataFormatReaders != null) {
+             return _detectBindAndReadValues(_dataFormatReaders.findFormat(src, offset, length), false);
+         }
+-        return _bindAndReadValues(_considerFilter(_parserFactory.createParser(src),
++        return _bindAndReadValues(_considerFilter(jp, _parserFactory.createParser(src),
+                 true));
+     }
+-
+     /**
+      * Overloaded version of {@link #readValue(InputStream)}.
+      */

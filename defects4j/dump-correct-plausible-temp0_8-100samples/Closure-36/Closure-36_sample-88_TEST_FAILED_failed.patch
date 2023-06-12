@@ -1,0 +1,38 @@
+diff --git a/src/com/google/javascript/jscomp/InlineVariables.java b/src/com/google/javascript/jscomp/InlineVariables.java
+index 4f045430..d6ba4f86 100644
+--- a/src/com/google/javascript/jscomp/InlineVariables.java
++++ b/src/com/google/javascript/jscomp/InlineVariables.java
+@@ -569,12 +565,31 @@ class InlineVariables implements CompilerPass {
+           if (relationship != null) {
+             return false;
+           }
+-
+           // issue 668: Don't inline singleton getter methods
+           // calls as this confused class removing logic.
++        } else if (callNode.isNew()) {
++          // issue 668: Don't inline singleton getter methods
++          // calls as this confused class removing logic.
++          // Do not inline a constructor if it is assigned directly to a
++          // class's prototype property.
++          // Ex:
++          // ClassA.prototype = new (function() {})
++          // This breaks class removing, because the prototype is not
++          // a singleton, and so can be removed, but the class is not
++          // removed because it is referenced in the inlined constructor.
++          // TODO(johnlenz): It may be possible to remove the class,
++          // if the constructor isn't invoked by the time it is reached.
++          // TODO(johnlenz): Support inlining of constructors when
++          // there are references from the constructor to "this".
++          Node parent = callNode.getParent();
++          if (parent.isGetProp()
++              && "prototype".equals(parent.getLastChild().getString())
++              && parent.getParent().isAssign()
++              && NodeUtil.isExpressionResultUsed(parent.getParent())) {
++            return false;
++          }
+         }
+       }
+-
+       return canMoveAggressively(value) ||
+           canMoveModerately(initialization, reference);
+     }

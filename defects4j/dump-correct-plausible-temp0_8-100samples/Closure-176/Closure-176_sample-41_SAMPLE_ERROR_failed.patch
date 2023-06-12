@@ -1,0 +1,25 @@
+diff --git a/src/com/google/javascript/jscomp/TypeInference.java b/src/com/google/javascript/jscomp/TypeInference.java
+index 53e8cb48..3a6706ee 100644
+--- a/src/com/google/javascript/jscomp/TypeInference.java
++++ b/src/com/google/javascript/jscomp/TypeInference.java
+@@ -544,10 +543,16 @@ class TypeInference
+         // is as narrow as it can possibly be, but we need to make
+         // sure we back-infer the <string> element constraint on
+         // the left hand side, so we use the left hand side.
+-
+-        boolean isVarTypeBetter = !isVarDeclaration || var == null || var.isTypeInferred();
+-            // Makes it easier to check for NPEs.
+-
++        // TODO(nicksantos): The cases of where we want to use var
++        // initializers over inferred types are much more rare than
++        // the cases where we want to use inferred types over var
++        // initializers. We should audit all the places where we do
++        // this, because these cases are almost always wrong.
++        // We use the var initializer iff it's declared, or if it
++        // would introduce a warning.
++        boolean isVarTypeBetter = isVarDeclaration &&
++            !var.isTypeInferred() &&
++            !registry.isDeclared(varName, left, false);
+         // TODO(nicksantos): This might be a better check once we have
+         // back-inference of object/array constraints.  It will probably
+         // introduce more type warnings.  It uses the result type iff it's

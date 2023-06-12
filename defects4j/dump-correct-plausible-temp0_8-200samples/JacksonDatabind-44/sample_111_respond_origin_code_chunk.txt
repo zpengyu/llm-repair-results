@@ -1,0 +1,34 @@
+    protected JavaType _narrow(Class<?> subclass)
+    {
+        if (_class == subclass) {
+            return this;
+        }
+        if (_class.isAssignableFrom(subclass)) {
+            // This also means we have super class:
+            Class<?> sc = subclass.getSuperclass();
+            if (sc == _class) { // super is closest
+                return new SimpleType(subclass, _bindings, this, _superInterfaces,
+                        _valueHandler, _typeHandler, _asStatic);
+            }
+            // but if not, need to go through super-interfaces
+            while (true) {
+                Class<?>[] ifcs = sc.getInterfaces();
+                for (Class<?> ifc : ifcs) {
+                    if (ifc == _class) {
+                        return new SimpleType(subclass, _bindings, null, sc,
+                                _valueHandler, _typeHandler, _asStatic);
+                    }
+                    if (_class.isAssignableFrom(ifc)) {
+                        sc = ifc;
+                        continue main_loop;
+                    }
+                }
+                sc = sc.getSuperclass();
+                if (sc == null || sc == Object.class) {
+                    throw new IllegalArgumentException("Internal error: Class "+subclass.getName()
+                            +" not subtype of "+_class.getName());
+                }
+            }
+        }
+        throw new IllegalArgumentException("Class "+subclass.getName()+" not subtype of "+_class.getName());
+    }

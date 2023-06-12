@@ -1,0 +1,32 @@
+diff --git a/src/org/mockito/internal/configuration/SpyAnnotationEngine.java b/src/org/mockito/internal/configuration/SpyAnnotationEngine.java
+index e292e1300..ce8237e6a 100644
+--- a/src/org/mockito/internal/configuration/SpyAnnotationEngine.java
++++ b/src/org/mockito/internal/configuration/SpyAnnotationEngine.java
+@@ -36,7 +36,7 @@ public class SpyAnnotationEngine implements AnnotationEngine {
+                     Object instance = field.get(testClass);
+                     if (instance == null) {
+                         throw new MockitoException("Cannot create a @Spy for '" + field.getName() + "' field because the *instance* is missing\n" +
+-                        		  "The instance must be created *before* initMocks();\n" +
++                                  "The instance must be created *before* initMocks();\n" +
+                                   "Example of correct usage of @Spy:\n" +
+                             	  "   @Spy List mock = new LinkedList();\n" +
+                             	  "   //also, don't forget about MockitoAnnotations.initMocks();");
+@@ -45,7 +44,7 @@ public class SpyAnnotationEngine implements AnnotationEngine {
+                     if (new MockUtil().isMock(instance)) { 
+                         // instance has been spied earlier
+                         Mockito.reset(instance);
+-                    } else {
++                    } else if (!Modifier.isFinal(field.getModifiers()) || !Modifier.isFinal(field.getDeclaringClass().getModifiers())) {
+                         field.set(testClass, Mockito.spy(instance));
+                     }
+                 } catch (IllegalAccessException e) {
+@@ -56,7 +55,8 @@ public class SpyAnnotationEngine implements AnnotationEngine {
+             }
+         }
+     }
+-    
++```
++```    
+     //TODO duplicated elsewhere
+     void assertNoAnnotations(Class annotation, Field field, Class ... undesiredAnnotations) {
+         for (Class u : undesiredAnnotations) {

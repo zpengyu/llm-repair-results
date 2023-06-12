@@ -1,0 +1,38 @@
+diff --git a/src/com/google/javascript/jscomp/TypedScopeCreator.java b/src/com/google/javascript/jscomp/TypedScopeCreator.java
+index 13d8808b..3162b451 100644
+--- a/src/com/google/javascript/jscomp/TypedScopeCreator.java
++++ b/src/com/google/javascript/jscomp/TypedScopeCreator.java
+@@ -1307,15 +1307,31 @@ final class TypedScopeCreator implements ScopeCreator {
+                     && !secondClause.getJSType().isUnknownType()) {
+                   return secondClause.getJSType();
+                 }
++              } else if (rValue.isName()) {
++                return getVarNameFromScope(sourceName, rValue);
+               }
+             }
+           }
+         }
+       }
+-
+       return getDeclaredTypeInAnnotation(sourceName, lValue, info);
+     }
+-
++    /**
++     * This function is used to get the type of an variable based on its name.
++     * If the variable could not be found in the scope, the return type would
++     * be unknown.
++     *
++     * @param sourceName The name of the file in which the variable occurs.
++     * @param rValue The node containing the name of the variable.
++     */
++    private JSType getVarNameFromScope(String sourceName, Node rValue) {
++      Var v = getScope(sourceName).getVar(rValue.getString());
++      if (v != null) {
++        return v.getType();
++      } else {
++        return registry.getNativeType(JSTypeNative.UNKNOWN_TYPE);
++      }
++    }
+     private FunctionType getFunctionType(@Nullable Var v) {
+       JSType t = v == null ? null : v.getType();
+       ObjectType o = t == null ? null : t.dereference();

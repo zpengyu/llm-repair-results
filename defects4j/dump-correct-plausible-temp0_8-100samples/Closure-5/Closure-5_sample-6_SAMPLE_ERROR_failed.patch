@@ -1,0 +1,30 @@
+diff --git a/src/com/google/javascript/jscomp/InlineObjectLiterals.java b/src/com/google/javascript/jscomp/InlineObjectLiterals.java
+index 2f5a8e10..29e05755 100644
+--- a/src/com/google/javascript/jscomp/InlineObjectLiterals.java
++++ b/src/com/google/javascript/jscomp/InlineObjectLiterals.java
+@@ -170,10 +169,9 @@ class InlineObjectLiterals implements CompilerPass {
+               && gramps.getFirstChild() == parent) {
+             return false;
+           }
+-
+           // Deleting a property has different semantics from deleting
+           // a variable, so deleted properties should not be inlined.
+-
++          //
+           // NOTE(nicksantos): This pass's object-splitting algorithm has
+           // a blind spot. It assumes that if a property isn't defined on an
+           // object, then the value is undefined. This is not true, because
+@@ -192,12 +190,10 @@ class InlineObjectLiterals implements CompilerPass {
+           }
+           continue;
+         }
+-
+         // Only rewrite VAR declarations or simple assignment statements
+-        if (!isVarOrAssignExprLhs(name)) {
++        if (!NodeUtil.isVarOrSimpleAssignLhs(name)) {
+            return false;
+         }
+-
+         Node val = ref.getAssignedValue();
+         if (val == null) {
+           // A var with no assignment.

@@ -1,0 +1,23 @@
+diff --git a/src/java/org/apache/commons/lang/enums/ValuedEnum.java b/src/java/org/apache/commons/lang/enums/ValuedEnum.java
+index 0823e77d..433f1348 100644
+--- a/src/java/org/apache/commons/lang/enums/ValuedEnum.java
++++ b/src/java/org/apache/commons/lang/enums/ValuedEnum.java
+@@ -180,9 +174,16 @@ public abstract class ValuedEnum extends Enum {
+      * @throws NullPointerException if other is <code>null</code>
+      */
+     public int compareTo(Object other) {
+-        return iValue - ((ValuedEnum) other).iValue;
++        Class cls = getEnumClass();
++        if (cls == other.getClass()) {
++            return iValue - ((ValuedEnum) other).iValue;
++        }
++        try {
++            return iValue - (Integer.parseInt(other.toString()));
++        } catch (NumberFormatException e) {
++            return -1;
++        }
+     }
+-
+     /**
+      * <p>Use reflection to return an objects value.</p>
+      *

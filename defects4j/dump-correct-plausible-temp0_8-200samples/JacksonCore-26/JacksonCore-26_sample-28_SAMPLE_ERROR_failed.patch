@@ -1,0 +1,20 @@
+diff --git a/src/main/java/com/fasterxml/jackson/core/json/async/NonBlockingJsonParser.java b/src/main/java/com/fasterxml/jackson/core/json/async/NonBlockingJsonParser.java
+index feec6483..f4678530 100644
+--- a/src/main/java/com/fasterxml/jackson/core/json/async/NonBlockingJsonParser.java
++++ b/src/main/java/com/fasterxml/jackson/core/json/async/NonBlockingJsonParser.java
+@@ -109,8 +107,14 @@ public class NonBlockingJsonParser
+         _inputPtr = start;
+         _inputEnd = end;
+         _origBufferLen = end - start;
++        if (_bufferRecyclable) {
++            byte[] oldBuffer = _inputBuffer;
++            if (oldBuffer != null) {
++                _inputBuffer = NO_BYTES;
++                _ioContext.releaseReadIOBuffer(oldBuffer);
++            }
++        }
+     }
+-
+     @Override
+     public void endOfInput() {
+         _endOfInput = true;

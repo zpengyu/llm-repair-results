@@ -1,0 +1,52 @@
+diff --git a/src/com/google/javascript/jscomp/TypedScopeCreator.java b/src/com/google/javascript/jscomp/TypedScopeCreator.java
+index 5e7bfa3f..c6e1f500 100644
+--- a/src/com/google/javascript/jscomp/TypedScopeCreator.java
++++ b/src/com/google/javascript/jscomp/TypedScopeCreator.java
+@@ -2034,9 +2030,45 @@ final class TypedScopeCreator implements ScopeCreator {
+                 .recordEscapedQualifiedName(n.getQualifiedName());
+           }
+         }
++      } else if (n.isAssign()) {
++        // There is a special case where we can detect the intended
++        // behavior of a program, even though it looks like variables
++        // are being assigned in different scopes.
++        //
++        // For example:
++        //
++        // function foo(x) {
++        //   x = 3;
++        //   return function() {
++        //     x = 5;
++        //   };
++        // }
++        //
++        // Here, the program is accessing x from the outer scope,
++        // but assigning it from the inner scope. However, the
++        // outer scope is always going to be "this" and the inner
++        // scope is always going to be "window", so we can assume
++        // that this is the programmer's intention, even though it
++        // looks like a bug.
++        Node lhs = n.getFirstChild();
++        Node rhs = n.getLastChild();
++        if (lhs.isName() && rhs.isName()) {
++          Scope scope = t.getScope();
++          Var lhsVar = scope.getVar(lhs.getString());
++          Var rhsVar = scope.getVar(rhs.getString());
++          if (lhsVar != null && rhsVar != null) {
++            Scope lhsOwnerScope = lhsVar.getScope();
++            Scope rhsOwnerScope = rhsVar.getScope();
++            if (lhsOwnerScope != rhsOwnerScope &&
++                lhsOwnerScope.isLocal() &&
++                rhsOwnerScope.isLocal()) {
++              data.get(lhsOwnerScope.getRootNode())
++                  .recordPotentialEscapedVarName(lhs.getString());
++            }
++          }
++        }
+       }
+-    }
+-  }
++    }  }
+ 
+   private AstFunctionContents getFunctionAnalysisResults(@Nullable Node n) {
+     if (n == null) {

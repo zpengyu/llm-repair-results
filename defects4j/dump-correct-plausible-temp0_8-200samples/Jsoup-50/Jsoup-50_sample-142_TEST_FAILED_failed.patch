@@ -1,0 +1,18 @@
+diff --git a/src/main/java/org/jsoup/helper/DataUtil.java b/src/main/java/org/jsoup/helper/DataUtil.java
+index 6de0c40..b76a2e3 100644
+--- a/src/main/java/org/jsoup/helper/DataUtil.java
++++ b/src/main/java/org/jsoup/helper/DataUtil.java
+@@ -130,6 +127,13 @@ public final class DataUtil {
+             charsetName = defaultCharset;
+             doc = null;
+         }
++        if (docData.length() > 0 && docData.charAt(0) == UNICODE_BOM) {
++            byteData.rewind();
++            docData = Charset.forName(defaultCharset).decode(byteData).toString();
++            docData = docData.substring(1);
++            charsetName = defaultCharset;
++            doc = null;
++        }
+         if (doc == null) {
+             doc = parser.parseInput(docData, baseUri);
+             doc.outputSettings().charset(charsetName);

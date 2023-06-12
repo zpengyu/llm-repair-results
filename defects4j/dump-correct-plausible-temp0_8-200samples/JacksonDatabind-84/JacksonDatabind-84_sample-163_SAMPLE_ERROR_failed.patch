@@ -1,0 +1,115 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/type/ResolvedRecursiveType.java b/src/main/java/com/fasterxml/jackson/databind/type/ResolvedRecursiveType.java
+index 7b8c69af7..a6059d4a4 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/type/ResolvedRecursiveType.java
++++ b/src/main/java/com/fasterxml/jackson/databind/type/ResolvedRecursiveType.java
+@@ -7,28 +7,22 @@ import com.fasterxml.jackson.databind.JavaType;
+  *
+  * @since 2.7
+  */
+-public class ResolvedRecursiveType extends TypeBase
+-{
++public class ResolvedRecursiveType extends TypeBase {
+     private static final long serialVersionUID = 1L;
+-
++    protected final String _id;
+     protected JavaType _referencedType;
+-
+-    public ResolvedRecursiveType(Class<?> erasedType, TypeBindings bindings) {
+-        super(erasedType, bindings, null, null, 0, null, null, false);
++    public ResolvedRecursiveType(String id) {
++        super(Object.class, TypeBindings.emptyBindings(), null, null, 0, null, null, false);
++        _id = id;
+     }
+-
+-    public void setReference(JavaType ref)
+-    {
+-        // sanity check; should not be called multiple times
++    public void setReference(JavaType ref) {
+         if (_referencedType != null) {
+             throw new IllegalStateException("Trying to re-set self reference; old value = "+_referencedType+", new = "+ref);
+         }
+         _referencedType = ref;
+     }
+-
+-
++    public String getId() { return _id; }
+     public JavaType getSelfReferencedType() { return _referencedType; }
+-
+     @Override
+     public StringBuilder getGenericSignature(StringBuilder sb) {
+         return _referencedType.getGenericSignature(sb);
+@@ -43,22 +35,6 @@ public class ResolvedRecursiveType extends TypeBase
+     public JavaType withContentType(JavaType contentType) {
+         return this;
+     }
+-    
+-    @Override
+-    public JavaType withTypeHandler(Object h) {
+-        return this;
+-    }
+-
+-    @Override
+-    public JavaType withContentTypeHandler(Object h) {
+-        return this;
+-    }
+-
+-    @Override
+-    public JavaType withValueHandler(Object h) {
+-        return this;
+-    }
+-
+     @Override
+     public JavaType withContentValueHandler(Object h) {
+         return this;
+@@ -68,19 +43,14 @@ public class ResolvedRecursiveType extends TypeBase
+     public JavaType withStaticTyping() {
+         return this;
+     }
+-
+-    @Deprecated // since 2.7
+     @Override
+     protected JavaType _narrow(Class<?> subclass) {
+         return this;
+     }
+-
+     @Override
+-    public JavaType refine(Class<?> rawType, TypeBindings bindings,
+-            JavaType superClass, JavaType[] superInterfaces) {
+-        return null;
++    public JavaType refine(Class<?> rawType, TypeBindings bindings, JavaType superClass, JavaType[] superInterfaces) {
++        return this;
+     }
+-
+     @Override
+     public boolean isContainerType() {
+         return false;
+@@ -93,22 +62,18 @@ public class ResolvedRecursiveType extends TypeBase
+         if (_referencedType == null) {
+             sb.append("UNRESOLVED");
+         } else {
+-            // [databind#1301]: Typically resolves to a loop so short-cut
+-            //   and only include type-erased class
+             sb.append(_referencedType.getRawClass().getName());
+         }
+-        return sb.toString();
++        return sb.append(']').toString();
+     }
+-
+     @Override
+     public boolean equals(Object o) {
+         if (o == this) return true;
+         if (o == null) return false;
+-        // Do NOT ever match unresolved references
+-        if (_referencedType == null) {
+-            return false;
+-        }
+-        return (o.getClass() == getClass()
+-                && _referencedType.equals(((ResolvedRecursiveType) o).getSelfReferencedType()));
++        if (o.getClass() != getClass()) return false;
++        ResolvedRecursiveType other = (ResolvedRecursiveType) o;
++        return _id.equals(other._id);
+     }
++    @Override
++    public int hashCode() { return _id.hashCode(); }
+ }
+\ No newline at end of file

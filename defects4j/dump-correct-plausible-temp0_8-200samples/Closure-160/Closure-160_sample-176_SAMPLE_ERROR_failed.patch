@@ -1,0 +1,25 @@
+diff --git a/src/com/google/javascript/jscomp/Compiler.java b/src/com/google/javascript/jscomp/Compiler.java
+index 9acb07a5..a84c51a6 100644
+--- a/src/com/google/javascript/jscomp/Compiler.java
++++ b/src/com/google/javascript/jscomp/Compiler.java
+@@ -277,10 +272,18 @@ public class Compiler extends AbstractCompiler {
+       guards.add(new DiagnosticGroupWarningsGuard(
+           DiagnosticGroups.CHECK_VARIABLES, CheckLevel.OFF));
+     }
+-
++    this.warningsGuard = new ComposeWarningsGuard(guards);
++    if (options.aggressiveVarCheck == VarCheckMode.OFF) {
++      guards.add(new DiagnosticGroupWarningsGuard(
++          DiagnosticGroups.UNDEFINED_VARIABLES, CheckLevel.OFF));
++      guards.add(new DiagnosticGroupWarningsGuard(
++          DiagnosticGroups.UNUSED_LOCAL_VARIABLES, CheckLevel.OFF));
++    }
++    if (options.aggressiveVarCheck == VarCheckMode.LOOSE) {
++      guards.add(new UndefinedVarsLooseGuard());
++    }
+     this.warningsGuard = new ComposeWarningsGuard(guards);
+   }
+-
+   /**
+    * Initializes the instance state needed for a compile job.
+    */

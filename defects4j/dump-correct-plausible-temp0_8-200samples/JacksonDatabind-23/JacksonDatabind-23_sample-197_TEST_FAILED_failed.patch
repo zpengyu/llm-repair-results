@@ -1,0 +1,41 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/ser/std/NumberSerializers.java b/src/main/java/com/fasterxml/jackson/databind/ser/std/NumberSerializers.java
+index 6d0db8734..6ea12a706 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/ser/std/NumberSerializers.java
++++ b/src/main/java/com/fasterxml/jackson/databind/ser/std/NumberSerializers.java
+@@ -219,17 +186,30 @@ public class NumberSerializers
+     @JacksonStdImpl
+     public final static class DoubleSerializer extends Base<Object>
+     {
+-
+         final static DoubleSerializer instance = new DoubleSerializer();
+-
+         public DoubleSerializer() { super(Double.class, JsonParser.NumberType.DOUBLE, "number"); }
+-
+-
+         @Override
+         public void serialize(Object value, JsonGenerator gen, SerializerProvider provider) throws IOException {
+-            gen.writeNumber(((Double) value).doubleValue());
++            if (!(value instanceof Double)) {
++                gen.writeNumber(((Double) value).doubleValue());
++            }
++            else {
++                // 08-Mar-2010, tatu: For some reason, when running with Sun JDK 1.6
++                //   on Mac OS X (64-bit), "-0.0" is not correctly serialized.
++                //   It looks like their optimization in BigDecimal.equals()
++                //   is broken; and Double.compare() does not catch it.
++                Double d = (Double) value;
++                if (d.doubleValue() == 0.0) {
++                    if (d.equals(Double.valueOf(-0.0))) {
++                        gen.writeNumber("-0");
++                    } else {
++                        gen.writeNumber("0");
++                    }
++                } else {
++                    gen.writeNumber(d);
++                }
++            }
+         }
+-
+         // IMPORTANT: copied from `NonTypedScalarSerializerBase`
+         @Override
+         public void serializeWithType(Object value, JsonGenerator gen,

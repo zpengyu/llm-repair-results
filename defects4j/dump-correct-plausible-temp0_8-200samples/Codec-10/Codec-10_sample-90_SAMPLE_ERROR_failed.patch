@@ -1,0 +1,161 @@
+diff --git a/src/java/org/apache/commons/codec/language/Caverphone.java b/src/java/org/apache/commons/codec/language/Caverphone.java
+index 7b844167..c0a60cb3 100644
+--- a/src/java/org/apache/commons/codec/language/Caverphone.java
++++ b/src/java/org/apache/commons/codec/language/Caverphone.java
+@@ -47,36 +47,28 @@ public class Caverphone implements StringEncoder {
+      * @param txt String the source string
+      * @return A caverphone code for the given String
+      */
++public class Caverphone2 {
++    public static void main(String[] args) {
++        Caverphone2 cp = new Caverphone2();
++        System.out.println(cp.caverphone("stevenson"));
++    }
+     public String caverphone(String txt) {
+-        // NOTE: Version 1.0 of Caverphone is easily derivable from this code 
+-        // by commenting out the 2.0 lines and adding in the 1.0 lines
+-
+-        if( txt == null || txt.length() == 0 ) {
++        if (txt == null || txt.length() == 0) {
+             return "1111111111";
+         }
+-
+-        // 1. Convert to lowercase
+-        txt = txt.toLowerCase(java.util.Locale.ENGLISH);
+-
+-        // 2. Remove anything not A-Z
++        txt = txt.toLowerCase(Locale.ENGLISH);
++        // 1. Remove anything not A-Z
+         txt = txt.replaceAll("[^a-z]", "");
+-
+-        // 2.5. Remove final e
+-        txt = txt.replaceAll("e$", "");             // 2.0 only
+-
+-        // 3. Handle various start options
++        // 2.1. Handle initial 2
+         txt = txt.replaceAll("^cough", "cou2f");
+         txt = txt.replaceAll("^rough", "rou2f");
+         txt = txt.replaceAll("^tough", "tou2f");
+-        txt = txt.replaceAll("^enough", "enou2f");  // 2.0 only
+-        txt = txt.replaceAll("^trough", "trou2f");  // 2.0 only - note the spec says ^enough here again, c+p error I assume
+-        txt = txt.replaceAll("^gn", "2n");
+-
+-        // End
+-        txt = txt.replaceAll("^mb", "m2");
+-
+-        // 4. Handle replacements
+-        txt = txt.replaceAll("cq", "2q");
++        txt = txt.replaceAll("^enough", "enou2f");
++        txt = txt.replaceAll("^trough", "trou2f");
++        // 2.2. Handle initial 3 and final e, h, ou, gh, n
++        txt = txt.replaceAll("^gn", "3n");
++        txt = txt.replaceAll("mb$", "m3");
++        txt = txt.replaceAll("cq", "3q");
+         txt = txt.replaceAll("ci", "si");
+         txt = txt.replaceAll("ce", "se");
+         txt = txt.replaceAll("cy", "sy");
+@@ -95,52 +87,80 @@ public class Caverphone implements StringEncoder {
+         txt = txt.replaceAll("z", "s");
+         txt = txt.replaceAll("^[aeiou]", "A");
+         txt = txt.replaceAll("[aeiou]", "3");
+-        txt = txt.replaceAll("j", "y");        // 2.0 only
+-        txt = txt.replaceAll("^y3", "Y3");     // 2.0 only
+-        txt = txt.replaceAll("^y", "A");       // 2.0 only
+-        txt = txt.replaceAll("y", "3");        // 2.0 only
++        // 2.3. Handle initial j, initial y, and final y
++        txt = txt.replaceAll("^j", "y");
++        txt = txt.replaceAll("j", "y");
++        txt = txt.replaceAll("^y3", "Y3");
++        txt = txt.replaceAll("^y", "A");
++        txt = txt.replaceAll("y", "3");
++        // 2.4. Handle final e
++        txt = txt.replaceAll("e$", "3");
++        // 2.5. Handle double consonants with the exception of cc
++        txt = txt.replaceAll("kk", "2k");
++        txt = txt.replaceAll("tt", "2t");
++        txt = txt.replaceAll("pp", "2p");
++        txt = txt.replaceAll("ff", "2f");
++        txt = txt.replaceAll("ss", "2s");
++        // 2.6. Handle final i
++        txt = txt.replaceAll("i$", "y");
++        // 3.1. Handle initial 3gh3
+         txt = txt.replaceAll("3gh3", "3kh3");
++        // 3.2. Handle other g's
+         txt = txt.replaceAll("gh", "22");
+         txt = txt.replaceAll("g", "k");
++        // 3.3. Handle initial and final s+
+         txt = txt.replaceAll("s+", "S");
++        // 3.4. Handle final t+
+         txt = txt.replaceAll("t+", "T");
++        // 3.5. Handle initial and final p+
+         txt = txt.replaceAll("p+", "P");
++        // 3.6. Handle initial and final k+
+         txt = txt.replaceAll("k+", "K");
++        // 3.7. Handle initial and final f+
+         txt = txt.replaceAll("f+", "F");
++        // 3.8. Handle initial and final m+
+         txt = txt.replaceAll("m+", "M");
++        // 3.9. Handle initial and final n+
+         txt = txt.replaceAll("n+", "N");
++        // 3.10. Handle w3
+         txt = txt.replaceAll("w3", "W3");
+-        //txt = txt.replaceAll("wy", "Wy");    // 1.0 only
++        // 3.11. Handle wh3
+         txt = txt.replaceAll("wh3", "Wh3");
+-        txt = txt.replaceAll("w$", "3");       // 2.0 only
+-        //txt = txt.replaceAll("why", "Why");  // 1.0 only
++        // 3.12. Handle wy
++        txt = txt.replaceAll("wy", "Wy");
++        // 3.13. Handle why
++        txt = txt.replaceAll("why", "Why");
++        // 3.14. Handle w
++        txt = txt.replaceAll("w$", "3");
+         txt = txt.replaceAll("w", "2");
++        // 3.15. Handle initial h
+         txt = txt.replaceAll("^h", "A");
++        // 3.16. Handle h
+         txt = txt.replaceAll("h", "2");
++        // 3.17. Handle r3
+         txt = txt.replaceAll("r3", "R3");
+-        txt = txt.replaceAll("r$", "3");       // 2.0 only
+-        //txt = txt.replaceAll("ry", "Ry");    // 1.0 only
++        // 3.18. Handle ry
++        txt = txt.replaceAll("ry", "Ry");
++        // 3.19. Handle r
++        txt = txt.replaceAll("r$", "3");
+         txt = txt.replaceAll("r", "2");
++        // 3.20. Handle l3
+         txt = txt.replaceAll("l3", "L3");
+-        txt = txt.replaceAll("l$", "3");       // 2.0 only
+-        //txt = txt.replaceAll("ly", "Ly");    // 1.0 only
++        // 3.21. Handle ly
++        txt = txt.replaceAll("ly", "Ly");
++        // 3.22. Handle l
++        txt = txt.replaceAll("l$", "3");
+         txt = txt.replaceAll("l", "2");
+-        //txt = txt.replaceAll("j", "y");      // 1.0 only
+-        //txt = txt.replaceAll("y3", "Y3");    // 1.0 only
+-        //txt = txt.replaceAll("y", "2");      // 1.0 only
+-
+-        // 5. Handle removals
++        // 4.1. Handle 2's
+         txt = txt.replaceAll("2", "");
+-        txt = txt.replaceAll("3$", "A");       // 2.0 only
++        // 4.2. Handle 3's
++        txt = txt.replaceAll("3$", "A");
+         txt = txt.replaceAll("3", "");
+-
+-        // 6. put ten 1s on the end
+-        txt = txt + "111111" + "1111";        // 1.0 only has 6 1s
+-
+-        // 7. take the first six characters as the code
+-        return txt.substring(0, 10);          // 1.0 truncates to 6
++        // 5. Truncate
++        txt = txt.substring(0, 10);
++        return txt + "111111";
+     }
+-
++}
+     /**
+      * Encodes an Object using the caverphone algorithm.  This method
+      * is provided in order to satisfy the requirements of the

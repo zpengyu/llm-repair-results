@@ -1,0 +1,43 @@
+diff --git a/src/com/google/javascript/jscomp/CommandLineRunner.java b/src/com/google/javascript/jscomp/CommandLineRunner.java
+index eb937f1c..9b9cdd0f 100644
+--- a/src/com/google/javascript/jscomp/CommandLineRunner.java
++++ b/src/com/google/javascript/jscomp/CommandLineRunner.java
+@@ -807,15 +807,18 @@ public class CommandLineRunner extends
+     CompilerOptions options = new CompilerOptions();
+     if (flags.processJqueryPrimitives) {
+       options.setCodingConvention(new JqueryCodingConvention());
+-    } else {
++    } else if (flags.processAngularPrimitives) {
++      options.setCodingConvention(new AngularCodingConvention());
++    } else if (flags.processClosurePrimitives) {
+       options.setCodingConvention(new ClosureCodingConvention());
++    } else if (flags.processCommonJsModules) {
++      options.setCodingConvention(new CommonJsCodingConvention());
++    } else {
++      options.setCodingConvention(new DefaultCodingConvention());
+     }
+-
+     options.setExtraAnnotationNames(flags.extraAnnotationName);
+-
+     CompilationLevel level = flags.compilationLevel;
+     level.setOptionsForCompilationLevel(options);
+-
+     if (flags.debug) {
+       level.setDebugOptionsForCompilationLevel(options);
+     }
+@@ -833,14 +833,11 @@ public class CommandLineRunner extends
+     for (FormattingOption formattingOption : flags.formatting) {
+       formattingOption.applyToOptions(options);
+     }
+-
+     options.closurePass = flags.processClosurePrimitives;
+-
+     options.jqueryPass = CompilationLevel.ADVANCED_OPTIMIZATIONS == level &&
+         flags.processJqueryPrimitives;
+-
+     options.angularPass = flags.angularPass;
+-
++    options.commonJsPass = flags.processCommonJsModules;
+     if (!flags.translationsFile.isEmpty()) {
+       try {
+         options.messageBundle = new XtbMessageBundle(

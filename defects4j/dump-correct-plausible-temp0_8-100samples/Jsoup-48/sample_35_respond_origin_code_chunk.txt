@@ -1,0 +1,37 @@
+void processResponseHeaders(Map<String, List<String>> resHeaders) {
+            for (Map.Entry<String, List<String>> entry : resHeaders.entrySet()) {
+                String name = entry.getKey();
+                if (name == null)
+                    continue; // http/1.1 line
+
+                List<String> values = entry.getValue();
+                if (name.equalsIgnoreCase("Set-Cookie")) {
+                    for (String value : values) {
+                        if (value == null)
+                            continue;
+                        TokenQueue cd = new TokenQueue(value);
+                        String cookieName = cd.chompTo("=").trim();
+                        String cookieVal = cd.consumeTo(";").trim();
+                        // ignores path, date, domain, validateTLSCertificates et al. req'd?
+                        // name not blank, value not null
+                        if (cookieName.length() > 0)
+                            cookie(cookieName, cookieVal);
+                    }
+                } else if (name.equals("Content-Type")) {
+                    String mimeType = values.get(0);
+                    String charset = selectCharsetFromContentTypeHeader(mimeType);
+                    if (charset != null && charset.length() != 0) // no point of empty charset.
+                        charset(charset);
+                    if (mimeType != null) { // mimeType no blank or null
+                        mimeType = mimeType.toLowerCase();
+                        int i = mimeType.indexOf(";");
+                        if (i != -1)
+                            mimeType = mimeType.substring(0, i);
+                        contentType = mimeType.trim();
+                    }
+                } else { // combine same header names with comma: http://www.w3.org/Protocols/rfc2616/rfc2616-sec4.html#sec4.2
+                    if (!values.isEmpty())
+                        header(name, values.get(0));
+                }
+            }
+        }
